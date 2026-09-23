@@ -172,6 +172,19 @@ font-size:11px!important;font-weight:800!important;padding:2px 4px!important
  }
 }
 
+
+/* Perfil topográfico ampliado · modal casi a pantalla completa */
+#profileModal{position:fixed;z-index:5000;inset:3vh 3vw;background:rgba(255,255,255,.985);border:1px solid #9aa4ad;border-radius:14px;box-shadow:0 8px 36px #0008;padding:18px 20px 16px;box-sizing:border-box;display:none;overflow:auto}
+#profileModal.open{display:block}
+#profileModalHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#profileModalTitle{font-size:20px;font-weight:900;color:#17324d}
+#profileModalClose{flex:0 0 auto;border:0;background:#17324d;color:#fff;border-radius:8px;width:38px;height:38px;font-size:22px;font-weight:900;cursor:pointer}
+#profileModalSummary{font-size:13px;margin:4px 0 10px;padding:8px 10px;background:#f3f6f8;border-radius:8px}
+#profileChartWrap{position:relative;width:100%;height:calc(88vh - 150px);min-height:420px}
+#profileCanvasLarge{display:block;width:100%;height:100%;border:1px solid #aab2b9;border-radius:9px;background:#fff}
+#profileTopoNote{font-size:10px;color:#555;margin-top:5px;text-align:right}
+@media(max-width:600px){#profileModal{inset:1.5vh 2vw;padding:10px 10px 8px;border-radius:10px}#profileModalTitle{font-size:15px}#profileChartWrap{height:calc(95vh - 145px);min-height:330px}#profileModalSummary{font-size:11px}}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -201,6 +214,28 @@ font-size:11px!important;font-weight:800!important;padding:2px 4px!important
 <label><input type="radio" name="base" value="lidar"> LiDAR · relieve</label>
 <label><input type="radio" name="base" value="land"> Ocupación del suelo</label>
 <label><input type="radio" name="base" value="historic"> Mapa histórico · 1.ª edición MTN50</label>
+</details>
+<details open><summary>Geología · IGME-CSIC</summary>
+<label><input id="geologyCheck" type="checkbox"> <b>Mapa geológico continuo · GEODE</b></label>
+<div style="padding:2px 2px 5px 13px">
+<small>IGME-CSIC · 1:50.000 en Península y 1:25.000 en territorios insulares</small>
+<small><b>Opacidad</b> <span id="geologyOpacityValue">70 %</span></small>
+<input id="geologyOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
+<div id="geologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
+<small><b>Leyenda geológica · IGME</b></small>
+<div style="max-height:230px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
+<img id="geologyLegendImg" alt="Leyenda del mapa geológico GEODE" style="display:block;max-width:none" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=8">
+</div>
+<small>Con la capa activa, pulsa cualquier punto del mapa para consultar la unidad geológica.</small>
+</div>
+</div>
+</details>
+<details open><summary>Toponimia</summary>
+<label><input id="toponymyCheck" type="checkbox"> <b>Toponimia enriquecida · IGN</b></label>
+<div style="padding:2px 2px 5px 13px">
+<small>Nomenclátor Geográfico Básico de España · densidad adaptada por el servicio a la escala</small>
+<input id="toponymyOpacity" type="range" min="0" max="1" value="0.90" step="0.05" style="width:100%">
+</div>
 </details>
 <details open><summary>Red geográfica</summary>
 <label><input id="gridCheck" type="checkbox" checked> <b>Paralelos y meridianos</b></label>
@@ -245,7 +280,7 @@ font-size:11px!important;font-weight:800!important;padding:2px 4px!important
 <button class="action" onclick="goCoords()">Localizar</button><div id="coordbox">WGS84 · grados decimales (EPSG:4326)</div></div>
 
 <div id="measurePanel" class="panel hidden"><h3>Medición</h3>
-<p><b>Distancia:</b> pulsa «Iniciar distancia» y marca puntos sobre el mapa. <b>Área:</b> marca al menos 3 vértices. Pulsa «Terminar» para cerrar la medición. El resultado permanece visible hasta que pulses «Borrar» o inicies otra medición.</p>
+<p><b>Distancia:</b> pulsa «Iniciar distancia» y marca puntos sobre el mapa. <b>Área:</b> marca al menos 3 vértices. Pulsa «Terminar» para cerrar la medición. El resultado permanece visible hasta que pulses «Borrar» o inicies otra medición. <b>Después puedes arrastrar cualquiera de los puntos para modificar la medición en tiempo real.</b></p>
 <div class="row"><button class="action" onclick="startMeasure('distance')">📏 Distancia</button><button class="action" onclick="startMeasure('area')">▱ Área</button></div>
 <div class="row" style="margin-top:5px"><button class="action" onclick="finishMeasure()">Terminar</button><button class="action" onclick="clearMeasure()">Borrar</button></div>
 <p id="measureResult"><b>Resultado:</b> —</p></div>
@@ -258,6 +293,13 @@ font-size:11px!important;font-weight:800!important;padding:2px 4px!important
 <div id="profileBox" style="display:none"><div id="profileSummary" style="margin-bottom:5px"></div><canvas id="profileCanvas" width="520" height="220" style="width:100%;height:auto;border:1px solid #bbb;border-radius:6px"></canvas></div>
 </div>
 
+
+<div id="profileModal" aria-hidden="true">
+  <div id="profileModalHeader"><div id="profileModalTitle">Perfil topográfico</div><button id="profileModalClose" onclick="closeProfileModal()" title="Cerrar">×</button></div>
+  <div id="profileModalSummary"></div>
+  <div id="profileChartWrap"><canvas id="profileCanvasLarge"></canvas></div>
+  <div id="profileTopoNote">Tintas hipsométricas · topónimos oficiales IGN vinculados a la cartografía MTN</div>
+</div>
 <div id="searchPanel" class="panel hidden"><h3>Buscar topónimo</h3>
 <input id="searchQ" type="text" placeholder="Ej.: Teide, Taganana, Adeje…">
 <button class="action" onclick="searchPlace()">Buscar</button>
@@ -300,10 +342,35 @@ const hybrid=L.layerGroup([pnoa,labels]);
 const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
+
+// Toponimia oficial enriquecida: Nomenclátor Geográfico Básico de España (IGN/CNIG).
+// Es una superposición independiente del mapa de fondo y el servidor adapta el contenido a la escala.
+const toponymy=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{
+ layers:'GN.GeographicalNames',format:'image/png',transparent:true,version:'1.3.0',
+ minZoom:6,maxZoom:19,opacity:0.90,attribution:'Toponimia · NGBE · © IGN/CNIG · CC BY 4.0'
+});
+
+// Cartografía geológica continua oficial GEODE (IGME-CSIC). Superposición activable.
+// Capas WMS: recintos, contactos, cuaternario, estructuras, indicios y rótulos.
+const geology=L.tileLayer.wms('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{
+ layers:'1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,version:'1.3.0',
+ opacity:0.70,attribution:'GEODE · © IGME-CSIC'
+});
+
 const bases={raster,pnoa,street,hybrid,lidar,land,historic};
 let activeBase=hybrid;
 hybrid.addTo(map);
-document.querySelectorAll('input[name=base]').forEach(r=>r.addEventListener('change',()=>{map.removeLayer(activeBase);activeBase=bases[r.value];activeBase.addTo(map);status('Fondo: '+r.parentElement.textContent.trim());}));
+document.querySelectorAll('input[name=base]').forEach(r=>r.addEventListener('change',()=>{map.removeLayer(activeBase);activeBase=bases[r.value];activeBase.addTo(map);if(document.getElementById('geologyCheck').checked)geology.bringToFront();if(document.getElementById('toponymyCheck').checked)toponymy.bringToFront();status('Fondo: '+r.parentElement.textContent.trim());}));
+document.getElementById('toponymyCheck').onchange=e=>{if(e.target.checked){toponymy.addTo(map);toponymy.bringToFront();status('Toponimia IGN activada');}else{map.removeLayer(toponymy);status('Toponimia IGN desactivada');}};
+document.getElementById('toponymyOpacity').oninput=e=>toponymy.setOpacity(+e.target.value);
+document.getElementById('geologyCheck').onchange=e=>{
+ document.getElementById('geologyLegendWrap').style.display=e.target.checked?'block':'none';
+ if(e.target.checked){geology.addTo(map);geology.bringToFront();if(document.getElementById('toponymyCheck').checked)toponymy.bringToFront();status('Mapa geológico GEODE activado · pulsa el mapa para consultar materiales');}
+ else{map.removeLayer(geology);status('Mapa geológico GEODE desactivado');}
+};
+document.getElementById('geologyOpacity').oninput=e=>{
+ const v=+e.target.value;geology.setOpacity(v);document.getElementById('geologyOpacityValue').textContent=Math.round(v*100)+' %';
+};
 
 
 // Red geográfica adaptativa (WGS84)
@@ -347,9 +414,11 @@ function redrawGeoGrid(){
  for(let lat=lat0;lat<=north+step;lat+=step){
    const y=+lat.toFixed(6);
    if(y<south-step/100 || y>north+step/100) continue;
-   L.polyline([[y,west],[y,east]],style).addTo(geoGrid);
+   const isEquator=Math.abs(y)<1e-8;
+   const lineStyle=isEquator?{color:'#ffb000',weight:4.2,opacity:Math.min(1,gridOpacity+.18),interactive:false}:style;
+   L.polyline([[y,west],[y,east]],lineStyle).addTo(geoGrid);
    L.circleMarker([y,west+(east-west)*.045],{radius:0,opacity:0,fillOpacity:0,interactive:false})
-     .bindTooltip(fmtDeg(y,'lat',step),{permanent:true,direction:'right',className:'grid-label',opacity:1})
+     .bindTooltip(isEquator?'Ecuador · 0°':fmtDeg(y,'lat',step),{permanent:true,direction:'right',className:'grid-label',opacity:1})
      .addTo(geoGrid);
  }
 
@@ -357,9 +426,11 @@ function redrawGeoGrid(){
  for(let lon=lon0;lon<=east+step;lon+=step){
    const x=+lon.toFixed(6);
    if(x<west-step/100 || x>east+step/100) continue;
-   L.polyline([[south,x],[north,x]],style).addTo(geoGrid);
+   const isGreenwich=Math.abs(x)<1e-8;
+   const lineStyle=isGreenwich?{color:'#ffb000',weight:4.2,opacity:Math.min(1,gridOpacity+.18),interactive:false}:style;
+   L.polyline([[south,x],[north,x]],lineStyle).addTo(geoGrid);
    L.circleMarker([south+(north-south)*.055,x],{radius:0,opacity:0,fillOpacity:0,interactive:false})
-     .bindTooltip(fmtDeg(x,'lon',step),{permanent:true,direction:'top',className:'grid-label',opacity:1})
+     .bindTooltip(isGreenwich?'Meridiano de Greenwich · 0°':fmtDeg(x,'lon',step),{permanent:true,direction:'top',className:'grid-label',opacity:1})
      .addTo(geoGrid);
  }
 }
@@ -512,51 +583,129 @@ const MDT25 = {
 };
 const mdtCache={};
 proj4.defs('EPSG:32628','+proj=utm +zone=28 +datum=WGS84 +units=m +no_defs +type=crs');
+// Teselas nacionales Terrain-RGB de IDEE/IGN. El servicio se genera a partir del MDT05
+// y permite consultas rápidas sin descargar un MDT nacional completo. Canarias conserva MDT25 local.
+const nationalDemTileCache=new Map();
+const NATIONAL_DEM_Z=15;
+function nationalDemTileXY(lat,lon,z=NATIONAL_DEM_Z){
+ const n=2**z;
+ const x=(lon+180)/360*n;
+ const latRad=lat*Math.PI/180;
+ const y=(1-Math.asinh(Math.tan(latRad))/Math.PI)/2*n;
+ return {tx:Math.floor(x),ty:Math.floor(y),px:Math.min(255,Math.max(0,Math.floor((x-Math.floor(x))*256))),py:Math.min(255,Math.max(0,Math.floor((y-Math.floor(y))*256)))};
+}
+async function nationalElevationAt(lat,lon){
+ // Cobertura del servicio nacional: Península y Baleares. Los MDT locales cubren Canarias.
+ if(lat<35.5||lat>44.5||lon<-10.0||lon>4.8)return null;
+ const t=nationalDemTileXY(lat,lon),key=NATIONAL_DEM_Z+'/'+t.tx+'/'+t.ty;
+ try{
+  if(!nationalDemTileCache.has(key)){
+   const promise=(async()=>{
+    const url='https://xyz-mdt.idee.es/1.0.0/raster-dem/'+key+'.png';
+    const resp=await fetch(url,{mode:'cors'});if(!resp.ok)throw new Error('TerrainRGB HTTP '+resp.status);
+    const bmp=await createImageBitmap(await resp.blob());
+    const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);if(bmp.close)bmp.close();
+    return ctx.getImageData(0,0,256,256).data;
+   })();
+   nationalDemTileCache.set(key,promise);
+  }
+  const data=await nationalDemTileCache.get(key),i=(t.py*256+t.px)*4;
+  const r=data[i],g=data[i+1],b=data[i+2],z=-10000+((r*256*256+g*256+b)*0.1);
+  if(!Number.isFinite(z)||z<-100||z>5000)return null;
+  return Math.round(z);
+ }catch(err){nationalDemTileCache.delete(key);console.warn('Consulta MDE nacional:',err);return null;}
+}
 async function elevationAt(lat,lon){
  try{
+  // 1) Canarias: se mantiene exactamente el MDT25 local que ya funcionaba.
   const xy=proj4('EPSG:4326','EPSG:32628',[lon,lat]), x=xy[0], y=xy[1];
   const entry=Object.entries(MDT25).find(([k,v])=>x>=v.bbox[0]&&x<=v.bbox[2]&&y>=v.bbox[1]&&y<=v.bbox[3]);
-  if(!entry)return null;
-  const [key,meta]=entry;
-  if(!mdtCache[key]){
-   const tif=await GeoTIFF.fromUrl('mdt25_web/'+meta.file);
-   const image=await tif.getImage();
-   mdtCache[key]={image,bbox:image.getBoundingBox(),w:image.getWidth(),h:image.getHeight()};
+  if(entry){
+   const [key,meta]=entry;
+   if(!mdtCache[key]){
+    const tif=await GeoTIFF.fromUrl('mdt25_web/'+meta.file);
+    const image=await tif.getImage();
+    mdtCache[key]={image,bbox:image.getBoundingBox(),w:image.getWidth(),h:image.getHeight()};
+   }
+   const d=mdtCache[key], b=d.bbox;
+   const col=Math.floor((x-b[0])/(b[2]-b[0])*d.w);
+   const row=Math.floor((b[3]-y)/(b[3]-b[1])*d.h);
+   if(col>=0&&row>=0&&col<d.w&&row<d.h){
+    const r=await d.image.readRasters({window:[col,row,col+1,row+1],interleave:true});
+    const z=Number(r[0]);
+    if(Number.isFinite(z)&&z!==-32768&&z>=-10)return Math.round(z);
+   }
   }
-  const d=mdtCache[key], b=d.bbox;
-  const col=Math.floor((x-b[0])/(b[2]-b[0])*d.w);
-  const row=Math.floor((b[3]-y)/(b[3]-b[1])*d.h);
-  if(col<0||row<0||col>=d.w||row>=d.h)return null;
-  const r=await d.image.readRasters({window:[col,row,col+1,row+1],interleave:true});
-  const z=Number(r[0]);
-  if(!Number.isFinite(z)||z===-32768||z<-10)return null;
-  return Math.round(z);
- }catch(err){console.warn('Consulta MDT25:',err);return null;}
+ }catch(err){console.warn('Consulta MDT25 Canarias:',err);}
+ // 2) Resto de España: servicio nacional Terrain-RGB oficial de IDEE/IGN.
+ return nationalElevationAt(lat,lon);
 }
-function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…'){
- return '<b>'+title+'</b><br>Latitud: '+Math.abs(lat).toFixed(6)+'° '+(lat>=0?'N':'S')+'<br>Longitud: '+Math.abs(lon).toFixed(6)+'° '+(lon>=0?'E':'O')+'<br><b>Altitud aprox.:</b> '+altText+'<br><small>MDT25 · resolución 25 m</small>';
+function dmsPart(value,isLat){
+ const hemi=isLat?(value>=0?'N':'S'):(value>=0?'E':'O');
+ let a=Math.abs(value),deg=Math.floor(a),mFloat=(a-deg)*60,min=Math.floor(mFloat),sec=(mFloat-min)*60;
+ // Evita mostrar 60,0″ por redondeo.
+ sec=Math.round(sec*10)/10;if(sec>=60){sec=0;min++;if(min>=60){min=0;deg++;}}
+ return deg+'° '+min+'′ '+sec.toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+'″ '+hemi;
+}
+function coordsDMS(lat,lon){return {lat:dmsPart(lat,true),lon:dmsPart(lon,false)};}
+function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function geologyAt(lat,lon){
+ if(!document.getElementById('geologyCheck').checked)return null;
+ try{
+  const base='https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8/query';
+  const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});
+  const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)throw new Error('IGME HTTP '+r.status);
+  const j=await r.json(),f=j&&j.features&&j.features[0];return f?f.attributes:null;
+ }catch(err){console.warn('Consulta geológica IGME:',err);return {__error:true};}
+}
+function geologyHtml(g){
+ if(!document.getElementById('geologyCheck').checked)return '';
+ if(!g)return '<hr><b>Geología · GEODE:</b> sin unidad identificada en este punto';
+ if(g.__error)return '<hr><b>Geología · GEODE:</b> no se pudo consultar el servicio';
+ const age1=g.NAME_EDA1||'',age2=g.NAME_EDA2||'',age=age1&&age2&&age1!==age2?age1+' – '+age2:(age1||age2||'');
+ return '<hr><b>Geología · GEODE (IGME-CSIC)</b><br><b>Materiales / unidad:</b> '+escHtml(g.DESC_UNIT||'Sin descripción')+(age?'<br><b>Edad:</b> '+escHtml(age):'')+(g.CODE_UNIO?'<br><small>Unidad '+escHtml(g.CODE_UNIO)+(g.ZONA?' · zona '+escHtml(g.ZONA):'')+'</small>':'');
+}
+function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…',geo=null,geoPending=false){
+ const c=coordsDMS(lat,lon);
+ return '<b>'+title+'</b><br>Latitud: '+c.lat+'<br>Longitud: '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(geoPending?'<hr><b>Geología · GEODE:</b> consultando materiales…':geologyHtml(geo))+'<br><small>Elevación IGN/IDEE · MDT25 local en Canarias · MDE nacional en Península y Baleares</small>';
 }
 let coordMarker=null,coordQuerySeq=0;
 async function showPoint(ll,title='Punto consultado',useMarker=true){
- const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng;
- if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title)).openPopup();}
- status('Lat '+lat.toFixed(6)+' · Lon '+lon.toFixed(6)+' · consultando altitud…');
- const z=await elevationAt(lat,lon); if(seq!==coordQuerySeq)return z;
+ const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng,geoOn=document.getElementById('geologyCheck').checked,c=coordsDMS(lat,lon);
+ if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'Consultando altitud…',null,geoOn)).openPopup();}
+ status(c.lat+' · '+c.lon+' · consultando altitud'+(geoOn?' y geología':'')+'…');
+ const [z,g]=await Promise.all([elevationAt(lat,lon),geoOn?geologyAt(lat,lon):Promise.resolve(null)]); if(seq!==coordQuerySeq)return z;
  const ztxt=z===null?'sin dato':z.toLocaleString('es-ES')+' m';
- if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt));coordMarker.openPopup();}
- status('Lat '+lat.toFixed(6)+' · Lon '+lon.toFixed(6)+' · Altitud aprox. '+ztxt);
+ if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,g,false));coordMarker.openPopup();}
+ status(c.lat+' · '+c.lon+' · Altitud aprox. '+ztxt+(geoOn&&g&&!g.__error?' · '+(g.DESC_UNIT||'unidad geológica consultada'):''));
  return z;
 }
 // Perfil topográfico · herramienta independiente
-let profileMode=false,profilePts=[],profileLayer=null;
+let profileMode=false,profilePts=[],profileLayer=null,profileLine=null,profileHandles=[];
 function startProfile(){
- measureMode=null;profileMode=true;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=L.layerGroup().addTo(map);
+ measureMode=null;profileMode=true;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=L.layerGroup().addTo(map);profileLine=null;profileHandles=[];
  document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');
  document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';
  status('PERFIL TOPOGRÁFICO · marca dos o más puntos · pulsa «Generar perfil»');
 }
-function addProfilePoint(ll){profilePts.push(ll);L.circleMarker(ll,{radius:4}).addTo(profileLayer);redrawProfileLine();}
-function redrawProfileLine(){if(!profileLayer)return;profileLayer.eachLayer(l=>{if(l instanceof L.Polyline && !(l instanceof L.CircleMarker))profileLayer.removeLayer(l);});if(profilePts.length>1)L.polyline(profilePts).addTo(profileLayer);}
+function profileHandleIcon(endpoint){return L.divIcon({className:'',html:'<div style="width:'+(endpoint?18:12)+'px;height:'+(endpoint?18:12)+'px;border-radius:50%;background:'+(endpoint?'#fff':'#17324d')+';border:'+(endpoint?'4px solid #17324d':'2px solid #fff')+';box-shadow:0 1px 5px #0008;box-sizing:border-box"></div>',iconSize:[endpoint?18:12,endpoint?18:12],iconAnchor:[endpoint?9:6,endpoint?9:6]});}
+function addProfilePoint(ll){profilePts.push(ll);rebuildProfileGeometry();}
+function rebuildProfileGeometry(){
+ if(!profileLayer)return;
+ if(profileLine){profileLayer.removeLayer(profileLine);profileLine=null;}
+ for(const h of profileHandles)profileLayer.removeLayer(h);profileHandles=[];
+ if(profilePts.length>1)profileLine=L.polyline(profilePts,{color:'#17324d',weight:4,opacity:.9}).addTo(profileLayer);
+ profilePts.forEach((ll,i)=>{
+  const endpoint=i===0||i===profilePts.length-1;
+  const h=L.marker(ll,{draggable:endpoint,icon:profileHandleIcon(endpoint),zIndexOffset:1000}).addTo(profileLayer);profileHandles.push(h);
+  if(endpoint){
+   h.on('drag',e=>{profilePts[i]=e.target.getLatLng();if(profileLine)profileLine.setLatLngs(profilePts);const pr=interpolateProfilePoints(profilePts,2);document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+fmtDistance(pr.total)+' · suelta el extremo para recalcular';status('Perfil · '+fmtDistance(pr.total));});
+   h.on('dragend',async e=>{profilePts[i]=e.target.getLatLng();if(profileLine)profileLine.setLatLngs(profilePts);await finishProfile();});
+  }
+ });
+}
+function redrawProfileLine(){if(!profileLayer)return;if(profileLine)profileLine.setLatLngs(profilePts);else if(profilePts.length>1)profileLine=L.polyline(profilePts,{color:'#17324d',weight:4,opacity:.9}).addTo(profileLayer);}
 function interpolateProfilePoints(pts,n=100){
  const seg=[],cum=[0];let total=0;for(let i=1;i<pts.length;i++){const d=pts[i-1].distanceTo(pts[i]);seg.push(d);total+=d;cum.push(total);}const out=[];
  for(let k=0;k<n;k++){const target=total*k/(n-1);let i=0;while(i<seg.length-1&&cum[i+1]<target)i++;const f=seg[i]?((target-cum[i])/seg[i]):0,a=pts[i],b=pts[i+1];out.push({d:target,ll:L.latLng(a.lat+(b.lat-a.lat)*f,a.lng+(b.lng-a.lng)*f)});}return {total,points:out};
@@ -564,19 +713,235 @@ function interpolateProfilePoints(pts,n=100){
 async function finishProfile(){
  if(profilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}profileMode=false;redrawProfileLine();
  const prof=interpolateProfilePoints(profilePts,100),result=document.getElementById('profileResult');result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total)+' · calculando altitudes…';
- const samples=[];for(const p of prof.points)samples.push({d:p.d,z:await elevationAt(p.ll.lat,p.ll.lng)});
+ // Calcula las cotas en paralelo con concurrencia limitada. Las consultas que caen
+ // en una misma tesela nacional comparten la promesa de nationalDemTileCache, de modo
+ // que cada PNG se descarga/decodifica una sola vez por sesión.
+ const samples=new Array(prof.points.length);
+ const workers=Math.min(12,prof.points.length);
+ let nextSample=0;
+ await Promise.all(Array.from({length:workers},async()=>{
+   while(true){
+     const i=nextSample++;if(i>=prof.points.length)break;
+     const p=prof.points[i];
+     samples[i]={d:p.d,ll:p.ll,z:await elevationAt(p.ll.lat,p.ll.lng)};
+   }
+ }));
  const valid=samples.filter(x=>x.z!==null);if(valid.length<2){result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total)+' · sin datos altimétricos suficientes';status('Perfil: sin datos altimétricos suficientes');return;}
  const zs=valid.map(x=>x.z),zmin=Math.min(...zs),zmax=Math.max(...zs);let gain=0,loss=0,last=null;for(const x of valid){if(last!==null){const dz=x.z-last;if(dz>0)gain+=dz;else loss-=dz;}last=x.z;}
- document.getElementById('profileSummary').innerHTML='<b>Distancia:</b> '+fmtDistance(prof.total)+' · <b>Cota mín.:</b> '+fmtNum(zmin,0)+' m · <b>Cota máx.:</b> '+fmtNum(zmax,0)+' m · <b>Ascenso aprox.:</b> +'+fmtNum(gain,0)+' m · <b>Descenso aprox.:</b> −'+fmtNum(loss,0)+' m';
- drawProfile(samples,prof.total,zmin,zmax);document.getElementById('profileBox').style.display='block';result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total);status('Perfil topográfico generado · '+fmtDistance(prof.total));
+ const summary='<b>Distancia:</b> '+fmtDistance(prof.total)+' · <b>Cota mín.:</b> '+fmtNum(zmin,0)+' m · <b>Cota máx.:</b> '+fmtNum(zmax,0)+' m · <b>Ascenso aprox.:</b> +'+fmtNum(gain,0)+' m · <b>Descenso aprox.:</b> −'+fmtNum(loss,0)+' m';
+ document.getElementById('profileSummary').innerHTML=summary;document.getElementById('profileModalSummary').innerHTML=summary;
+ document.getElementById('profileBox').style.display='none';result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total);
+ const turns=detectProfileTurns(samples,prof.total,zmin,zmax);
+ const topo=await profileToponyms(prof,turns);openProfileModal();requestAnimationFrame(()=>drawProfileLarge(samples,prof.total,zmin,zmax,topo.labels,topo.turns));status('Perfil topográfico generado · '+fmtDistance(prof.total));
+}
+
+function openProfileModal(){const m=document.getElementById('profileModal');m.classList.add('open');m.setAttribute('aria-hidden','false');}
+function closeProfileModal(){const m=document.getElementById('profileModal');m.classList.remove('open');m.setAttribute('aria-hidden','true');}
+function profileTopoName(d){
+ if(!d)return '';
+ const v=Array.isArray(d)?d[0]:d;
+ if(!v)return '';
+ return v.poblacion||v.POBLACION||v.municipio||v.MUNICIPIO||v.name||v.nombre||v.etiqueta||'';
+}
+function profileNearestPoint(ll,prof){
+ let best=null,bestDist=Infinity;
+ for(const p of prof.points){const dist=ll.distanceTo(p.ll);if(dist<bestDist){bestDist=dist;best=p;}}
+ return best?{d:best.d,dist:bestDist}:null;
+}
+function profileCorridorRadius(total){
+ // El contexto crece con el recorrido, pero sin convertir el perfil en un mapa regional entero.
+ if(total<25000)return 5000;if(total<75000)return 9000;if(total<180000)return 15000;if(total<350000)return 25000;return 40000;
+}
+async function profileFetchFeatures(collection,bbox,limit=250){
+ try{
+  const u='https://api-features.ign.es/collections/'+collection+'/items?f=json&limit='+limit+'&bbox='+bbox.map(v=>v.toFixed(5)).join(',')+'&crs=http://www.opengis.net/def/crs/OGC/1.3/CRS84';
+  const r=await fetch(u);if(!r.ok)return [];const j=await r.json();return Array.isArray(j.features)?j.features:[];
+ }catch(e){return [];}
+}
+function profileFeaturePoint(f){
+ if(!f||!f.geometry)return null;let c=f.geometry.coordinates;
+ if(f.geometry.type==='Point')return L.latLng(c[1],c[0]);
+ // En geometrías no puntuales usamos el primer vértice disponible como referencia visual.
+ while(Array.isArray(c)&&Array.isArray(c[0]))c=c[0];
+ return Array.isArray(c)&&c.length>=2?L.latLng(c[1],c[0]):null;
+}
+function profilePeakType(p){
+ const t=((p.tipo||'')+' '+(p.tiponombre||'')+' '+(p.etiqueta||'')).toLocaleLowerCase('es-ES');
+ return /(pico|picos|cumbre|cumbres|montaña|montanas|montañas|monte|cerro|sierra|peña|pena|peñas|volcán|volcan)/.test(t);
+}
+async function profileToponyms(prof,turns=[]){
+ // El MTN que vemos es ráster: sus rótulos no son objetos extraíbles. Consultamos el
+ // NGBE del IGN y distribuimos la selección a lo largo de TODO el transecto, evitando
+ // que los candidatos de mayor rango se concentren al comienzo.
+ const radius=profileCorridorRadius(prof.total),latPad=radius/111320;
+ const lats=prof.points.map(p=>p.ll.lat),lngs=prof.points.map(p=>p.ll.lng),midLat=lats.reduce((a,b)=>a+b,0)/lats.length;
+ const lonPad=radius/(111320*Math.max(.25,Math.cos(midLat*Math.PI/180)));
+ const bbox=[Math.min(...lngs)-lonPad,Math.min(...lats)-latPad,Math.max(...lngs)+lonPad,Math.max(...lats)+latPad];
+ const places=await profileFetchFeatures('namedplace',bbox,1500),candidates=[],seen=new Set();
+ for(const f of places){
+  const p=f.properties||{},ll=profileFeaturePoint(f);if(!ll)continue;const near=profileNearestPoint(ll,prof);if(!near||near.dist>radius)continue;
+  const name=(p.etiqueta||p.identidad||p.nombre||'').trim();if(!name)continue;
+  const raw=((p.tipo||'')+' '+(p.tiponombre||'')+' '+(p.etiqueta||'')).toLocaleLowerCase('es-ES');
+  let kind=null,weight=0;
+  if(/(capital|ciudad|poblaci[oó]n|n[uú]cleo|villa)/.test(raw)){kind='city';weight=1000000;}
+  else if(/(pico|cumbre|montaña|montanas|montañas|monte|cerro|peña|pena|volc[aá]n)/.test(raw)){kind='peak';weight=900000;}
+  else if(/(sierra|cordillera|macizo|sistema|serran[ií]a|valle|depresi[oó]n|meseta|p[aá]ramo)/.test(raw)){kind='relief';weight=820000;}
+  else continue;
+  const subtype=/(valle|depresi[oó]n|collado|puerto|barranco|garganta|hoya|vega|cauce)/.test(raw)?'low':(/(pico|cumbre|montaña|montanas|montañas|monte|cerro|peña|pena|volc[aá]n|alto)/.test(raw)?'high':'unit');
+  candidates.push({d:near.d,name,kind,subtype,score:weight-near.dist,dist:near.dist,ll});
+ }
+ candidates.sort((a,b)=>b.score-a.score);
+ // Cuotas espaciales: el recorrido se divide en tramos y se intenta conservar al menos
+ // un topónimo útil en cada uno antes de completar con los mejores candidatos restantes.
+ const maxLabels=prof.total>400000?12:prof.total>180000?10:prof.total>70000?8:6;
+ const bins=Math.max(3,Math.min(8,Math.round(prof.total/80000)+2)),chosen=[];
+ const minSep=Math.max(1800,prof.total/(maxLabels*2.2));
+ function accept(c,relaxed=false){
+  const key=c.name.toLocaleLowerCase('es-ES');if(seen.has(key))return false;
+  if(!relaxed&&chosen.some(x=>Math.abs(x.d-c.d)<minSep))return false;
+  seen.add(key);chosen.push(c);return true;
+ }
+ for(let b=0;b<bins;b++){
+  const a=prof.total*b/bins,z=prof.total*(b+1)/bins;
+  const local=candidates.filter(c=>c.d>=a&&c.d<=(b===bins-1?z+1:z));
+  for(const c of local){if(accept(c))break;}
+ }
+ for(const c of candidates){if(chosen.length>=maxLabels)break;accept(c);}
+ chosen.sort((a,b)=>a.d-b.d);
+ // Cada inflexión hace SU PROPIA consulta NGBE alrededor de sus coordenadas.
+ // Así el nombre no depende de que el accidente haya entrado antes en la selección general
+ // de topónimos del corredor. Se prima la compatibilidad geomorfológica y la proximidad.
+ async function nameTurn(t){
+  if(!t.ll)return t;
+  const searchRadius=t.type==='peak'?9000:7000;
+  const latPad=searchRadius/111320,lonPad=searchRadius/(111320*Math.max(.25,Math.cos(t.ll.lat*Math.PI/180)));
+  const tb=[t.ll.lng-lonPad,t.ll.lat-latPad,t.ll.lng+lonPad,t.ll.lat+latPad];
+  const fs=await profileFetchFeatures('namedplace',tb,350),opts=[];
+  for(const f of fs){
+   const p=f.properties||{},ll=profileFeaturePoint(f);if(!ll)continue;
+   const name=(p.etiqueta||p.identidad||p.nombre||'').trim();if(!name)continue;
+   const dist=t.ll.distanceTo(ll);if(dist>searchRadius)continue;
+   const raw=((p.tipo||'')+' '+(p.tiponombre||'')+' '+name).toLocaleLowerCase('es-ES');
+   const high=/(pico|cumbre|montaña|montanas|montañas|monte|cerro|alto|peña|pena|roque|volc[aá]n|sierra|macizo|cordillera|serran[ií]a)/.test(raw);
+   const low=/(valle|vaguada|depresi[oó]n|collado|puerto|barranco|garganta|hoya|vega|cauce|r[ií]o|arroyo|rambla)/.test(raw);
+   const compatible=t.type==='peak'?high:low;
+   // Un accidente del tipo correcto puede estar rotulado algo apartado del punto culminante.
+   // Un nombre sin tipo reconocible solo se admite si está realmente muy próximo.
+   if(!compatible&&dist>1800)continue;
+   const score=(compatible?100000:25000)-dist;
+   opts.push({name,ll,dist,score,kind:high?'peak':low?'relief':'relief'});
+  }
+  opts.sort((a,b)=>b.score-a.score);
+  const best=opts[0];
+  return best?{...t,name:best.name,kind:best.kind,nameDist:best.dist}:t;
+ }
+ const namedTurns=await Promise.all(turns.map(nameTurn));
+ return {labels:chosen,turns:namedTurns};
+}
+
+function detectProfileTurns(samples,total,zmin,zmax){
+ const hi=Math.ceil((zmax+80)/100)*100,lo=Math.min(0,Math.floor((zmin-50)/100)*100),turns=[];
+ const win=Math.max(2,Math.floor(samples.length/28));
+ for(let k=win;k<samples.length-win;k++){
+  const z=samples[k]&&samples[k].z;if(!Number.isFinite(z))continue;let l=0,r=0;
+  for(let j=1;j<=win;j++){if(Number.isFinite(samples[k-j]?.z))l+=Math.sign(z-samples[k-j].z);if(Number.isFinite(samples[k+j]?.z))r+=Math.sign(z-samples[k+j].z);}
+  const peak=l>win*.65&&r>win*.65,valley=l<-win*.65&&r<-win*.65;if(!peak&&!valley)continue;
+  const left=samples.slice(k-win,k).filter(x=>Number.isFinite(x?.z)).map(x=>x.z),right=samples.slice(k+1,k+win+1).filter(x=>Number.isFinite(x?.z)).map(x=>x.z);if(!left.length||!right.length)continue;
+  const prominence=peak?z-Math.max(Math.min(...left),Math.min(...right)):Math.min(Math.max(...left),Math.max(...right))-z;
+  if(prominence>=Math.max(18,(hi-lo)*.025))turns.push({d:samples[k].d,z,type:peak?'peak':'valley',prominence,ll:samples[k].ll});
+ }
+ turns.sort((a,b)=>b.prominence-a.prominence);const marked=[];for(const t of turns){if(marked.length>=7)break;if(marked.some(m=>Math.abs(m.d-t.d)<total/14))continue;marked.push(t);}return marked.sort((a,b)=>a.d-b.d);
+}
+function niceDistanceStep(total){
+ const target=total/5,exp=Math.pow(10,Math.floor(Math.log10(Math.max(1,target)))),q=target/exp;
+ const m=q<=1?1:q<=2?2:q<=2.5?2.5:q<=5?5:10;return m*exp;
+}
+function fmtAxisDistance(m){
+ if(m<1000)return fmtNum(m,0)+' m';
+ const km=m/1000;return fmtNum(km,Math.abs(km-Math.round(km))<1e-8?0:1)+' km';
+}
+function hypsometricColor(z){
+ if(z<0)return '#b9d9f2'; if(z<200)return '#d9efc2'; if(z<500)return '#b9d98b';
+ if(z<1000)return '#e8d88a'; if(z<1500)return '#d6b47a'; if(z<2000)return '#c28f68';
+ if(z<2500)return '#a8735d'; if(z<3000)return '#8f6257'; return '#d9d9d9';
+}
+function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
+ const c=document.getElementById('profileCanvasLarge'),wrap=document.getElementById('profileChartWrap');
+ const dpr=Math.max(1,window.devicePixelRatio||1),cw=Math.max(700,wrap.clientWidth),ch=Math.max(400,wrap.clientHeight);
+ c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);c.style.width=cw+'px';c.style.height=ch+'px';
+ const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,p={l:72,r:28,t:34,b:64};ctx.clearRect(0,0,W,H);
+ let lo=Math.min(0,Math.floor((zmin-50)/100)*100),hi=Math.ceil((zmax+80)/100)*100;if(hi<=lo)hi=lo+100;
+ const X=d=>p.l+(d/total)*(W-p.l-p.r),Y=z=>p.t+(hi-z)/(hi-lo)*(H-p.t-p.b),base=H-p.b;
+ // Fondo neutro: las tintas hipsométricas se reservan para la "piel" del relieve.
+ ctx.fillStyle='rgba(248,249,247,.96)';ctx.fillRect(p.l,p.t,W-p.l-p.r,base-p.t);
+ // rejilla y cotas
+ ctx.font='12px system-ui,sans-serif';ctx.textBaseline='middle';const step=(hi-lo<=800?100:hi-lo<=1800?200:500);
+ for(let z=Math.ceil(lo/step)*step;z<=hi;z+=step){const y=Y(z);ctx.strokeStyle='rgba(50,60,70,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#34404a';ctx.textAlign='right';ctx.fillText(fmtNum(z,0)+' m',p.l-8,y);}
+ // Interior homogéneo del perfil: una sola tinta suave bajo la silueta.
+ const segments=[];let seg=[];for(const sm of samples){if(Number.isFinite(sm.z)){seg.push(sm);}else if(seg.length){segments.push(seg);seg=[];}}if(seg.length)segments.push(seg);
+ ctx.fillStyle='#e7e1d2';for(const ss of segments){if(ss.length<2)continue;ctx.beginPath();ctx.moveTo(X(ss[0].d),base);for(const sm of ss)ctx.lineTo(X(sm.d),Y(sm.z));ctx.lineTo(X(ss[ss.length-1].d),base);ctx.closePath();ctx.fill();}
+ // Piel hipsométrica el doble de gruesa: mantiene la lectura por alturas sin teñir el interior.
+ let prev=null;for(const sm of samples){if(sm.z===null){prev=null;continue;}const cur={x:X(sm.d),y:Y(sm.z),z:sm.z};if(prev){ctx.strokeStyle=hypsometricColor((prev.z+cur.z)/2);ctx.lineWidth=16;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(cur.x,cur.y);ctx.stroke();}prev=cur;}
+ // contorno fino para que la forma del terreno siga siendo nítida
+ ctx.strokeStyle='#263238';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.beginPath();let pen=false;for(const sm of samples){if(sm.z===null){pen=false;continue;}const x=X(sm.d),y=Y(sm.z);if(!pen){ctx.moveTo(x,y);pen=true}else ctx.lineTo(x,y);}ctx.stroke();
+ // Etiquetas del perfil: inflexiones y topónimos compiten por el mismo espacio.
+ // Si dos rótulos se solapan, solo se conserva el de mayor relevancia geográfica.
+ // Los puntos de inflexión siguen dibujándose aunque su texto sea descartado.
+ for(const t of marked){const x=X(t.d),y=Y(t.z);ctx.fillStyle='#263238';ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fill();}
+ // ejes y distancias
+ ctx.strokeStyle='#263238';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(p.l,p.t);ctx.lineTo(p.l,base);ctx.lineTo(W-p.r,base);ctx.stroke();ctx.fillStyle='#263238';ctx.textAlign='center';ctx.textBaseline='top';
+ const xStep=niceDistanceStep(total);for(let d=0;d<=total+1e-6;d+=xStep){const x=X(d);ctx.strokeStyle='rgba(50,60,70,.14)';ctx.beginPath();ctx.moveTo(x,p.t);ctx.lineTo(x,base);ctx.stroke();ctx.fillStyle='#263238';ctx.fillText(fmtAxisDistance(d),x,base+9);}
+ // Construimos una única cola de rótulos. La prioridad combina categoría, proximidad y,
+ // en las inflexiones, la prominencia real detectada en el perfil.
+ const labelCandidates=[];
+ for(const t of marked){
+  const named=!!t.name,label=(named?(t.type==='peak'?'▲ ':'▼ ')+t.name+' · ':'')+fmtNum(t.z,0)+' m';
+  labelCandidates.push({source:'turn',d:t.d,z:t.z,text:label,kind:t.type==='peak'?'peak':'relief',priority:(named?1400000:650000)+(t.type==='peak'?90000:30000)+(t.prominence||0)*100});
+ }
+ for(const t of toponyms){
+  const basePriority=t.kind==='peak'?1150000:t.kind==='relief'?1080000:1000000;
+  labelCandidates.push({source:'topo',d:t.d,text:(t.kind==='peak'?'▲ ':t.kind==='relief'?'◆ ':'● ')+t.name,kind:t.kind,priority:basePriority+(t.score||0)/20-(t.dist||0)});
+ }
+ labelCandidates.sort((a,b)=>b.priority-a.priority);
+ const occupied=[],accepted=[];
+ function collides(box){return occupied.some(o=>!(box.r+7<o.l||box.l-7>o.r||box.b+4<o.t||box.t-4>o.b));}
+ function tryLabel(cand){
+  const x=X(cand.d),font=cand.source==='turn'?'600 11px system-ui,sans-serif':'700 12px system-ui,sans-serif';ctx.font=font;
+  const w=ctx.measureText(cand.text).width,h=cand.source==='turn'?14:15;
+  // Las inflexiones se anclan a la piel; los topónimos territoriales ocupan tres niveles superiores.
+  const levels=cand.source==='turn'?[Y(cand.z)-24,Y(cand.z)-42,Y(cand.z)+28]:[23,40,57];
+  for(const cy of levels){
+   let align=x<W*.18?'left':x>W*.82?'right':'center',l=align==='left'?x:align==='right'?x-w:x-w/2,r=l+w,t=cy-h,b=cy+2;
+   if(l<p.l-4){r+=p.l-4-l;l=p.l-4;}if(r>W-p.r+4){l-=r-(W-p.r+4);r=W-p.r+4;}
+   const box={l,r,t,b};if(!collides(box)){occupied.push(box);accepted.push({...cand,x,cy,align});return true;}
+  }
+  return false;
+ }
+ for(const cand of labelCandidates)tryLabel(cand);
+ // Dibujamos únicamente los rótulos aceptados. Las líneas-guía de los topónimos también
+ // desaparecen cuando su etiqueta pierde una colisión, evitando ruido visual innecesario.
+ for(const a of accepted){
+  const isPeak=a.kind==='peak',isRelief=a.kind==='relief';
+  if(a.source==='topo'){ctx.strokeStyle=isPeak?'rgba(120,70,45,.48)':isRelief?'rgba(72,92,55,.48)':'rgba(23,50,77,.42)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(a.x,p.t);ctx.lineTo(a.x,base);ctx.stroke();ctx.setLineDash([]);ctx.font='700 12px system-ui,sans-serif';ctx.fillStyle=isPeak?'#75452f':isRelief?'#485c37':'#17324d';}
+  else{
+   // Flecha explícita entre el nombre/cota de la inflexión y el punto exacto de la piel.
+   const py=Y(a.z),above=a.cy<py,fromY=above?a.cy+4:a.cy-15,toY=above?py-7:py+7;
+   ctx.strokeStyle='rgba(38,50,56,.72)';ctx.fillStyle='rgba(38,50,56,.82)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(a.x,fromY);ctx.lineTo(a.x,toY);ctx.stroke();
+   const dir=above?1:-1;ctx.beginPath();ctx.moveTo(a.x,toY+dir*5);ctx.lineTo(a.x-4,toY-dir*1);ctx.lineTo(a.x+4,toY-dir*1);ctx.closePath();ctx.fill();
+   ctx.font='600 11px system-ui,sans-serif';ctx.fillStyle='#263238';
+  }
+  ctx.textBaseline='bottom';ctx.textAlign=a.align;ctx.fillText(a.text,a.x,a.cy);
+ }
 }
 function drawProfile(samples,total,zmin,zmax){
  const c=document.getElementById('profileCanvas'),ctx=c.getContext('2d'),W=c.width,H=c.height,p={l:55,r:15,t:15,b:38};ctx.clearRect(0,0,W,H);let lo=Math.max(0,Math.floor((zmin-20)/50)*50),hi=Math.ceil((zmax+20)/50)*50;if(hi<=lo)hi=lo+50;
  ctx.strokeStyle='#aaa';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,p.t);ctx.lineTo(p.l,H-p.b);ctx.lineTo(W-p.r,H-p.b);ctx.stroke();ctx.fillStyle='#222';ctx.font='12px sans-serif';ctx.fillText(fmtNum(hi,0)+' m',4,p.t+4);ctx.fillText(fmtNum(lo,0)+' m',4,H-p.b+4);ctx.fillText('0',p.l-4,H-12);ctx.fillText(fmtDistance(total),W-p.r-70,H-12);
  ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.beginPath();let pen=false;for(const sm of samples){if(sm.z===null){pen=false;continue;}const x=p.l+(sm.d/total)*(W-p.l-p.r),y=p.t+(hi-sm.z)/(hi-lo)*(H-p.t-p.b);if(!pen){ctx.moveTo(x,y);pen=true;}else ctx.lineTo(x,y);}ctx.stroke();
 }
-function clearProfile(){profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
+function clearProfile(){closeProfileModal();profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
 
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfileModal();});
 map.on('click',e=>{if(profileMode){addProfilePoint(e.latlng);return;}if(measureMode){addMeasurePoint(e.latlng);return;}showPoint(e.latlng);});
 function goCoords(){const lat=parseFloat(latIn.value),lon=parseFloat(lonIn.value);if(!isFinite(lat)||!isFinite(lon))return alert('Introduce latitud y longitud válidas.');const ll=L.latLng(lat,lon);map.setView(ll,16);closePanels();showPoint(ll,'Coordenadas introducidas');}
 
@@ -589,9 +954,9 @@ function gps(){
   const ll=[p.coords.latitude,p.coords.longitude];
   if(gpsMarker)map.removeLayer(gpsMarker);if(gpsCircle)map.removeLayer(gpsCircle);
   gpsCircle=L.circle(ll,{radius:p.coords.accuracy,weight:1,fillOpacity:.08}).addTo(map);
-  gpsMarker=L.marker(ll).addTo(map).bindPopup('<b>Tu ubicación</b><br>Latitud: '+p.coords.latitude.toFixed(6)+'° N<br>Longitud: '+Math.abs(p.coords.longitude).toFixed(6)+'° '+(p.coords.longitude>=0?'E':'O')+'<br><b>Altitud aprox.:</b> consultando…<br>Precisión GPS: ±'+Math.round(p.coords.accuracy)+' m').openPopup();
+  const gd=coordsDMS(p.coords.latitude,p.coords.longitude);gpsMarker=L.marker(ll).addTo(map).bindPopup('<b>Tu ubicación</b><br>Latitud: '+gd.lat+'<br>Longitud: '+gd.lon+'<br><b>Altitud aprox.:</b> consultando…<br>Precisión GPS: ±'+Math.round(p.coords.accuracy)+' m').openPopup();
   map.setView(ll,17);status('GPS activo · consultando altitud…');
-  elevationAt(p.coords.latitude,p.coords.longitude).then(z=>{const ztxt=z===null?'sin dato':z.toLocaleString('es-ES')+' m';gpsMarker.setPopupContent('<b>Tu ubicación</b><br>Latitud: '+p.coords.latitude.toFixed(6)+'° N<br>Longitud: '+Math.abs(p.coords.longitude).toFixed(6)+'° '+(p.coords.longitude>=0?'E':'O')+'<br><b>Altitud aprox.:</b> '+ztxt+'<br>Precisión GPS: ±'+Math.round(p.coords.accuracy)+' m<br><small>MDT25 · resolución 25 m</small>');gpsMarker.openPopup();status('GPS activo · altitud aprox. '+ztxt+' · precisión ±'+Math.round(p.coords.accuracy)+' m');});
+  elevationAt(p.coords.latitude,p.coords.longitude).then(z=>{const ztxt=z===null?'sin dato':z.toLocaleString('es-ES')+' m';gpsMarker.setPopupContent('<b>Tu ubicación</b><br>Latitud: '+gd.lat+'<br>Longitud: '+gd.lon+'<br><b>Altitud aprox.:</b> '+ztxt+'<br>Precisión GPS: ±'+Math.round(p.coords.accuracy)+' m<br><small>Elevación IGN/IDEE · MDT25 local en Canarias · MDE nacional en Península y Baleares</small>');gpsMarker.openPopup();status('GPS activo · altitud aprox. '+ztxt+' · precisión ±'+Math.round(p.coords.accuracy)+' m');});
  },err=>{status('No se pudo obtener la ubicación GPS');alert('Activa el permiso de ubicación del navegador. En GitHub Pages funciona mediante HTTPS.');},{enableHighAccuracy:true,timeout:12000,maximumAge:0});
 }
 
@@ -601,20 +966,40 @@ function fmtDistance(m){if(m<1000)return fmtNum(m,0)+' m';if(m<10000)return fmtN
 function fmtArea(a){return a<1000000?fmtNum(a,0)+' m²':fmtNum(a/1000000,2)+' km²';}
 
 // Medición
-let measureMode=null,measurePts=[],measureLayer=null;
-function startMeasure(mode){profileMode=false;measureMode=mode;measurePts=[];if(measureLayer)map.removeLayer(measureLayer);measureLayer=L.layerGroup().addTo(map);document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='measurePanel')p.classList.add('hidden')});document.getElementById('measurePanel').classList.remove('hidden');document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';status(mode==='distance'?'MEDIR DISTANCIA · toca puntos · pulsa «Terminar» al acabar':'MEDIR ÁREA · marca al menos 3 vértices · pulsa «Terminar» al acabar');}
-function addMeasurePoint(ll){measurePts.push(ll);L.circleMarker(ll,{radius:4}).addTo(measureLayer);redrawMeasure();}
+let measureMode=null,measureKind=null,measurePts=[],measureLayer=null,measureShape=null,measureHandles=[];
+function measureHandleIcon(){return L.divIcon({className:'',html:'<div style="width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid #17324d;box-shadow:0 1px 5px #0008;box-sizing:border-box;cursor:grab"></div>',iconSize:[16,16],iconAnchor:[8,8]});}
+function startMeasure(mode){
+ profileMode=false;measureMode=mode;measureKind=mode;measurePts=[];
+ if(measureLayer)map.removeLayer(measureLayer);measureLayer=L.layerGroup().addTo(map);measureShape=null;measureHandles=[];
+ document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='measurePanel')p.classList.add('hidden')});document.getElementById('measurePanel').classList.remove('hidden');
+ document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';
+ status(mode==='distance'?'MEDIR DISTANCIA · toca puntos · pulsa «Terminar» al acabar':'MEDIR ÁREA · marca al menos 3 vértices · pulsa «Terminar» al acabar');
+}
+function addMeasurePoint(ll){measurePts.push(ll);rebuildMeasureHandles();redrawMeasure();}
+function rebuildMeasureHandles(){
+ if(!measureLayer)return;
+ for(const h of measureHandles)measureLayer.removeLayer(h);measureHandles=[];
+ measurePts.forEach((ll,i)=>{
+  const h=L.marker(ll,{draggable:true,icon:measureHandleIcon(),zIndexOffset:1000}).addTo(measureLayer);measureHandles.push(h);
+  h.on('dragstart',()=>{map.dragging.disable();});
+  h.on('drag',e=>{measurePts[i]=e.target.getLatLng();redrawMeasure();});
+  h.on('dragend',e=>{measurePts[i]=e.target.getLatLng();redrawMeasure();map.dragging.enable();});
+ });
+}
+function measurePerimeter(pts,closed){let d=0;for(let i=1;i<pts.length;i++)d+=pts[i-1].distanceTo(pts[i]);if(closed&&pts.length>2)d+=pts[pts.length-1].distanceTo(pts[0]);return d;}
 function redrawMeasure(){
- measureLayer.eachLayer(l=>{if(l instanceof L.Polyline && !(l instanceof L.CircleMarker))measureLayer.removeLayer(l);});
- if(measurePts.length>1)(measureMode==='area'?L.polygon(measurePts,{fillOpacity:.12}):L.polyline(measurePts)).addTo(measureLayer);
- let res='—';
- if(measureMode==='distance'&&measurePts.length>1){let d=0;for(let i=1;i<measurePts.length;i++)d+=measurePts[i-1].distanceTo(measurePts[i]);res=fmtDistance(d);}
- if(measureMode==='area'&&measurePts.length>2){let area=geodesicArea(measurePts);res=fmtArea(area);}
- document.getElementById('measureResult').innerHTML='<b>Resultado:</b> '+res;status('Medición: '+res);
+ if(!measureLayer)return;
+ if(measureShape){measureLayer.removeLayer(measureShape);measureShape=null;}
+ const kind=measureMode||measureKind;
+ if(measurePts.length>1){measureShape=(kind==='area'?L.polygon(measurePts,{fillOpacity:.12}):L.polyline(measurePts));measureShape.addTo(measureLayer);measureShape.bringToBack();}
+ let html='<b>Resultado:</b> —',short='—';
+ if(kind==='distance'&&measurePts.length>1){const d=measurePerimeter(measurePts,false);short=fmtDistance(d);html='<b>Distancia:</b> '+short;}
+ if(kind==='area'&&measurePts.length>2){const area=geodesicArea(measurePts),per=measurePerimeter(measurePts,true);short=fmtArea(area);html='<b>Superficie:</b> '+fmtArea(area)+' &nbsp;·&nbsp; <b>Perímetro:</b> '+fmtDistance(per);}
+ document.getElementById('measureResult').innerHTML=html;status('Medición: '+short);
 }
 function geodesicArea(pts){let a=0,R=6378137;if(pts.length<3)return 0;for(let i=0;i<pts.length;i++){let p1=pts[i],p2=pts[(i+1)%pts.length];a+=(p2.lng-p1.lng)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));}return Math.abs(a*R*R/2);}
-function finishMeasure(){if(!measureMode)return;redrawMeasure();measureMode=null;document.getElementById('measurePanel').classList.remove('hidden');status('Medición terminada · resultado visible en el panel');}
-function clearMeasure(){measureMode=null;measurePts=[];if(measureLayer)map.removeLayer(measureLayer);measureLayer=null;document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';status('Medición borrada');}
+function finishMeasure(){if(!measureMode)return;redrawMeasure();measureKind=measureMode;measureMode=null;document.getElementById('measurePanel').classList.remove('hidden');status('Medición terminada · arrastra cualquier punto para modificarla');}
+function clearMeasure(){measureMode=null;measureKind=null;measurePts=[];if(measureLayer)map.removeLayer(measureLayer);measureLayer=null;measureShape=null;measureHandles=[];document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';status('Medición borrada');}
 
 
 // Lugares buscados: capa persistente durante la sesión y gestión individual
