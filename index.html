@@ -1121,12 +1121,27 @@ async function analyzeProfileTerritory(prof){
  lastProfileAnalysis={total:prof.total,samples:arr};redrawProfileTheme();
 }
 function profileThemeInfoAtDistance(d){
- const box=document.getElementById('profileThemeInfo'),mode=profileThemeMode();if(!box||mode==='alt'||!lastProfileAnalysis){if(box)box.style.display='none';return;}
+ const box=document.getElementById('profileThemeInfo'),mode=profileThemeMode();if(!box)return;
+ // Altimetría: se consulta directamente sobre las muestras del perfil, sin depender del análisis temático.
+ if(mode==='alt'){
+   const samples=lastProfileDraw&&lastProfileDraw[0];
+   if(!samples||!samples.length){box.style.display='none';return;}
+   let best=null,bd=Infinity;for(const x of samples){if(!Number.isFinite(x.z))continue;const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}
+   if(!best){box.style.display='block';box.innerHTML='<div class="ptiTitle">Sin información altimétrica en este punto</div>';return;}
+   const rows=['<div class="ptiTitle">⛰️ Altimetría</div>','<b>Cota:</b> '+fmtNum(best.z,0)+' m','<b>Distancia desde el inicio:</b> '+fmtDistance(best.d)];
+   if(best.ll)rows.push('<b>Localización:</b> '+dmsLat(best.ll.lat)+' · '+dmsLon(best.ll.lng));
+   box.style.display='block';box.innerHTML=rows.join('<br>');return;
+ }
+ if(!lastProfileAnalysis){box.style.display='block';box.innerHTML='<div class="ptiTitle">Información temática todavía cargándose…</div>';return;}
  let best=null,bd=Infinity;for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}const o=best&&best[mode];if(!o||!o.label||o.label==='Sin dato'){box.style.display='block';box.innerHTML='<div class="ptiTitle">Sin información temática en este punto</div>';return;}
- if(mode==='geo'){box.style.display='block';box.innerHTML='<div class="ptiTitle">🪨 '+escHtml(o.label)+'</div>'+(o.detail&&o.detail!==o.label?'<b>Detalle:</b> '+escHtml(o.detail):'');return;}
- const i=o.info||{},rows=['<div class="ptiTitle">🌿 '+escHtml(o.label)+'</div>'];if(i.concrete&&cleanThemeText(i.concrete)!==o.label)rows.push('<b>Formación concreta:</b> '+escHtml(cleanThemeText(i.concrete)));if(i.dominant)rows.push('<b>Especie dominante:</b> <i>'+escHtml(cleanThemeText(i.dominant))+'</i>');if(i.association)rows.push('<b>Asociación / unidad fitosociológica:</b> <i>'+escHtml(cleanThemeText(i.association))+'</i>');if(i.floor)rows.push('<b>Piso bioclimático:</b> '+escHtml(cleanThemeText(i.floor)));if(i.physiognomy)rows.push('<b>Fisionomía:</b> '+escHtml(cleanThemeText(i.physiognomy)));if(best.ll)rows.push('<b>Localización:</b> '+dmsLat(best.ll.lat)+' · '+dmsLon(best.ll.lng));box.style.display='block';box.innerHTML=rows.join('<br>');
+ if(mode==='geo'){box.style.display='block';box.innerHTML='<div class="ptiTitle">🪨 '+escHtml(o.label)+'</div>'+(o.detail&&o.detail!==o.label?'<b>Detalle:</b> '+escHtml(o.detail):'')+(best.ll?'<br><b>Localización:</b> '+dmsLat(best.ll.lat)+' · '+dmsLon(best.ll.lng):'');return;}
+ const i=o.info||{},rows=['<div class="ptiTitle">🌿 '+escHtml(o.label)+'</div>','<b>Formación:</b> '+escHtml(o.label)];
+ const concrete=cleanThemeText(i.concrete||'');if(concrete&&concrete!==o.label)rows.push('<b>Formación concreta:</b> '+escHtml(concrete));
+ if(i.dominant)rows.push('<b>Especie dominante:</b> <i>'+escHtml(cleanThemeText(i.dominant))+'</i>');if(i.association)rows.push('<b>Asociación / unidad fitosociológica:</b> <i>'+escHtml(cleanThemeText(i.association))+'</i>');if(i.floor)rows.push('<b>Piso bioclimático:</b> '+escHtml(cleanThemeText(i.floor)));if(i.physiognomy)rows.push('<b>Fisionomía:</b> '+escHtml(cleanThemeText(i.physiognomy)));
+ if(rows.length===2&&o.detail&&o.detail!==o.label)rows.push('<b>Detalle:</b> '+escHtml(o.detail));
+ if(best.ll)rows.push('<b>Localización:</b> '+dmsLat(best.ll.lat)+' · '+dmsLon(best.ll.lng));box.style.display='block';box.innerHTML=rows.join('<br>');
 }
-function installProfileCanvasInfo(){const c=document.getElementById('profileCanvasLarge');if(!c||c.dataset.themeInfo)return;c.dataset.themeInfo='1';c.addEventListener('click',e=>{if(!lastProfileAnalysis||profileThemeMode()==='alt')return;const r=c.getBoundingClientRect(),W=r.width,pL=72,pR=28,x=e.clientX-r.left;if(x<pL||x>W-pR)return;const d=Math.max(0,Math.min(lastProfileAnalysis.total,(x-pL)/(W-pL-pR)*lastProfileAnalysis.total));profileThemeInfoAtDistance(d);});}
+function installProfileCanvasInfo(){const c=document.getElementById('profileCanvasLarge');if(!c||c.dataset.themeInfo)return;c.dataset.themeInfo='1';const inspect=e=>{const r=c.getBoundingClientRect(),W=r.width,pL=72,pR=28,x=e.clientX-r.left;if(x<pL||x>W-pR)return;const total=(lastProfileAnalysis&&lastProfileAnalysis.total)||(lastProfileDraw&&lastProfileDraw[1]);if(!total)return;const d=Math.max(0,Math.min(total,(x-pL)/(W-pL-pR)*total));profileThemeInfoAtDistance(d);};c.addEventListener('pointerup',inspect);}
 installProfileCanvasInfo();
 document.addEventListener('change',e=>{if(e.target&&e.target.name==='profileTheme')redrawProfileTheme();});
 function openProfileModal(){const m=document.getElementById('profileModal');m.classList.add('open');m.setAttribute('aria-hidden','false');}
