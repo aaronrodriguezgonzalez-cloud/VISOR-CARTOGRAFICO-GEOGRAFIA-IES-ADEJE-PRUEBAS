@@ -277,7 +277,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 </details>
 <details open><summary>Vegetación y comunicaciones · España</summary>
 <label><input id="vegetationCheck" type="checkbox"> <b>Vegetación · Mapa Forestal de España MFE25</b></label>
-<div style="padding:2px 2px 5px 13px"><small>MITECO · tipos/coberturas forestales · consultable al pulsar el mapa</small><input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"><img alt="Leyenda MFE25" src="https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=LC.LandCoverSurfaces" style="display:block;max-width:none"></div></div>
+<div style="padding:2px 2px 5px 13px"><small>MITECO · tipos/coberturas forestales · consultable al pulsar el mapa</small><input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"><img alt="Leyenda MFE25" src="https://wms.mapama.gob.es/sig/Biodiversidad/MFE?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=LC.LandCoverSurfacesWMS" style="display:block;max-width:none"></div></div>
 <label><input id="transportCheck" type="checkbox"> <b>Vías de comunicación · IGN</b></label>
 <div style="padding:2px 2px 5px 13px"><small>IGR Redes de Transporte · carreteras y ferrocarril</small><input id="transportOpacity" type="range" min="0" max="1" value="0.85" step="0.05" style="width:100%"></div>
 </details>
@@ -409,11 +409,11 @@ const geology=L.tileLayer.wms('https://mapas.igme.es/gis/services/Cartografia_Ge
 
 
 // v4.0 · capas nacionales oficiales, apagadas por defecto y bajo demanda
-const vegetation=L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx',{
- layers:'LC.LandCoverSurfaces',format:'image/png',transparent:true,version:'1.3.0',opacity:0.72,minZoom:6,maxZoom:19,attribution:'MFE25 · © MITECO'
+const vegetation=L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/MFE',{
+ layers:'LC.LandCoverSurfacesWMS',format:'image/png',transparent:true,version:'1.3.0',opacity:0.72,minZoom:6,maxZoom:19,attribution:'MFE25 · © MITECO'
 });
 const transport=L.tileLayer.wms('https://servicios.idee.es/wms-inspire/transportes',{
- layers:'TN.RoadTransportNetwork.RoadLink,TN.RailTransportNetwork.RailwayLink',format:'image/png',transparent:true,version:'1.3.0',opacity:0.85,minZoom:6,maxZoom:19,attribution:'IGR Redes de Transporte · © IGN/CNIG'
+ layers:'TN.RailTransportNetwork.RailwayLink,TN.RoadTransportNetwork.RoadLink',format:'image/png',transparent:true,version:'1.1.1',opacity:0.85,minZoom:6,maxZoom:19,attribution:'IGR Redes de Transporte · © IGN/CNIG'
 });
 // El WMS de Unidades Administrativas adapta la simbología a la escala.
 const adminCCAA=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{
@@ -755,7 +755,28 @@ async function nearestToponymAt(lat,lon){
  }catch(e){return null;}
 }
 async function adminAt(lat,lon){
- try{const r=await fetch('https://www.cartociudad.es/geocoder/api/geocoder/reverseGeocode?lon='+encodeURIComponent(lon)+'&lat='+encodeURIComponent(lat));if(!r.ok)throw 0;const j=await r.json();return {muni:j.muni||'',province:j.province||'',ccaa:j.comunidadAutonoma||''};}catch(e){return null;}
+ // Fuente primaria: OGC API Features oficial del IGN. Un bbox diminuto que contiene
+ // el punto devuelve las unidades administrativas (municipio/provincia/CCAA) que lo contienen.
+ try{
+  const e=0.00001,bbox=[lon-e,lat-e,lon+e,lat+e].join(',');
+  const u='https://api-features.ign.es/collections/unidades-administrativas/AdministrativeUnit/items?f=json&limit=20&bbox='+encodeURIComponent(bbox);
+  const r=await fetch(u,{mode:'cors'});if(!r.ok)throw new Error('IGN OGC API '+r.status);
+  const j=await r.json(),out={muni:'',province:'',ccaa:''};
+  for(const f of (j.features||[])){
+   const pr=f.properties||{},name=pr.nameunit||pr.name||'',lvl=String(pr.nationallevelname||pr.nationalLevelName||'').toLowerCase();
+   if(!name)continue;
+   if(lvl.includes('municip'))out.muni=name;
+   else if(lvl.includes('provinc'))out.province=name;
+   else if(lvl.includes('comunidad')||lvl.includes('autónom')||lvl.includes('autonom'))out.ccaa=name;
+  }
+  if(out.muni||out.province||out.ccaa)return out;
+ }catch(e){console.warn('Consulta administrativa IGN:',e);}
+ // Respaldo: geocodificación inversa de CartoCiudad, tolerando variantes de nombres de campo.
+ try{
+  const r=await fetch('https://www.cartociudad.es/geocoder/api/geocoder/reverseGeocode?lon='+encodeURIComponent(lon)+'&lat='+encodeURIComponent(lat),{mode:'cors'});if(!r.ok)throw new Error('CartoCiudad '+r.status);
+  const j=await r.json(),x=Array.isArray(j)?(j[0]||{}):j;
+  return {muni:x.muni||x.municipio||x.municipality||'',province:x.province||x.provincia||'',ccaa:x.comunidadAutonoma||x.comunidad_autonoma||x.ccaa||x.autonomousCommunity||''};
+ }catch(e){console.warn('Consulta administrativa CartoCiudad:',e);return null;}
 }
 function wmsFeatureInfoUrl(base,layers,lat,lon){
  const b=map.getBounds(),sz=map.getSize(),pt=map.latLngToContainerPoint([lat,lon]);
@@ -765,7 +786,16 @@ function wmsFeatureInfoUrl(base,layers,lat,lon){
 }
 async function vegetationAt(lat,lon){
  if(!document.getElementById('vegetationCheck').checked)return null;
- try{const u=wmsFeatureInfoUrl('https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx','LC.LandCoverSurfaces',lat,lon);const r=await fetch(u);if(!r.ok)throw 0;let t=await r.text();const d=document.createElement('div');d.innerHTML=t;t=(d.innerText||d.textContent||'').replace(/\s+/g,' ').trim();return t?{text:t.slice(0,900)}:null;}catch(e){console.warn('Consulta MFE25:',e);return {__error:true};}
+ try{
+  const u=wmsFeatureInfoUrl('https://wms.mapama.gob.es/sig/Biodiversidad/MFE','LC.LandCoverSurfacesWMS',lat,lon);
+  const r=await fetch(u,{mode:'cors'});if(!r.ok)throw new Error('MFE25 HTTP '+r.status);
+  let t=await r.text();
+  // Algunos WMS devuelven HTML, otros XML/GML. Convertimos ambos a texto legible sin inventar atributos.
+  const d=document.createElement('div');d.innerHTML=t;
+  t=(d.innerText||d.textContent||t.replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim();
+  if(!t||/no features|no se han encontrado|sin resultados/i.test(t))return null;
+  return {text:t.slice(0,1200)};
+ }catch(e){console.warn('Consulta MFE25:',e);return {__error:true};}
 }
 function vegetationHtml(v){if(!document.getElementById('vegetationCheck').checked)return '';if(!v)return '<hr><b>🌿 Vegetación · MFE25:</b> sin dato en este punto';if(v.__error)return '<hr><b>🌿 Vegetación · MFE25:</b> no se pudo consultar el servicio';return '<hr><b>🌿 Vegetación · MFE25 (MITECO)</b><br>'+escHtml(v.text);}
 function adminHtml(a){
@@ -1249,15 +1279,19 @@ async function ensureGlobe(){
   const base='https://cdn.jsdelivr.net/npm/cesium@1.132/Build/Cesium/';
   loadCssOnce(base+'Widgets/widgets.css');await loadScriptOnce(base+'Cesium.js');
   globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,terrainProvider:new Cesium.EllipsoidTerrainProvider(),baseLayer:false});
-  const sat=new Cesium.WebMapServiceImageryProvider({url:'https://www.ign.es/wms-inspire/pnoa-ma',layers:'OI.OrthoimageCoverage',parameters:{transparent:false,format:'image/jpeg'},credit:'PNOA · IGN/CNIG'});globeViewer.imageryLayers.addImageryProvider(sat);
+  // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
+  const sat=new Cesium.UrlTemplateImageryProvider({
+   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+   credit:'Esri World Imagery',maximumLevel:19
+  });
+  globeViewer.imageryLayers.addImageryProvider(sat);
   globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;
-  const c=map.getCenter();globeViewer.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(c.lng,c.lat,Math.max(1800000,26000000/Math.pow(1.55,map.getZoom()-2))),duration:0});
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
  finally{globeLoading=false;}
 }
 async function toggleGlobe(){
  const entering=!document.body.classList.contains('globe-mode');
- if(entering){document.body.classList.add('globe-mode');document.getElementById('viewModeBadge').style.display='block';document.getElementById('globeToggle').classList.add('active');await ensureGlobe();if(globeViewer)globeViewer.resize();closePanels();}
+ if(entering){document.body.classList.add('globe-mode');document.getElementById('viewModeBadge').style.display='block';document.getElementById('globeToggle').classList.add('active');await ensureGlobe();if(globeViewer){globeViewer.resize();const c=map.getCenter(),h=Math.max(1800000,26000000/Math.pow(1.55,map.getZoom()-2));globeViewer.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(c.lng,c.lat,h),duration:0});globeViewer.scene.requestRender();}closePanels();}
  else{document.body.classList.remove('globe-mode');document.getElementById('viewModeBadge').style.display='none';document.getElementById('globeToggle').classList.remove('active');if(globeViewer){const pos=globeViewer.camera.positionCartographic;if(pos){const h=Math.max(80,pos.height),z=Math.max(2,Math.min(18,Math.round(2+Math.log(26000000/h)/Math.log(1.55))));map.setView([Cesium.Math.toDegrees(pos.latitude),Cesium.Math.toDegrees(pos.longitude)],z);}}setTimeout(()=>map.invalidateSize(),50);}
 }
 window.addEventListener('orientationchange',()=>setTimeout(()=>{map.invalidateSize();if(globeViewer)globeViewer.resize();},180));
