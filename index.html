@@ -883,11 +883,25 @@ function featureTouchesCanaries(f){let hit=false;const walk=a=>{if(hit||!Array.i
 function plainVegetationText(raw){
  const doc=new DOMParser().parseFromString(raw||'','text/html');
  doc.querySelectorAll('script,style,noscript').forEach(n=>n.remove());
- return (doc.body?.textContent||'').replace(/\s+/g,' ').trim();
+ return cleanVegetationValue(doc.body?.textContent||'');
+}
+function cleanVegetationValue(raw){
+ const ta=document.createElement('textarea');ta.innerHTML=String(raw||'');
+ let t=ta.value.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+ // GRAFCAN devuelve en algunos campos fragmentos del JavaScript de su ficha HTML.
+ // Todo lo situado desde el primer token de código es ruido, no información botánica.
+ const cut=t.search(/(?:document\.write\s*\(|\bif\s*\(|\belse\b|\bswitch\s*\(|\bcase\s+["']|\bbreak\s*;|\bfunction\s*\()/i);
+ if(cut>=0)t=t.slice(0,cut);
+ t=t.replace(/(?:={2,3}|!={1,2}|=>|\|\||&&)\s*["']?\s*$/g,'')
+    .replace(/[{};]+/g,' ')
+    .replace(/\s*\(\s*\)?\s*$/g,'')
+    .replace(/^[\s:.,;]+|[\s:.,;]+$/g,'')
+    .replace(/\s+/g,' ').trim();
+ return t;
 }
 function canaryVegetationSummary(raw){
- const decoded=document.createElement('textarea');decoded.innerHTML=raw||'';const src=decoded.value.replace(/&aacute;/gi,'á').replace(/&eacute;/gi,'é').replace(/&iacute;/gi,'í').replace(/&oacute;/gi,'ó').replace(/&uacute;/gi,'ú').replace(/&ntilde;/gi,'ñ');
- const grab=(label,next)=>{const re=new RegExp(label+'\\s*:?\\s*([\\s\\S]*?)(?='+next+'|$)','i'),m=src.match(re);if(!m)return '';return m[1].replace(/<[^>]+>/g,' ').replace(/document\\.write\\([^)]*\\)/gi,' ').replace(/[{};]/g,' ').replace(/\\s+/g,' ').trim().slice(0,420);};
+ const decoded=document.createElement('textarea');decoded.innerHTML=raw||'';const src=decoded.value;
+ const grab=(label,next)=>{const re=new RegExp(label+'\\s*:?\\s*([\\s\\S]*?)(?='+next+'|$)','i'),m=src.match(re);return m?cleanVegetationValue(m[1]).slice(0,420):'';};
  const fis=grab('Fisionom[ií]a','Nombre cient|Nombre com|Denominaci|Leyenda'),sci=grab('Nombre cient(?:ífico|&iacute;fico)','Nombre com|Denominaci|Leyenda'),com=grab('Nombre com(?:ún|&uacute;n)','Denominaci|Leyenda|Nombre cient'),den=grab('Denominaci(?:ón|&oacute;n) asociada','Leyenda|Nombre cient|Nombre com');
  const rows=[];if(fis)rows.push('<b>Formación:</b> '+escHtml(fis));if(com)rows.push('<b>Nombre común:</b> '+escHtml(com));if(sci)rows.push('<b>Unidad fitosociológica:</b> <i>'+escHtml(sci)+'</i>');if(den)rows.push('<b>Denominación asociada:</b> '+escHtml(den));
  if(rows.length)return rows.join('<br>');
@@ -915,11 +929,11 @@ function mitecoVegetationSummary(f){const p=f.properties||{},code=String(p.__ser
 async function vegetationAt(lat,lon){
  if(!document.getElementById('vegetationCheck').checked)return null;
  if(isCanaryPoint(lat,lon))return canaryVegetationAt(lat,lon);
- try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(!f)return null;return {source:'miteco',html:mitecoVegetationSummary(f)};}catch(e){return {source:'miteco',__error:true};}
+ try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(!f)return null;return {source:'miteco',html:mitecoVegetationSummary(f),code:String((f.properties||{}).__serie||'').trim()};}catch(e){return {source:'miteco',__error:true};}
 }
 async function vegetationAtRaw(lat,lon){
  if(isCanaryPoint(lat,lon))return canaryVegetationAt(lat,lon);
- try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));return f?{source:'miteco',html:mitecoVegetationSummary(f)}:null;}catch(e){return null;}
+ try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));return f?{source:'miteco',html:mitecoVegetationSummary(f),code:String((f.properties||{}).__serie||'').trim()}:null;}catch(e){return null;}
 }
 function thematicPlain(html){const d=document.createElement('div');d.innerHTML=html||'';return (d.textContent||'').replace(/\s+/g,' ').trim();}
 function shortThemeLabel(kind,v){if(!v)return 'Sin dato';if(kind==='geo'){return (v.DESC_UNIT||v.CODE_UNIO||'Unidad geológica').replace(/\s+/g,' ').trim();}return thematicPlain(v.html||'').replace(/^(Formación:|Vegetación potencial · MITECO)/i,'').trim()||'Unidad vegetal';}
@@ -1019,17 +1033,32 @@ async function finishProfileFromPoints(profileInputPts){
 }
 let lastProfileAnalysis=null,lastProfileDraw=null;
 function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 68%)';}
-function cleanThemeText(txt){return String(txt||'').replace(/<[^>]*>/g,' ').replace(/&[a-zA-Z#0-9]+;/g,' ').replace(/\b(?:document\.write|switch|case|break|href|target|font|file|else|if)\b/gi,' ').replace(/[{};|]+/g,' ').replace(/^[\s:.,()\-–—]+|[\s:.,()\-–—]+$/g,'').replace(/\s+/g,' ').trim();}
+function cleanThemeText(txt){return cleanVegetationValue(String(txt||'').replace(/&[a-zA-Z#0-9]+;/g,' '));}
 function extractHtmlField(html,label){const re=new RegExp('<b>'+label+':<\\/b>\\s*([^<]+)','i'),m=String(html||'').match(re);return m?cleanThemeText(m[1]):'';}
-function vegetationTheme(v){if(!v)return {label:'Sin dato',detail:''};const html=v.html||'';let formation=extractHtmlField(html,'Formación')||extractHtmlField(html,'Vegetación potencial');let species=extractHtmlField(html,'Nombre común')||extractHtmlField(html,'Especie dominante');if(!formation){const serie=extractHtmlField(html,'Serie');formation=serie?serie.replace(/^\S+\s*[·-]\s*/,''):'';}formation=cleanThemeText(formation)||'Unidad vegetal';species=cleanThemeText(species);return {label:formation,detail:species?formation+' · '+species:formation};}
-function geologyTheme(g){if(!g)return {label:'Sin dato',detail:''};let label=cleanThemeText(g.DESC_UNIT||g.CODE_UNIO||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();const age=cleanThemeText(g.ERA||g.SYSTEM||g.SERIES||g.AGE||'');return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label};}
+function vegetationTheme(v){
+ if(!v)return {label:'Sin dato',detail:'',color:null};const html=v.html||'';
+ let formation=extractHtmlField(html,'Formación')||extractHtmlField(html,'Vegetación potencial');
+ let species=extractHtmlField(html,'Nombre común')||extractHtmlField(html,'Especie dominante');
+ if(!formation){const serie=extractHtmlField(html,'Serie');formation=serie?serie.replace(/^\\S+\\s*[·-]\\s*/,''):'';}
+ formation=cleanThemeText(formation)||'Unidad vegetal';species=cleanThemeText(species);
+ const label=species&&species!==formation?formation+' · '+species:formation;
+ return {label,detail:label,color:v.color||(v.code?vegetationColor(v.code):null)};
+}
+function geologyTheme(g){if(!g)return {label:'Sin dato',detail:'',color:null};let label=String(g.DESC_UNIT||g.CODE_UNIO||'Unidad geológica').replace(/^[-–—\\s]+/,'').replace(/\\s*\\([^)]*(?:file|shp|mdb|gdb)[^)]*\\)\\s*/gi,' ').replace(/\\s+/g,' ').trim();const age=String(g.ERA||g.SYSTEM||g.SERIES||g.AGE||'').replace(/\\s+/g,' ').trim();return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__profileColor||null};}
+const thematicPixelCache=new Map();
+async function wmsPixelColor(base,params,lat,lon,keyPrefix){
+ const key=keyPrefix+':'+lat.toFixed(4)+','+lon.toFixed(4);if(thematicPixelCache.has(key))return thematicPixelCache.get(key);
+ const promise=(async()=>{try{const d=.004,q=new URLSearchParams({...params,SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'3',HEIGHT:'3',FORMAT:'image/png',TRANSPARENT:'TRUE'});const r=await fetch(base+'?'+q.toString(),{mode:'cors',cache:'force-cache'});if(!r.ok)return null;const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=3;cv.height=3;const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(bmp,0,0,3,3);if(bmp.close)bmp.close();const a=cx.getImageData(0,0,3,3).data;for(const j of [4,1,3,5,7,0,2,6,8]){const i=j*4;if(a[i+3]>40)return '#'+[a[i],a[i+1],a[i+2]].map(x=>x.toString(16).padStart(2,'0')).join('');}return null;}catch(e){return null;}})();thematicPixelCache.set(key,promise);return promise;
+}
+async function vegetationMapColor(lat,lon,v){if(v&&v.source==='miteco')return vegetationColor(v.code||extractHtmlField(v.html||'','Serie')||'');if(isCanaryPoint(lat,lon))return wmsPixelColor('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{LAYERS:'VREAL',STYLES:''},lat,lon,'vegcan');return null;}
+async function geologyMapColor(lat,lon){return wmsPixelColor('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{LAYERS:'1,2,3,4,5,6,7,8,9',STYLES:''},lat,lon,'geode');}
 function themeAtDistance(d,key){if(!lastProfileAnalysis||!lastProfileAnalysis.samples.length)return null;let best=lastProfileAnalysis.samples[0],bd=Math.abs(best.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}return best[key]||null;}
 function profileThemeMode(){return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';}
-function renderProfileLegend(){const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();if(mode==='alt'){const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];box.innerHTML=items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;}if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode==='veg'?'vegetación':'geología')+'…</span>';return;}const seen=new Map();for(const x of lastProfileAnalysis.samples){const o=x[mode];if(o&&o.label&&o.label!=='Sin dato'&&!seen.has(o.label))seen.set(o.label,o.detail||o.label);}if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}box.innerHTML=[...seen].map(([label,detail])=>'<span class="profileLegendItem" title="'+escHtml(detail)+'"><span class="profileLegendSw" style="background:'+themeColor(label)+'"></span><span class="profileLegendText">'+escHtml(label)+(detail&&detail!==label?' <small>· '+escHtml(detail.replace(label,'').replace(/^\s*·\s*/,''))+'</small>':'')+'</span></span>').join('');}
+function renderProfileLegend(){const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();if(mode==='alt'){const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];box.innerHTML=items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;}if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode==='veg'?'vegetación':'geología')+'…</span>';return;}const seen=new Map();for(const x of lastProfileAnalysis.samples){const o=x[mode];if(o&&o.label&&o.label!=='Sin dato'&&!seen.has(o.label))seen.set(o.label,o);}if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}box.innerHTML=[...seen.values()].map(o=>'<span class="profileLegendItem" title="'+escHtml(o.detail||o.label)+'"><span class="profileLegendSw" style="background:'+(o.color||themeColor(o.label))+'"></span><span class="profileLegendText">'+escHtml(o.label)+'</span></span>').join('');}
 function redrawProfileTheme(){renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
 async function analyzeProfileTerritory(prof){
  const n=Math.min(32,Math.max(14,Math.round(prof.total/18000)));const q=interpolateProfilePoints(profilePts,n),arr=new Array(q.points.length);let next=0;const workers=Math.min(6,q.points.length);
- await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let veg={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const [v,g]=await Promise.all([vegetationAtRaw(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);veg=vegetationTheme(v);geo=geologyTheme(g);}arr[i]={d:p.d,veg,geo};}}));
+ await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let veg={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const [v,g]=await Promise.all([vegetationAtRaw(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);veg=vegetationTheme(v);geo=geologyTheme(g);const [vc,gc]=await Promise.all([vegetationMapColor(p.ll.lat,p.ll.lng,v),geologyMapColor(p.ll.lat,p.ll.lng)]);if(vc)veg.color=vc;if(gc)geo.color=gc;}arr[i]={d:p.d,veg,geo};}}));
  lastProfileAnalysis={total:prof.total,samples:arr};redrawProfileTheme();
 }
 document.addEventListener('change',e=>{if(e.target&&e.target.name==='profileTheme')redrawProfileTheme();});
@@ -1179,7 +1208,7 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  const segments=[];let seg=[];for(const sm of samples){if(Number.isFinite(sm.z)){seg.push(sm);}else if(seg.length){segments.push(seg);seg=[];}}if(seg.length)segments.push(seg);
  ctx.fillStyle='#e7e1d2';for(const ss of segments){if(ss.length<2)continue;ctx.beginPath();ctx.moveTo(X(ss[0].d),base);for(const sm of ss)ctx.lineTo(X(sm.d),Y(sm.z));ctx.lineTo(X(ss[ss.length-1].d),base);ctx.closePath();ctx.fill();}
  // Piel temática gruesa: altimetría, vegetación o geología según la selección.
- let prev=null;const skinMode=profileThemeMode();for(const sm of samples){if(sm.z===null){prev=null;continue;}const cur={x:X(sm.d),y:Y(sm.z),z:sm.z,d:sm.d};if(prev){let skin=hypsometricColor((prev.z+cur.z)/2);if(skinMode==='veg'||skinMode==='geo'){const t=themeAtDistance((prev.d+cur.d)/2,skinMode);if(t&&t.label&&t.label!=='Sin dato')skin=themeColor(t.label);else skin='#c9cdd1';}ctx.strokeStyle=skin;ctx.lineWidth=24;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(cur.x,cur.y);ctx.stroke();}prev=cur;}
+ let prev=null;const skinMode=profileThemeMode();for(const sm of samples){if(sm.z===null){prev=null;continue;}const cur={x:X(sm.d),y:Y(sm.z),z:sm.z,d:sm.d};if(prev){let skin=hypsometricColor((prev.z+cur.z)/2);if(skinMode==='veg'||skinMode==='geo'){const t=themeAtDistance((prev.d+cur.d)/2,skinMode);if(t&&t.label&&t.label!=='Sin dato')skin=t.color||themeColor(t.label);else skin='#c9cdd1';}ctx.strokeStyle=skin;ctx.lineWidth=24;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(cur.x,cur.y);ctx.stroke();}prev=cur;}
  // contorno fino para que la forma del terreno siga siendo nítida
  ctx.strokeStyle='#263238';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.beginPath();let pen=false;for(const sm of samples){if(sm.z===null){pen=false;continue;}const x=X(sm.d),y=Y(sm.z);if(!pen){ctx.moveTo(x,y);pen=true}else ctx.lineTo(x,y);}ctx.stroke();
  // Etiquetas del perfil: inflexiones y topónimos compiten por el mismo espacio.
@@ -1451,7 +1480,20 @@ function countryName(p){return p.ADMIN||p.NAME_ES||p.NAME_EN||p.NAME||p.SOVEREIG
 async function loadCountries(){if(countriesData)return countriesData;if(countriesLoading)return countriesLoading;countriesLoading=(async()=>{const urls=['https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson','https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'];let j=null;for(const u of urls){try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){j=await r.json();break;}}catch(e){}}if(!j)throw new Error('No se pudo cargar Natural Earth 110m');countriesData=j;return j;})().finally(()=>countriesLoading=null);return countriesLoading;}
 function countryAtFeature(lat,lon){if(!countriesData)return null;return countriesData.features.find(f=>featureContainsPoint(f,lat,lon))||null;}
 async function countryAt(lat,lon){try{await loadCountries();const f=countryAtFeature(lat,lon);return f?countryName(f.properties||{}):'Océano / territorio no identificado';}catch(e){return 'País no disponible';}}
-async function toggleCountriesLayer(on){if(!globeViewer)return;if(on){status('Cargando fronteras mundiales ligeras…');try{const data=await loadCountries();if(!document.getElementById('countriesCheck').checked)return;if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);countriesSource=await Cesium.GeoJsonDataSource.load(data,{stroke:Cesium.Color.WHITE.withAlpha(.92),fill:Cesium.Color.TRANSPARENT,strokeWidth:1.2,clampToGround:false});globeViewer.dataSources.add(countriesSource);globeViewer.scene.requestRender();status('Países y territorios · Natural Earth 1:110 M');}catch(e){document.getElementById('countriesCheck').checked=false;status('No se pudieron cargar las fronteras mundiales');}}else if(countriesSource){globeViewer.dataSources.remove(countriesSource,true);countriesSource=null;globeViewer.scene.requestRender();}}
+async function toggleCountriesLayer(on){
+ if(!globeViewer)return;
+ if(on){
+  status('Cargando fronteras mundiales…');
+  try{
+   const data=await loadCountries();if(!document.getElementById('countriesCheck').checked)return;
+   if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);
+   const ds=new Cesium.CustomDataSource('Fronteras internacionales');
+   const addRing=ring=>{if(!ring||ring.length<2)return;ds.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(ring.flatMap(c=>[c[0],c[1]])),width:2.4,material:Cesium.Color.WHITE.withAlpha(.96),arcType:Cesium.ArcType.GEODESIC,clampToGround:false}});};
+   for(const f of data.features||[]){const g=f.geometry;if(!g)continue;if(g.type==='Polygon'){for(const ring of g.coordinates)addRing(ring);}else if(g.type==='MultiPolygon'){for(const poly of g.coordinates)for(const ring of poly)addRing(ring);}}
+   countriesSource=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();status('Fronteras internacionales · Natural Earth 1:110 M');
+  }catch(e){console.warn('Fronteras mundiales:',e);document.getElementById('countriesCheck').checked=false;status('No se pudieron cargar las fronteras mundiales');}
+ }else if(countriesSource){globeViewer.dataSources.remove(countriesSource,true);countriesSource=null;globeViewer.scene.requestRender();}
+}
 async function showGlobePoint(ll){const box=document.getElementById('globeInfo');box.classList.remove('empty');const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');}
 function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);
  globeClickHandler.setInputAction(ev=>{const picked=globeViewer.scene.pick(ev.position);if(Cesium.defined(picked)&&picked.id&&Number.isInteger(picked.id.__profileIndex)){globeDragIndex=picked.id.__profileIndex;globeViewer.scene.screenSpaceCameraController.enableRotate=false;return;}},Cesium.ScreenSpaceEventType.LEFT_DOWN);
