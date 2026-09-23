@@ -924,12 +924,24 @@ async function canaryVegetationAt(lat,lon){
  }catch(e){console.warn('Consulta vegetación Canarias:',e);return {source:'canarias',__error:true};}
 }
 function canaryPotentialSummary(raw){
- const decoded=document.createElement('textarea');decoded.innerHTML=raw||'';const src=decoded.value;
- const grab=(label,next)=>{const re=new RegExp(label+'\\s*:?\\s*([\\s\\S]*?)(?='+next+'|$)','i'),m=src.match(re);return m?cleanVegetationValue(m[1]).slice(0,420):'';};
- let name=grab('CO[_ ]?VEGPOT|Vegetaci(?:ón|&oacute;n) potencial|Nombre','VPOTENCIAL|Código|Codigo|Leyenda|Área|Area');
- let code=grab('VPOTENCIAL|Código|Codigo','CO[_ ]?VEGPOT|Vegetaci|Nombre|Leyenda|Área|Area');
- if(!name){const txt=plainVegetationText(raw);name=cleanVegetationValue(txt);}
- const rows=[];if(name)rows.push('<b>Vegetación potencial:</b> '+escHtml(name));if(code&&code!==name)rows.push('<b>Unidad:</b> '+escHtml(code));return rows.join('<br>');
+ // La ficha HTML de VPOT incluye después del dato botánico un bloque completo de
+ // documentación, autores, cronología y metadatos. Para el visor solo interesa
+ // el valor situado entre «Vegetación Potencial:» y «Documentación asociada:».
+ const doc=new DOMParser().parseFromString(raw||'','text/html');
+ doc.querySelectorAll('script,style,noscript').forEach(n=>n.remove());
+ const text=(doc.body?.textContent||'').replace(/\s+/g,' ').trim();
+ let name='';
+ let m=text.match(/Vegetaci(?:ón|on)\s+Potencial\s*:\s*([\s\S]*?)(?=\s*Documentaci(?:ón|on)\s+asociada\s*:|$)/i);
+ if(m)name=cleanVegetationValue(m[1]);
+ // Algunos formatos devuelven la etiqueta codificada dentro del HTML bruto.
+ if(!name){
+  const ta=document.createElement('textarea');ta.innerHTML=raw||'';
+  const decoded=ta.value.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+  m=decoded.match(/Vegetaci(?:ón|on|&oacute;n)\s+Potencial\s*:\s*([\s\S]*?)(?=\s*Documentaci(?:ón|on|&oacute;n)\s+asociada\s*:|$)/i);
+  if(m)name=cleanVegetationValue(m[1]);
+ }
+ if(!name)return '';
+ return '<b>Vegetación potencial:</b> '+escHtml(name);
 }
 async function canaryPotentialVegetationAt(lat,lon){
  try{const d=.012,bbox=[lon-d,lat-d,lon+d,lat+d].join(','),q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetFeatureInfo',LAYERS:'VPOT',QUERY_LAYERS:'VPOT',STYLES:'',SRS:'EPSG:4326',BBOX:bbox,WIDTH:'101',HEIGHT:'101',X:'50',Y:'50',FORMAT:'image/png',INFO_FORMAT:'text/html',FEATURE_COUNT:'1'});const r=await fetch('https://idecan2.grafcan.es/ServicioWMS/Vegetacion?'+q.toString(),{mode:'cors'});if(!r.ok)throw new Error('GRAFCAN '+r.status);const raw=await r.text(),html=canaryPotentialSummary(raw);if(!html||/no features|sin resultados|no se han encontrado/i.test(html))return null;return {source:'canarias_pot',html};}catch(e){console.warn('Consulta vegetación potencial Canarias:',e);return {source:'canarias_pot',__error:true};}
