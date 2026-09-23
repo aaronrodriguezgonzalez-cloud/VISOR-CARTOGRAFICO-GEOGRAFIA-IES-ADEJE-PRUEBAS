@@ -220,6 +220,43 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  #status{bottom:2px!important}
 }
 
+
+/* v7.1 · móvil: cabecera mínima y uso real en horizontal */
+@media (max-width:700px) and (orientation:portrait){
+ .brand{
+   top:3px!important;left:50%!important;transform:translateX(-50%)!important;
+   width:calc(100vw - 78px)!important;height:30px!important;min-height:30px!important;
+   padding:2px 6px!important;gap:5px!important;border-radius:7px!important;
+ }
+ .brand img{width:24px!important;height:24px!important}
+ .brandText{min-width:0!important;text-align:left!important;white-space:nowrap!important;overflow:hidden!important}
+ .brand .brandTitle{font-size:10.5px!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+ .brand .brandDept,.brand .brandTeacher,.brand .brandAbout,.brand .brandCourse,.brand .brandMeta{display:none!important}
+ .toolbar{top:38px!important;left:5px!important;gap:3px!important}
+ .tool{padding:5px!important;min-width:31px!important;min-height:31px!important}
+ .tool span{font-size:16px!important}
+}
+@media (max-width:900px) and (orientation:landscape){
+ .brand{
+   top:2px!important;left:50%!important;transform:translateX(-50%)!important;
+   width:min(430px,calc(100vw - 180px))!important;height:24px!important;min-height:24px!important;
+   padding:1px 6px!important;gap:4px!important;border-radius:6px!important;
+ }
+ .brand img{display:none!important}
+ .brandText{min-width:0!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important}
+ .brand .brandTitle{font-size:9.5px!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+ .brand .brandDept,.brand .brandTeacher,.brand .brandAbout,.brand .brandCourse,.brand .brandMeta{display:none!important}
+ .toolbar{top:31px!important;left:4px!important;gap:2px!important;max-height:calc(100vh - 34px)!important;overflow-y:auto!important;scrollbar-width:none}
+ .toolbar::-webkit-scrollbar{display:none}
+ .tool{padding:4px!important;min-width:28px!important;min-height:28px!important;border-radius:6px!important}
+ .tool span{font-size:14px!important}
+ .panel{top:3px!important;right:3px!important;width:min(310px,42vw)!important;max-height:calc(100vh - 6px)!important;padding:7px!important;font-size:11px!important}
+ #dynamicLegend{bottom:5px!important;width:min(470px,55vw)!important;max-height:46vh!important;font-size:10px!important}
+ #profileModal{inset:1vh 1vw!important;padding:7px!important}
+ #profileChartWrap{height:calc(98vh - 115px)!important;min-height:190px!important}
+ #viewModeBadge{top:4px!important;right:5px!important;padding:4px 6px!important;font-size:9px!important}
+}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -276,8 +313,8 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 </div>
 </details>
 <details open><summary>Vegetación y comunicaciones · España</summary>
-<label><input id="vegetationCheck" type="checkbox"> <b>Vegetación · Series de Vegetación de España</b></label>
-<div style="padding:2px 2px 5px 13px"><small>MITECO · Series de Vegetación (Rivas-Martínez, 1987) · vegetación potencial</small><input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"><small>Colores por serie/unidad de vegetación potencial. Pulsa el mapa para identificarla.</small></div></div>
+<label><input id="vegetationCheck" type="checkbox"> <b>Vegetación · actual en Canarias / potencial en España</b></label>
+<div style="padding:2px 2px 5px 13px"><small>Canarias: Mapa de Vegetación GRAFCAN (vegetación real, actualizada por islas) · resto de España: series potenciales MITECO</small><input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"><small>En Canarias se muestra vegetación real (VREAL, GRAFCAN); fuera de Canarias, vegetación potencial (MITECO). Pulsa el mapa para identificar la unidad.</small></div></div>
 <label><input id="transportCheck" type="checkbox"> <b>Vías de comunicación · IGN</b></label>
 <div style="padding:2px 2px 5px 13px"><small>IGR Redes de Transporte · carreteras y ferrocarril</small><input id="transportOpacity" type="range" min="0" max="1" value="0.85" step="0.05" style="width:100%"></div>
 </details>
@@ -348,7 +385,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
   <div id="profileModalHeader"><div id="profileModalTitle">Perfil topográfico</div><button id="profileModalClose" onclick="closeProfileModal()" title="Cerrar">×</button></div>
   <div id="profileModalSummary"></div>
   <div id="profileChartWrap"><canvas id="profileCanvasLarge"></canvas></div>
-  <div id="profileTopoNote">Tintas hipsométricas · topónimos oficiales IGN vinculados a la cartografía MTN</div>
+  <div id="profileTopoNote">Tintas hipsométricas · MDT25/IGN en España · terreno mundial Cesium fuera de España · topónimos IGN en España</div>
 </div>
 <div id="searchPanel" class="panel hidden"><h3>Buscar topónimo</h3>
 <input id="searchQ" type="text" placeholder="Ej.: Teide, Taganana, Adeje…">
@@ -409,7 +446,9 @@ const geology=L.tileLayer.wms('https://mapas.igme.es/gis/services/Cartografia_Ge
 
 
 // v4.0 · capas nacionales oficiales, apagadas por defecto y bajo demanda
-const vegetation=L.geoJSON(null,{style:f=>({color:'#555',weight:.45,fillColor:vegetationColor((f.properties||{}).__serie||''),fillOpacity:.72})});
+const vegetationPotential=L.geoJSON(null,{style:f=>({color:'#555',weight:.45,fillColor:vegetationColor((f.properties||{}).__serie||''),fillOpacity:.72})});
+const vegetationCanary=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{layers:'VREAL',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'Mapa de Vegetación · © Gobierno de Canarias / GRAFCAN'});
+const vegetation=L.layerGroup([vegetationPotential,vegetationCanary]);
 let vegetationLoaded=false,vegetationLoading=null,vegetationFeatures=[];
 function vegetationColor(v){let h=0;for(const c of String(v))h=(h*31+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 48%)';}
 function ensureJsZip(){return new Promise((resolve,reject)=>{if(window.JSZip)return resolve();const q=document.createElement('script');q.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';q.onload=resolve;q.onerror=reject;document.head.appendChild(q);});}
@@ -431,7 +470,7 @@ async function loadVegetationSeries(){
   if(!kn)throw new Error('KMZ sin KML');
   const fs=kmlSeriesFeatures(await zip.files[kn].async('text'));
   if(!fs.length)throw new Error('KMZ sin polígonos interpretables');
-  vegetationFeatures=fs;vegetation.addData({type:'FeatureCollection',features:fs});vegetationLoaded=true;
+  vegetationFeatures=fs;vegetationPotential.addData({type:'FeatureCollection',features:fs});vegetationLoaded=true;
   status('Series de Vegetación cargadas · '+fs.length.toLocaleString('es-ES')+' unidades');
  })().catch(e=>{console.warn('Series de Vegetación:',e);status('Series de Vegetación no disponibles · falta series_vegetacion.kmz o el servidor MITECO bloquea la descarga');throw e;}).finally(()=>vegetationLoading=null);
  return vegetationLoading;
@@ -455,12 +494,12 @@ function bindOverlayCheck(id,layer,label){
  el.onchange=e=>{if(e.target.checked){layer.addTo(map);layer.bringToFront();status(label+' activada');}else{map.removeLayer(layer);status(label+' desactivada');}updateLegend();};
 }
 bindOverlayCheck('vegetationCheck',vegetation,'Series de Vegetación');
-document.getElementById('vegetationCheck').addEventListener('change',e=>{document.getElementById('vegetationLegendWrap').style.display=e.target.checked?'block':'none';if(e.target.checked)loadVegetationSeries().catch(()=>{});});
+document.getElementById('vegetationCheck').addEventListener('change',e=>{document.getElementById('vegetationLegendWrap').style.display=e.target.checked?'block':'none';if(e.target.checked&&!isCanaryPoint(map.getCenter().lat,map.getCenter().lng))loadVegetationSeries().catch(()=>{});});
 bindOverlayCheck('transportCheck',transport,'Vías de comunicación');
 bindOverlayCheck('ccaaCheck',adminCCAA,'Comunidades autónomas');
 bindOverlayCheck('provCheck',adminProv,'Provincias');
 bindOverlayCheck('munSpainCheck',adminMun,'Municipios de España');
-document.getElementById('vegetationOpacity').oninput=e=>vegetation.setStyle({fillOpacity:+e.target.value});
+document.getElementById('vegetationOpacity').oninput=e=>{const o=+e.target.value;vegetationPotential.setStyle({fillOpacity:o});vegetationCanary.setOpacity(o);};
 document.getElementById('transportOpacity').oninput=e=>transport.setOpacity(+e.target.value);
 document.getElementById('adminOpacity').oninput=e=>[adminCCAA,adminProv,adminMun].forEach(l=>l.setOpacity(+e.target.value));
 
@@ -746,10 +785,21 @@ async function elevationAtRaw(lat,lon){
  // 2) Resto de España: servicio nacional Terrain-RGB oficial de IDEE/IGN.
  return nationalElevationAt(lat,lon);
 }
+async function cesiumWorldElevationAt(lat,lon){
+ try{
+  if(!window.Cesium)return null;
+  if(!globeTerrainProvider){
+   globeTerrainProvider=Cesium.createWorldTerrainAsync?await Cesium.createWorldTerrainAsync():Cesium.createWorldTerrain();
+  }
+  const out=await Cesium.sampleTerrainMostDetailed(globeTerrainProvider,[Cesium.Cartographic.fromDegrees(lon,lat)]);
+  const z=out&&out[0]&&Number(out[0].height);
+  return Number.isFinite(z)?Math.round(z):null;
+ }catch(err){console.warn('Elevación mundial Cesium:',err);return null;}
+}
 function elevationAt(lat,lon){
  const key=lat.toFixed(5)+','+lon.toFixed(5);
  if(pointElevationCache.has(key))return pointElevationCache.get(key);
- const p=elevationAtRaw(lat,lon).finally(()=>{if(pointElevationCache.size>300){const k=pointElevationCache.keys().next().value;pointElevationCache.delete(k);}});
+ const p=(async()=>{const z=await elevationAtRaw(lat,lon);return z!==null&&z!==undefined?z:await cesiumWorldElevationAt(lat,lon);})().finally(()=>{if(pointElevationCache.size>300){const k=pointElevationCache.keys().next().value;pointElevationCache.delete(k);}});
  pointElevationCache.set(key,p);return p;
 }
 function dmsPart(value,isLat){
@@ -818,8 +868,25 @@ function wmsFeatureInfoUrl(base,layers,lat,lon){
 }
 function pointInRing(lon,lat,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(((yi>lat)!=(yj>lat))&&(lon<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;}return inside;}
 function featureContainsPoint(f,lat,lon){const g=f.geometry;if(!g)return false;const polys=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];return polys.some(p=>p[0]&&pointInRing(lon,lat,p[0])&&!p.slice(1).some(r=>pointInRing(lon,lat,r)));}
-async function vegetationAt(lat,lon){if(!document.getElementById('vegetationCheck').checked)return null;try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(!f)return null;return {text:(f.properties||{}).__serie||'Serie de vegetación'};}catch(e){return {__error:true};}}
-function vegetationHtml(v){if(!document.getElementById('vegetationCheck').checked)return '';if(!v)return '<hr><b>🌿 Series de Vegetación:</b> sin dato en este punto';if(v.__error)return '<hr><b>🌿 Series de Vegetación:</b> no se pudo consultar el servicio';return '<hr><b>🌿 Series de Vegetación (MITECO)</b><br>'+escHtml(v.text);}
+function isCanaryPoint(lat,lon){return lat>=27.45&&lat<=29.55&&lon>=-18.25&&lon<=-13.25;}
+async function canaryVegetationAt(lat,lon){
+ try{
+  const d=.012,bbox=[lon-d,lat-d,lon+d,lat+d].join(',');
+  const q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetFeatureInfo',LAYERS:'VREAL',QUERY_LAYERS:'VREAL',STYLES:'',SRS:'EPSG:4326',BBOX:bbox,WIDTH:'101',HEIGHT:'101',X:'50',Y:'50',FORMAT:'image/png',INFO_FORMAT:'text/html',FEATURE_COUNT:'5'});
+  const r=await fetch('https://idecan2.grafcan.es/ServicioWMS/Vegetacion?'+q.toString(),{mode:'cors'});if(!r.ok)throw new Error('GRAFCAN '+r.status);
+  const raw=await r.text(),doc=new DOMParser().parseFromString(raw,'text/html');
+  let txt=(doc.body?.innerText||raw).replace(/\s+/g,' ').trim();
+  txt=txt.replace(/^(GetFeatureInfo|Feature Info)\s*/i,'').trim();
+  if(!txt||/no features|sin resultados|no se han encontrado/i.test(txt))return null;
+  return {source:'canarias',text:txt.slice(0,1800)};
+ }catch(e){console.warn('Consulta vegetación Canarias:',e);return {source:'canarias',__error:true};}
+}
+async function vegetationAt(lat,lon){
+ if(!document.getElementById('vegetationCheck').checked)return null;
+ if(isCanaryPoint(lat,lon))return canaryVegetationAt(lat,lon);
+ try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(!f)return null;return {source:'miteco',text:(f.properties||{}).__serie||'Serie de vegetación'};}catch(e){return {source:'miteco',__error:true};}
+}
+function vegetationHtml(v){if(!document.getElementById('vegetationCheck').checked)return '';if(!v)return '<hr><b>🌿 Vegetación:</b> sin dato en este punto';if(v.__error)return '<hr><b>🌿 Vegetación:</b> no se pudo consultar la información descriptiva';if(v.source==='canarias')return '<hr><b>🌿 Vegetación actual · Canarias (GRAFCAN)</b><br>'+escHtml(v.text);return '<hr><b>🌿 Vegetación potencial · MITECO</b><br>'+escHtml(v.text);}
 function adminHtml(a){
  if(!a)return '';
  const rows=[];
@@ -854,6 +921,7 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
 // Perfil topográfico · herramienta independiente
 let profileMode=false,profilePts=[],profileLayer=null,profileLine=null,profileHandles=[];
 function startProfile(){
+ if(document.body.classList.contains('globe-mode')){startGlobeProfile();return;}
  measureMode=null;profileMode=true;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=L.layerGroup().addTo(map);profileLine=null;profileHandles=[];
  document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');
  document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';
@@ -881,6 +949,12 @@ function interpolateProfilePoints(pts,n=100){
  for(let k=0;k<n;k++){const target=total*k/(n-1);let i=0;while(i<seg.length-1&&cum[i+1]<target)i++;const f=seg[i]?((target-cum[i])/seg[i]):0,a=pts[i],b=pts[i+1];out.push({d:target,ll:L.latLng(a.lat+(b.lat-a.lat)*f,a.lng+(b.lng-a.lng)*f)});}return {total,points:out};
 }
 async function finishProfile(){
+ if(document.body.classList.contains('globe-mode')&&globeProfileMode){await finishGlobeProfile();return;}
+ await finishProfileFromPoints(profilePts);
+}
+async function finishProfileFromPoints(profileInputPts){
+ const oldPts=profilePts;profilePts=profileInputPts;
+ try{
  if(profilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}profileMode=false;redrawProfileLine();
  const prof=interpolateProfilePoints(profilePts,100),result=document.getElementById('profileResult');result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total)+' · calculando altitudes…';
  // Calcula las cotas en paralelo con concurrencia limitada. Las consultas que caen
@@ -903,8 +977,9 @@ async function finishProfile(){
  document.getElementById('profileBox').style.display='none';result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total);
  const turns=detectProfileTurns(samples,prof.total,zmin,zmax);
  const topo=await profileToponyms(prof,turns);openProfileModal();requestAnimationFrame(()=>drawProfileLarge(samples,prof.total,zmin,zmax,topo.labels,topo.turns));status('Perfil topográfico generado · '+fmtDistance(prof.total));
-}
 
+ }finally{profilePts=oldPts;}
+}
 function openProfileModal(){const m=document.getElementById('profileModal');m.classList.add('open');m.setAttribute('aria-hidden','false');}
 function closeProfileModal(){const m=document.getElementById('profileModal');m.classList.remove('open');m.setAttribute('aria-hidden','true');}
 function profileTopoName(d){
@@ -1108,7 +1183,7 @@ function drawProfile(samples,total,zmin,zmax){
  ctx.strokeStyle='#aaa';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,p.t);ctx.lineTo(p.l,H-p.b);ctx.lineTo(W-p.r,H-p.b);ctx.stroke();ctx.fillStyle='#222';ctx.font='12px sans-serif';ctx.fillText(fmtNum(hi,0)+' m',4,p.t+4);ctx.fillText(fmtNum(lo,0)+' m',4,H-p.b+4);ctx.fillText('0',p.l-4,H-12);ctx.fillText(fmtDistance(total),W-p.r-70,H-12);
  ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.beginPath();let pen=false;for(const sm of samples){if(sm.z===null){pen=false;continue;}const x=p.l+(sm.d/total)*(W-p.l-p.r),y=p.t+(hi-sm.z)/(hi-lo)*(H-p.t-p.b);if(!pen){ctx.moveTo(x,y);pen=true;}else ctx.lineTo(x,y);}ctx.stroke();
 }
-function clearProfile(){closeProfileModal();profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
+function clearProfile(){if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
 
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfileModal();});
@@ -1139,6 +1214,7 @@ function fmtArea(a){return a<1000000?fmtNum(a,0)+' m²':fmtNum(a/1000000,2)+' km
 let measureMode=null,measureKind=null,measurePts=[],measureLayer=null,measureShape=null,measureHandles=[];
 function measureHandleIcon(){return L.divIcon({className:'',html:'<div style="width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid #17324d;box-shadow:0 1px 5px #0008;box-sizing:border-box;cursor:grab"></div>',iconSize:[16,16],iconAnchor:[8,8]});}
 function startMeasure(mode){
+ if(document.body.classList.contains('globe-mode')){startGlobeMeasure(mode);return;}
  profileMode=false;measureMode=mode;measureKind=mode;measurePts=[];
  if(measureLayer)map.removeLayer(measureLayer);measureLayer=L.layerGroup().addTo(map);measureShape=null;measureHandles=[];
  document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='measurePanel')p.classList.add('hidden')});document.getElementById('measurePanel').classList.remove('hidden');
@@ -1168,8 +1244,8 @@ function redrawMeasure(){
  document.getElementById('measureResult').innerHTML=html;status('Medición: '+short);
 }
 function geodesicArea(pts){let a=0,R=6378137;if(pts.length<3)return 0;for(let i=0;i<pts.length;i++){let p1=pts[i],p2=pts[(i+1)%pts.length];a+=(p2.lng-p1.lng)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));}return Math.abs(a*R*R/2);}
-function finishMeasure(){if(!measureMode)return;redrawMeasure();measureKind=measureMode;measureMode=null;document.getElementById('measurePanel').classList.remove('hidden');status('Medición terminada · arrastra cualquier punto para modificarla');}
-function clearMeasure(){measureMode=null;measureKind=null;measurePts=[];if(measureLayer)map.removeLayer(measureLayer);measureLayer=null;measureShape=null;measureHandles=[];document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';status('Medición borrada');}
+function finishMeasure(){if(document.body.classList.contains('globe-mode')&&globeMeasureMode){finishGlobeMeasure();return;}if(!measureMode)return;redrawMeasure();measureKind=measureMode;measureMode=null;document.getElementById('measurePanel').classList.remove('hidden');status('Medición terminada · arrastra cualquier punto para modificarla');}
+function clearMeasure(){if(globeMeasureEntities.length)clearGlobeMeasure();measureMode=null;measureKind=null;measurePts=[];if(measureLayer)map.removeLayer(measureLayer);measureLayer=null;measureShape=null;measureHandles=[];document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';status('Medición borrada');}
 
 
 // Lugares buscados: capa persistente durante la sesión y gestión individual
@@ -1300,15 +1376,32 @@ setTimeout(updateLegend,100);
 
 
 // v4.0 · Globo 3D cargado únicamente cuando el usuario lo solicita.
-let globeViewer=null,globeLoading=false;
+let globeViewer=null,globeLoading=false,globeTerrainProvider=null;
 function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.dataset.globeCss='1';document.head.appendChild(l);}
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
+
+// Herramientas sobre el globo: usan las mismas funciones geodésicas y el mismo perfil altimétrico del mapa 2D.
+let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[];
+function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
+function globeEntityPoint(ll,color=Cesium.Color.WHITE){return globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:10,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});}
+function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
+function redrawGlobeMeasure(){for(const e of globeMeasureEntities)globeViewer.entities.remove(e);globeMeasureEntities=[];for(const p of globeMeasurePts)globeMeasureEntities.push(globeEntityPoint(p,Cesium.Color.WHITE));if(globeMeasurePts.length>1)globeMeasureEntities.push(globeEntityLine(globeMeasurePts,Cesium.Color.CYAN,globeMeasureMode==='area'));let html='<b>Resultado:</b> —';if(globeMeasureMode==='distance'&&globeMeasurePts.length>1)html='<b>Distancia:</b> '+fmtDistance(measurePerimeter(globeMeasurePts,false));if(globeMeasureMode==='area'&&globeMeasurePts.length>2)html='<b>Superficie:</b> '+fmtArea(geodesicArea(globeMeasurePts))+' &nbsp;·&nbsp; <b>Perímetro:</b> '+fmtDistance(measurePerimeter(globeMeasurePts,true));document.getElementById('measureResult').innerHTML=html;globeViewer.scene.requestRender();}
+function startGlobeMeasure(mode){globeProfileMode=false;globeMeasureMode=mode;globeMeasurePts=[];clearGlobeMeasure(false);document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='measurePanel')p.classList.add('hidden')});document.getElementById('measurePanel').classList.remove('hidden');document.getElementById('measureResult').innerHTML='<b>Resultado:</b> —';status('Medición sobre globo');}
+function finishGlobeMeasure(){if(!globeMeasureMode)return;redrawGlobeMeasure();globeMeasureMode=null;document.getElementById('measurePanel').classList.remove('hidden');}
+function clearGlobeMeasure(reset=true){if(globeViewer)for(const e of globeMeasureEntities)globeViewer.entities.remove(e);globeMeasureEntities=[];globeMeasurePts=[];if(reset)globeMeasureMode=null;if(globeViewer)globeViewer.scene.requestRender();}
+function redrawGlobeProfile(){for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];for(const p of globeProfilePts)globeProfileEntities.push(globeEntityPoint(p,Cesium.Color.YELLOW));if(globeProfilePts.length>1)globeProfileEntities.push(globeEntityLine(globeProfilePts,Cesium.Color.YELLOW,false));globeViewer.scene.requestRender();}
+function startGlobeProfile(){globeMeasureMode=null;globeProfileMode=true;globeProfilePts=[];clearGlobeProfile(false);document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('PERFIL EN GLOBO · marca al menos dos puntos');}
+async function finishGlobeProfile(){if(globeProfilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}globeProfileMode=false;const saved=profilePts;profilePts=globeProfilePts.slice();try{await finishProfileFromPoints(profilePts);}finally{profilePts=saved;}}
+function clearGlobeProfile(reset=true){if(globeViewer)for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];globeProfilePts=[];if(reset)globeProfileMode=false;if(globeViewer)globeViewer.scene.requestRender();}
+function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);globeClickHandler.setInputAction(ev=>{const ll=globePickLatLng(ev.position);if(!ll)return;if(globeProfileMode){globeProfilePts.push(ll);redrawGlobeProfile();document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+(globeProfilePts.length>1?fmtDistance(measurePerimeter(globeProfilePts,false)):'—');return;}if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();}},Cesium.ScreenSpaceEventType.LEFT_CLICK);}
+
 async function ensureGlobe(){
  if(globeViewer||globeLoading)return;globeLoading=true;status('Cargando globo 3D…');
  try{
   const base='https://cdn.jsdelivr.net/npm/cesium@1.132/Build/Cesium/';
   loadCssOnce(base+'Widgets/widgets.css');await loadScriptOnce(base+'Cesium.js');
-  globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,terrainProvider:new Cesium.EllipsoidTerrainProvider(),baseLayer:false});
+  globeTerrainProvider=Cesium.createWorldTerrainAsync?await Cesium.createWorldTerrainAsync():Cesium.createWorldTerrain();
+  globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,terrainProvider:globeTerrainProvider,baseLayer:false});
   // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
   const sat=new Cesium.UrlTemplateImageryProvider({
    url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -1322,7 +1415,7 @@ async function ensureGlobe(){
   for(let lat=-75;lat<=75;lat+=15){const a=[];for(let lon=-180;lon<=180;lon+=5)a.push(lon,lat);mkLine(a,lat===0);}
   globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(2,1.5),label:{text:'Ecuador',font:'600 14px sans-serif',fillColor:gridMain,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.55),pixelOffset:new Cesium.Cartesian2(8,8),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
   globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(0,42),label:{text:'Greenwich',font:'600 14px sans-serif',fillColor:gridMain,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.55),pixelOffset:new Cesium.Cartesian2(8,0),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
-  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;
+  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
  finally{globeLoading=false;}
 }
@@ -1331,6 +1424,6 @@ async function toggleGlobe(){
  if(entering){document.body.classList.add('globe-mode');document.getElementById('viewModeBadge').style.display='block';document.getElementById('globeToggle').classList.add('active');await ensureGlobe();if(globeViewer){globeViewer.resize();const c=map.getCenter(),h=Math.max(1800000,26000000/Math.pow(1.55,map.getZoom()-2));globeViewer.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(c.lng,c.lat,h),duration:0});globeViewer.scene.requestRender();}closePanels();}
  else{document.body.classList.remove('globe-mode');document.getElementById('viewModeBadge').style.display='none';document.getElementById('globeToggle').classList.remove('active');if(globeViewer){const pos=globeViewer.camera.positionCartographic;if(pos){const h=Math.max(80,pos.height),z=Math.max(2,Math.min(18,Math.round(2+Math.log(26000000/h)/Math.log(1.55))));map.setView([Cesium.Math.toDegrees(pos.latitude),Cesium.Math.toDegrees(pos.longitude)],z);}}setTimeout(()=>map.invalidateSize(),50);}
 }
-window.addEventListener('orientationchange',()=>setTimeout(()=>{map.invalidateSize();if(globeViewer)globeViewer.resize();},180));
+window.addEventListener('orientationchange',()=>{setTimeout(()=>{map.invalidateSize(true);if(globeViewer){globeViewer.resize();globeViewer.scene.requestRender();}},120);setTimeout(()=>{map.invalidateSize(true);if(globeViewer){globeViewer.resize();globeViewer.scene.requestRender();}},420);});
 window.addEventListener('resize',()=>{clearTimeout(window.__mapResizeT);window.__mapResizeT=setTimeout(()=>{map.invalidateSize();if(globeViewer)globeViewer.resize();},120);});
 </script></body></html>
