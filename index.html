@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Toponimia mundial vectorial y dinámica: grandes ciudades a escala planetaria; ciudades y poblaciones a escala regional; y pueblos, aldeas, barrios y núcleos menores al acercarse. En España y Canarias se mantiene NGBE/IGN.</li>
+<li>Toponimia mundial vectorial y dinámica decodificada directamente desde las teselas PBF de OpenFreeMap: grandes ciudades a escala planetaria; ciudades y poblaciones a escala regional; y pueblos, aldeas, barrios y núcleos menores al acercarse. En España y Canarias se mantiene NGBE/IGN.</li>
           <li>Consulta de cualquier punto para identificar el topónimo más próximo, país, divisiones territoriales infraestatales, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales exclusivamente altimétricos, con países atravesados mediante llaves y una selección mínima de topónimos próximos —incluidos máximos y valles— en el eje superior.</li>
@@ -2227,6 +2227,7 @@ function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=doc
 let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeSpainToponymsLayer=null,worldTranslitSource=null,
 worldMvtGlobal=null,worldMvtRegional=null,worldMvtLocal=null,worldMvtRegionalKey='',worldMvtLocalKey='',
 worldMvtGeneration=0,worldMvtMoveHandlerInstalled=false,worldRasterFallbackLayer=null,
+worldVectorLabelSource=null,worldVectorLabelTileCache=new Map(),worldVectorLibsPromise=null,worldVectorLabelGeneration=0,
 globeInfoCartesian=null,globeInfoPostRenderInstalled=false,globeReverseCache=new Map();
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
@@ -2440,125 +2441,109 @@ function isSpainGlobeView(){
  return ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
 }
 
+
 function globeCameraHeight(){
  if(!globeViewer)return Infinity;
  try{return Math.max(0,Cesium.Cartographic.fromCartesian(globeViewer.camera.positionWC).height||0);}
  catch(e){return Infinity;}
 }
-function vectorPlaceProp(feature,name){
- try{
-  const v=feature?.getProperty?.(name);
-  return v===undefined||v===null?'':String(v);
- }catch(e){return '';}
-}
-function vectorPlaceNumber(feature,name,fallback=999){
- const n=Number(vectorPlaceProp(feature,name));
- return Number.isFinite(n)?n:fallback;
-}
-function vectorPlaceDisplayName(feature){
- const native=vectorPlaceProp(feature,'name:nonlatin').trim();
- const latin=(vectorPlaceProp(feature,'name:latin')||
-              vectorPlaceProp(feature,'name:es')||
-              vectorPlaceProp(feature,'name:en')||
-              vectorPlaceProp(feature,'name')).trim();
- const raw=vectorPlaceProp(feature,'name').trim();
- if(native&&latin&&native.toLocaleLowerCase()!==latin.toLocaleLowerCase())return native+' ('+latin+')';
- return latin||raw||native;
-}
-function vectorPlaceAllowed(feature,band){
- const cls=vectorPlaceProp(feature,'class').toLowerCase();
- const rank=vectorPlaceNumber(feature,'rank',99);
- const name=vectorPlaceDisplayName(feature);
- if(!name)return false;
-
- // La combinación "class + rank" discrimina la capa place frente a carreteras,
- // usos del suelo y la mayoría de POI del mismo tileset.
- if(band==='global'){
-  return cls==='city' && rank<=6;
+function worldVectorLibs(){
+ if(!worldVectorLibsPromise){
+  worldVectorLibsPromise=Promise.all([
+   import('https://cdn.jsdelivr.net/npm/@mapbox/vector-tile@2.0.4/+esm'),
+   import('https://cdn.jsdelivr.net/npm/pbf@4.0.1/+esm')
+  ]).then(([vt,pbf])=>({VectorTile:vt.VectorTile,Pbf:pbf.default||pbf}));
  }
+ return worldVectorLibsPromise;
+}
+function mercatorTileXY(lon,lat,z){
+ const n=2**z;
+ const x=Math.floor((lon+180)/360*n);
+ const latRad=lat*Math.PI/180;
+ const y=Math.floor((1-Math.asinh(Math.tan(latRad))/Math.PI)/2*n);
+ return {x:Math.max(0,Math.min(n-1,x)),y:Math.max(0,Math.min(n-1,y))};
+}
+function tilePointToLonLat(px,py,extent,x,y,z){
+ const n=2**z;
+ const gx=x+px/extent,gy=y+py/extent;
+ const lon=gx/n*360-180;
+ const lat=Math.atan(Math.sinh(Math.PI*(1-2*gy/n)))*180/Math.PI;
+ return {lon,lat};
+}
+function vectorPlaceNativeProps(p){
+ return String(p['name:nonlatin']||p.name||'').trim();
+}
+function vectorPlaceLatinProps(p){
+ return String(p['name:latin']||p['name:es']||p['name:en']||p.int_name||p.name||'').trim();
+}
+function vectorPlaceDisplayProps(p){
+ const native=vectorPlaceNativeProps(p),latin=vectorPlaceLatinProps(p);
+ if(native&&latin&&hasNonLatinLetters(native)&&native.toLocaleLowerCase()!==latin.toLocaleLowerCase())return native+' ('+latin+')';
+ return latin||native;
+}
+function vectorPlaceAllowedProps(p,band){
+ const cls=String(p.class||'').toLowerCase();
+ const rank=Number(p.rank??99);
+ const name=vectorPlaceDisplayProps(p);
+ if(!name)return false;
+ if(band==='global')return cls==='city'&&rank<=6;
  if(band==='regional'){
   if(cls==='city')return rank<=12;
-  if(cls==='town')return rank<=9;
-  if(cls==='village')return rank<=5;
+  if(cls==='town')return rank<=10;
+  if(cls==='village')return rank<=6;
   return false;
  }
  return ['city','town','village','hamlet','suburb','quarter','neighbourhood','isolated_dwelling'].includes(cls);
 }
-function vectorPlaceFont(feature,band){
- const cls=vectorPlaceProp(feature,'class').toLowerCase();
- const capital=vectorPlaceNumber(feature,'capital',0)>0;
- if(capital)return band==='global'?'800 18px Montserrat, Arial, sans-serif':'800 16px Montserrat, Arial, sans-serif';
- if(cls==='city')return band==='global'?'800 16px Montserrat, Arial, sans-serif':'800 14px Montserrat, Arial, sans-serif';
+function vectorPlaceFontProps(p,band){
+ const cls=String(p.class||'').toLowerCase();
+ const capital=Number(p.capital||0)>0;
+ if(capital)return band==='global'?'800 17px Montserrat, Arial, sans-serif':'800 15px Montserrat, Arial, sans-serif';
+ if(cls==='city')return band==='global'?'800 15px Montserrat, Arial, sans-serif':'800 14px Montserrat, Arial, sans-serif';
  if(cls==='town')return '700 13px Montserrat, Arial, sans-serif';
  if(cls==='village')return '700 12px Montserrat, Arial, sans-serif';
  return '600 11px Montserrat, Arial, sans-serif';
 }
-function makeWorldMvtStyle(band){
- const pale=Cesium.Color.fromCssColorString('#fff0a6');
- const transparent=Cesium.Color.TRANSPARENT;
- const style=new Cesium.Cesium3DTileStyle();
-
- style.show={evaluate:(feature)=>vectorPlaceAllowed(feature,band)};
- style.labelText={evaluate:(feature)=>vectorPlaceDisplayName(feature)};
- style.font={evaluate:(feature)=>vectorPlaceFont(feature,band)};
- style.labelColor={evaluate:()=>pale};
- style.labelOutlineColor={evaluate:()=>Cesium.Color.BLACK.withAlpha(.98)};
- style.labelOutlineWidth={evaluate:()=>3};
- style.labelStyle={evaluate:()=>Cesium.LabelStyle.FILL_AND_OUTLINE};
- style.labelHorizontalOrigin={evaluate:()=>Cesium.HorizontalOrigin.CENTER};
- style.labelVerticalOrigin={evaluate:()=>Cesium.VerticalOrigin.BOTTOM};
- style.pointSize={evaluate:()=>1};
- style.pointColor={evaluate:()=>transparent};
- style.pointOutlineColor={evaluate:()=>transparent};
- style.pointOutlineWidth={evaluate:()=>0};
- return style;
+function worldLabelBand(){
+ const h=globeCameraHeight();
+ if(h>4200000)return {name:'global',z:4,r:1};
+ if(h>500000)return {name:'regional',z:7,r:1};
+ if(h>120000)return {name:'local',z:10,r:1};
+ return {name:'local',z:12,r:1};
 }
-function worldMvtViewCenter(){
- const ll=globeCameraCenterLatLng();
- return ll?{lat:ll.lat,lng:ll.lng}:null;
+async function fetchVectorPlaceTile(z,x,y){
+ const key=z+'/'+x+'/'+y;
+ if(worldVectorLabelTileCache.has(key))return worldVectorLabelTileCache.get(key);
+ const p=(async()=>{
+  const {VectorTile,Pbf}=await worldVectorLibs();
+  const url=`https://tiles.openfreemap.org/planet/latest/${z}/${x}/${y}.pbf`;
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('MVT HTTP '+r.status);
+  const buf=await r.arrayBuffer();
+  const tile=new VectorTile(new Pbf(new Uint8Array(buf)));
+  const layer=tile.layers.place;
+  if(!layer)return [];
+  const out=[];
+  for(let i=0;i<layer.length;i++){
+   const f=layer.feature(i);
+   const p=f.properties||{};
+   const g=f.loadGeometry();
+   if(!g?.length||!g[0]?.length)continue;
+   // place layer is point geometry; use first point.
+   const pt=g[0][0], ll=tilePointToLonLat(pt.x,pt.y,layer.extent,x,y,z);
+   out.push({p,lon:ll.lon,lat:ll.lat});
+  }
+  return out;
+ })();
+ worldVectorLabelTileCache.set(key,p);
+ if(worldVectorLabelTileCache.size>160){
+  const first=worldVectorLabelTileCache.keys().next().value;
+  worldVectorLabelTileCache.delete(first);
+ }
+ return p;
 }
-function clampLat(v){return Math.max(-84.5,Math.min(84.5,v));}
-function normLon(v){while(v>180)v-=360;while(v<-180)v+=360;return v;}
-function worldMvtExtentAround(center,lonSpan,latSpan){
- const west=normLon(center.lng-lonSpan/2),east=normLon(center.lng+lonSpan/2);
- const south=clampLat(center.lat-latSpan/2),north=clampLat(center.lat+latSpan/2);
- return Cesium.Rectangle.fromDegrees(west,south,east,north);
-}
-function worldMvtKey(center,step){
- if(!center)return '';
- return Math.round(center.lng/step)*step+'|'+Math.round(center.lat/step)*step;
-}
-function removeWorldMvtProvider(provider){
- if(!provider||!globeViewer)return;
- try{globeViewer.scene.primitives.remove(provider);}catch(e){}
-}
-async function createWorldMvtProvider(band,extent,minZoom,maxZoom){
- if(!Cesium.MVTDataProvider)throw new Error('MVTDataProvider no está disponible en esta versión de Cesium');
- const provider=await Cesium.MVTDataProvider.fromUrl(
-  'https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf',
-  {minZoom,maxZoom,extent,featureIdProperty:'osm_id'}
- );
- globeViewer.scene.primitives.add(provider);
- provider.tileset.style=makeWorldMvtStyle(band);
- provider.show=true;
- return provider;
-}
-function ensureWorldRasterFallback(){
- if(!globeViewer||worldRasterFallbackLayer)return;
- const p=new Cesium.UrlTemplateImageryProvider({
-  url:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
-  subdomains:['a','b','c','d'],minimumLevel:0,maximumLevel:20,
-  credit:'© OpenStreetMap contributors · © CARTO',hasAlphaChannel:true
- });
- worldRasterFallbackLayer=globeViewer.imageryLayers.addImageryProvider(p);
- worldRasterFallbackLayer.alpha=1;
- globeViewer.imageryLayers.raiseToTop(worldRasterFallbackLayer);
-}
-function hideAllWorldMvt(){
- if(worldMvtGlobal)worldMvtGlobal.show=false;
- if(worldMvtRegional)worldMvtRegional.show=false;
- if(worldMvtLocal)worldMvtLocal.show=false;
- if(worldRasterFallbackLayer)worldRasterFallbackLayer.show=false;
+function clearWorldVectorLabels(){
+ if(worldVectorLabelSource)worldVectorLabelSource.entities.removeAll();
 }
 async function updateWorldVectorToponyms(force=false){
  if(!globeViewer)return;
@@ -2567,75 +2552,84 @@ async function updateWorldVectorToponyms(force=false){
 
  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=spain;
  if(!enabled||spain){
-  hideAllWorldMvt();
+  if(worldVectorLabelSource)worldVectorLabelSource.show=false;
   globeViewer.scene.requestRender();
   return;
  }
 
- const generation=++worldMvtGeneration;
- const h=globeCameraHeight();
- const center=worldMvtViewCenter();
+ const center=globeCameraCenterLatLng();
  if(!center)return;
+ const band=worldLabelBand();
+ const generation=++worldVectorLabelGeneration;
 
  try{
-  // A) planeta/continente: solamente grandes ciudades.
-  if(h>4200000){
-   if(!worldMvtGlobal){
-    status('Cargando grandes ciudades vectoriales…');
-    worldMvtGlobal=await createWorldMvtProvider(
-     'global',
-     Cesium.Rectangle.fromDegrees(-180,-84.5,180,84.5),
-     0,5
-    );
-   }
-   if(generation!==worldMvtGeneration)return;
-   worldMvtGlobal.show=true;
-   if(worldMvtRegional)worldMvtRegional.show=false;
-   if(worldMvtLocal)worldMvtLocal.show=false;
-   if(worldRasterFallbackLayer)worldRasterFallbackLayer.show=false;
-   status('Toponimia vectorial · grandes ciudades');
+  if(!worldVectorLabelSource){
+   worldVectorLabelSource=new Cesium.CustomDataSource('Toponimia mundial vectorial');
+   await globeViewer.dataSources.add(worldVectorLabelSource);
   }
-  // B) escala regional: ciudades + towns + pueblos principales.
-  else if(h>500000){
-   const key=worldMvtKey(center,12);
-   if(force||!worldMvtRegional||key!==worldMvtRegionalKey){
-    const old=worldMvtRegional;
-    status('Cargando toponimia vectorial regional…');
-    const fresh=await createWorldMvtProvider('regional',worldMvtExtentAround(center,34,24),5,9);
-    if(generation!==worldMvtGeneration){removeWorldMvtProvider(fresh);return;}
-    worldMvtRegional=fresh;worldMvtRegionalKey=key;
-    removeWorldMvtProvider(old);
+  worldVectorLabelSource.show=true;
+
+  const c=mercatorTileXY(center.lng,center.lat,band.z),n=2**band.z;
+  const jobs=[];
+  for(let dx=-band.r;dx<=band.r;dx++){
+   for(let dy=-band.r;dy<=band.r;dy++){
+    const x=(c.x+dx+n)%n,y=c.y+dy;
+    if(y<0||y>=n)continue;
+    jobs.push(fetchVectorPlaceTile(band.z,x,y));
    }
-   if(worldMvtGlobal)worldMvtGlobal.show=false;
-   worldMvtRegional.show=true;
-   if(worldMvtLocal)worldMvtLocal.show=false;
-   if(worldRasterFallbackLayer)worldRasterFallbackLayer.show=false;
-   status('Toponimia vectorial · ciudades y poblaciones');
   }
-  // C) escala local: pueblos, aldeas, barrios, etc.
-  else{
-   const key=worldMvtKey(center,1.8);
-   if(force||!worldMvtLocal||key!==worldMvtLocalKey){
-    const old=worldMvtLocal;
-    status('Cargando toponimia vectorial local…');
-    const fresh=await createWorldMvtProvider('local',worldMvtExtentAround(center,6,5),9,14);
-    if(generation!==worldMvtGeneration){removeWorldMvtProvider(fresh);return;}
-    worldMvtLocal=fresh;worldMvtLocalKey=key;
-    removeWorldMvtProvider(old);
+  const tiles=await Promise.all(jobs);
+  if(generation!==worldVectorLabelGeneration)return;
+
+  clearWorldVectorLabels();
+  const pale=Cesium.Color.fromCssColorString('#fff0a6');
+  const seen=new Set();
+  const candidates=[];
+  for(const arr of tiles){
+   for(const item of arr){
+    const p=item.p;
+    if(!vectorPlaceAllowedProps(p,band.name))continue;
+    const name=vectorPlaceDisplayProps(p);
+    const key=name.toLocaleLowerCase('es');
+    if(seen.has(key))continue;
+    seen.add(key);
+    candidates.push(item);
    }
-   if(worldMvtGlobal)worldMvtGlobal.show=false;
-   if(worldMvtRegional)worldMvtRegional.show=false;
-   worldMvtLocal.show=true;
-   if(worldRasterFallbackLayer)worldRasterFallbackLayer.show=false;
-   status('Toponimia vectorial · detalle local');
   }
+
+  // Avoid label overload. Rank + class determines priority.
+  candidates.sort((a,b)=>{
+   const ca=String(a.p.class||''),cb=String(b.p.class||'');
+   const sa=(Number(a.p.capital||0)>0?1000:0)+(ca==='city'?500:ca==='town'?300:ca==='village'?150:0)-Number(a.p.rank||99)*10;
+   const sb=(Number(b.p.capital||0)>0?1000:0)+(cb==='city'?500:cb==='town'?300:cb==='village'?150:0)-Number(b.p.rank||99)*10;
+   return sb-sa;
+  });
+
+  const maxLabels=band.name==='global'?45:band.name==='regional'?90:160;
+  for(const item of candidates.slice(0,maxLabels)){
+   const p=item.p,name=vectorPlaceDisplayProps(p);
+   worldVectorLabelSource.entities.add({
+    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
+    label:{
+     text:name,
+     font:vectorPlaceFontProps(p,band.name),
+     fillColor:pale,
+     outlineColor:Cesium.Color.BLACK.withAlpha(.98),
+     outlineWidth:3,
+     style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+     showBackground:false,
+     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
+     verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
+     pixelOffset:new Cesium.Cartesian2(0,-4),
+     disableDepthTestDistance:0
+    }
+   });
+  }
+  status('Toponimia vectorial · '+(band.name==='global'?'grandes ciudades':band.name==='regional'?'ciudades y poblaciones':'detalle local'));
  }catch(e){
-  console.error('Toponimia MVT:',e);
-  // Esta es una versión de prueba: si OpenFreeMap/MVT falla, el visor sigue siendo utilizable.
-  hideAllWorldMvt();
-  ensureWorldRasterFallback();
-  worldRasterFallbackLayer.show=true;
-  status('MVT no disponible · usando temporalmente la rotulación raster de respaldo');
+  console.error('Toponimia vectorial PBF:',e);
+  if(worldVectorLabelSource)worldVectorLabelSource.show=false;
+  status('No se pudo cargar la toponimia vectorial mundial');
  }
  globeViewer.scene.requestRender();
 }
@@ -2644,15 +2638,13 @@ function syncGlobeToponymLayers(){
  const enabled=!!document.getElementById('worldToponymsCheck')?.checked;
  const spain=enabled&&isSpainGlobeView();
  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=spain;
- if(!enabled||spain)hideAllWorldMvt();
+ if(worldVectorLabelSource)worldVectorLabelSource.show=enabled&&!spain;
  globeViewer.scene.requestRender();
 }
-
 async function toggleWorldToponyms(on){
  if(!globeViewer)return;
  if(on){
   try{
-   // España/Canarias mantiene la misma fuente oficial NGBE/IGN del mapa 2D.
    if(!globeSpainToponymsLayer){
     const ignProvider=new Cesium.WebMapServiceImageryProvider({
      url:'https://www.ign.es/wms-inspire/ngbe',
@@ -2677,7 +2669,7 @@ async function toggleWorldToponyms(on){
    status('No se pudo cargar la toponimia');
   }
  }else{
-  hideAllWorldMvt();
+  if(worldVectorLabelSource)worldVectorLabelSource.show=false;
   if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=false;
   globeViewer.scene.requestRender();
  }
