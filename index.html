@@ -519,7 +519,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <li>Toponimia opcional y dinámica: fuera de España usa rotulación mundial por teselas; en España y Canarias muestra la misma toponimia NGBE/IGN del mapa.</li>
           <li>Consulta de cualquier punto para identificar el topónimo más próximo, país, divisiones territoriales infraestatales, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
-          <li>Perfiles topográficos mundiales con los países atravesados indicados mediante llaves y los topónimos próximos reflejados en el eje superior.</li>
+          <li>Perfiles topográficos mundiales exclusivamente altimétricos, con países atravesados mediante llaves y una selección mínima de topónimos próximos —incluidos máximos y valles— en el eje superior.</li>
         </ul>
       </section>
       <section class="welcomeCard">
@@ -1406,13 +1406,22 @@ async function finishProfileFromPoints(profileInputPts){
  document.getElementById('profileBox').style.display='none';result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total);
  const turns=detectProfileTurns(samples,prof.total,zmin,zmax);
  const topo=await profileToponyms(prof,turns);
- let profileLabels=topo.labels;
+ let profileLabels=topo.labels,profileTurns=topo.turns;
  if(lastProfileSource==='globe'){
-  const worldLabels=await profileWorldToponyms(prof);
-  profileLabels=mergeProfileToponyms(topo.labels,worldLabels);
-  lastProfileCountries=await profileCountryBlocks(prof);
+  const [worldLabels,nearestLabels,namedTurns,countryBlocks]=await Promise.all([
+   profileWorldToponyms(prof),
+   profileWorldNearestLabels(prof),
+   nameWorldProfileTurns(topo.turns),
+   profileCountryBlocks(prof)
+  ]);
+  profileLabels=mergeProfileToponyms([],mergeProfileToponyms(worldLabels,nearestLabels));
+  profileTurns=namedTurns;
+  lastProfileCountries=countryBlocks;
  }else lastProfileCountries=[];
- openProfileModal();lastProfilePath=prof;lastProfileAnalysis=null;lastProfileDraw=[samples,prof.total,zmin,zmax,profileLabels,topo.turns];requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));renderProfileLegend();analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis territorial.</span>';});status('Perfil topográfico generado · '+fmtDistance(prof.total));
+ updateProfileThemeAvailability();
+ openProfileModal();lastProfilePath=prof;lastProfileAnalysis=null;lastProfileDraw=[samples,prof.total,zmin,zmax,profileLabels,profileTurns];requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));renderProfileLegend();
+ if(lastProfileSource!=='globe')analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis territorial.</span>';});
+ status('Perfil topográfico generado · '+fmtDistance(prof.total));
 
  }finally{profilePts=oldPts;}
 }
@@ -1480,7 +1489,25 @@ async function geodeOriginalColor(code){
 }
 function geologyTheme(g){if(!g)return {label:'Sin dato',detail:''};let label=cleanThemeText(g.DESC_UNIT||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();const a1=cleanThemeText(g.NAME_EDA1||''),a2=cleanThemeText(g.NAME_EDA2||''),age=a1&&a2&&a1!==a2?a1+' – '+a2:(a1||a2||'');const id=String(g.CODE_UNIO||g.CODE_COTR||label);return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__color||null,unit:'geode:'+id,code:normalizeGeodeCode(g.CODE_COTR||''),categoryKey:'geo|'+normalizeThemeCategory(id)};}
 function themeAtDistance(d,key){if(!lastProfileAnalysis||!lastProfileAnalysis.samples.length)return null;let best=lastProfileAnalysis.samples[0],bd=Math.abs(best.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}return best[key]||null;}
-function profileThemeMode(){return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';}
+function profileThemeMode(){
+ if(lastProfileSource==='globe')return 'alt';
+ return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';
+}
+function updateProfileThemeAvailability(){
+ const globe=lastProfileSource==='globe';
+ const alt=document.getElementById('profileAltTheme');
+ const thematic=['profileVegActualTheme','profileVegPotentialTheme','profileGeoTheme'];
+ if(globe&&alt)alt.checked=true;
+ for(const id of thematic){
+  const el=document.getElementById(id);if(!el)continue;
+  el.disabled=globe;
+  if(el.parentElement){
+   el.parentElement.style.opacity=globe?'.35':'';
+   el.parentElement.style.cursor=globe?'not-allowed':'pointer';
+   el.parentElement.title=globe?'Esta capa temática no está disponible todavía a escala mundial.':'';
+  }
+ }
+}
 function validProfileFormation(name){
  const t=String(name||'').trim();return !!t&&!/^(?:sin dato|sin informaci[oó]n|no consta|n\/a|formaci[oó]n no determinada)$/i.test(t);
 }
@@ -1488,7 +1515,11 @@ function profileConcreteKey(u){return String(u?.concrete||u?.detail||u?.label||u
 function profileCategoryKey(u){return u?.categoryKey||normalizeThemeCategory(profileConcreteKey(u)||u?.unit||u?.label||'');}
 function renderProfileLegend(){
  const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();
- if(mode==='alt'){const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];box.innerHTML=items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;}
+ if(mode==='alt'){
+  const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];
+  const note=lastProfileSource==='globe'?'<span class="profileLegendHint" style="flex-basis:100%">Perfil mundial: por ahora solo se representa la altimetría.</span>':'';
+  box.innerHTML=note+items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;
+ }
  if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode.startsWith('veg')?'vegetación':'geología')+'…</span>';return;}
  if(mode==='geo'){
   const seen=new Map();for(const x of lastProfileAnalysis.samples){const u=x.geo;if(!u||!u.label||u.label==='Sin dato')continue;seen.set(profileCategoryKey(u),u);}
@@ -1510,7 +1541,7 @@ function renderProfileLegend(){
  box.innerHTML=grouped+loose;
 }
 
-function redrawProfileTheme(){renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
+function redrawProfileTheme(){updateProfileThemeAvailability();renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
 let profileTerritorySeq=0;
 async function analyzeProfileTerritory(prof){
  const seq=++profileTerritorySeq;
@@ -1580,7 +1611,7 @@ async function profileWorldToponyms(prof){
  if(lastProfileSource!=='globe')return [];
  try{
   const data=await loadWorldToponyms();
-  const radius=profileCorridorRadius(prof.total);
+  const radius=Math.max(profileCorridorRadius(prof.total),Math.min(45000,Math.max(12000,prof.total/18)));
   const candidates=[],seen=new Set();
 
   for(const f of data.features||[]){
@@ -1596,7 +1627,7 @@ async function profileWorldToponyms(prof){
    const near=profileNearestPoint(ll,prof);
    if(!near||near.dist>radius)continue;
 
-   const name=worldPlaceName(p).trim();
+   const name=worldPlaceDisplayName(p).trim();
    if(!name)continue;
 
    const rank=Number(p.scalerank??p.labelrank??p.SCALERANK??p.LABELRANK??8);
@@ -1631,6 +1662,44 @@ async function profileWorldToponyms(prof){
   return [];
  }
 }
+
+async function profileWorldNearestLabels(prof){
+ if(lastProfileSource!=='globe')return [];
+ const total=prof.total||0;
+ const target=total>1200000?8:total>400000?7:total>120000?6:5;
+ const chosen=[],seen=new Set();
+
+ // Muestras distribuidas por todo el perfil: garantizan presencia de topónimos
+ // aunque el transecto no cruce exactamente una ciudad del catálogo.
+ for(let k=0;k<target;k++){
+  const d=target===1?total/2:total*k/(target-1);
+  const p=prof.points.reduce((best,x)=>Math.abs(x.d-d)<Math.abs(best.d-d)?x:best,prof.points[0]);
+  if(!p?.ll||profileIsSpainLatLng(p.ll))continue;
+  const rev=await reverseWorldAt(p.ll.lat,p.ll.lng);
+  const name=String(rev?.place||rev?.display?.split(',')[0]||'').trim();
+  if(!name)continue;
+  const key=name.toLocaleLowerCase('es-ES');if(seen.has(key))continue;
+  seen.add(key);
+  chosen.push({d:p.d,name,kind:'city',score:750000,dist:0,ll:p.ll,nearest:true});
+ }
+ return chosen;
+}
+async function nameWorldProfileTurns(turns){
+ if(lastProfileSource!=='globe'||!turns?.length)return turns||[];
+ const ordered=[...turns].sort((a,b)=>(b.prominence||0)-(a.prominence||0));
+ const limit=Math.min(7,ordered.length);
+ const named=new Map();
+
+ for(let i=0;i<limit;i++){
+  const t=ordered[i];
+  if(!t?.ll||profileIsSpainLatLng(t.ll))continue;
+  const rev=await reverseWorldAt(t.ll.lat,t.ll.lng);
+  const name=String(rev?.place||rev?.display?.split(',')[0]||'').trim();
+  if(name)named.set(t,{...t,name,kind:t.type==='peak'?'peak':'relief',nameDist:0});
+ }
+ return turns.map(t=>named.get(t)||t);
+}
+
 function mergeProfileToponyms(localLabels,worldLabels){
  const out=[],seen=new Set();
  for(const t of [...(localLabels||[]),...(worldLabels||[])]){
@@ -2120,7 +2189,7 @@ function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))ret
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
 
 // Herramientas sobre el globo: medición, perfil editable y consulta territorial mundial.
-let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeSpainToponymsLayer=null,globeInfoCartesian=null,globeInfoPostRenderInstalled=false,globeReverseCache=new Map();
+let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeSpainToponymsLayer=null,worldTranslitSource=null,globeInfoCartesian=null,globeInfoPostRenderInstalled=false,globeReverseCache=new Map();
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
 function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
@@ -2274,6 +2343,28 @@ function countryLabelName(p){
  return p.NAME_ES||p.ADMIN||p.NAME_LONG||p.NAME_EN||p.NAME||p.SOVEREIGNT||'';
 }
 
+
+function hasNonLatinLetters(s){
+ const v=String(s||'');
+ // Letras Unicode excluyendo bloques latinos comunes.
+ return /[^\u0000-\u024F\u1E00-\u1EFF0-9\s.,'’"“”()\-–—·/]/u.test(v);
+}
+function worldPlaceNativeName(p){
+ return String(p.name||p.NAME||p.namepar||p.NAMEPAR||'').trim();
+}
+function worldPlaceLatinName(p){
+ return String(p.nameascii||p.NAMEASCII||p.name_en||p.NAME_EN||p.namepar||p.NAMEPAR||'').trim();
+}
+function worldPlaceDisplayName(p){
+ const native=worldPlaceNativeName(p);
+ const latin=worldPlaceLatinName(p);
+ const base=native||latin||worldPlaceName(p);
+ if(native&&latin&&hasNonLatinLetters(native)&&native.toLocaleLowerCase()!==latin.toLocaleLowerCase()){
+  return native+' ('+latin+')';
+ }
+ return base;
+}
+
 function worldPlaceName(p){return p.nameascii||p.name||p.namepar||p.namealt||p.ls_name||p.NAMEASCII||p.NAME||p.NAMEPAR||p.LS_NAME||'';}
 function worldPlaceMaxDistance(p){
  const minz=Number(p.min_zoom??p.MIN_ZOOM);
@@ -2316,7 +2407,81 @@ function syncGlobeToponymLayers(){
  const spain=enabled&&isSpainGlobeView();
  if(worldToponymsLayer)worldToponymsLayer.show=enabled&&!spain;
  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=spain;
+ if(worldTranslitSource)worldTranslitSource.show=enabled&&!spain;
  globeViewer.scene.requestRender();
+}
+
+
+function tintImageryProviderLabels(provider,fill='#fff2a8'){
+ const original=provider.requestImage.bind(provider);
+ provider.requestImage=(x,y,level,request)=>{
+  const img=original(x,y,level,request);
+  if(!img)return img;
+  return Promise.resolve(img).then(source=>{
+   try{
+    const w=source.width||provider.tileWidth||256,h=source.height||provider.tileHeight||256;
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(source,0,0,w,h);
+    ctx.globalCompositeOperation='source-in';
+    ctx.fillStyle=fill;
+    ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='source-over';
+    return canvas;
+   }catch(e){
+    console.warn('No se pudo colorear una tesela de topónimos:',e);
+    return source;
+   }
+  });
+ };
+ return provider;
+}
+
+
+async function ensureWorldTranslitLabels(){
+ if(!globeViewer)return;
+ if(worldTranslitSource){
+  worldTranslitSource.show=true;
+  return;
+ }
+ try{
+  const data=await loadWorldToponyms();
+  const ds=new Cesium.CustomDataSource('Topónimos transliterados');
+  for(const f of data.features||[]){
+   const p=f.properties||{},g=f.geometry||{};
+   if(g.type!=='Point'||!Array.isArray(g.coordinates))continue;
+   const lon=Number(g.coordinates[0]),lat=Number(g.coordinates[1]);
+   if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
+   const native=worldPlaceNativeName(p),latin=worldPlaceLatinName(p);
+   if(!native||!latin||!hasNonLatinLetters(native)||native.toLocaleLowerCase()===latin.toLocaleLowerCase())continue;
+
+   const maxDist=worldPlaceMaxDistance(p);
+   const fc=String(p.featurecla||p.FEATURECLA||'').toLowerCase();
+   const capital=fc.includes('capital');
+   ds.entities.add({
+    position:Cesium.Cartesian3.fromDegrees(lon,lat,9000),
+    label:{
+     text:native+' ('+latin+')',
+     font:capital?'800 13px Montserrat, Arial, sans-serif':'700 11px Montserrat, Arial, sans-serif',
+     fillColor:Cesium.Color.fromCssColorString('#fff0a6'),
+     outlineColor:Cesium.Color.BLACK.withAlpha(.98),
+     outlineWidth:3,
+     style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+     showBackground:true,
+     backgroundColor:Cesium.Color.BLACK.withAlpha(.30),
+     backgroundPadding:new Cesium.Cartesian2(4,2),
+     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
+     verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
+     pixelOffset:new Cesium.Cartesian2(0,-8),
+     distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist)
+    }
+   });
+  }
+  worldTranslitSource=ds;
+  await globeViewer.dataSources.add(ds);
+ }catch(e){
+  console.warn('No se pudo crear la capa de transliteraciones:',e);
+ }
 }
 
 async function toggleWorldToponyms(on){
@@ -2324,14 +2489,14 @@ async function toggleWorldToponyms(on){
  if(on){
   try{
    if(!worldToponymsLayer){
-    const globalProvider=new Cesium.UrlTemplateImageryProvider({
+    const globalProvider=tintImageryProviderLabels(new Cesium.UrlTemplateImageryProvider({
      url:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
      subdomains:['a','b','c','d'],
      minimumLevel:0,
      maximumLevel:20,
      credit:'© OpenStreetMap contributors · © CARTO',
      hasAlphaChannel:true
-    });
+    }),'#fff0a6');
     worldToponymsLayer=globeViewer.imageryLayers.addImageryProvider(globalProvider);
     worldToponymsLayer.alpha=1;
    }
@@ -2353,6 +2518,7 @@ async function toggleWorldToponyms(on){
    globeViewer.imageryLayers.raiseToTop(worldToponymsLayer);
    globeViewer.imageryLayers.raiseToTop(globeSpainToponymsLayer);
    syncGlobeToponymLayers();
+   if(!isSpainGlobeView())await ensureWorldTranslitLabels();
    status(isSpainGlobeView()?'Toponimia IGN/NGBE en España y Canarias':'Toponimia mundial visible · detalle automático según la escala');
   }catch(e){
    console.error(e);
@@ -2362,6 +2528,7 @@ async function toggleWorldToponyms(on){
  }else{
   if(worldToponymsLayer)worldToponymsLayer.show=false;
   if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=false;
+  if(worldTranslitSource)worldTranslitSource.show=false;
   globeViewer.scene.requestRender();
  }
 }
@@ -2490,14 +2657,17 @@ async function reverseWorldAt(lat,lon){
  if(globeReverseCache.has(key))return globeReverseCache.get(key);
  const p=(async()=>{
   try{
-   const u='https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=es&lat='+
+   const u='https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&namedetails=1&zoom=18&accept-language=es&lat='+
     encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon);
    const r=await fetch(u,{headers:{'Accept':'application/json'}});
    if(!r.ok)throw new Error('HTTP '+r.status);
    const j=await r.json();
-   const a=j.address||{};
-   const place=j.name||a.hamlet||a.village||a.town||a.city||a.municipality||
+   const a=j.address||{},nd=j.namedetails||{};
+   const rawPlace=j.name||a.hamlet||a.village||a.town||a.city||a.municipality||
     a.locality||a.suburb||a.neighbourhood||a.road||a.natural||a.tourism||a.amenity||'';
+   const latinPlace=nd['name:es']||nd['name:en']||nd.int_name||nd['name:fr']||nd['name:pt']||'';
+   const place=(rawPlace&&latinPlace&&hasNonLatinLetters(rawPlace)&&rawPlace.toLocaleLowerCase()!==latinPlace.toLocaleLowerCase())
+    ?rawPlace+' ('+latinPlace+')':rawPlace;
    const municipality=a.municipality||a.city_district||a.borough||a.city||a.town||a.village||'';
    const subregion=a.county||a.state_district||a.region||'';
    const region=a.state||a.province||a.region||'';
