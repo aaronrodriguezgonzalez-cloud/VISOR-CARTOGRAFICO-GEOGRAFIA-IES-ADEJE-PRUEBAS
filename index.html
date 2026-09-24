@@ -491,35 +491,43 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     </div>
     <div class="welcomeGrid">
       <section class="welcomeCard">
-        <h4>🗺️ Qué puedes explorar</h4>
+        <h4>🏝️ Canarias</h4>
         <ul>
-          <li>Mapas topográficos y ortofotos del IGN/PNOA.</li>
-          <li>Capas temáticas de relieve, vegetación, usos del suelo y geología.</li>
-          <li>Consulta de municipios, provincias, comunidades y países.</li>
+          <li>Cartografía topográfica, ortofotografía y red geográfica.</li>
+          <li>Consulta territorial y límites municipales.</li>
+          <li>Vegetación actual y potencial de GRAFCAN, con identificación de formaciones.</li>
+          <li>Geología GEODE y consulta de unidades, edades y materiales.</li>
+          <li>Mediciones y perfiles topográficos con altimetría, vegetación y geología.</li>
         </ul>
       </section>
       <section class="welcomeCard">
-        <h4>📍 Herramientas de localización</h4>
+        <h4>🇪🇸 España</h4>
         <ul>
-          <li>Mi ubicación GPS.</li>
-          <li>Búsqueda de topónimos.</li>
-          <li>Localización por coordenadas.</li>
+          <li>Mapas IGN, ortofotos PNOA y herramientas de localización.</li>
+          <li>Comunidades autónomas, provincias y municipios.</li>
+          <li>Vegetación actual MFE25 en Península y Baleares y vegetación potencial MITECO.</li>
+          <li>Vías de comunicación, geología GEODE y toponimia.</li>
+          <li>Medición de distancias, perímetros y superficies y creación de perfiles.</li>
         </ul>
       </section>
       <section class="welcomeCard">
-        <h4>📏 Medición y análisis</h4>
+        <h4>🌍 Mundo</h4>
         <ul>
-          <li>Medición de distancias, perímetros y superficies.</li>
-          <li>Generación de perfiles topográficos.</li>
-          <li>Análisis por tramos con altimetría, vegetación y geología.</li>
+          <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
+          <li>Visualización de fronteras de países y territorios.</li>
+          <li>Consulta de cualquier punto para identificar país, coordenadas y altitud aproximada.</li>
+          <li>Medición de distancias y superficies directamente sobre el globo.</li>
+          <li>Perfiles topográficos mundiales con los países atravesados indicados mediante llaves.</li>
         </ul>
       </section>
       <section class="welcomeCard">
-        <h4>🌐 Más posibilidades</h4>
+        <h4>🧭 Herramientas comunes</h4>
         <ul>
-          <li>Modo globo 3D para explorar el mundo.</li>
-          <li>Consulta temática del territorio en distintos ámbitos.</li>
-          <li>Herramienta útil para docencia, divulgación y trabajo personal.</li>
+          <li>GPS, búsqueda de topónimos y localización por coordenadas.</li>
+          <li>Escala, orientación, paralelos y meridianos.</li>
+          <li>Consulta interactiva de capas y leyendas.</li>
+          <li>Perfiles editables y fichas informativas al recorrer el perfil.</li>
+          <li>Uso abierto para docencia, divulgación y exploración territorial.</li>
         </ul>
       </section>
     </div>
@@ -581,7 +589,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 </details>
 <details open><summary>Territorios · globo 3D</summary>
 <label><input id="countriesCheck" type="checkbox" checked> <b>Países y territorios</b></label>
-<div style="padding:2px 2px 5px 13px"><small>Fronteras mundiales · Natural Earth. La identificación del país funciona aunque la capa esté apagada.</small></div>
+<div style="padding:2px 2px 5px 13px"><small>Fronteras mundiales · Natural Earth. Activa esta opción para verlas claramente sobre el globo. La identificación del país funciona aunque la capa esté apagada.</small></div>
 </details>
 <details open><summary>División administrativa · España</summary>
 <label><input id="ccaaCheck" type="checkbox"> <b>Comunidades autónomas</b></label>
@@ -1366,6 +1374,7 @@ function interpolateProfilePoints(pts,n=100){
 }
 async function finishProfile(){
  if(document.body.classList.contains('globe-mode')&&globeProfileMode){await finishGlobeProfile();return;}
+ lastProfileSource='map';lastProfileCountries=[];
  await finishProfileFromPoints(profilePts);
 }
 async function finishProfileFromPoints(profileInputPts){
@@ -1392,11 +1401,13 @@ async function finishProfileFromPoints(profileInputPts){
  document.getElementById('profileSummary').innerHTML=summary;document.getElementById('profileModalSummary').innerHTML=summary;
  document.getElementById('profileBox').style.display='none';result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total);
  const turns=detectProfileTurns(samples,prof.total,zmin,zmax);
- const topo=await profileToponyms(prof,turns);openProfileModal();lastProfilePath=prof;lastProfileAnalysis=null;lastProfileDraw=[samples,prof.total,zmin,zmax,topo.labels,topo.turns];requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));renderProfileLegend();analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis territorial.</span>';});status('Perfil topográfico generado · '+fmtDistance(prof.total));
+ const topo=await profileToponyms(prof,turns);
+ if(lastProfileSource==='globe')lastProfileCountries=await profileCountryBlocks(prof);else lastProfileCountries=[];
+ openProfileModal();lastProfilePath=prof;lastProfileAnalysis=null;lastProfileDraw=[samples,prof.total,zmin,zmax,topo.labels,topo.turns];requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));renderProfileLegend();analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis territorial.</span>';});status('Perfil topográfico generado · '+fmtDistance(prof.total));
 
  }finally{profilePts=oldPts;}
 }
-let lastProfileAnalysis=null,lastProfileDraw=null,lastProfilePath=null;
+let lastProfileAnalysis=null,lastProfileDraw=null,lastProfilePath=null,lastProfileSource='map',lastProfileCountries=[];
 function profileVegetationKind(){return document.querySelector('input[name="profileTheme"]:checked')?.value==='veg_potential'?'potential':'actual';}
 function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 68%)';}
 function cleanThemeText(txt){return cleanGrafcanValue(txt);}
@@ -1672,11 +1683,25 @@ function drawProfileFormationBrackets(ctx,X,base,W,p,total,key){
   row=Math.min(row,occupied.length-1);const y=base+31+row*20;ctx.beginPath();ctx.moveTo(x1,y+5);ctx.lineTo(x1,y+14);ctx.lineTo(x2,y+14);ctx.lineTo(x2,y+5);ctx.stroke();ctx.textAlign='center';ctx.fillText(text,Math.max(p.l+tw/2,Math.min((x1+x2)/2,W-p.r-tw/2)),y);
  }
 }
+
+function drawProfileCountryBrackets(ctx,X,base,W,p,total,vegetationMode){
+ if(lastProfileSource!=='globe'||!lastProfileCountries?.length)return;
+ ctx.save();ctx.font='800 11px system-ui,sans-serif';ctx.textBaseline='top';ctx.strokeStyle='rgba(26,107,136,.88)';ctx.fillStyle='#1a6b88';ctx.lineWidth=1.4;
+ const y=base+(vegetationMode?101:43);
+ for(const b of lastProfileCountries){
+  const x1=X(b.start),x2=X(b.end);if(x2-x1<2)continue;
+  ctx.beginPath();ctx.moveTo(x1,y+4);ctx.lineTo(x1,y+13);ctx.lineTo(x2,y+13);ctx.lineTo(x2,y+4);ctx.stroke();
+  const tw=ctx.measureText(b.name).width,mid=(x1+x2)/2;
+  ctx.textAlign='center';ctx.fillText(b.name,Math.max(p.l+tw/2,Math.min(mid,W-p.r-tw/2)),y-10);
+ }
+ ctx.restore();
+}
+
 function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  const c=document.getElementById('profileCanvasLarge'),wrap=document.getElementById('profileChartWrap');
  const dpr=Math.max(1,window.devicePixelRatio||1),cw=Math.max(700,wrap.clientWidth),ch=Math.max(400,wrap.clientHeight),skinMode=profileThemeMode(),vegetationMode=skinMode.startsWith('veg');
  c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);c.style.width=cw+'px';c.style.height=ch+'px';
- const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,p={l:72,r:28,t:58,b:vegetationMode?118:64};ctx.clearRect(0,0,W,H);
+ const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,countryMode=lastProfileSource==='globe'&&!!lastProfileCountries?.length,p={l:72,r:28,t:58,b:vegetationMode?(countryMode?154:118):(countryMode?96:64)};ctx.clearRect(0,0,W,H);
  let lo=Math.min(0,Math.floor((zmin-50)/100)*100),hi=Math.ceil((zmax+80)/100)*100;if(hi<=lo)hi=lo+100;
  const X=d=>p.l+(d/total)*(W-p.l-p.r),Y=z=>p.t+(hi-z)/(hi-lo)*(H-p.t-p.b),base=H-p.b;
  // Fondo neutro: las tintas hipsométricas se reservan para la "piel" del relieve.
@@ -1705,6 +1730,7 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  ctx.strokeStyle='#263238';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(p.l,p.t);ctx.lineTo(p.l,base);ctx.lineTo(W-p.r,base);ctx.stroke();ctx.fillStyle='#263238';ctx.textAlign='center';ctx.textBaseline='top';
  const xStep=niceDistanceStep(total);for(let d=0;d<=total+1e-6;d+=xStep){const x=X(d);ctx.strokeStyle='rgba(50,60,70,.14)';ctx.beginPath();ctx.moveTo(x,p.t);ctx.lineTo(x,base);ctx.stroke();ctx.fillStyle='#263238';ctx.fillText(fmtAxisDistance(d),x,base+9);}
  if(vegetationMode)drawProfileFormationBrackets(ctx,X,base,W,p,total,skinMode==='veg_potential'?'vegPotential':'vegActual');
+ drawProfileCountryBrackets(ctx,X,base,W,p,total,vegetationMode);
  // Construimos una única cola de rótulos. La prioridad combina categoría, proximidad y,
  // en las inflexiones, la prominencia real detectada en el perfil.
  const labelCandidates=[];
@@ -1767,6 +1793,8 @@ function showProfilePoint(event){
  const request=++profilePointRequest;
  const rows=mode==='alt'?[]:mode==='geo'?[['Unidad geológica',u?.label||'Sin dato'],['Edad',u?.detail&&u.detail!==u.label?u.detail.replace(u.label+' · ',''):'']]:[[u?.coverType?'Cobertura/uso':'Formación',validProfileFormation(u?.formation)?u.formation:''],['Formación concreta',u?.concrete&&u.concrete!==u.formation?u.concrete:''],['Especie dominante',u?.dominant],['Nombre común',u?.detail&&u.detail!==u.concrete&&u.detail!==u.formation?u.detail:''],['Unidad fitosociológica',u?.association]];
  const heading=mode==='alt'?'⛰️ Altimetría':mode==='geo'?'🪨 Geología':'🌿 Vegetación '+(mode==='veg_potential'?'potencial':'actual');
+ const profileCountry=profileCountryAtDistance(distance);
+ if(profileCountry)rows.unshift(['País/territorio',profileCountry]);
  rows.unshift(['Altitud aproximada',nearest?fmtNum(nearest.z,0)+' m':'Sin dato']);
  box.innerHTML='<button type="button" aria-label="Cerrar ficha" style="float:right;margin-left:6px" onclick="this.parentNode.classList.add(\'hidden\')">×</button><b>'+heading+'</b><br>'+rows.filter(row=>row[1]).map(row=>'<b>'+escHtml(row[0])+':</b> '+escHtml(row[1])).join('<br>')+'<br><small>'+fmtDistance(distance)+' desde el inicio</small>';
  const wrap=document.getElementById('profileChartWrap'),w=wrap.clientWidth,h=wrap.clientHeight;
@@ -1783,7 +1811,7 @@ function showProfilePoint(event){
  }
 }
 document.getElementById('profileCanvasLarge').addEventListener('click',showProfilePoint);
-function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
+function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;lastProfileSource='map';lastProfileCountries=[];const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
 
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfileModal();});
@@ -1992,13 +2020,34 @@ function clearGlobeMeasure(reset=true){if(globeViewer)for(const e of globeMeasur
 function redrawGlobeProfile(){if(!globeViewer)return;for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];globeProfileHandles=[];globeProfileLine=null;globeProfilePts.forEach((p,i)=>{const endpoint=i===0||i===globeProfilePts.length-1,e=globeEntityPoint(p,endpoint?Cesium.Color.YELLOW:Cesium.Color.ORANGE,endpoint?i:null);globeProfileEntities.push(e);if(endpoint)globeProfileHandles.push(e);});if(globeProfilePts.length>1){globeProfileLine=globeEntityLine(globeProfilePts,Cesium.Color.YELLOW,false);globeProfileEntities.push(globeProfileLine);}globeViewer.scene.requestRender();}
 function updateGlobeProfileFast(){if(globeProfileLine)globeProfileLine.polyline.positions=Cesium.Cartesian3.fromDegreesArray(globeProfilePts.flatMap(p=>[p.lng,p.lat]));const d=measurePerimeter(globeProfilePts,false);document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+fmtDistance(d)+' · suelta el extremo para recalcular';status('Perfil · '+fmtDistance(d));globeViewer.scene.requestRender();}
 function startGlobeProfile(){globeMeasureMode=null;globeProfileMode=true;globeProfilePts=[];clearGlobeProfile(false);document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('PERFIL EN GLOBO · marca al menos dos puntos');}
-async function finishGlobeProfile(){if(globeProfilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}globeProfileMode=false;redrawGlobeProfile();await finishProfileFromPoints(globeProfilePts.slice());}
+async function finishGlobeProfile(){if(globeProfilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}globeProfileMode=false;redrawGlobeProfile();lastProfileSource='globe';lastProfileCountries=[];await finishProfileFromPoints(globeProfilePts.slice());}
 function clearGlobeProfile(reset=true){if(globeViewer)for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];globeProfileHandles=[];globeProfileLine=null;globeProfilePts=[];if(reset)globeProfileMode=false;if(globeViewer)globeViewer.scene.requestRender();}
 function countryName(p){return p.ADMIN||p.NAME_ES||p.NAME_EN||p.NAME||p.SOVEREIGNT||p.BRK_NAME||'Territorio sin identificar';}
 async function loadCountries(){if(countriesData)return countriesData;if(countriesLoading)return countriesLoading;countriesLoading=(async()=>{const urls=['https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson','https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'];let j=null;for(const u of urls){try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){j=await r.json();break;}}catch(e){}}if(!j)throw new Error('No se pudo cargar Natural Earth 110m');countriesData=j;return j;})().finally(()=>countriesLoading=null);return countriesLoading;}
 function countryAtFeature(lat,lon){if(!countriesData)return null;return countriesData.features.find(f=>featureContainsPoint(f,lat,lon))||null;}
+async function profileCountryBlocks(prof){
+ try{
+  await loadCountries();
+  const pts=prof?.points||[],blocks=[];let cur=null;
+  for(let i=0;i<pts.length;i++){
+   const p=pts[i],f=countryAtFeature(p.ll.lat,p.ll.lng),name=f?countryName(f.properties||{}):'';
+   const left=i===0?0:(pts[i-1].d+p.d)/2,right=i===pts.length-1?prof.total:(p.d+pts[i+1].d)/2;
+   if(!name){if(cur){blocks.push(cur);cur=null;}continue;}
+   if(cur&&cur.name===name)cur.end=right;
+   else{if(cur)blocks.push(cur);cur={name,start:left,end:right};}
+  }
+  if(cur)blocks.push(cur);
+  return blocks.filter(b=>b.end>b.start);
+ }catch(e){console.warn('Países del perfil:',e);return [];}
+}
+function profileCountryAtDistance(d){
+ if(!lastProfileCountries?.length)return '';
+ const b=lastProfileCountries.find(x=>d>=x.start&&d<=x.end);
+ return b?.name||'';
+}
+
 async function countryAt(lat,lon){try{await loadCountries();const f=countryAtFeature(lat,lon);return f?countryName(f.properties||{}):'Océano / territorio no identificado';}catch(e){return 'País no disponible';}}
-async function toggleCountriesLayer(on){if(!globeViewer)return;if(on){status('Cargando fronteras mundiales ligeras…');try{const data=await loadCountries();if(!document.getElementById('countriesCheck').checked)return;if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);countriesSource=await Cesium.GeoJsonDataSource.load(data,{stroke:Cesium.Color.WHITE.withAlpha(.92),fill:Cesium.Color.TRANSPARENT,strokeWidth:1.2,clampToGround:false});globeViewer.dataSources.add(countriesSource);globeViewer.scene.requestRender();status('Países y territorios · Natural Earth 1:110 M');}catch(e){document.getElementById('countriesCheck').checked=false;status('No se pudieron cargar las fronteras mundiales');}}else if(countriesSource){globeViewer.dataSources.remove(countriesSource,true);countriesSource=null;globeViewer.scene.requestRender();}}
+async function toggleCountriesLayer(on){if(!globeViewer)return;if(on){status('Cargando fronteras mundiales…');try{const data=await loadCountries();if(!document.getElementById('countriesCheck').checked)return;if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);const borderColor=Cesium.Color.fromCssColorString('#63d7ff').withAlpha(.98);countriesSource=await Cesium.GeoJsonDataSource.load(data,{stroke:borderColor,fill:Cesium.Color.fromCssColorString('#63d7ff').withAlpha(.035),strokeWidth:2.4,clampToGround:true});globeViewer.dataSources.add(countriesSource);for(const ent of countriesSource.entities.values){if(ent.polygon){ent.polygon.outline=true;ent.polygon.outlineColor=borderColor;ent.polygon.material=Cesium.Color.fromCssColorString('#63d7ff').withAlpha(.025);}}globeViewer.scene.requestRender();status('Fronteras de países y territorios visibles · Natural Earth 1:110 M');}catch(e){console.error(e);document.getElementById('countriesCheck').checked=false;status('No se pudieron cargar las fronteras mundiales');}}else if(countriesSource){globeViewer.dataSources.remove(countriesSource,true);countriesSource=null;globeViewer.scene.requestRender();}}
 async function showGlobePoint(ll){const box=document.getElementById('globeInfo');box.classList.remove('empty');const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');}
 function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);
  globeClickHandler.setInputAction(ev=>{const picked=globeViewer.scene.pick(ev.position);if(Cesium.defined(picked)&&picked.id&&Number.isInteger(picked.id.__profileIndex)){globeDragIndex=picked.id.__profileIndex;globeViewer.scene.screenSpaceCameraController.enableRotate=false;return;}},Cesium.ScreenSpaceEventType.LEFT_DOWN);
