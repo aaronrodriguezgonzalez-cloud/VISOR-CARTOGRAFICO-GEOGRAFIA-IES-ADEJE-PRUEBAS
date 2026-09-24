@@ -2047,7 +2047,60 @@ function profileCountryAtDistance(d){
 }
 
 async function countryAt(lat,lon){try{await loadCountries();const f=countryAtFeature(lat,lon);return f?countryName(f.properties||{}):'Océano / territorio no identificado';}catch(e){return 'País no disponible';}}
-async function toggleCountriesLayer(on){if(!globeViewer)return;if(on){status('Cargando fronteras mundiales…');try{const data=await loadCountries();if(!document.getElementById('countriesCheck').checked)return;if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);const borderColor=Cesium.Color.fromCssColorString('#63d7ff').withAlpha(.98);countriesSource=await Cesium.GeoJsonDataSource.load(data,{stroke:borderColor,fill:Cesium.Color.fromCssColorString('#63d7ff').withAlpha(.035),strokeWidth:2.4,clampToGround:true});globeViewer.dataSources.add(countriesSource);for(const ent of countriesSource.entities.values){if(ent.polygon){ent.polygon.outline=true;ent.polygon.outlineColor=borderColor;ent.polygon.material=Cesium.Color.fromCssColorString('#63d7ff').withAlpha(.025);}}globeViewer.scene.requestRender();status('Fronteras de países y territorios visibles · Natural Earth 1:110 M');}catch(e){console.error(e);document.getElementById('countriesCheck').checked=false;status('No se pudieron cargar las fronteras mundiales');}}else if(countriesSource){globeViewer.dataSources.remove(countriesSource,true);countriesSource=null;globeViewer.scene.requestRender();}}
+function addCountryRingLine(ds,ring,color){
+ if(!Array.isArray(ring)||ring.length<2)return;
+ const deg=[];
+ for(const c of ring){
+  if(!Array.isArray(c)||c.length<2)continue;
+  deg.push(Number(c[0]),Number(c[1]));
+ }
+ if(deg.length<4)return;
+ ds.entities.add({polyline:{
+  positions:Cesium.Cartesian3.fromDegreesArray(deg),
+  width:3.2,
+  material:color,
+  clampToGround:true,
+  arcType:Cesium.ArcType.GEODESIC,
+  classificationType:Cesium.ClassificationType.BOTH
+ }});
+}
+function addCountryGeometryLines(ds,geom,color){
+ if(!geom)return;
+ if(geom.type==='Polygon'){
+  for(const ring of geom.coordinates||[])addCountryRingLine(ds,ring,color);
+ }else if(geom.type==='MultiPolygon'){
+  for(const poly of geom.coordinates||[])for(const ring of poly||[])addCountryRingLine(ds,ring,color);
+ }else if(geom.type==='GeometryCollection'){
+  for(const g of geom.geometries||[])addCountryGeometryLines(ds,g,color);
+ }
+}
+async function toggleCountriesLayer(on){
+ if(!globeViewer)return;
+ if(on){
+  status('Cargando fronteras mundiales…');
+  try{
+   const data=await loadCountries();
+   if(!document.getElementById('countriesCheck').checked)return;
+   if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);
+   const ds=new Cesium.CustomDataSource('Fronteras mundiales');
+   const borderColor=Cesium.Color.fromCssColorString('#00e5ff').withAlpha(1);
+   for(const f of data.features||[])addCountryGeometryLines(ds,f.geometry,borderColor);
+   countriesSource=ds;
+   await globeViewer.dataSources.add(ds);
+   globeViewer.scene.globe.depthTestAgainstTerrain=false;
+   globeViewer.scene.requestRender();
+   status('Fronteras de países y territorios visibles · Natural Earth 1:110 M');
+  }catch(e){
+   console.error(e);
+   document.getElementById('countriesCheck').checked=false;
+   status('No se pudieron cargar las fronteras mundiales');
+  }
+ }else if(countriesSource){
+  globeViewer.dataSources.remove(countriesSource,true);
+  countriesSource=null;
+  globeViewer.scene.requestRender();
+ }
+}
 async function showGlobePoint(ll){const box=document.getElementById('globeInfo');box.classList.remove('empty');const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');}
 function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);
  globeClickHandler.setInputAction(ev=>{const picked=globeViewer.scene.pick(ev.position);if(Cesium.defined(picked)&&picked.id&&Number.isInteger(picked.id.__profileIndex)){globeDragIndex=picked.id.__profileIndex;globeViewer.scene.screenSpaceCameraController.enableRotate=false;return;}},Cesium.ScreenSpaceEventType.LEFT_DOWN);
