@@ -588,8 +588,8 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <div style="padding:2px 2px 5px 13px"><small>IGR Redes de Transporte · carreteras y ferrocarril</small><input id="transportOpacity" type="range" min="0" max="1" value="0.85" step="0.05" style="width:100%"></div>
 </details>
 <details open><summary>Territorios · globo 3D</summary>
-<label><input id="countriesCheck" type="checkbox" checked> <b>Países y territorios</b></label>
-<div style="padding:2px 2px 5px 13px"><small>Fronteras mundiales · Natural Earth. Activa esta opción para verlas claramente sobre el globo. La identificación del país funciona aunque la capa esté apagada.</small></div>
+<label><input id="countriesCheck" type="checkbox" checked> <b>Fronteras internacionales</b></label>
+<div style="padding:2px 2px 5px 13px"><small>Fronteras internacionales · Natural Earth 1:10 M. La identificación de países y los perfiles funcionan aunque esta capa esté apagada.</small></div>
 </details>
 <details open><summary>División administrativa · España</summary>
 <label><input id="ccaaCheck" type="checkbox"> <b>Comunidades autónomas</b></label>
@@ -2009,7 +2009,7 @@ function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))ret
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
 
 // Herramientas sobre el globo: medición, perfil editable y consulta territorial mundial.
-let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null;
+let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryBordersData=null,countryBordersLoading=null;
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
 function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
@@ -2023,8 +2023,30 @@ function startGlobeProfile(){globeMeasureMode=null;globeProfileMode=true;globePr
 async function finishGlobeProfile(){if(globeProfilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}globeProfileMode=false;redrawGlobeProfile();lastProfileSource='globe';lastProfileCountries=[];await finishProfileFromPoints(globeProfilePts.slice());}
 function clearGlobeProfile(reset=true){if(globeViewer)for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];globeProfileHandles=[];globeProfileLine=null;globeProfilePts=[];if(reset)globeProfileMode=false;if(globeViewer)globeViewer.scene.requestRender();}
 function countryName(p){return p.ADMIN||p.NAME_ES||p.NAME_EN||p.NAME||p.SOVEREIGNT||p.BRK_NAME||'Territorio sin identificar';}
-async function loadCountries(){if(countriesData)return countriesData;if(countriesLoading)return countriesLoading;countriesLoading=(async()=>{const urls=['https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson','https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'];let j=null;for(const u of urls){try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){j=await r.json();break;}}catch(e){}}if(!j)throw new Error('No se pudo cargar Natural Earth 110m');countriesData=j;return j;})().finally(()=>countriesLoading=null);return countriesLoading;}
+async function loadCountries(){if(countriesData)return countriesData;if(countriesLoading)return countriesLoading;countriesLoading=(async()=>{const urls=['https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_admin_0_countries.geojson','https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson'];let j=null;for(const u of urls){try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){j=await r.json();break;}}catch(e){}}if(!j)throw new Error('No se pudo cargar Natural Earth 50m');countriesData=j;return j;})().finally(()=>countriesLoading=null);return countriesLoading;}
 function countryAtFeature(lat,lon){if(!countriesData)return null;return countriesData.features.find(f=>featureContainsPoint(f,lat,lon))||null;}
+async function loadCountryBorders(){
+ if(countryBordersData)return countryBordersData;
+ if(countryBordersLoading)return countryBordersLoading;
+ countryBordersLoading=(async()=>{
+  const urls=[
+   'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_admin_0_boundary_lines_land.geojson',
+   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_0_boundary_lines_land.geojson'
+  ];
+  let j=null;
+  for(const u of urls){
+   try{
+    const r=await fetch(u,{mode:'cors',cache:'force-cache'});
+    if(r.ok){j=await r.json();break;}
+   }catch(e){}
+  }
+  if(!j)throw new Error('No se pudieron cargar las fronteras internacionales 10m');
+  countryBordersData=j;
+  return j;
+ })().finally(()=>countryBordersLoading=null);
+ return countryBordersLoading;
+}
+
 async function profileCountryBlocks(prof){
  try{
   await loadCountries();
@@ -2047,53 +2069,58 @@ function profileCountryAtDistance(d){
 }
 
 async function countryAt(lat,lon){try{await loadCountries();const f=countryAtFeature(lat,lon);return f?countryName(f.properties||{}):'Océano / territorio no identificado';}catch(e){return 'País no disponible';}}
-function addCountryRingLine(ds,ring,color){
- if(!Array.isArray(ring)||ring.length<2)return;
+
+function addBorderLineEntities(ds,coords){
+ if(!Array.isArray(coords)||coords.length<2)return;
  const deg=[];
- for(const c of ring){
+ for(const c of coords){
   if(!Array.isArray(c)||c.length<2)continue;
-  deg.push(Number(c[0]),Number(c[1]));
+  const lon=Number(c[0]),lat=Number(c[1]);
+  if(Number.isFinite(lon)&&Number.isFinite(lat))deg.push(lon,lat);
  }
  if(deg.length<4)return;
+ const pos=Cesium.Cartesian3.fromDegreesArray(deg);
+ // Casing oscuro + línea clara: se lee sobre mar, desierto, bosque y nieve.
  ds.entities.add({polyline:{
-  positions:Cesium.Cartesian3.fromDegreesArray(deg),
-  width:3.2,
-  material:color,
-  clampToGround:true,
-  arcType:Cesium.ArcType.GEODESIC,
-  classificationType:Cesium.ClassificationType.BOTH
+  positions:pos,width:3.6,
+  material:Cesium.Color.BLACK.withAlpha(.72),
+  clampToGround:true,arcType:Cesium.ArcType.GEODESIC
+ }});
+ ds.entities.add({polyline:{
+  positions:pos,width:1.65,
+  material:Cesium.Color.fromCssColorString('#fff3a6').withAlpha(.98),
+  clampToGround:true,arcType:Cesium.ArcType.GEODESIC
  }});
 }
-function addCountryGeometryLines(ds,geom,color){
+function addBorderGeometry(ds,geom){
  if(!geom)return;
- if(geom.type==='Polygon'){
-  for(const ring of geom.coordinates||[])addCountryRingLine(ds,ring,color);
- }else if(geom.type==='MultiPolygon'){
-  for(const poly of geom.coordinates||[])for(const ring of poly||[])addCountryRingLine(ds,ring,color);
+ if(geom.type==='LineString'){
+  addBorderLineEntities(ds,geom.coordinates||[]);
+ }else if(geom.type==='MultiLineString'){
+  for(const line of geom.coordinates||[])addBorderLineEntities(ds,line);
  }else if(geom.type==='GeometryCollection'){
-  for(const g of geom.geometries||[])addCountryGeometryLines(ds,g,color);
+  for(const g of geom.geometries||[])addBorderGeometry(ds,g);
  }
 }
 async function toggleCountriesLayer(on){
  if(!globeViewer)return;
  if(on){
-  status('Cargando fronteras mundiales…');
+  status('Cargando fronteras internacionales de alta resolución…');
   try{
-   const data=await loadCountries();
+   const data=await loadCountryBorders();
    if(!document.getElementById('countriesCheck').checked)return;
    if(countriesSource)globeViewer.dataSources.remove(countriesSource,true);
-   const ds=new Cesium.CustomDataSource('Fronteras mundiales');
-   const borderColor=Cesium.Color.fromCssColorString('#00e5ff').withAlpha(1);
-   for(const f of data.features||[])addCountryGeometryLines(ds,f.geometry,borderColor);
+   const ds=new Cesium.CustomDataSource('Fronteras internacionales 1:10 M');
+   for(const f of data.features||[])addBorderGeometry(ds,f.geometry);
    countriesSource=ds;
    await globeViewer.dataSources.add(ds);
    globeViewer.scene.globe.depthTestAgainstTerrain=false;
    globeViewer.scene.requestRender();
-   status('Fronteras de países y territorios visibles · Natural Earth 1:110 M');
+   status('Fronteras internacionales · Natural Earth 1:10 M');
   }catch(e){
    console.error(e);
    document.getElementById('countriesCheck').checked=false;
-   status('No se pudieron cargar las fronteras mundiales');
+   status('No se pudieron cargar las fronteras internacionales');
   }
  }else if(countriesSource){
   globeViewer.dataSources.remove(countriesSource,true);
@@ -2137,7 +2164,7 @@ async function toggleGlobe(){
  if(entering){document.body.classList.add('globe-mode');document.getElementById('viewModeBadge').style.display='block';document.getElementById('globeToggle').classList.add('active');await ensureGlobe();if(globeViewer){globeViewer.resize();const c=map.getCenter(),h=Math.max(1800000,26000000/Math.pow(1.55,map.getZoom()-2));globeViewer.camera.flyTo({destination:Cesium.Cartesian3.fromDegrees(c.lng,c.lat,h),duration:0});globeViewer.scene.requestRender();}closePanels();}
  else{document.body.classList.remove('globe-mode');document.getElementById('viewModeBadge').style.display='none';document.getElementById('globeToggle').classList.remove('active');if(globeViewer){const pos=globeViewer.camera.positionCartographic;if(pos){const h=Math.max(80,pos.height),z=Math.max(2,Math.min(18,Math.round(2+Math.log(26000000/h)/Math.log(1.55))));map.setView([Cesium.Math.toDegrees(pos.latitude),Cesium.Math.toDegrees(pos.longitude)],z);}}setTimeout(()=>map.invalidateSize(),50);}
 }
-document.getElementById('countriesCheck').addEventListener('change',e=>{if(!document.body.classList.contains('globe-mode')){status('La capa de países se muestra en el globo 3D');return;}toggleCountriesLayer(e.target.checked);});
+document.getElementById('countriesCheck').addEventListener('change',e=>{if(!document.body.classList.contains('globe-mode')){status('Las fronteras internacionales se muestran en el globo 3D');return;}toggleCountriesLayer(e.target.checked);});
 window.addEventListener('orientationchange',()=>{setTimeout(()=>{map.invalidateSize(true);if(globeViewer){globeViewer.resize();globeViewer.scene.requestRender();}},120);setTimeout(()=>{map.invalidateSize(true);if(globeViewer){globeViewer.resize();globeViewer.scene.requestRender();}},420);});
 window.addEventListener('resize',()=>{clearTimeout(window.__mapResizeT);window.__mapResizeT=setTimeout(()=>{map.invalidateSize();if(globeViewer)globeViewer.resize();},120);});
 
