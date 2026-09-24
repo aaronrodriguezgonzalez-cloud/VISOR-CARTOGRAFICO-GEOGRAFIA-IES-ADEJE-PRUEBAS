@@ -514,7 +514,9 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
         <h4>🌍 Mundo</h4>
         <ul>
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
-          <li>Visualización de fronteras de países y territorios.</li>
+          <li>Visualización de fronteras internacionales y nombres de países.</li>
+<li>Red geográfica con Ecuador, Greenwich, Trópico de Cáncer y Trópico de Capricornio.</li>
+<li>Topónimos mundiales que aumentan su nivel de detalle al acercarse.</li>
           <li>Consulta de cualquier punto para identificar país, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales con los países atravesados indicados mediante llaves.</li>
@@ -590,6 +592,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <details open><summary>Territorios · globo 3D</summary>
 <label><input id="countriesCheck" type="checkbox" checked> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox" checked> Nombres de países</label>
+<label class="sub"><input id="worldToponymsCheck" type="checkbox" checked> Topónimos mundiales</label>
 <div style="padding:2px 2px 5px 13px"><small>Fronteras internacionales · Natural Earth 1:10 M. Los nombres forman una capa independiente. La identificación de países y los perfiles funcionan aunque ambas capas estén apagadas.</small></div>
 </details>
 <details open><summary>División administrativa · España</summary>
@@ -2010,7 +2013,7 @@ function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))ret
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
 
 // Herramientas sobre el globo: medición, perfil editable y consulta territorial mundial.
-let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null;
+let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null;
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
 function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
@@ -2026,6 +2029,29 @@ function clearGlobeProfile(reset=true){if(globeViewer)for(const e of globeProfil
 function countryName(p){return p.ADMIN||p.NAME_ES||p.NAME_EN||p.NAME||p.SOVEREIGNT||p.BRK_NAME||'Territorio sin identificar';}
 async function loadCountries(){if(countriesData)return countriesData;if(countriesLoading)return countriesLoading;countriesLoading=(async()=>{const urls=['https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_admin_0_countries.geojson','https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson'];let j=null;for(const u of urls){try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){j=await r.json();break;}}catch(e){}}if(!j)throw new Error('No se pudo cargar Natural Earth 50m');countriesData=j;return j;})().finally(()=>countriesLoading=null);return countriesLoading;}
 function countryAtFeature(lat,lon){if(!countriesData)return null;return countriesData.features.find(f=>featureContainsPoint(f,lat,lon))||null;}
+
+async function loadWorldToponyms(){
+ if(worldToponymsData)return worldToponymsData;
+ if(worldToponymsLoading)return worldToponymsLoading;
+ worldToponymsLoading=(async()=>{
+  const urls=[
+   'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_populated_places_simple.geojson',
+   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_populated_places_simple.geojson'
+  ];
+  let j=null;
+  for(const u of urls){
+   try{
+    const r=await fetch(u,{mode:'cors',cache:'force-cache'});
+    if(r.ok){j=await r.json();break;}
+   }catch(e){}
+  }
+  if(!j)throw new Error('No se pudieron cargar los topónimos mundiales');
+  worldToponymsData=j;
+  return j;
+ })().finally(()=>worldToponymsLoading=null);
+ return worldToponymsLoading;
+}
+
 async function loadCountryBorders(){
  if(countryBordersData)return countryBordersData;
  if(countryBordersLoading)return countryBordersLoading;
@@ -2140,6 +2166,88 @@ function countryLabelPoint(feature){
 function countryLabelName(p){
  return p.NAME_ES||p.ADMIN||p.NAME_LONG||p.NAME_EN||p.NAME||p.SOVEREIGNT||'';
 }
+
+function worldPlaceName(p){return p.NAMEPAR||p.NAMEASCII||p.NAME||p.LS_NAME||'';}
+function worldPlaceMaxDistance(p){
+ const minz=Number(p.MIN_ZOOM);
+ if(Number.isFinite(minz)){
+  if(minz<=2.5)return 28000000;
+  if(minz<=4)return 17000000;
+  if(minz<=6)return 9500000;
+  if(minz<=8)return 5000000;
+  return 2500000;
+ }
+ const rank=Number(p.SCALERANK??p.LABELRANK??6);
+ if(rank<=1)return 28000000;
+ if(rank<=3)return 17000000;
+ if(rank<=5)return 9500000;
+ if(rank<=7)return 5000000;
+ return 2500000;
+}
+function worldPlaceFont(p){
+ const fc=String(p.FEATURECLA||'').toLowerCase();
+ const important=fc.includes('capital')||Number(p.WORLDCITY||0)===1||Number(p.MEGACITY||0)===1;
+ return important?'800 13px Montserrat, Arial, sans-serif':'700 11px Montserrat, Arial, sans-serif';
+}
+async function toggleWorldToponyms(on){
+ if(!globeViewer)return;
+ if(on){
+  status('Cargando topónimos mundiales…');
+  try{
+   const data=await loadWorldToponyms();
+   if(!document.getElementById('worldToponymsCheck').checked)return;
+   if(worldToponymsSource)globeViewer.dataSources.remove(worldToponymsSource,true);
+   const ds=new Cesium.CustomDataSource('Topónimos mundiales');
+   for(const f of data.features||[]){
+    const p=f.properties||{},g=f.geometry||{};
+    if(g.type!=='Point'||!Array.isArray(g.coordinates))continue;
+    const lon=Number(g.coordinates[0]),lat=Number(g.coordinates[1]),name=worldPlaceName(p);
+    if(!name||!Number.isFinite(lon)||!Number.isFinite(lat))continue;
+    const maxDist=worldPlaceMaxDistance(p);
+    const fc=String(p.FEATURECLA||'').toLowerCase(),capital=fc.includes('capital');
+    ds.entities.add({
+     position:Cesium.Cartesian3.fromDegrees(lon,lat,1500),
+     point:{
+      pixelSize:capital?5:3.5,
+      color:Cesium.Color.WHITE.withAlpha(.95),
+      outlineColor:Cesium.Color.BLACK.withAlpha(.9),
+      outlineWidth:1.3,
+      disableDepthTestDistance:Number.POSITIVE_INFINITY,
+      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist)
+     },
+     label:{
+      text:name,
+      font:worldPlaceFont(p),
+      fillColor:Cesium.Color.WHITE,
+      outlineColor:Cesium.Color.BLACK.withAlpha(.95),
+      outlineWidth:3,
+      style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+      pixelOffset:new Cesium.Cartesian2(7,-3),
+      horizontalOrigin:Cesium.HorizontalOrigin.LEFT,
+      verticalOrigin:Cesium.VerticalOrigin.CENTER,
+      disableDepthTestDistance:Number.POSITIVE_INFINITY,
+      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist),
+      scaleByDistance:new Cesium.NearFarScalar(300000,1.05,maxDist,.62),
+      translucencyByDistance:new Cesium.NearFarScalar(Math.min(1500000,maxDist*.30),1,maxDist,.08)
+     }
+    });
+   }
+   worldToponymsSource=ds;
+   await globeViewer.dataSources.add(ds);
+   globeViewer.scene.requestRender();
+   status('Topónimos mundiales visibles según la escala');
+  }catch(e){
+   console.error(e);
+   document.getElementById('worldToponymsCheck').checked=false;
+   status('No se pudieron cargar los topónimos mundiales');
+  }
+ }else if(worldToponymsSource){
+  globeViewer.dataSources.remove(worldToponymsSource,true);
+  worldToponymsSource=null;
+  globeViewer.scene.requestRender();
+ }
+}
+
 async function toggleCountryLabels(on){
  if(!globeViewer)return;
  if(on){
@@ -2235,14 +2343,42 @@ async function ensureGlobe(){
    credit:'Esri World Imagery',maximumLevel:19
   });
   globeViewer.imageryLayers.addImageryProvider(sat);
-  // Red geográfica del globo: paralelos y meridianos cada 15°, con Ecuador y Greenwich destacados.
-  const gridSoft=Cesium.Color.WHITE.withAlpha(0.42),gridMain=Cesium.Color.fromCssColorString('#ffc107').withAlpha(0.95);
-  const mkLine=(coords,main=false)=>globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(coords),width:main?2.6:1.0,material:main?gridMain:gridSoft,arcType:Cesium.ArcType.GEODESIC}});
+  // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
+  const gridSoft=Cesium.Color.WHITE.withAlpha(0.42);
+  const gridMain=Cesium.Color.fromCssColorString('#ff7043').withAlpha(0.98); // Ecuador y Greenwich
+  const tropicColor=Cesium.Color.fromCssColorString('#ffd54a').withAlpha(0.98); // Trópicos
+  const mkLine=(coords,main=false)=>globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(coords),width:main?2.7:1.0,material:main?gridMain:gridSoft,arcType:Cesium.ArcType.GEODESIC}});
+  const mkTropic=(lat,label)=>{
+   const a=[];for(let lon=-180;lon<=180;lon+=2)a.push(lon,lat);
+   globeViewer.entities.add({polyline:{
+    positions:Cesium.Cartesian3.fromDegreesArray(a),
+    width:2.2,
+    material:new Cesium.PolylineDashMaterialProperty({color:tropicColor,dashLength:16}),
+    arcType:Cesium.ArcType.GEODESIC
+   }});
+   globeViewer.entities.add({
+    position:Cesium.Cartesian3.fromDegrees(-38,lat),
+    label:{
+     text:label,
+     font:'700 13px Montserrat, Arial, sans-serif',
+     fillColor:tropicColor,
+     outlineColor:Cesium.Color.BLACK.withAlpha(.85),
+     outlineWidth:2,
+     style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+     showBackground:true,
+     backgroundColor:Cesium.Color.BLACK.withAlpha(.42),
+     pixelOffset:new Cesium.Cartesian2(8,-4),
+     disableDepthTestDistance:Number.POSITIVE_INFINITY
+    }
+   });
+  };
   for(let lon=-180;lon<180;lon+=15){const a=[];for(let lat=-85;lat<=85;lat+=5)a.push(lon,lat);mkLine(a,lon===0);}
   for(let lat=-75;lat<=75;lat+=15){const a=[];for(let lon=-180;lon<=180;lon+=5)a.push(lon,lat);mkLine(a,lat===0);}
-  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(2,1.5),label:{text:'Ecuador',font:'600 14px sans-serif',fillColor:gridMain,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.55),pixelOffset:new Cesium.Cartesian2(8,8),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
-  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(0,42),label:{text:'Greenwich',font:'600 14px sans-serif',fillColor:gridMain,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.55),pixelOffset:new Cesium.Cartesian2(8,0),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
-  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);
+  mkTropic(23.4366,'Trópico de Cáncer · 23°26′ N');
+  mkTropic(-23.4366,'Trópico de Capricornio · 23°26′ S');
+  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(2,1.5),label:{text:'Ecuador',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.8),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.48),pixelOffset:new Cesium.Cartesian2(8,8),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(0,42),label:{text:'Meridiano de Greenwich',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.8),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.48),pixelOffset:new Cesium.Cartesian2(8,0),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
  finally{globeLoading=false;}
 }
@@ -2253,6 +2389,7 @@ async function toggleGlobe(){
 }
 document.getElementById('countriesCheck').addEventListener('change',e=>{if(!document.body.classList.contains('globe-mode')){status('Las fronteras internacionales se muestran en el globo 3D');return;}toggleCountriesLayer(e.target.checked);});
 document.getElementById('countryLabelsCheck').addEventListener('change',e=>{if(!document.body.classList.contains('globe-mode')){status('Los nombres de países se muestran en el globo 3D');return;}toggleCountryLabels(e.target.checked);});
+document.getElementById('worldToponymsCheck').addEventListener('change',e=>{if(!document.body.classList.contains('globe-mode')){status('Los topónimos mundiales se muestran en el globo 3D');return;}toggleWorldToponyms(e.target.checked);});
 window.addEventListener('orientationchange',()=>{setTimeout(()=>{map.invalidateSize(true);if(globeViewer){globeViewer.resize();globeViewer.scene.requestRender();}},120);setTimeout(()=>{map.invalidateSize(true);if(globeViewer){globeViewer.resize();globeViewer.scene.requestRender();}},420);});
 window.addEventListener('resize',()=>{clearTimeout(window.__mapResizeT);window.__mapResizeT=setTimeout(()=>{map.invalidateSize();if(globeViewer)globeViewer.resize();},120);});
 
