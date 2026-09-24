@@ -1950,11 +1950,46 @@ function showProfilePoint(event){
  box.classList.remove('hidden');
  if(position){
   const c=coordsDMS(position.ll.lat,position.ll.lng);
-  const geo=document.createElement('div');geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><small>Consultando topónimo y unidades administrativas…</small>';box.appendChild(geo);
-  Promise.all([nearestToponymAt(position.ll.lat,position.ll.lng),adminAt(position.ll.lat,position.ll.lng)]).then(([topo,admin])=>{
-   if(request!==profilePointRequest||box.classList.contains('hidden'))return;
-   geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><b>Topónimo próximo:</b> '+(topo?escHtml(topo.name)+' ('+fmtDistance(topo.dist)+')':'Sin dato')+'<br><b>Municipio:</b> '+escHtml(admin?.muni||'Sin dato')+'<br><b>Provincia:</b> '+escHtml(admin?.province||'Sin dato')+'<br><b>Comunidad autónoma:</b> '+escHtml(admin?.ccaa||'Sin dato');
-  }).catch(()=>{if(request===profilePointRequest)geo.innerHTML+='<br>Localización administrativa: sin dato';});
+  const geo=document.createElement('div');
+  geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><small>Consultando topónimo y unidades administrativas…</small>';
+  box.appendChild(geo);
+
+  if(lastProfileSource==='globe'){
+   const inSpain=profileIsSpainLatLng(position.ll);
+   const work=inSpain
+    ?Promise.all([nearestToponymAt(position.ll.lat,position.ll.lng),adminAt(position.ll.lat,position.ll.lng)])
+      .then(([topo,admin])=>({topo,admin,reverse:null}))
+    :reverseWorldAt(position.ll.lat,position.ll.lng)
+      .then(reverse=>({topo:null,admin:null,reverse}));
+
+   work.then(({topo,admin,reverse})=>{
+    if(request!==profilePointRequest||box.classList.contains('hidden'))return;
+    let html='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon);
+
+    if(inSpain){
+     html+='<br><b>Topónimo próximo:</b> '+(topo?escHtml(topo.name)+(Number.isFinite(topo.dist)?' ('+fmtDistance(topo.dist)+')':''):'Sin dato');
+     if(admin?.muni)html+='<br><b>Municipio:</b> '+escHtml(admin.muni);
+     if(admin?.province)html+='<br><b>Provincia:</b> '+escHtml(admin.province);
+     if(admin?.ccaa)html+='<br><b>Comunidad autónoma:</b> '+escHtml(admin.ccaa);
+    }else{
+     const rows=globeTerritorialRows(reverse,null,profileCountry);
+     const placeRow=rows.find(r=>r[0]==='Topónimo / lugar próximo');
+     html+='<br><b>Topónimo próximo:</b> '+escHtml(placeRow?.[1]||'Sin dato');
+     for(const row of rows){
+      if(row===placeRow||row[0]==='País / territorio')continue;
+      html+='<br><b>'+escHtml(row[0])+':</b> '+escHtml(row[1]);
+     }
+    }
+    geo.innerHTML=html;
+   }).catch(()=>{
+    if(request===profilePointRequest)geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><b>Topónimo próximo:</b> Sin dato';
+   });
+  }else{
+   Promise.all([nearestToponymAt(position.ll.lat,position.ll.lng),adminAt(position.ll.lat,position.ll.lng)]).then(([topo,admin])=>{
+    if(request!==profilePointRequest||box.classList.contains('hidden'))return;
+    geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><b>Topónimo próximo:</b> '+(topo?escHtml(topo.name)+' ('+fmtDistance(topo.dist)+')':'Sin dato')+'<br><b>Municipio:</b> '+escHtml(admin?.muni||'Sin dato')+'<br><b>Provincia:</b> '+escHtml(admin?.province||'Sin dato')+'<br><b>Comunidad autónoma:</b> '+escHtml(admin?.ccaa||'Sin dato');
+   }).catch(()=>{if(request===profilePointRequest)geo.innerHTML+='<br>Localización administrativa: sin dato';});
+  }
  }
 }
 document.getElementById('profileCanvasLarge').addEventListener('click',showProfilePoint);
