@@ -921,6 +921,13 @@ function classifyCanaryFormation(text){
  const rules=[[/fayal.?brezal/,'Fayal-brezal'],[/laurisilv|monteverde/,'Laurisilva/Monteverde'],[/tabaib|cardonal/,'Tabaibal-cardonal'],[/retamar|codesar/,'Retamar-codesar'],[/pinar|pino canario|pinus canariensis|pinetum canariensis/,'Pinar'],[/palmeral/,'Palmeral'],[/sabinar/,'Sabinar'],[/acebuchal/,'Acebuchal'],[/lentiscar/,'Lentiscar'],[/brezal/,'Brezal'],[/pastizal|matorral de cumbre|alta montana/,'Vegetación de alta montaña'],[/ribera|sauced|tarajal/,'Vegetación de ribera'],[/barrillar|saladar/,'Vegetación de saladar']];
  return rules.find(([re])=>re.test(t))?.[1]||'Formación no determinada';
 }
+function classifyNonVegetatedCover(text){
+ const t=String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ if(/cultiv|agricol|regadi|secano/.test(t))return 'Cultivos';
+ if(/urbani|medio urbano|industrial|caseri|area de servicio|infraestructura|nucleo urbano/.test(t))return 'Área urbanizada';
+ if(/desprovisto de vegetacion|sin vegetacion|vegetacion escasa o nula|colada reciente/.test(t))return 'Sin cubierta vegetal';
+ return '';
+}
 function canaryVegetationSummary(raw){
  const doc=new DOMParser().parseFromString(raw||'','text/html');
  doc.querySelectorAll('script,style,noscript').forEach(node=>node.remove());
@@ -929,12 +936,16 @@ function canaryVegetationSummary(raw){
  const get=(prefix)=>[...fields].find(([k])=>k.startsWith(prefix))?.[1]||'';
  const fis=get('fisionomía'),sci=get('nombre científico'),com=get('nombre común');
  const pot=[...fields].filter(([k])=>/potencial|vegetaci[oó]n|comunidad|serie|unidad|asociaci[oó]n/.test(k)).map(([,v])=>v);
- const formation=[com,...pot,sci,fis].map(classifyCanaryFormation).find(x=>x!=='Formación no determinada')||'Formación no determinada';
- const rows=['<b>Formación:</b> '+escHtml(formation)];
+ const values=[com,...pot,sci,fis,...fields.values()].filter(Boolean);
+ const botanical=[com,...pot,sci,fis].filter(Boolean).filter(v=>!classifyNonVegetatedCover(v));
+ const vegetation=botanical.map(classifyCanaryFormation).find(x=>x!=='Formación no determinada');
+ const cover=vegetation?'':values.map(classifyNonVegetatedCover).find(Boolean);
+ const formation=vegetation||cover||'Formación no determinada';
+ const rows=['<b>'+(cover?'Cobertura/uso':'Formación')+':</b> '+escHtml(formation)];
  if(fis&&fis!==formation)rows.push('<b>Formación concreta / fisionomía:</b> '+escHtml(fis));
  if(com)rows.push('<b>Nombre común:</b> '+escHtml(com));
  if(sci)rows.push('<b>Unidad fitosociológica:</b> <i>'+escHtml(sci)+'</i>');
- return {html:rows.join('<br>'),unit:{formation,concrete:com||pot[0]||fis,common:com,association:sci,hasData:fields.size>0,rawFields:[...fields]}};
+ return {html:rows.join('<br>'),unit:{formation,concrete:cover?(values.find(v=>classifyNonVegetatedCover(v))||cover):(com||pot[0]||fis||[...fields.values()][0]),common:com,association:sci,coverType:!!cover,hasData:fields.size>0,rawFields:[...fields]}};
 }
 async function canaryVegetationAt(lat,lon,kind='actual'){
  try{
@@ -1118,18 +1129,20 @@ const grafcanColorCache=new Map();
 async function grafcanOriginalColor(lat,lon,kind,label){
  const key=kind+':'+label;if(grafcanColorCache.has(key))return grafcanColorCache.get(key);
  const promise=(async()=>{
-  const d=.0012,q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:'',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'9',HEIGHT:'9'});
+  const d=.0009,q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:'',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'17',HEIGHT:'17'});
   const r=await fetch('https://idecan2.grafcan.es/ServicioWMS/Vegetacion?'+q,{mode:'cors'});if(!r.ok)throw Error('Color GRAFCAN');
-  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=9;cv.height=9;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
-  const a=ctx.getImageData(0,0,9,9).data,i=(4*9+4)*4;if(a[i+3]<80)return null;return '#'+[a[i],a[i+1],a[i+2]].map(x=>x.toString(16).padStart(2,'0')).join('');
+  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=17;cv.height=17;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
+  const px=ctx.getImageData(0,0,17,17).data,counts=new Map();
+  for(let y=6;y<=10;y++)for(let x=6;x<=10;x++){const i=(y*17+x)*4;if(px[i+3]<245)continue;const color='#'+[px[i],px[i+1],px[i+2]].map(v=>v.toString(16).padStart(2,'0')).join('');if(color==='#ffffff'||color==='#000000')continue;counts.set(color,(counts.get(color)||0)+1);}
+  return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
  })().catch(()=>null);grafcanColorCache.set(key,promise);return promise;
 }
-const FORMATION_COLORS={...MFE_FORMATION_COLORS,'Retamar-codesar':'#8e9852','Vegetación de alta montaña':'#888775','Tabaibal-cardonal':'#9ca666','Laurisilva/Monteverde':'#487b70','Fayal-brezal':'#638879','Palmeral':'#7d9b59','Sabinar':'#78917b','Acebuchal':'#718e61','Lentiscar':'#929360','Brezal':'#8a8379','Vegetación de saladar':'#9b9c83','Enebral':'#638f84'};
+const FORMATION_COLORS={...MFE_FORMATION_COLORS,'Retamar-codesar':'#8e9852','Vegetación de alta montaña':'#888775','Tabaibal-cardonal':'#9ca666','Laurisilva/Monteverde':'#487b70','Fayal-brezal':'#638879','Palmeral':'#7d9b59','Sabinar':'#78917b','Acebuchal':'#718e61','Lentiscar':'#929360','Brezal':'#8a8379','Vegetación de saladar':'#9b9c83','Enebral':'#638f84','Cultivos':'#d8bc7c','Área urbanizada':'#a1a1a1','Sin cubierta vegetal':'#c5c5c5'};
 function formationColor(name){return FORMATION_COLORS[name]||MFE_FORMATION_COLORS['Formación no determinada']||'#aab0b6';}
 function vegetationTheme(v){
  if(!v||!v.unit)return {label:'Sin dato',formation:'Sin dato',detail:'',color:null};
  const u=v.unit;
- return {label:u.formation,formation:u.formation,detail:u.common||u.concrete||u.dominant||u.formation,color:formationColor(u.formation),unit:u.id,code:u.code||'',concrete:u.concrete||'',dominant:u.dominant||'',association:u.association||'',source:v.source,kind:v.kind||''};
+ return {label:u.formation,formation:u.formation,detail:u.common||u.concrete||u.dominant||u.formation,color:formationColor(u.formation),unit:u.id,code:u.code||'',concrete:u.concrete||'',dominant:u.dominant||'',association:u.association||'',source:v.source,kind:v.kind||'',coverType:!!u.coverType};
 }
 let geodeColorsPromise=null;
 async function geodeOriginalColor(code){
@@ -1149,8 +1162,8 @@ function renderProfileLegend(){const box=document.getElementById('profileBandsCo
 }
 if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}
 box.innerHTML=[...seen].map(([formation,units])=>{
- const list=[...units.values()],swatches=[mode==='geo'?list[0].color||'#c9cdd1':formationColor(formation)].map(color=>'<span class="profileLegendSw" style="background-color:'+escHtml(color)+';display:inline-block;min-width:24px;min-height:10px"></span>').join('');
- const details=list.map(u=>'<div>'+escHtml(u.concrete||u.detail||u.formation)+(u.code?' <small>· serie '+escHtml(u.code)+'</small>':'')+(u.dominant?' · <i>'+escHtml(u.dominant)+'</i>':'')+(u.association?' · <i>'+escHtml(u.association)+'</i>':'')+'</div>').join('');
+ const list=[...units.values()],swatches=[list[0].color||'#c9cdd1'].map(color=>'<span class="profileLegendSw" style="background-color:'+escHtml(color)+';display:inline-block;min-width:24px;min-height:10px"></span>').join('');
+ const details=list.map(u=>'<div><span class="profileLegendSw" style="background-color:'+escHtml(u.color||'#c9cdd1')+';display:inline-block;min-width:18px;min-height:10px"></span> '+escHtml(u.concrete||u.detail||u.formation)+(u.source==='canarias'&&!u.officialColor?' <small>· color oficial no disponible</small>':'')+(u.code?' <small>· serie '+escHtml(u.code)+'</small>':'')+(u.dominant?' · <i>'+escHtml(u.dominant)+'</i>':'')+(u.association?' · <i>'+escHtml(u.association)+'</i>':'')+'</div>').join('');
  return '<details class="profileLegendItem"><summary>'+swatches+'<span class="profileLegendText">'+escHtml(formation)+'</span></summary><div class="profileLegendDetails">'+details+'</div></details>';
 }).join('');}
 
@@ -1159,7 +1172,7 @@ let profileTerritorySeq=0;
 async function analyzeProfileTerritory(prof){
  const seq=++profileTerritorySeq;
  const n=Math.min(900,Math.max(64,Math.ceil(prof.total/950)));const q=interpolateProfilePoints(prof.path,n),arr=new Array(q.points.length);let next=0;const workers=Math.min(12,q.points.length);
- await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let vegActual={label:'Sin dato',detail:''},vegPotential={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const canary=isCanaryPoint(p.ll.lat,p.ll.lng);const [va,vp,g]=await Promise.all([canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'actual'):mfeAt(p.ll.lat,p.ll.lng),canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'potential'):mitecoVegetationAt(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);vegActual=vegetationTheme(va);vegPotential=vegetationTheme(vp);geo=geologyTheme(g);const gc=g?await geodeOriginalColor(g.CODE_COTR):null;if(gc)geo.color=gc;}arr[i]={d:p.d,vegActual,vegPotential,geo};}}));
+ await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let vegActual={label:'Sin dato',detail:''},vegPotential={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const canary=isCanaryPoint(p.ll.lat,p.ll.lng);const [va,vp,g]=await Promise.all([canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'actual'):mfeAt(p.ll.lat,p.ll.lng),canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'potential'):mitecoVegetationAt(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);vegActual=vegetationTheme(va);vegPotential=vegetationTheme(vp);geo=geologyTheme(g);const [ac,pc,gc]=await Promise.all([canary&&va?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'actual',va.unit.id):null,canary&&vp?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'potential',vp.unit.id):null,g?geodeOriginalColor(g.CODE_COTR):null]);if(canary&&va?.unit){vegActual.color=ac||'#aab0b6';vegActual.officialColor=!!ac;}if(canary&&vp?.unit){vegPotential.color=pc||'#aab0b6';vegPotential.officialColor=!!pc;}if(gc)geo.color=gc;}arr[i]={d:p.d,vegActual,vegPotential,geo};}}));
  if(seq!==profileTerritorySeq)return;lastProfileAnalysis={total:prof.total,samples:arr};redrawProfileTheme();
 }
 document.addEventListener('change',e=>{if(e.target?.name==='profileTheme'){document.getElementById('profilePointInfo')?.classList.add('hidden');redrawProfileTheme();}});
@@ -1379,8 +1392,9 @@ function showProfilePoint(event){
  const nearest=lastProfileDraw[0].reduce((best,p)=>Number.isFinite(p.z)&&(!best||Math.abs(p.d-distance)<Math.abs(best.d-distance))?p:best,null);
  const position=lastProfilePath?.path?interpolateProfilePoints(lastProfilePath.path,Math.min(1200,Math.max(200,Math.ceil(total/150)))).points.reduce((best,p)=>!best||Math.abs(p.d-distance)<Math.abs(best.d-distance)?p:best,null):null;
  const request=++profilePointRequest;
- const rows=mode==='alt'?[['Altitud aproximada',nearest?fmtNum(nearest.z,0)+' m':'Sin dato']]:mode==='geo'?[['Unidad geológica',u?.label||'Sin dato'],['Edad',u?.detail&&u.detail!==u.label?u.detail.replace(u.label+' · ',''):'']]:[['Formación',u?.formation||'Sin dato'],['Formación concreta',u?.concrete&&u.concrete!==u.formation?u.concrete:''],['Especie dominante',u?.dominant],['Nombre común',u?.detail&&u.detail!==u.concrete&&u.detail!==u.formation?u.detail:''],['Unidad fitosociológica',u?.association]];
+ const rows=mode==='alt'?[]:mode==='geo'?[['Unidad geológica',u?.label||'Sin dato'],['Edad',u?.detail&&u.detail!==u.label?u.detail.replace(u.label+' · ',''):'']]:[[u?.coverType?'Cobertura/uso':'Formación',u?.formation||'Sin dato'],['Formación concreta',u?.concrete&&u.concrete!==u.formation?u.concrete:''],['Especie dominante',u?.dominant],['Nombre común',u?.detail&&u.detail!==u.concrete&&u.detail!==u.formation?u.detail:''],['Unidad fitosociológica',u?.association]];
  const heading=mode==='alt'?'⛰️ Altimetría':mode==='geo'?'🪨 Geología':'🌿 Vegetación '+(mode==='veg_potential'?'potencial':'actual');
+ rows.unshift(['Altitud aproximada',nearest?fmtNum(nearest.z,0)+' m':'Sin dato']);
  box.innerHTML='<button type="button" aria-label="Cerrar ficha" style="float:right;margin-left:6px" onclick="this.parentNode.classList.add(\'hidden\')">×</button><b>'+heading+'</b><br>'+rows.filter(row=>row[1]).map(row=>'<b>'+escHtml(row[0])+':</b> '+escHtml(row[1])).join('<br>')+'<br><small>'+fmtDistance(distance)+' desde el inicio</small>';
  const wrap=document.getElementById('profileChartWrap'),w=wrap.clientWidth,h=wrap.clientHeight;
  box.style.left=Math.max(4,Math.min(x+12,w-Math.min(310,w*.7)-12))+'px';
