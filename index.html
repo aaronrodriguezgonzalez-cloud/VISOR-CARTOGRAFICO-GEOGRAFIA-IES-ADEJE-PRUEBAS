@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Toponimia mundial opcional y dinámica: grandes ciudades a pequeña escala y, al acercarse, ciudades, pueblos y aldeas de la zona visible.</li>
+<li>Toponimia opcional y dinámica: fuera de España usa rotulación mundial por teselas; en España y Canarias muestra la misma toponimia NGBE/IGN del mapa.</li>
           <li>Consulta de cualquier punto para identificar país, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales con los países atravesados indicados mediante llaves.</li>
@@ -592,7 +592,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <details open><summary>Territorios · globo 3D</summary>
 <label><input id="countriesCheck" type="checkbox" checked> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox" checked> Nombres de países</label>
-<label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales</label>
+<label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · IGN en España</label>
 <div style="padding:2px 2px 5px 13px"><small>Fronteras internacionales · Natural Earth 1:10 M. Los nombres forman una capa independiente. La identificación de países y los perfiles funcionan aunque ambas capas estén apagadas.</small></div>
 </details>
 <details open><summary>División administrativa · España</summary>
@@ -668,7 +668,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <div id="searchPanel" class="panel hidden"><h3>Buscar topónimo</h3>
 <input id="searchQ" type="text" placeholder="Ej.: Teide, Taganana, Adeje…">
 <button class="action" onclick="searchPlace()">Buscar</button>
-<div id="searchResults"></div><small>Buscador oficial CartoCiudad/IGN: topónimos, poblaciones, municipios, direcciones y puntos de interés.</small></div>
+<div id="searchResults"></div><small>En el mapa 2D: CartoCiudad/IGN. En el globo 3D: búsqueda mundial basada en OpenStreetMap; en España y Canarias la rotulación visible procede del NGBE/IGN.</small></div>
 
 
 <div id="orientation" title="Esquema de orientación">
@@ -1977,23 +1977,56 @@ function updateLegend(){
  c.innerHTML=h||'<small>No hay capas visibles.</small>';
 }
 
-// Buscador oficial CartoCiudad
+// Buscador: CartoCiudad/IGN en el mapa 2D; búsqueda mundial OSM en el globo.
 async function searchPlace(){
  const q=document.getElementById('searchQ').value.trim();if(!q)return;
  const box=document.getElementById('searchResults');box.innerHTML='Buscando…';
+ const globeMode=document.body.classList.contains('globe-mode');
  try{
-  const r=await fetch('https://www.cartociudad.es/geocoder/api/geocoder/candidates?q='+encodeURIComponent(q)+'&limit=8');
-  const data=await r.json();const arr=Array.isArray(data)?data:(data.results||data.candidates||[]);
+  let arr=[];
+  if(globeMode){
+   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=10&accept-language=es&q='+encodeURIComponent(q);
+   const r=await fetch(url,{headers:{'Accept':'application/json'}});
+   arr=await r.json();
+  }else{
+   const r=await fetch('https://www.cartociudad.es/geocoder/api/geocoder/candidates?q='+encodeURIComponent(q)+'&limit=8');
+   const data=await r.json();arr=Array.isArray(data)?data:(data.results||data.candidates||[]);
+  }
   box.innerHTML='';if(!arr.length){box.textContent='Sin resultados.';return;}
-  arr.forEach(x=>{const name=x.address||x.name||x.nombre||x.full_address||x.id||q;const b=document.createElement('button');b.textContent=name;b.onclick=()=>selectCandidate(x,name);box.appendChild(b);});
+  arr.forEach(x=>{
+   const name=globeMode?(x.display_name||x.name||q):(x.address||x.name||x.nombre||x.full_address||x.id||q);
+   const b=document.createElement('button');b.textContent=name;b.onclick=()=>selectCandidate(x,name,globeMode);box.appendChild(b);
+  });
  }catch(e){box.textContent='El servicio de búsqueda no respondió. '+e.message;}
 }
-async function selectCandidate(x,name){
- let lat=parseFloat(x.lat||x.latitude||x.latitud),lon=parseFloat(x.lng||x.lon||x.longitude||x.longitud);
+async function selectCandidate(x,name,globeMode=document.body.classList.contains('globe-mode')){
+ let lat=parseFloat(x.lat||x.latitude||x.latitud),lon=parseFloat(x.lon||x.lng||x.longitude||x.longitud);
  if(!isFinite(lat)||!isFinite(lon)){
-  try{const r=await fetch('https://www.cartociudad.es/geocoder/api/geocoder/find?q='+encodeURIComponent(name));const d=await r.json();const y=Array.isArray(d)?d[0]:d;lat=parseFloat(y.lat||y.latitude||y.latitud);lon=parseFloat(y.lng||y.lon||y.longitude||y.longitud);}catch(e){}
+  if(!globeMode){
+   try{const r=await fetch('https://www.cartociudad.es/geocoder/api/geocoder/find?q='+encodeURIComponent(name));const d=await r.json();const y=Array.isArray(d)?d[0]:d;lat=parseFloat(y.lat||y.latitude||y.latitud);lon=parseFloat(y.lng||y.lon||y.longitude||y.longitud);}catch(e){}
+  }
  }
- if(isFinite(lat)&&isFinite(lon)){map.setView([lat,lon],16);const m=addSearchedPlace(name,lat,lon);m.openPopup();closePanels();status('Añadido a «Lugares buscados»: '+name);}else alert('El resultado no devolvió coordenadas utilizables.');
+ if(!(isFinite(lat)&&isFinite(lon))){alert('El resultado no devolvió coordenadas utilizables.');return;}
+ if(globeMode){
+  closePanels();
+  if(!globeViewer)return;
+  // Si se busca en España/Canarias, al llegar se verá NGBE; fuera, la capa mundial.
+  const h=85000;
+  globeViewer.camera.flyTo({
+   destination:Cesium.Cartesian3.fromDegrees(lon,lat,h),
+   duration:1.2,
+   complete:()=>{
+    syncGlobeToponymLayers();
+    globeInfoCartesian=Cesium.Cartesian3.fromDegrees(lon,lat,500);
+    showGlobePoint(L.latLng(lat,lon));
+   }
+  });
+  status('Localizado en el globo: '+name);
+ }else{
+  map.setView([lat,lon],16);
+  const m=addSearchedPlace(name,lat,lon);m.openPopup();closePanels();
+  status('Añadido a «Lugares buscados»: '+name);
+ }
 }
 document.getElementById('searchQ').addEventListener('keydown',e=>{if(e.key==='Enter')searchPlace();});
 
@@ -2013,7 +2046,7 @@ function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))ret
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
 
 // Herramientas sobre el globo: medición, perfil editable y consulta territorial mundial.
-let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeInfoCartesian=null,globeInfoPostRenderInstalled=false;
+let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeSpainToponymsLayer=null,globeInfoCartesian=null,globeInfoPostRenderInstalled=false;
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
 function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
@@ -2190,39 +2223,71 @@ function worldPlaceFont(p){
  const important=fc.includes('capital')||Number(p.worldcity??p.WORLDCITY??0)===1||Number(p.megacity??p.MEGACITY??0)===1;
  return important?'800 14px Montserrat, Arial, sans-serif':'700 11px Montserrat, Arial, sans-serif';
 }
+
+function globeCameraCenterLatLng(){
+ if(!globeViewer)return null;
+ const canvas=globeViewer.scene.canvas;
+ const pos=new Cesium.Cartesian2(canvas.clientWidth/2,canvas.clientHeight/2);
+ const ll=globePickLatLng(pos);
+ return ll||null;
+}
+function isSpainGlobeView(){
+ const ll=globeCameraCenterLatLng();
+ if(!ll)return false;
+ return ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
+}
+function syncGlobeToponymLayers(){
+ if(!globeViewer)return;
+ const enabled=!!document.getElementById('worldToponymsCheck')?.checked;
+ const spain=enabled&&isSpainGlobeView();
+ if(worldToponymsLayer)worldToponymsLayer.show=enabled&&!spain;
+ if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=spain;
+ globeViewer.scene.requestRender();
+}
+
 async function toggleWorldToponyms(on){
  if(!globeViewer)return;
  if(on){
   try{
-   if(worldToponymsLayer){
-    globeViewer.imageryLayers.raiseToTop(worldToponymsLayer);
-    worldToponymsLayer.show=true;
-    globeViewer.scene.requestRender();
-    status('Topónimos mundiales visibles · detalle automático según la escala');
-    return;
+   if(!worldToponymsLayer){
+    const globalProvider=new Cesium.UrlTemplateImageryProvider({
+     url:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
+     subdomains:['a','b','c','d'],
+     minimumLevel:0,
+     maximumLevel:20,
+     credit:'© OpenStreetMap contributors · © CARTO',
+     hasAlphaChannel:true
+    });
+    worldToponymsLayer=globeViewer.imageryLayers.addImageryProvider(globalProvider);
+    worldToponymsLayer.alpha=1;
    }
-   // Capa de etiquetas en teselas: solo descarga la zona visible y Cesium cambia
-   // automáticamente de nivel de detalle al acercarse (z 0–20).
-   const provider=new Cesium.UrlTemplateImageryProvider({
-    url:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
-    subdomains:['a','b','c','d'],
-    minimumLevel:0,
-    maximumLevel:20,
-    credit:'© OpenStreetMap contributors · © CARTO',
-    hasAlphaChannel:true
-   });
-   worldToponymsLayer=globeViewer.imageryLayers.addImageryProvider(provider);
-   worldToponymsLayer.alpha=1;
+   if(!globeSpainToponymsLayer){
+    const ignProvider=new Cesium.WebMapServiceImageryProvider({
+     url:'https://www.ign.es/wms-inspire/ngbe',
+     layers:'GN.GeographicalNames',
+     parameters:{
+      transparent:true,
+      format:'image/png',
+      version:'1.3.0'
+     },
+     rectangle:Cesium.Rectangle.fromDegrees(-18.8,27,5.0,44.7),
+     credit:'Toponimia NGBE · © IGN/CNIG · CC BY 4.0'
+    });
+    globeSpainToponymsLayer=globeViewer.imageryLayers.addImageryProvider(ignProvider);
+    globeSpainToponymsLayer.alpha=.96;
+   }
    globeViewer.imageryLayers.raiseToTop(worldToponymsLayer);
-   globeViewer.scene.requestRender();
-   status('Topónimos mundiales visibles · grandes ciudades, ciudades, pueblos y aldeas según la escala');
+   globeViewer.imageryLayers.raiseToTop(globeSpainToponymsLayer);
+   syncGlobeToponymLayers();
+   status(isSpainGlobeView()?'Toponimia IGN/NGBE en España y Canarias':'Toponimia mundial visible · detalle automático según la escala');
   }catch(e){
    console.error(e);
    document.getElementById('worldToponymsCheck').checked=false;
-   status('No se pudo cargar la toponimia mundial');
+   status('No se pudo cargar la toponimia');
   }
- }else if(worldToponymsLayer){
-  worldToponymsLayer.show=false;
+ }else{
+  if(worldToponymsLayer)worldToponymsLayer.show=false;
+  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=false;
   globeViewer.scene.requestRender();
  }
 }
@@ -2303,25 +2368,51 @@ async function toggleCountriesLayer(on){
  }
 }
 
+
+function placeGlobeInfoAtCanvasPoint(pos){
+ const box=document.getElementById('globeInfo');
+ if(!box||!pos||!globeViewer)return;
+ const rect=globeViewer.scene.canvas.getBoundingClientRect();
+ const px=rect.left+Number(pos.x),py=rect.top+Number(pos.y);
+ if(!Number.isFinite(px)||!Number.isFinite(py))return;
+ const bw=box.offsetWidth||330,bh=box.offsetHeight||150,margin=8,offset=16;
+ let left=px+offset,top=py-bh/2;
+ if(left+bw>window.innerWidth-margin)left=px-bw-offset;
+ left=Math.max(margin,Math.min(left,window.innerWidth-bw-margin));
+ top=Math.max(margin,Math.min(top,window.innerHeight-bh-margin));
+ box.style.left=left+'px';
+ box.style.top=top+'px';
+ box.style.right='auto';
+ box.style.bottom='auto';
+}
+
 function positionGlobeInfo(){
  const box=document.getElementById('globeInfo');
  if(!box||box.classList.contains('empty')||!globeViewer||!globeInfoCartesian)return;
- const win=Cesium.SceneTransforms.wgs84ToWindowCoordinates(globeViewer.scene,globeInfoCartesian);
- if(!win||!Number.isFinite(win.x)||!Number.isFinite(win.y))return;
- const bw=box.offsetWidth||330,bh=box.offsetHeight||150,margin=8,offset=16;
- let left=win.x+offset,top=win.y-bh/2;
- if(left+bw>window.innerWidth-margin)left=win.x-bw-offset;
- left=Math.max(margin,Math.min(left,window.innerWidth-bw-margin));
- top=Math.max(margin,Math.min(top,window.innerHeight-bh-margin));
- box.style.left=left+'px';box.style.top=top+'px';box.style.right='auto';box.style.bottom='auto';
+ try{
+  // En Cesium moderno usamos la conversión propia de Scene.
+  // Evita SceneTransforms.wgs84ToWindowCoordinates, que no existe en algunas versiones.
+  const win=globeViewer.scene.cartesianToCanvasCoordinates(globeInfoCartesian,new Cesium.Cartesian2());
+  if(!win||!Number.isFinite(win.x)||!Number.isFinite(win.y))return;
+  const rect=globeViewer.scene.canvas.getBoundingClientRect();
+  const px=rect.left+win.x,py=rect.top+win.y;
+  const bw=box.offsetWidth||330,bh=box.offsetHeight||150,margin=8,offset=16;
+  let left=px+offset,top=py-bh/2;
+  if(left+bw>window.innerWidth-margin)left=px-bw-offset;
+  left=Math.max(margin,Math.min(left,window.innerWidth-bw-margin));
+  top=Math.max(margin,Math.min(top,window.innerHeight-bh-margin));
+  box.style.left=left+'px';box.style.top=top+'px';box.style.right='auto';box.style.bottom='auto';
+ }catch(e){
+  console.warn('No se pudo recolocar la ficha del globo:',e);
+ }
 }
 
-async function showGlobePoint(ll){const box=document.getElementById('globeInfo');globeInfoCartesian=Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,500);box.classList.remove('empty');requestAnimationFrame(positionGlobeInfo);const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');requestAnimationFrame(positionGlobeInfo);}
+async function showGlobePoint(ll,screenPos=null){const box=document.getElementById('globeInfo');globeInfoCartesian=Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,500);box.classList.remove('empty');requestAnimationFrame(()=>{if(screenPos)placeGlobeInfoAtCanvasPoint(screenPos);else positionGlobeInfo();});const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');requestAnimationFrame(()=>{if(screenPos)placeGlobeInfoAtCanvasPoint(screenPos);else positionGlobeInfo();});}
 function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);
  globeClickHandler.setInputAction(ev=>{const picked=globeViewer.scene.pick(ev.position);if(Cesium.defined(picked)&&picked.id&&Number.isInteger(picked.id.__profileIndex)){globeDragIndex=picked.id.__profileIndex;globeViewer.scene.screenSpaceCameraController.enableRotate=false;return;}},Cesium.ScreenSpaceEventType.LEFT_DOWN);
  globeClickHandler.setInputAction(ev=>{if(globeDragIndex<0)return;const ll=globePickLatLng(ev.endPosition);if(!ll)return;globeProfilePts[globeDragIndex]=ll;const ent=globeProfileHandles.find(e=>e.__profileIndex===globeDragIndex);if(ent)ent.position=Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0);updateGlobeProfileFast();},Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  globeClickHandler.setInputAction(async()=>{if(globeDragIndex<0)return;globeDragIndex=-1;globeViewer.scene.screenSpaceCameraController.enableRotate=true;await finishGlobeProfile();},Cesium.ScreenSpaceEventType.LEFT_UP);
- globeClickHandler.setInputAction(ev=>{if(globeDragIndex>=0)return;const ll=globePickLatLng(ev.position);if(!ll)return;if(globeProfileMode){globeProfilePts.push(ll);redrawGlobeProfile();document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+(globeProfilePts.length>1?fmtDistance(measurePerimeter(globeProfilePts,false)):'—');return;}if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();return;}showGlobePoint(ll);},Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ globeClickHandler.setInputAction(ev=>{if(globeDragIndex>=0)return;const ll=globePickLatLng(ev.position);if(!ll)return;if(globeProfileMode){globeProfilePts.push(ll);redrawGlobeProfile();document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+(globeProfilePts.length>1?fmtDistance(measurePerimeter(globeProfilePts,false)):'—');return;}if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();return;}showGlobePoint(ll,ev.position);},Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 async function ensureGlobe(){
  if(globeViewer||globeLoading)return;globeLoading=true;status('Cargando globo 3D…');
@@ -2387,7 +2478,12 @@ async function ensureGlobe(){
   mkGeoLabel(0,-89.2,'Polo Sur',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
   globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();
   if(!globeInfoPostRenderInstalled){
-   globeViewer.scene.postRender.addEventListener(()=>{if(globeInfoCartesian)positionGlobeInfo();});
+   let __lastTopoSync=0;
+   globeViewer.scene.postRender.addEventListener(()=>{
+    if(globeInfoCartesian)positionGlobeInfo();
+    const now=performance.now();
+    if(now-__lastTopoSync>350){__lastTopoSync=now;syncGlobeToponymLayers();}
+   });
    globeInfoPostRenderInstalled=true;
   }if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
