@@ -341,6 +341,127 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
   .brandVersion{font-size:9px;padding:2px 7px}
 }
 
+
+/* v1.0 · cabecera ANAMBRO más horizontal y compacta */
+.brand{
+  width:min(1180px,calc(100vw - 150px))!important;
+  max-width:none!important;
+  min-height:76px!important;
+  padding:8px 14px!important;
+  gap:13px!important;
+  align-items:center!important;
+  border-radius:14px!important;
+}
+.brand img{
+  width:58px!important;
+  height:58px!important;
+  flex:0 0 58px!important;
+}
+.brandText{
+  gap:1px!important;
+  justify-content:center!important;
+}
+.brand .brandTitle{
+  justify-content:center!important;
+  font-size:24px!important;
+  line-height:1!important;
+  gap:8px!important;
+}
+.brand .brandTitle .brandLogoWord{
+  font-size:30px!important;
+}
+.brand .brandDept{
+  text-align:center!important;
+  font-size:10.5px!important;
+  line-height:1.15!important;
+}
+.brand .brandTeacher{
+  font-size:15px!important;
+  line-height:1.12!important;
+  margin:1px 0 0!important;
+}
+.brand .brandRoles{
+  font-size:9.5px!important;
+  line-height:1.18!important;
+  margin-top:0!important;
+}
+.brand .brandAbout{
+  display:none!important;
+}
+.brandActions{
+  position:absolute!important;
+  right:12px!important;
+  bottom:8px!important;
+  margin:0!important;
+  gap:7px!important;
+}
+.brandWelcomeBtn{
+  padding:6px 10px!important;
+  font-size:10px!important;
+}
+.brandWelcomeHint{
+  display:none!important;
+}
+.brandVersion{
+  position:absolute!important;
+  left:82px!important;
+  bottom:9px!important;
+  padding:2px 7px!important;
+  font-size:9px!important;
+}
+.toolbar{
+  top:102px!important;
+}
+@media(max-width:900px){
+  .brand{
+    width:calc(100vw - 90px)!important;
+    min-height:72px!important;
+    padding:7px 10px!important;
+  }
+  .brand img{width:52px!important;height:52px!important;flex-basis:52px!important}
+  .brand .brandTitle{font-size:20px!important}
+  .brand .brandTitle .brandLogoWord{font-size:25px!important}
+  .brand .brandTeacher{font-size:13px!important}
+  .brand .brandRoles{font-size:8.5px!important}
+  .brandVersion{left:70px!important}
+  .toolbar{top:94px!important}
+}
+@media(max-width:600px){
+  .brand{
+    width:calc(100vw - 70px)!important;
+    min-height:56px!important;
+    padding:5px 8px!important;
+    gap:8px!important;
+  }
+  .brand img{width:40px!important;height:40px!important;flex-basis:40px!important}
+  .brand .brandTitle{font-size:15px!important;gap:5px!important}
+  .brand .brandTitle .brandLogoWord{font-size:19px!important}
+  .brand .brandDept{font-size:8px!important}
+  .brand .brandTeacher{font-size:10px!important}
+  .brand .brandRoles{display:none!important}
+  .brandVersion{left:56px!important;bottom:5px!important;font-size:7.5px!important}
+  .brandActions{right:7px!important;bottom:5px!important}
+  .brandWelcomeBtn{padding:4px 7px!important;font-size:8px!important}
+  .toolbar{top:72px!important}
+}
+@media(max-width:480px){
+  .brand{
+    left:48px!important;
+    right:6px!important;
+    width:auto!important;
+    min-height:48px!important;
+    padding:4px 6px!important;
+  }
+  .brand img{width:34px!important;height:34px!important;flex-basis:34px!important}
+  .brand .brandTitle{font-size:13px!important}
+  .brand .brandTitle .brandLogoWord{font-size:16px!important}
+  .brand .brandDept{display:none!important}
+  .brand .brandTeacher{display:block!important;font-size:8.5px!important;text-align:center!important}
+  .brandVersion{left:47px!important;bottom:4px!important}
+  .brandActions{right:5px!important;bottom:4px!important}
+  .toolbar{top:62px!important}
+}
+
 </style>
 </head><body>
 <div id="map"></div>
