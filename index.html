@@ -944,8 +944,8 @@ function canaryVegetationSummary(raw){
  const concrete=cover?(values.find(v=>classifyNonVegetatedCover(v))||cover):(com||pot[0]||fis||[...fields.values()][0]||formation);
  const rows=['<b>'+(cover?'Cobertura/uso':'Formación')+':</b> '+escHtml(formation)];
  if(concrete&&concrete!==formation)rows.push('<b>Formación concreta:</b> '+escHtml(concrete));
+ if(fis&&fis!==formation&&fis!==concrete)rows.push('<b>Fisionomía:</b> '+escHtml(fis));
  if(com&&com!==concrete)rows.push('<b>Nombre común:</b> '+escHtml(com));
- if(fis&&fis!==formation&&fis!==concrete&&fis!==com)rows.push('<b>Fisionomía:</b> '+escHtml(fis));
  if(sci)rows.push('<b>Unidad fitosociológica:</b> <i>'+escHtml(sci)+'</i>');
  return {html:rows.join('<br>'),unit:{formation,concrete,common:com,association:sci,coverType:!!cover,hasData:fields.size>0,rawFields:[...fields]}};
 }
@@ -975,7 +975,9 @@ function mitecoSeriesUnit(f){
 }
 function mitecoVegetationSummary(f){
  const u=mitecoSeriesUnit(f);
- const rows=['<b>Formación potencial:</b> '+escHtml(u.formation),'<b>Serie:</b> '+escHtml(u.code)];
+ const rows=['<b>Formación potencial:</b> '+escHtml(u.formation)];
+ if(u.concrete)rows.push('<b>Formación concreta / serie:</b> '+escHtml(u.concrete));
+ if(u.code)rows.push('<small>Serie '+escHtml(u.code)+'</small>');
  if(u.dominant)rows.push('<b>Especie dominante:</b> <i>'+escHtml(u.dominant)+'</i>');
  if(u.association)rows.push('<b>Asociación:</b> <i>'+escHtml(u.association)+'</i>');
  return rows.join('<br>');
@@ -1127,26 +1129,26 @@ function profileVegetationKind(){return document.querySelector('input[name="prof
 function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 68%)';}
 function cleanThemeText(txt){return cleanGrafcanValue(txt);}
 function extractHtmlField(html,label){const re=new RegExp('<b>'+label+':<\\/b>\\s*([^<]+)','i'),m=String(html||'').match(re);return m?cleanThemeText(m[1]):'';}
-const grafcanColorCache=new Map();
-function modalWmsColor(px,w,h,x0,y0,radius=3){
- const counts=new Map();
- for(let y=Math.max(0,y0-radius);y<=Math.min(h-1,y0+radius);y++)for(let x=Math.max(0,x0-radius);x<=Math.min(w-1,x0+radius);x++){
-  const i=(y*w+x)*4,a=px[i+3],r=px[i],g=px[i+1],b=px[i+2];if(a<245)continue;
-  if((r>248&&g>248&&b>248)||(r<8&&g<8&&b<8))continue;
-  const c='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');counts.set(c,(counts.get(c)||0)+1);
- }
- return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
+function normalizeThemeCategory(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+async function sampleWmsFillColor(base,params,lat,lon){
+ try{
+  const d=.0012,size=31,q=new URLSearchParams({...params,SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:String(size),HEIGHT:String(size)});
+  const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)throw Error('WMS color '+r.status);
+  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=size;cv.height=size;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
+  const px=ctx.getImageData(0,0,size,size).data,counts=new Map(),c=Math.floor(size/2),rad=7;
+  for(let y=c-rad;y<=c+rad;y++)for(let x=c-rad;x<=c+rad;x++){
+   const i=(y*size+x)*4,a=px[i+3];if(a<210)continue;const rgb=[px[i],px[i+1],px[i+2]];const max=Math.max(...rgb),min=Math.min(...rgb);
+   if(max>248&&min>248)continue;if(max<12&&min<12)continue;
+   const color='#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');counts.set(color,(counts.get(color)||0)+1);
+  }
+  return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
+ }catch(e){return null;}
 }
+const grafcanColorCache=new Map();
 async function grafcanOriginalColor(lat,lon,kind,label){
- // Un único color por formación concreta: se toma de la propia imagen WMS y se reutiliza
- // en todo el perfil para evitar que antialiasing, tramas o bordes creen falsas categorías.
- const key=kind+':'+String(label||'');if(grafcanColorCache.has(key))return grafcanColorCache.get(key);
- const promise=(async()=>{
-  const d=.0009,q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:'',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'17',HEIGHT:'17'});
-  const r=await fetch('https://idecan2.grafcan.es/ServicioWMS/Vegetacion?'+q,{mode:'cors'});if(!r.ok)throw Error('Color GRAFCAN');
-  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=17;cv.height=17;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
-  return modalWmsColor(ctx.getImageData(0,0,17,17).data,17,17,8,8,3);
- })().catch(()=>null);grafcanColorCache.set(key,promise);return promise;
+ const key=kind+':'+normalizeThemeCategory(label);if(grafcanColorCache.has(key))return grafcanColorCache.get(key);
+ const promise=sampleWmsFillColor('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:''},lat,lon);
+ grafcanColorCache.set(key,promise);return promise;
 }
 const mfeColorCache=new Map();
 async function mfeOriginalColor(lat,lon,label){
@@ -1155,51 +1157,53 @@ async function mfeOriginalColor(lat,lon,label){
   const d=.0009,q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',LAYERS:'ff_uso',STYLES:'',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'17',HEIGHT:'17'});
   const r=await fetch(MFE25_URL+'?'+q,{mode:'cors'});if(!r.ok)throw Error('Color MFE25');
   const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=17;cv.height=17;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
-  return modalWmsColor(ctx.getImageData(0,0,17,17).data,17,17,8,8,3);
+  const px=ctx.getImageData(0,0,17,17).data,counts=new Map();
+  for(let y=6;y<=10;y++)for(let x=6;x<=10;x++){const i=(y*17+x)*4;if(px[i+3]<245)continue;const color='#'+[px[i],px[i+1],px[i+2]].map(v=>v.toString(16).padStart(2,'0')).join('');if(color==='#ffffff'||color==='#000000')continue;counts.set(color,(counts.get(color)||0)+1);}
+  return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
  })().catch(()=>null);mfeColorCache.set(key,promise);return promise;
 }
 const FORMATION_COLORS={...MFE_FORMATION_COLORS,'Retamar-codesar':'#8e9852','Vegetación de alta montaña':'#888775','Tabaibal-cardonal':'#9ca666','Laurisilva/Monteverde':'#487b70','Fayal-brezal':'#638879','Palmeral':'#7d9b59','Sabinar':'#78917b','Acebuchal':'#718e61','Lentiscar':'#929360','Brezal':'#8a8379','Vegetación de saladar':'#9b9c83','Enebral':'#638f84','Cultivos':'#d8bc7c','Área urbanizada':'#a1a1a1','Sin cubierta vegetal':'#c5c5c5'};
 function formationColor(name){return FORMATION_COLORS[name]||MFE_FORMATION_COLORS['Formación no determinada']||'#aab0b6';}
 function vegetationTheme(v){
  if(!v||!v.unit)return {label:'Sin dato',formation:'Sin dato',detail:'',color:null};
- const u=v.unit;
- return {label:u.concrete||u.formation,formation:u.formation,detail:u.common||u.concrete||u.dominant||u.formation,color:u.color||formationColor(u.formation),unit:u.id,code:u.code||'',concrete:u.concrete||u.formation||'',dominant:u.dominant||'',association:u.association||'',source:v.source,kind:v.kind||'',coverType:!!u.coverType};
+ const u=v.unit,concrete=u.concrete||u.formation||'';
+ return {label:concrete||u.formation,formation:u.formation,detail:u.common||concrete||u.dominant||u.formation,color:u.color||formationColor(u.formation),unit:u.id,code:u.code||'',concrete,dominant:u.dominant||'',association:u.association||'',source:v.source,kind:v.kind||'',coverType:!!u.coverType,categoryKey:(v.source||'veg')+'|'+(v.kind||'actual')+'|'+normalizeThemeCategory(concrete||u.id||u.formation)};
 }
-const geodeColorCache=new Map();
-async function geodeOriginalColor(lat,lon,unitKey){
- const key=String(unitKey||'');if(!key)return null;if(geodeColorCache.has(key))return geodeColorCache.get(key);
- const promise=(async()=>{
-  const d=.0012,q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',LAYERS:'8',STYLES:'',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'21',HEIGHT:'21'});
-  const r=await fetch('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?'+q,{mode:'cors'});if(!r.ok)throw Error('Color GEODE');
-  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=21;cv.height=21;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
-  return modalWmsColor(ctx.getImageData(0,0,21,21).data,21,21,10,10,4);
- })().catch(()=>null);geodeColorCache.set(key,promise);return promise;
+let geodeColorsPromise=null;
+async function geodeOriginalColor(code){
+ if(!code)return null;
+ try{
+  if(!geodeColorsPromise)geodeColorsPromise=fetch('https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8?f=pjson',{mode:'cors'}).then(r=>{if(!r.ok)throw Error('GEODE renderer');return r.json();}).then(j=>new Map((j.drawingInfo?.renderer?.uniqueValueInfos||[]).map(x=>[String(x.value),x.symbol?.color]))).catch(e=>{geodeColorsPromise=null;throw e;});
+  const rgba=(await geodeColorsPromise).get(String(code));return rgba&&rgba.length>=3&&rgba[3]>0?'#'+rgba.slice(0,3).map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):null;
+ }catch(e){return null;}
 }
-function geologyTheme(g){
- if(!g)return {label:'Sin dato',detail:''};
- let label=cleanThemeText(g.DESC_UNIT||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();
- const a1=cleanThemeText(g.NAME_EDA1||''),a2=cleanThemeText(g.NAME_EDA2||''),age=a1&&a2&&a1!==a2?a1+' – '+a2:(a1||a2||'');
- return {label:label||'Unidad geológica',detail:age?((label||'Unidad geológica')+' · '+age):(label||'Unidad geológica'),color:null,unit:'geode:'+(g.CODE_UNIO||g.CODE_COTR||label),code:g.CODE_UNIO||'',age};
+const geodeMapColorCache=new Map();
+async function geodeMapColor(lat,lon,key){
+ const k='geo|'+normalizeThemeCategory(key);if(geodeMapColorCache.has(k))return geodeMapColorCache.get(k);
+ const promise=sampleWmsFillColor('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{LAYERS:'8',STYLES:''},lat,lon);
+ geodeMapColorCache.set(k,promise);return promise;
 }
+function geologyTheme(g){if(!g)return {label:'Sin dato',detail:''};let label=cleanThemeText(g.DESC_UNIT||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();const a1=cleanThemeText(g.NAME_EDA1||''),a2=cleanThemeText(g.NAME_EDA2||''),age=a1&&a2&&a1!==a2?a1+' – '+a2:(a1||a2||'');const id=String(g.CODE_UNIO||g.CODE_COTR||label);return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__color||null,unit:'geode:'+id,categoryKey:'geo|'+normalizeThemeCategory(id)};}
 function themeAtDistance(d,key){if(!lastProfileAnalysis||!lastProfileAnalysis.samples.length)return null;let best=lastProfileAnalysis.samples[0],bd=Math.abs(best.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}return best[key]||null;}
 function profileThemeMode(){return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';}
 function validProfileFormation(name){
  const t=String(name||'').trim();return !!t&&!/^(?:sin dato|sin informaci[oó]n|no consta|n\/a|formaci[oó]n no determinada)$/i.test(t);
 }
 function profileConcreteKey(u){return String(u?.concrete||u?.detail||u?.label||u?.unit||'').trim();}
+function profileCategoryKey(u){return u?.categoryKey||normalizeThemeCategory(profileConcreteKey(u)||u?.unit||u?.label||'');}
 function renderProfileLegend(){
  const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();
  if(mode==='alt'){const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];box.innerHTML=items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;}
  if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode.startsWith('veg')?'vegetación':'geología')+'…</span>';return;}
  if(mode==='geo'){
-  const seen=new Map();for(const x of lastProfileAnalysis.samples){const u=x.geo;if(!u||!u.label||u.label==='Sin dato')continue;seen.set(u.unit||u.label,u);}
+  const seen=new Map();for(const x of lastProfileAnalysis.samples){const u=x.geo;if(!u||!u.label||u.label==='Sin dato')continue;seen.set(profileCategoryKey(u),u);}
   if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}
   box.innerHTML=[...seen.values()].map(u=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background-color:'+escHtml(u.color||'#c9cdd1')+'"></span><span class="profileLegendText">'+escHtml(u.label)+'</span></span>').join('');return;
  }
  const key=mode==='veg_potential'?'vegPotential':'vegActual',groups=new Map(),ungrouped=new Map();
  for(const x of lastProfileAnalysis.samples){
   const u=x[key];if(!u||u.label==='Sin dato')continue;const concrete=profileConcreteKey(u);if(!concrete)continue;
-  const entryKey=(u.unit||concrete);
+  const entryKey=profileCategoryKey(u)||normalizeThemeCategory(concrete);
   if(validProfileFormation(u.formation)){
    if(!groups.has(u.formation))groups.set(u.formation,new Map());groups.get(u.formation).set(entryKey,u);
   }else ungrouped.set(entryKey,u);
@@ -1216,8 +1220,29 @@ let profileTerritorySeq=0;
 async function analyzeProfileTerritory(prof){
  const seq=++profileTerritorySeq;
  const n=Math.min(900,Math.max(64,Math.ceil(prof.total/950)));const q=interpolateProfilePoints(prof.path,n),arr=new Array(q.points.length);let next=0;const workers=Math.min(12,q.points.length);
- await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let vegActual={label:'Sin dato',detail:''},vegPotential={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const canary=isCanaryPoint(p.ll.lat,p.ll.lng);const [va,vp,g]=await Promise.all([canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'actual'):mfeAt(p.ll.lat,p.ll.lng),canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'potential'):mitecoVegetationAt(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);vegActual=vegetationTheme(va);vegPotential=vegetationTheme(vp);geo=geologyTheme(g);const [ac,pc,mc,gc]=await Promise.all([canary&&va?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'actual',va.unit.id):null,canary&&vp?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'potential',vp.unit.id):null,!canary&&va?.unit?mfeOriginalColor(p.ll.lat,p.ll.lng,va.unit.id):null,g?geodeOriginalColor(p.ll.lat,p.ll.lng,g.CODE_UNIO||g.CODE_COTR||g.DESC_UNIT):null]);if(canary&&va?.unit){vegActual.color=ac||vegActual.color||'#aab0b6';vegActual.officialColor=!!ac;}if(canary&&vp?.unit){vegPotential.color=pc||vegPotential.color||'#aab0b6';vegPotential.officialColor=!!pc;}if(!canary&&va?.unit&&mc){vegActual.color=mc;vegActual.officialColor=true;}if(gc)geo.color=gc;}arr[i]={d:p.d,vegActual,vegPotential,geo};}}));
- if(seq!==profileTerritorySeq)return;lastProfileAnalysis={total:prof.total,samples:arr};redrawProfileTheme();
+ await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let vegActual={label:'Sin dato',detail:''},vegPotential={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const canary=isCanaryPoint(p.ll.lat,p.ll.lng);const [va,vp,g]=await Promise.all([canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'actual'):mfeAt(p.ll.lat,p.ll.lng),canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'potential'):mitecoVegetationAt(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);vegActual=vegetationTheme(va);vegPotential=vegetationTheme(vp);geo=geologyTheme(g);
+   const [ac,pc,gc]=await Promise.all([
+    canary&&va?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'actual',vegActual.concrete||vegActual.label):null,
+    canary&&vp?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'potential',vegPotential.concrete||vegPotential.label):null,
+    g?geodeMapColor(p.ll.lat,p.ll.lng,g.CODE_UNIO||g.DESC_UNIT||g.CODE_COTR):null
+   ]);
+   if(canary&&va?.unit){vegActual.color=ac||vegActual.color||'#aab0b6';vegActual.officialColor=!!ac;}
+   if(canary&&vp?.unit){vegPotential.color=pc||vegPotential.color||'#aab0b6';vegPotential.officialColor=!!pc;}
+   // Fuera de Canarias, ambos colores proceden ya de la misma simbología que dibuja el mapa:
+   // MFE25 usa MFE_FORMATION_COLORS a través del mismo SLD y la potencial usa vegetationColor(__serie).
+   if(!canary&&va?.unit)vegActual.officialColor=true;
+   if(!canary&&vp?.unit)vegPotential.officialColor=true;
+   if(gc){geo.color=gc;geo.officialColor=true;}
+  }arr[i]={d:p.d,vegActual,vegPotential,geo};}}));
+ if(seq!==profileTerritorySeq)return;
+ // Arquitectura común a las tres pieles: una categoría temática = un color único.
+ // La categoría se deduplica por identidad temática; jamás por el RGB de un píxel concreto.
+ for(const key of ['vegActual','vegPotential','geo']){
+  const canonical=new Map();
+  for(const row of arr){const u=row[key];if(!u||!u.label||u.label==='Sin dato')continue;const k=profileCategoryKey(u);if(!k)continue;const old=canonical.get(k);if(!old||(u.officialColor&&!old.officialColor))canonical.set(k,{color:u.color||'#c9cdd1',officialColor:!!u.officialColor});}
+  for(const row of arr){const u=row[key];if(!u||!u.label||u.label==='Sin dato')continue;const c=canonical.get(profileCategoryKey(u));if(c){u.color=c.color;u.officialColor=c.officialColor;}}
+ }
+ lastProfileAnalysis={total:prof.total,samples:arr};redrawProfileTheme();
 }
 document.addEventListener('change',e=>{if(e.target?.name==='profileTheme'){document.getElementById('profilePointInfo')?.classList.add('hidden');redrawProfileTheme();}});
 function openProfileModal(){const m=document.getElementById('profileModal');m.classList.add('open');m.setAttribute('aria-hidden','false');}
@@ -1378,7 +1403,7 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  const c=document.getElementById('profileCanvasLarge'),wrap=document.getElementById('profileChartWrap');
  const dpr=Math.max(1,window.devicePixelRatio||1),cw=Math.max(700,wrap.clientWidth),ch=Math.max(400,wrap.clientHeight),skinMode=profileThemeMode(),vegetationMode=skinMode.startsWith('veg');
  c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);c.style.width=cw+'px';c.style.height=ch+'px';
- const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,p={l:72,r:28,t:40,b:vegetationMode?118:64};ctx.clearRect(0,0,W,H);
+ const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,p={l:72,r:28,t:58,b:vegetationMode?118:64};ctx.clearRect(0,0,W,H);
  let lo=Math.min(0,Math.floor((zmin-50)/100)*100),hi=Math.ceil((zmax+80)/100)*100;if(hi<=lo)hi=lo+100;
  const X=d=>p.l+(d/total)*(W-p.l-p.r),Y=z=>p.t+(hi-z)/(hi-lo)*(H-p.t-p.b),base=H-p.b;
  // Fondo neutro: las tintas hipsométricas se reservan para la "piel" del relieve.
@@ -1386,10 +1411,10 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  // rejilla y cotas
  ctx.font='12px system-ui,sans-serif';ctx.textBaseline='middle';const step=(hi-lo<=800?100:hi-lo<=1800?200:500);
  for(let z=Math.ceil(lo/step)*step;z<=hi;z+=step){const y=Y(z);ctx.strokeStyle='rgba(50,60,70,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillStyle='#34404a';ctx.textAlign='right';ctx.fillText(fmtNum(z,0)+' m',p.l-8,y);}
- // Orientación del transecto: cartelas reservadas para que los topónimos nunca se solapen.
- const orientationReserved=[];const ori=profileOrientationLabels();if(ori){
-  ctx.font='900 14px system-ui,sans-serif';ctx.textBaseline='middle';const padX=7,boxH=24,yc=p.t-22;
-  const drawOri=(text,x,side)=>{const tw=ctx.measureText(text).width,bw=tw+padX*2,l=side==='left'?x:x-bw,r=l+bw,t=yc-boxH/2,b=yc+boxH/2;ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle='rgba(23,50,77,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect?ctx.roundRect(l,t,bw,boxH,6):ctx.rect(l,t,bw,boxH);ctx.fill();ctx.stroke();ctx.fillStyle='#17324d';ctx.textAlign='center';ctx.fillText(text,l+bw/2,yc);orientationReserved.push({l,r,t,b});};
+ // Orientación del transecto: franja propia, fuera del espacio de topónimos.
+ const orientationBoxes=[];const ori=profileOrientationLabels();if(ori){
+  ctx.font='900 14px system-ui,sans-serif';ctx.textBaseline='middle';const y=18,h=24,pad=9;
+  const drawOri=(text,x,side)=>{const tw=ctx.measureText(text).width,w=tw+pad*2,l=side==='left'?x:x-w,r=l+w;ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='rgba(23,50,77,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(l,y-12,w,h,7);ctx.fill();ctx.stroke();ctx.fillStyle='#17324d';ctx.textAlign=side==='left'?'left':'right';ctx.fillText(text,side==='left'?l+pad:r-pad,y);orientationBoxes.push({l,r,t:y-12,b:y+12});};
   drawOri(ori.left,p.l,'left');drawOri(ori.right,W-p.r,'right');
  }
  // Interior homogéneo del perfil: una sola tinta suave bajo la silueta.
@@ -1419,13 +1444,13 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
   labelCandidates.push({source:'topo',d:t.d,text:(t.kind==='peak'?'▲ ':t.kind==='relief'?'◆ ':'● ')+t.name,kind:t.kind,priority:basePriority+(t.score||0)/20-(t.dist||0)});
  }
  labelCandidates.sort((a,b)=>b.priority-a.priority);
- const occupied=[...orientationReserved],accepted=[];
+ const occupied=[...orientationBoxes],accepted=[];
  function collides(box){return occupied.some(o=>!(box.r+7<o.l||box.l-7>o.r||box.b+4<o.t||box.t-4>o.b));}
  function tryLabel(cand){
   const x=X(cand.d),font=cand.source==='turn'?'600 11px system-ui,sans-serif':'700 12px system-ui,sans-serif';ctx.font=font;
   const w=ctx.measureText(cand.text).width,h=cand.source==='turn'?14:15;
   // Las inflexiones se anclan a la piel; los topónimos territoriales ocupan tres niveles superiores.
-  const levels=cand.source==='turn'?[Y(cand.z)-24,Y(cand.z)-42,Y(cand.z)+28]:[23,40,57];
+  const levels=cand.source==='turn'?[Y(cand.z)-24,Y(cand.z)-42,Y(cand.z)+28]:[p.t+18,p.t+36,p.t+54];
   for(const cy of levels){
    let align=x<W*.18?'left':x>W*.82?'right':'center',l=align==='left'?x:align==='right'?x-w:x-w/2,r=l+w,t=cy-h,b=cy+2;
    if(l<p.l-4){r+=p.l-4-l;l=p.l-4;}if(r>W-p.r+4){l-=r-(W-p.r+4);r=W-p.r+4;}
