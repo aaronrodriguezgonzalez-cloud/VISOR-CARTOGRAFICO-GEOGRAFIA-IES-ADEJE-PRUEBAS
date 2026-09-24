@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Toponimia mundial vectorial y dinámica decodificada directamente desde las teselas PBF de OpenFreeMap, con cinco niveles progresivos: grandes ciudades, ciudades principales, ciudades y poblaciones, pueblos y aldeas, y detalle local máximo. En España y Canarias se mantiene NGBE/IGN.</li>
+<li>Toponimia mundial vectorial y dinámica decodificada desde OpenFreeMap. Las teselas cubren toda la ventana visible —no solo el centro— y la selección se distribuye espacialmente para evitar vacíos y acumulaciones. Los perfiles mundiales usan la misma fuente vectorial y un respaldo por topónimo próximo. En España y Canarias se mantiene NGBE/IGN.</li>
           <li>Consulta de cualquier punto para identificar el topónimo más próximo, país, divisiones territoriales infraestatales, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales exclusivamente altimétricos, con países atravesados mediante llaves y una selección mínima de topónimos próximos —incluidos máximos y valles— en el eje superior.</li>
@@ -1607,66 +1607,84 @@ function profilePeakType(p){
 function profileIsSpainLatLng(ll){
  return !!ll&&ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
 }
-async function profileWorldToponyms(prof){
+function profileWorldVectorZoom(total){
+ if(total<80000)return 12;
+ if(total<220000)return 10;
+ if(total<650000)return 8;
+ if(total<1800000)return 7;
+ return 6;
+}
+async function profileWorldVectorToponyms(prof){
  if(lastProfileSource!=='globe')return [];
  try{
-  const data=await loadWorldToponyms();
-  const radius=Math.max(profileCorridorRadius(prof.total),Math.min(45000,Math.max(12000,prof.total/18)));
+  const z=profileWorldVectorZoom(prof.total),n=2**z;
+  const keys=new Map();
+
+  // Recorremos el transecto completo y pedimos la tesela del punto + sus vecinas.
+  // Así el perfil no depende de que el topónimo caiga exactamente bajo la línea.
+  const stride=Math.max(1,Math.floor(prof.points.length/36));
+  for(let i=0;i<prof.points.length;i+=stride){
+   const ll=prof.points[i]?.ll;if(!ll||profileIsSpainLatLng(ll))continue;
+   const t=mercatorTileXY(ll.lng,ll.lat,z);
+   for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+    const x=(t.x+dx+n)%n,y=t.y+dy;if(y<0||y>=n)continue;
+    keys.set(z+'/'+x+'/'+y,{z,x,y});
+   }
+  }
+  const limited=[...keys.values()].slice(0,90);
+  const tiles=await Promise.all(limited.map(t=>fetchVectorPlaceTile(t.z,t.x,t.y)));
+
+  const corridor=Math.max(profileCorridorRadius(prof.total),Math.min(50000,Math.max(10000,prof.total/14)));
   const candidates=[],seen=new Set();
 
-  for(const f of data.features||[]){
-   const g=f.geometry||{},p=f.properties||{};
-   if(g.type!=='Point'||!Array.isArray(g.coordinates))continue;
-   const lon=Number(g.coordinates[0]),lat=Number(g.coordinates[1]);
-   if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
-   const ll=L.latLng(lat,lon);
-
-   // En España y Canarias conservamos la misma fuente NGBE/IGN que usa el mapa/perfil 2D.
-   if(profileIsSpainLatLng(ll))continue;
-
-   const near=profileNearestPoint(ll,prof);
-   if(!near||near.dist>radius)continue;
-
-   const name=worldPlaceDisplayName(p).trim();
-   if(!name)continue;
-
-   const rank=Number(p.scalerank??p.labelrank??p.SCALERANK??p.LABELRANK??8);
-   const pop=Number(p.pop_max??p.pop_min??p.POP_MAX??p.POP_MIN??0);
-   const fc=String(p.featurecla||p.FEATURECLA||'').toLowerCase();
-   const capital=fc.includes('capital');
-   const worldcity=Number(p.worldcity??p.WORLDCITY??0)===1;
-   const megacity=Number(p.megacity??p.MEGACITY??0)===1;
-
-   // Mayor jerarquía para capitales/grandes ciudades; la proximidad al transecto remata la prioridad.
-   const score=(capital?1600000:0)+(megacity?1450000:0)+(worldcity?1250000:0)+
-     Math.max(0,900000-rank*65000)+Math.min(500000,Math.log10(Math.max(10,pop))*55000)-near.dist;
-
-   candidates.push({d:near.d,name,kind:'city',score,dist:near.dist,ll,rank,pop,capital});
+  for(const arr of tiles){
+   for(const item of arr){
+    const p=item.p||{},cls=String(p.class||'').toLowerCase();
+    if(!['city','town','village','hamlet','locality','suburb','quarter','neighbourhood','isolated_dwelling','farm'].includes(cls))continue;
+    const name=vectorPlaceDisplayProps(p).trim();if(!name)continue;
+    const ll=L.latLng(item.lat,item.lon),near=profileNearestPoint(ll,prof);
+    if(!near||near.dist>corridor)continue;
+    const key=name.toLocaleLowerCase('es-ES');if(seen.has(key))continue;
+    seen.add(key);
+    candidates.push({
+     d:near.d,name,kind:'city',score:worldLabelPriority(item)-near.dist/120,
+     dist:near.dist,ll,rank:Number(p.rank??99),capital:Number(p.capital||0)>0
+    });
+   }
   }
 
-  candidates.sort((a,b)=>b.score-a.score);
-  const maxLabels=prof.total>1500000?14:prof.total>600000?12:prof.total>200000?10:8;
-  const minSep=Math.max(3500,prof.total/(maxLabels*2.0));
-  const chosen=[];
+  // Garantizar cobertura longitudinal del perfil, no solo grandes ciudades.
+  const target=prof.total>1200000?14:prof.total>500000?12:prof.total>180000?10:8;
+  const bins=target,chosen=[];
+  for(let b=0;b<bins;b++){
+   const d0=prof.total*b/bins,d1=prof.total*(b+1)/bins;
+   const inBin=candidates.filter(c=>c.d>=d0&&c.d<d1).sort((a,b)=>b.score-a.score);
+   if(inBin.length)chosen.push(inBin[0]);
+  }
 
+  // Completar con los mejores restantes sin amontonar.
+  candidates.sort((a,b)=>b.score-a.score);
+  const minSep=Math.max(2500,prof.total/(target*2.4));
   for(const c of candidates){
-   const key=c.name.toLocaleLowerCase('es-ES');
-   if(seen.has(key))continue;
+   if(chosen.length>=target)break;
+   if(chosen.includes(c))continue;
    if(chosen.some(x=>Math.abs(x.d-c.d)<minSep))continue;
-   seen.add(key);chosen.push(c);
-   if(chosen.length>=maxLabels)break;
+   chosen.push(c);
   }
   return chosen.sort((a,b)=>a.d-b.d);
  }catch(e){
-  console.warn('Topónimos mundiales del perfil:',e);
+  console.warn('Topónimos vectoriales del perfil:',e);
   return [];
  }
+}
+async function profileWorldToponyms(prof){
+ return profileWorldVectorToponyms(prof);
 }
 
 async function profileWorldNearestLabels(prof){
  if(lastProfileSource!=='globe')return [];
  const total=prof.total||0;
- const target=total>1200000?8:total>400000?7:total>120000?6:5;
+ const target=total>1200000?12:total>500000?10:total>180000?9:8;
  const chosen=[],seen=new Set();
 
  // Muestras distribuidas por todo el perfil: garantizan presencia de topónimos
@@ -2504,11 +2522,12 @@ function vectorPlaceAllowedProps(p,band){
  if(band==='local'){
   if(cls==='city'||cls==='town')return true;
   if(cls==='village')return rank<=11;
-  if(cls==='hamlet')return rank<=7;
-  if(cls==='suburb'||cls==='quarter')return rank<=5;
+  if(cls==='hamlet'||cls==='locality')return rank<=9;
+  if(cls==='suburb'||cls==='quarter'||cls==='neighbourhood')return rank<=6;
+  if(cls==='isolated_dwelling'||cls==='farm')return rank<=5;
   return false;
  }
- return ['city','town','village','hamlet','suburb','quarter','neighbourhood','isolated_dwelling'].includes(cls);
+ return ['city','town','village','hamlet','locality','suburb','quarter','neighbourhood','isolated_dwelling','farm'].includes(cls);
 }
 function vectorPlaceFontProps(p,band){
  const cls=String(p.class||'').toLowerCase();
@@ -2572,6 +2591,99 @@ async function fetchVectorPlaceTile(z,x,y){
 function clearWorldVectorLabels(){
  if(worldVectorLabelSource)worldVectorLabelSource.entities.removeAll();
 }
+
+function worldVisibleRectangle(){
+ if(!globeViewer)return null;
+ try{
+  const r=globeViewer.camera.computeViewRectangle(globeViewer.scene.globe.ellipsoid);
+  if(!r)return null;
+  return {
+   west:Cesium.Math.toDegrees(r.west),
+   south:Cesium.Math.toDegrees(r.south),
+   east:Cesium.Math.toDegrees(r.east),
+   north:Cesium.Math.toDegrees(r.north)
+  };
+ }catch(e){return null;}
+}
+function worldVisibleTileKeys(z,margin=1,maxTiles=48){
+ const rect=worldVisibleRectangle(),n=2**z;
+ if(!rect){
+  const c=globeCameraCenterLatLng();if(!c)return [];
+  const t=mercatorTileXY(c.lng,c.lat,z),out=[];
+  for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+   const x=(t.x+dx+n)%n,y=t.y+dy;if(y>=0&&y<n)out.push({z,x,y});
+  }
+  return out;
+ }
+
+ const nw=mercatorTileXY(rect.west,Math.min(84.5,rect.north),z);
+ const se=mercatorTileXY(rect.east,Math.max(-84.5,rect.south),z);
+ let xs=[];
+ if(rect.east>=rect.west){
+  for(let x=nw.x-margin;x<=se.x+margin;x++)xs.push((x+n)%n);
+ }else{
+  for(let x=nw.x-margin;x<n;x++)xs.push((x+n)%n);
+  for(let x=0;x<=se.x+margin;x++)xs.push((x+n)%n);
+ }
+ let ys=[];for(let y=nw.y-margin;y<=se.y+margin;y++)if(y>=0&&y<n)ys.push(y);
+
+ const keys=[];for(const y of ys)for(const x of xs)keys.push({z,x,y});
+ if(keys.length<=maxTiles)return keys;
+
+ // Si la ventana visible ocupa demasiadas teselas, muestreamos de forma uniforme
+ // para no disparar peticiones ni bloquear el navegador.
+ const step=Math.ceil(keys.length/maxTiles),out=[];
+ for(let i=0;i<keys.length;i+=step)out.push(keys[i]);
+ return out.slice(0,maxTiles);
+}
+function worldLabelPriority(item){
+ const p=item.p||{},cls=String(p.class||'').toLowerCase(),rank=Number(p.rank??99);
+ return (Number(p.capital||0)>0?1400:0)+
+  (cls==='city'?900:cls==='town'?650:cls==='village'?450:cls==='hamlet'||cls==='locality'?300:170)-
+  Math.min(500,rank*18);
+}
+function worldLabelScreenPoint(item){
+ try{
+  return globeViewer.scene.cartesianToCanvasCoordinates(
+   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
+   new Cesium.Cartesian2()
+  );
+ }catch(e){return null;}
+}
+function selectWorldLabelsSpatially(candidates,maxLabels,bandName){
+ const canvas=globeViewer?.scene?.canvas;if(!canvas)return candidates.slice(0,maxLabels);
+ const w=canvas.clientWidth||1200,h=canvas.clientHeight||800;
+ const cell=bandName==='global'?180:bandName==='regional'?145:bandName==='regional-detail'?125:bandName==='local'?105:90;
+ const byCell=new Map(),rest=[];
+
+ for(const item of candidates){
+  const s=worldLabelScreenPoint(item);
+  if(!s||s.x<-80||s.y<-40||s.x>w+80||s.y>h+40)continue;
+  item.__screen=s;
+  item.__priority=worldLabelPriority(item);
+  const key=Math.floor(s.x/cell)+'|'+Math.floor(s.y/cell);
+  const prev=byCell.get(key);
+  if(!prev||item.__priority>prev.__priority){
+   if(prev)rest.push(prev);
+   byCell.set(key,item);
+  }else rest.push(item);
+ }
+ const chosen=[...byCell.values()].sort((a,b)=>b.__priority-a.__priority);
+ rest.sort((a,b)=>b.__priority-a.__priority);
+
+ const minPx=bandName==='global'?95:bandName==='regional'?78:bandName==='regional-detail'?65:bandName==='local'?54:46;
+ const min2=minPx*minPx;
+ for(const item of rest){
+  if(chosen.length>=maxLabels)break;
+  const s=item.__screen;
+  if(chosen.some(x=>{
+   const q=x.__screen,dx=q.x-s.x,dy=q.y-s.y;return dx*dx+dy*dy<min2;
+  }))continue;
+  chosen.push(item);
+ }
+ return chosen.slice(0,maxLabels);
+}
+
 async function updateWorldVectorToponyms(force=false){
  if(!globeViewer)return;
  const enabled=!!document.getElementById('worldToponymsCheck')?.checked;
@@ -2596,16 +2708,8 @@ async function updateWorldVectorToponyms(force=false){
   }
   worldVectorLabelSource.show=true;
 
-  const c=mercatorTileXY(center.lng,center.lat,band.z),n=2**band.z;
-  const jobs=[];
-  for(let dx=-band.r;dx<=band.r;dx++){
-   for(let dy=-band.r;dy<=band.r;dy++){
-    const x=(c.x+dx+n)%n,y=c.y+dy;
-    if(y<0||y>=n)continue;
-    jobs.push(fetchVectorPlaceTile(band.z,x,y));
-   }
-  }
-  const tiles=await Promise.all(jobs);
+  const tileKeys=worldVisibleTileKeys(band.z,1,band.name==='local-detail'?42:36);
+  const tiles=await Promise.all(tileKeys.map(t=>fetchVectorPlaceTile(t.z,t.x,t.y)));
   if(generation!==worldVectorLabelGeneration)return;
 
   clearWorldVectorLabels();
@@ -2633,7 +2737,8 @@ async function updateWorldVectorToponyms(force=false){
   });
 
   const maxLabels=band.maxLabels||120;
-  for(const item of candidates.slice(0,maxLabels)){
+  const selected=selectWorldLabelsSpatially(candidates,maxLabels,band.name);
+  for(const item of selected){
    const p=item.p,name=vectorPlaceDisplayProps(p);
    worldVectorLabelSource.entities.add({
     position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
