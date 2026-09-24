@@ -262,7 +262,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 
 
 /* Análisis territorial del perfil y herramientas avanzadas del globo */
-#profileBands{margin-top:8px;font-size:12px}.profileBandControls{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 7px}.profileBandControls label{font-weight:800;background:#f3f6f8;border:1px solid #c8d0d6;border-radius:999px;padding:5px 10px;cursor:pointer}.profileBandControls input{margin-right:4px}.profileLegend{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;padding:7px 9px;border-top:1px solid #d3d9de}.profileLegendItem{display:flex;align-items:center;gap:6px;max-width:360px}.profileLegendSw{width:24px;height:10px;border-radius:5px;border:1px solid #6673;flex:0 0 auto}.profileLegendText{white-space:normal}.profileLegendHint{color:#5f6972;font-size:11px}.globeInfo{position:absolute;z-index:3500;right:12px;bottom:42px;width:min(360px,calc(100vw - 24px));max-height:45vh;overflow:auto;background:#fffef5f2;border:1px solid #8b949c;border-radius:10px;box-shadow:0 5px 20px #0007;padding:10px 12px;font-size:13px;display:none}.globeInfo b{color:#17324d}.globeInfoClose{float:right;border:0;background:#17324d;color:#fff;border-radius:5px;cursor:pointer}.globe-mode #globeInfo{display:block}.globe-mode #globeInfo.empty{display:none}@media(max-width:600px){.profileBandRow{grid-template-columns:72px 1fr}.profileBandSeg{font-size:10px}.globeInfo{right:6px;bottom:32px;width:calc(100vw - 12px);font-size:11px}}
+#profileBands{margin-top:8px;font-size:12px}.profileBandControls{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 7px}.profileBandControls label{font-weight:800;background:#f3f6f8;border:1px solid #c8d0d6;border-radius:999px;padding:5px 10px;cursor:pointer}.profileBandControls input{margin-right:4px}.profileLegend{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;padding:7px 9px;border-top:1px solid #d3d9de}.profileLegendItem{display:flex;align-items:center;gap:6px;max-width:360px}.profileLegendSw{width:24px;height:10px;border-radius:5px;border:1px solid #6673;flex:0 0 auto}.profileLegendText{white-space:normal}.profileLegendHint{color:#5f6972;font-size:11px}.globeInfo{position:fixed;z-index:3500;left:12px;top:120px;width:min(330px,calc(100vw - 24px));max-height:45vh;overflow:auto;background:#fffef5f2;border:1px solid #8b949c;border-radius:10px;box-shadow:0 5px 20px #0007;padding:10px 12px;font-size:13px;display:none;pointer-events:auto}.globeInfo b{color:#17324d}.globeInfoClose{float:right;border:0;background:#17324d;color:#fff;border-radius:5px;cursor:pointer}.globe-mode #globeInfo{display:block}.globe-mode #globeInfo.empty{display:none}@media(max-width:600px){.profileBandRow{grid-template-columns:72px 1fr}.profileBandSeg{font-size:10px}.globeInfo{width:min(300px,calc(100vw - 12px));font-size:11px}}
 
 /* Identidad general ANAMBRO + bienvenida */
 .brand{display:flex!important;align-items:flex-start!important;gap:14px!important;max-width:min(920px,calc(100vw - 180px))!important;padding:12px 16px!important;border-radius:18px!important;background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(247,250,252,.95))!important;border:1px solid #d6e0ea!important;box-shadow:0 8px 24px rgba(0,0,0,.16)!important}
@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Topónimos mundiales (capitales y ciudades) disponibles como capa opcional, con mayor nivel de detalle al acercarse.</li>
+<li>Toponimia mundial opcional y dinámica: grandes ciudades a pequeña escala y, al acercarse, ciudades, pueblos y aldeas de la zona visible.</li>
           <li>Consulta de cualquier punto para identificar país, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales con los países atravesados indicados mediante llaves.</li>
@@ -2013,7 +2013,7 @@ function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))ret
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
 
 // Herramientas sobre el globo: medición, perfil editable y consulta territorial mundial.
-let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null;
+let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeInfoCartesian=null,globeInfoPostRenderInstalled=false;
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
 function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
@@ -2193,56 +2193,36 @@ function worldPlaceFont(p){
 async function toggleWorldToponyms(on){
  if(!globeViewer)return;
  if(on){
-  status('Cargando topónimos mundiales…');
   try{
-   const data=await loadWorldToponyms();
-   if(!document.getElementById('worldToponymsCheck').checked)return;
-   if(worldToponymsSource)globeViewer.dataSources.remove(worldToponymsSource,true);
-   const ds=new Cesium.CustomDataSource('Topónimos mundiales');
-   for(const f of data.features||[]){
-    const p=f.properties||{},g=f.geometry||{};
-    if(g.type!=='Point'||!Array.isArray(g.coordinates))continue;
-    const lon=Number(g.coordinates[0]),lat=Number(g.coordinates[1]),name=worldPlaceName(p);
-    if(!name||!Number.isFinite(lon)||!Number.isFinite(lat))continue;
-    const maxDist=worldPlaceMaxDistance(p);
-    const fc=String(p.featurecla||p.FEATURECLA||'').toLowerCase(),capital=fc.includes('capital');
-    ds.entities.add({
-     position:Cesium.Cartesian3.fromDegrees(lon,lat,9000),
-     point:{
-      pixelSize:capital?5:3.5,
-      color:Cesium.Color.WHITE.withAlpha(.95),
-      outlineColor:Cesium.Color.BLACK.withAlpha(.9),
-      outlineWidth:1.3,
-      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist)
-     },
-     label:{
-      text:name,
-      font:worldPlaceFont(p),
-      fillColor:Cesium.Color.WHITE,
-      outlineColor:Cesium.Color.BLACK.withAlpha(.95),
-      outlineWidth:3,
-      style:Cesium.LabelStyle.FILL_AND_OUTLINE,
-      pixelOffset:new Cesium.Cartesian2(7,-3),
-      horizontalOrigin:Cesium.HorizontalOrigin.LEFT,
-      verticalOrigin:Cesium.VerticalOrigin.CENTER,
-      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist),
-      scaleByDistance:new Cesium.NearFarScalar(300000,1.05,maxDist,.62),
-      translucencyByDistance:new Cesium.NearFarScalar(Math.min(1500000,maxDist*.30),1,maxDist,.08)
-     }
-    });
+   if(worldToponymsLayer){
+    globeViewer.imageryLayers.raiseToTop(worldToponymsLayer);
+    worldToponymsLayer.show=true;
+    globeViewer.scene.requestRender();
+    status('Topónimos mundiales visibles · detalle automático según la escala');
+    return;
    }
-   worldToponymsSource=ds;
-   await globeViewer.dataSources.add(ds);
+   // Capa de etiquetas en teselas: solo descarga la zona visible y Cesium cambia
+   // automáticamente de nivel de detalle al acercarse (z 0–20).
+   const provider=new Cesium.UrlTemplateImageryProvider({
+    url:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
+    subdomains:['a','b','c','d'],
+    minimumLevel:0,
+    maximumLevel:20,
+    credit:'© OpenStreetMap contributors · © CARTO',
+    hasAlphaChannel:true
+   });
+   worldToponymsLayer=globeViewer.imageryLayers.addImageryProvider(provider);
+   worldToponymsLayer.alpha=1;
+   globeViewer.imageryLayers.raiseToTop(worldToponymsLayer);
    globeViewer.scene.requestRender();
-   status('Topónimos mundiales visibles según la escala');
+   status('Topónimos mundiales visibles · grandes ciudades, ciudades, pueblos y aldeas según la escala');
   }catch(e){
    console.error(e);
    document.getElementById('worldToponymsCheck').checked=false;
-   status('No se pudieron cargar los topónimos mundiales');
+   status('No se pudo cargar la toponimia mundial');
   }
- }else if(worldToponymsSource){
-  globeViewer.dataSources.remove(worldToponymsSource,true);
-  worldToponymsSource=null;
+ }else if(worldToponymsLayer){
+  worldToponymsLayer.show=false;
   globeViewer.scene.requestRender();
  }
 }
@@ -2322,7 +2302,21 @@ async function toggleCountriesLayer(on){
   globeViewer.scene.requestRender();
  }
 }
-async function showGlobePoint(ll){const box=document.getElementById('globeInfo');box.classList.remove('empty');const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');}
+
+function positionGlobeInfo(){
+ const box=document.getElementById('globeInfo');
+ if(!box||box.classList.contains('empty')||!globeViewer||!globeInfoCartesian)return;
+ const win=Cesium.SceneTransforms.wgs84ToWindowCoordinates(globeViewer.scene,globeInfoCartesian);
+ if(!win||!Number.isFinite(win.x)||!Number.isFinite(win.y))return;
+ const bw=box.offsetWidth||330,bh=box.offsetHeight||150,margin=8,offset=16;
+ let left=win.x+offset,top=win.y-bh/2;
+ if(left+bw>window.innerWidth-margin)left=win.x-bw-offset;
+ left=Math.max(margin,Math.min(left,window.innerWidth-bw-margin));
+ top=Math.max(margin,Math.min(top,window.innerHeight-bh-margin));
+ box.style.left=left+'px';box.style.top=top+'px';box.style.right='auto';box.style.bottom='auto';
+}
+
+async function showGlobePoint(ll){const box=document.getElementById('globeInfo');globeInfoCartesian=Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,500);box.classList.remove('empty');requestAnimationFrame(positionGlobeInfo);const c=coordsDMS(ll.lat,ll.lng);box.innerHTML='<button class="globeInfoClose" onclick="this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> consultando…<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> calculando…';const [country,z,adm]=await Promise.all([countryAt(ll.lat,ll.lng),elevationAt(ll.lat,ll.lng), (ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8)?adminAt(ll.lat,ll.lng):Promise.resolve(null)]);let ah='';if(adm&&(adm.muni||adm.province||adm.ccaa))ah=(adm.muni?'<br><b>Municipio:</b> '+escHtml(adm.muni):'')+(adm.province?'<br><b>Provincia:</b> '+escHtml(adm.province):'')+(adm.ccaa?'<br><b>Comunidad autónoma:</b> '+escHtml(adm.ccaa):'');box.innerHTML='<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add(\'empty\')">×</button><b>🌍 Punto consultado</b><br><b>País/territorio:</b> '+escHtml(country)+ah+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+(z===null?'sin dato':fmtNum(z,0)+' m');requestAnimationFrame(positionGlobeInfo);}
 function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);
  globeClickHandler.setInputAction(ev=>{const picked=globeViewer.scene.pick(ev.position);if(Cesium.defined(picked)&&picked.id&&Number.isInteger(picked.id.__profileIndex)){globeDragIndex=picked.id.__profileIndex;globeViewer.scene.screenSpaceCameraController.enableRotate=false;return;}},Cesium.ScreenSpaceEventType.LEFT_DOWN);
  globeClickHandler.setInputAction(ev=>{if(globeDragIndex<0)return;const ll=globePickLatLng(ev.endPosition);if(!ll)return;globeProfilePts[globeDragIndex]=ll;const ent=globeProfileHandles.find(e=>e.__profileIndex===globeDragIndex);if(ent)ent.position=Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0);updateGlobeProfileFast();},Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -2375,8 +2369,7 @@ async function ensureGlobe(){
    mkGeoLabel(-38,lat,label,color);
   };
   for(let lon=-180;lon<180;lon+=15){
-   const a=[];const latMin=(lon===0?-90:-85),latMax=(lon===0?90:85);
-   for(let lat=latMin;lat<=latMax;lat+=5)a.push(lon,lat);
+   const a=[];for(let lat=-90;lat<=90;lat+=5)a.push(lon,lat);
    mkLine(a,lon===0);
   }
   // Antimeridiano 180°, con la misma jerarquía visual que Greenwich y llegando a los polos.
@@ -2392,7 +2385,11 @@ async function ensureGlobe(){
   mkGeoLabel(179.4,18,'Antimeridiano · 180°',gridMain,{font:'700 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(-8,0),horizontalOrigin:Cesium.HorizontalOrigin.RIGHT});
   mkGeoLabel(0,89.2,'Polo Norte',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
   mkGeoLabel(0,-89.2,'Polo Sur',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
-  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);
+  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();
+  if(!globeInfoPostRenderInstalled){
+   globeViewer.scene.postRender.addEventListener(()=>{if(globeInfoCartesian)positionGlobeInfo();});
+   globeInfoPostRenderInstalled=true;
+  }if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
  finally{globeLoading=false;}
 }
