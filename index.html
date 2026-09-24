@@ -1130,38 +1130,46 @@ function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt
 function cleanThemeText(txt){return cleanGrafcanValue(txt);}
 function extractHtmlField(html,label){const re=new RegExp('<b>'+label+':<\\/b>\\s*([^<]+)','i'),m=String(html||'').match(re);return m?cleanThemeText(m[1]):'';}
 function normalizeThemeCategory(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
-async function sampleWmsFillColor(base,params,lat,lon){
- try{
-  const d=.0012,size=31,q=new URLSearchParams({...params,SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:String(size),HEIGHT:String(size)});
-  const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)throw Error('WMS color '+r.status);
-  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=size;cv.height=size;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
-  const px=ctx.getImageData(0,0,size,size).data,counts=new Map(),c=Math.floor(size/2),rad=7;
-  for(let y=c-rad;y<=c+rad;y++)for(let x=c-rad;x<=c+rad;x++){
-   const i=(y*size+x)*4,a=px[i+3];if(a<210)continue;const rgb=[px[i],px[i+1],px[i+2]];const max=Math.max(...rgb),min=Math.min(...rgb);
-   if(max>248&&min>248)continue;if(max<12&&min<12)continue;
-   const color='#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');counts.set(color,(counts.get(color)||0)+1);
-  }
-  return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
- }catch(e){return null;}
+const grafcanLegendCatalogCache=new Map(),grafcanLegendColorCache=new Map();
+function normalizeThemeName(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es-ES').replace(/\([^)]*\)/g,' ').replace(/[^a-z0-9ñ]+/g,' ').replace(/\s+/g,' ').trim();}
+function legendEntryText(img){
+ let txt='',n=img.nextSibling,guard=0;
+ while(n&&guard++<12){if(n.nodeType===1&&(/^(?:BR|IMG|HR)$/i).test(n.tagName))break;txt+=' '+(n.textContent||'');n=n.nextSibling;}
+ if(cleanGrafcanValue(txt))return cleanGrafcanValue(txt);
+ const p=img.parentElement;if(!p)return '';return cleanGrafcanValue(p.textContent||'');
 }
-const grafcanColorCache=new Map();
-async function grafcanOriginalColor(lat,lon,kind,label){
- const key=kind+':'+normalizeThemeCategory(label);if(grafcanColorCache.has(key))return grafcanColorCache.get(key);
- const promise=sampleWmsFillColor('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:''},lat,lon);
- grafcanColorCache.set(key,promise);return promise;
-}
-const mfeColorCache=new Map();
-async function mfeOriginalColor(lat,lon,label){
- const key=String(label||'');if(mfeColorCache.has(key))return mfeColorCache.get(key);
+async function grafcanLegendCatalog(kind){
+ const layer=kind==='potential'?'VPOT':'VREAL';if(grafcanLegendCatalogCache.has(layer))return grafcanLegendCatalogCache.get(layer);
  const promise=(async()=>{
-  const d=.0009,q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',LAYERS:'ff_uso',STYLES:'',FORMAT:'image/png',TRANSPARENT:'TRUE',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:'17',HEIGHT:'17'});
-  const r=await fetch(MFE25_URL+'?'+q,{mode:'cors'});if(!r.ok)throw Error('Color MFE25');
-  const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=17;cv.height=17;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();
-  const px=ctx.getImageData(0,0,17,17).data,counts=new Map();
-  for(let y=6;y<=10;y++)for(let x=6;x<=10;x++){const i=(y*17+x)*4;if(px[i+3]<245)continue;const color='#'+[px[i],px[i+1],px[i+2]].map(v=>v.toString(16).padStart(2,'0')).join('');if(color==='#ffffff'||color==='#000000')continue;counts.set(color,(counts.get(color)||0)+1);}
-  return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
- })().catch(()=>null);mfeColorCache.set(key,promise);return promise;
+  const base='https://idecan2.grafcan.es/ServicioWMS/Vegetacion';
+  const r=await fetch(base+'?LAYERS='+encodeURIComponent(layer)+'&MODE=LEGEND',{mode:'cors'});if(!r.ok)throw Error('Leyenda GRAFCAN '+r.status);
+  const html=await r.text(),doc=new DOMParser().parseFromString(html,'text/html'),items=[];
+  for(const img of doc.querySelectorAll('img')){const label=legendEntryText(img),src=img.getAttribute('src')||'';if(!label||!src)continue;items.push({label,norm:normalizeThemeName(label),icon:new URL(src,base).href});}
+  return items;
+ })().catch(e=>{console.warn('Leyenda GRAFCAN:',e);return [];});grafcanLegendCatalogCache.set(layer,promise);return promise;
 }
+function legendMatchScore(itemNorm,candidate){
+ const q=normalizeThemeName(candidate);if(!q||!itemNorm)return 0;if(itemNorm===q)return 1000;
+ let score=0;if(itemNorm.includes(q)||q.includes(itemNorm))score+=100;
+ const qa=q.split(' ').filter(t=>t.length>2),ia=itemNorm.split(' ').filter(t=>t.length>2),qs=new Set(qa);let common=0;for(const t of ia)if(qs.has(t))common++;
+ score+=common*12-Math.abs(ia.length-qa.length);return score;
+}
+function bestLegendMatch(items,candidates){
+ const arr=(Array.isArray(candidates)?candidates:[candidates]).filter(Boolean);let best=null,bestScore=0;
+ for(const candidate of arr)for(const item of items){const score=legendMatchScore(item.norm,candidate);if(score>bestScore){bestScore=score;best=item;}}
+ return bestScore>=20?best:null;
+}
+async function iconDominantColor(url){
+ if(grafcanLegendColorCache.has(url))return grafcanLegendColorCache.get(url);
+ const promise=(async()=>{const r=await fetch(url,{mode:'cors'});if(!r.ok)throw Error('Icono '+r.status);const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(bmp,0,0);bmp.close?.();const px=ctx.getImageData(0,0,cv.width,cv.height).data,counts=new Map();for(let i=0;i<px.length;i+=4){const a=px[i+3],r=px[i],g=px[i+1],b=px[i+2];if(a<100)continue;if(r>242&&g>242&&b>242)continue;if(r<18&&g<18&&b<18)continue;const rr=Math.min(255,Math.round(r/4)*4),gg=Math.min(255,Math.round(g/4)*4),bb=Math.min(255,Math.round(b/4)*4),key='#'+[rr,gg,bb].map(v=>v.toString(16).padStart(2,'0')).join('');counts.set(key,(counts.get(key)||0)+1);}return [...counts].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;})().catch(e=>{console.warn('Color de leyenda GRAFCAN:',e);return null;});grafcanLegendColorCache.set(url,promise);return promise;
+}
+async function grafcanOfficialColor(kind,unit){
+ const items=await grafcanLegendCatalog(kind);if(!items.length||!unit)return null;
+ const raw=Array.isArray(unit.rawFields)?unit.rawFields.map(x=>Array.isArray(x)?x[1]:x):[];
+ const candidates=[unit.concrete,unit.common,unit.formation,unit.association,...raw];
+ const match=bestLegendMatch(items,candidates);return match?iconDominantColor(match.icon):null;
+}
+function mfeOfficialColor(unit){return unit?.color||MFE_FORMATION_COLORS[unit?.formation]||MFE_FORMATION_COLORS['Formación no determinada'];}
 const FORMATION_COLORS={...MFE_FORMATION_COLORS,'Retamar-codesar':'#8e9852','Vegetación de alta montaña':'#888775','Tabaibal-cardonal':'#9ca666','Laurisilva/Monteverde':'#487b70','Fayal-brezal':'#638879','Palmeral':'#7d9b59','Sabinar':'#78917b','Acebuchal':'#718e61','Lentiscar':'#929360','Brezal':'#8a8379','Vegetación de saladar':'#9b9c83','Enebral':'#638f84','Cultivos':'#d8bc7c','Área urbanizada':'#a1a1a1','Sin cubierta vegetal':'#c5c5c5'};
 function formationColor(name){return FORMATION_COLORS[name]||MFE_FORMATION_COLORS['Formación no determinada']||'#aab0b6';}
 function vegetationTheme(v){
@@ -1170,20 +1178,15 @@ function vegetationTheme(v){
  return {label:concrete||u.formation,formation:u.formation,detail:u.common||concrete||u.dominant||u.formation,color:u.color||formationColor(u.formation),unit:u.id,code:u.code||'',concrete,dominant:u.dominant||'',association:u.association||'',source:v.source,kind:v.kind||'',coverType:!!u.coverType,categoryKey:(v.source||'veg')+'|'+(v.kind||'actual')+'|'+normalizeThemeCategory(concrete||u.id||u.formation)};
 }
 let geodeColorsPromise=null;
+function normalizeGeodeCode(code){const s=String(code??'').trim();return /^\d+$/.test(s)?s.padStart(8,'0'):s;}
 async function geodeOriginalColor(code){
- if(!code)return null;
+ const key=normalizeGeodeCode(code);if(!key)return null;
  try{
-  if(!geodeColorsPromise)geodeColorsPromise=fetch('https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8?f=pjson',{mode:'cors'}).then(r=>{if(!r.ok)throw Error('GEODE renderer');return r.json();}).then(j=>new Map((j.drawingInfo?.renderer?.uniqueValueInfos||[]).map(x=>[String(x.value),x.symbol?.color]))).catch(e=>{geodeColorsPromise=null;throw e;});
-  const rgba=(await geodeColorsPromise).get(String(code));return rgba&&rgba.length>=3&&rgba[3]>0?'#'+rgba.slice(0,3).map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):null;
- }catch(e){return null;}
+  if(!geodeColorsPromise)geodeColorsPromise=fetch('https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8?f=pjson',{mode:'cors'}).then(r=>{if(!r.ok)throw Error('GEODE renderer');return r.json();}).then(j=>new Map((j.drawingInfo?.renderer?.uniqueValueInfos||[]).map(x=>[normalizeGeodeCode(x.value),x.symbol?.color]))).catch(e=>{geodeColorsPromise=null;throw e;});
+  const rgba=(await geodeColorsPromise).get(key);return rgba&&rgba.length>=3&&Number(rgba[3]??255)>0?'#'+rgba.slice(0,3).map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):null;
+ }catch(e){console.warn('Color GEODE:',e);return null;}
 }
-const geodeMapColorCache=new Map();
-async function geodeMapColor(lat,lon,key){
- const k='geo|'+normalizeThemeCategory(key);if(geodeMapColorCache.has(k))return geodeMapColorCache.get(k);
- const promise=sampleWmsFillColor('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{LAYERS:'8',STYLES:''},lat,lon);
- geodeMapColorCache.set(k,promise);return promise;
-}
-function geologyTheme(g){if(!g)return {label:'Sin dato',detail:''};let label=cleanThemeText(g.DESC_UNIT||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();const a1=cleanThemeText(g.NAME_EDA1||''),a2=cleanThemeText(g.NAME_EDA2||''),age=a1&&a2&&a1!==a2?a1+' – '+a2:(a1||a2||'');const id=String(g.CODE_UNIO||g.CODE_COTR||label);return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__color||null,unit:'geode:'+id,categoryKey:'geo|'+normalizeThemeCategory(id)};}
+function geologyTheme(g){if(!g)return {label:'Sin dato',detail:''};let label=cleanThemeText(g.DESC_UNIT||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();const a1=cleanThemeText(g.NAME_EDA1||''),a2=cleanThemeText(g.NAME_EDA2||''),age=a1&&a2&&a1!==a2?a1+' – '+a2:(a1||a2||'');const id=String(g.CODE_UNIO||g.CODE_COTR||label);return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__color||null,unit:'geode:'+id,code:normalizeGeodeCode(g.CODE_COTR||''),categoryKey:'geo|'+normalizeThemeCategory(id)};}
 function themeAtDistance(d,key){if(!lastProfileAnalysis||!lastProfileAnalysis.samples.length)return null;let best=lastProfileAnalysis.samples[0],bd=Math.abs(best.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}return best[key]||null;}
 function profileThemeMode(){return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';}
 function validProfileFormation(name){
@@ -1222,21 +1225,19 @@ async function analyzeProfileTerritory(prof){
  const n=Math.min(900,Math.max(64,Math.ceil(prof.total/950)));const q=interpolateProfilePoints(prof.path,n),arr=new Array(q.points.length);let next=0;const workers=Math.min(12,q.points.length);
  await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let vegActual={label:'Sin dato',detail:''},vegPotential={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const canary=isCanaryPoint(p.ll.lat,p.ll.lng);const [va,vp,g]=await Promise.all([canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'actual'):mfeAt(p.ll.lat,p.ll.lng),canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'potential'):mitecoVegetationAt(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);vegActual=vegetationTheme(va);vegPotential=vegetationTheme(vp);geo=geologyTheme(g);
    const [ac,pc,gc]=await Promise.all([
-    canary&&va?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'actual',vegActual.concrete||vegActual.label):null,
-    canary&&vp?.unit?grafcanOriginalColor(p.ll.lat,p.ll.lng,'potential',vegPotential.concrete||vegPotential.label):null,
-    g?geodeMapColor(p.ll.lat,p.ll.lng,g.CODE_UNIO||g.DESC_UNIT||g.CODE_COTR):null
+    canary&&va?.unit?grafcanOfficialColor('actual',va.unit):null,
+    canary&&vp?.unit?grafcanOfficialColor('potential',vp.unit):null,
+    g?geodeOriginalColor(g.CODE_COTR):null
    ]);
+   // Una sola arquitectura de simbología: la categoría del mapa aporta el color al perfil y a su leyenda.
    if(canary&&va?.unit){vegActual.color=ac||vegActual.color||'#aab0b6';vegActual.officialColor=!!ac;}
+   else if(va?.unit){vegActual.color=mfeOfficialColor(va.unit);vegActual.officialColor=true;}
    if(canary&&vp?.unit){vegPotential.color=pc||vegPotential.color||'#aab0b6';vegPotential.officialColor=!!pc;}
-   // Fuera de Canarias, ambos colores proceden ya de la misma simbología que dibuja el mapa:
-   // MFE25 usa MFE_FORMATION_COLORS a través del mismo SLD y la potencial usa vegetationColor(__serie).
-   if(!canary&&va?.unit)vegActual.officialColor=true;
-   if(!canary&&vp?.unit)vegPotential.officialColor=true;
+   else if(vp?.unit){vegPotential.color=vp.unit.color||vegPotential.color;vegPotential.officialColor=!!vp.unit.color;}
    if(gc){geo.color=gc;geo.officialColor=true;}
   }arr[i]={d:p.d,vegActual,vegPotential,geo};}}));
  if(seq!==profileTerritorySeq)return;
- // Arquitectura común a las tres pieles: una categoría temática = un color único.
- // La categoría se deduplica por identidad temática; jamás por el RGB de un píxel concreto.
+ // Una categoría temática real conserva un único color a lo largo de todo el perfil.
  for(const key of ['vegActual','vegPotential','geo']){
   const canonical=new Map();
   for(const row of arr){const u=row[key];if(!u||!u.label||u.label==='Sin dato')continue;const k=profileCategoryKey(u);if(!k)continue;const old=canonical.get(k);if(!old||(u.officialColor&&!old.officialColor))canonical.set(k,{color:u.color||'#c9cdd1',officialColor:!!u.officialColor});}
