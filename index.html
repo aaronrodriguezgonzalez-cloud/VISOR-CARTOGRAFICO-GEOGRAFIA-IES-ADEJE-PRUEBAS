@@ -2412,92 +2412,25 @@ function syncGlobeToponymLayers(){
 }
 
 
-function tintImageryProviderLabels(provider,fill='#fff2a8'){
- const original=provider.requestImage.bind(provider);
- provider.requestImage=(x,y,level,request)=>{
-  const img=original(x,y,level,request);
-  if(!img)return img;
-  return Promise.resolve(img).then(source=>{
-   try{
-    const w=source.width||provider.tileWidth||256,h=source.height||provider.tileHeight||256;
-    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-    const ctx=canvas.getContext('2d');
-    ctx.drawImage(source,0,0,w,h);
-    ctx.globalCompositeOperation='source-in';
-    ctx.fillStyle=fill;
-    ctx.fillRect(0,0,w,h);
-    ctx.globalCompositeOperation='source-over';
-    return canvas;
-   }catch(e){
-    console.warn('No se pudo colorear una tesela de topónimos:',e);
-    return source;
-   }
-  });
- };
- return provider;
-}
-
-
-async function ensureWorldTranslitLabels(){
- if(!globeViewer)return;
- if(worldTranslitSource){
-  worldTranslitSource.show=true;
-  return;
- }
- try{
-  const data=await loadWorldToponyms();
-  const ds=new Cesium.CustomDataSource('Topónimos transliterados');
-  for(const f of data.features||[]){
-   const p=f.properties||{},g=f.geometry||{};
-   if(g.type!=='Point'||!Array.isArray(g.coordinates))continue;
-   const lon=Number(g.coordinates[0]),lat=Number(g.coordinates[1]);
-   if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
-   const native=worldPlaceNativeName(p),latin=worldPlaceLatinName(p);
-   if(!native||!latin||!hasNonLatinLetters(native)||native.toLocaleLowerCase()===latin.toLocaleLowerCase())continue;
-
-   const maxDist=worldPlaceMaxDistance(p);
-   const fc=String(p.featurecla||p.FEATURECLA||'').toLowerCase();
-   const capital=fc.includes('capital');
-   ds.entities.add({
-    position:Cesium.Cartesian3.fromDegrees(lon,lat,9000),
-    label:{
-     text:native+' ('+latin+')',
-     font:capital?'800 13px Montserrat, Arial, sans-serif':'700 11px Montserrat, Arial, sans-serif',
-     fillColor:Cesium.Color.fromCssColorString('#fff0a6'),
-     outlineColor:Cesium.Color.BLACK.withAlpha(.98),
-     outlineWidth:3,
-     style:Cesium.LabelStyle.FILL_AND_OUTLINE,
-     showBackground:true,
-     backgroundColor:Cesium.Color.BLACK.withAlpha(.30),
-     backgroundPadding:new Cesium.Cartesian2(4,2),
-     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
-     verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
-     pixelOffset:new Cesium.Cartesian2(0,-8),
-     distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist)
-    }
-   });
-  }
-  worldTranslitSource=ds;
-  await globeViewer.dataSources.add(ds);
- }catch(e){
-  console.warn('No se pudo crear la capa de transliteraciones:',e);
- }
-}
-
 async function toggleWorldToponyms(on){
  if(!globeViewer)return;
  if(on){
   try{
    if(!worldToponymsLayer){
-    const globalProvider=tintImageryProviderLabels(new Cesium.UrlTemplateImageryProvider({
+    const globalProvider=new Cesium.UrlTemplateImageryProvider({
      url:'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png',
      subdomains:['a','b','c','d'],
      minimumLevel:0,
      maximumLevel:20,
      credit:'© OpenStreetMap contributors · © CARTO',
      hasAlphaChannel:true
-    }),'#fff0a6');
+    });
     worldToponymsLayer=globeViewer.imageryLayers.addImageryProvider(globalProvider);
+    // Sin reprocesar las teselas: evita inversión/espejado de los textos.
+    // Se mejora la legibilidad mediante brillo/contraste de la capa.
+    worldToponymsLayer.brightness=1.35;
+    worldToponymsLayer.contrast=1.22;
+    worldToponymsLayer.gamma=.92;
     worldToponymsLayer.alpha=1;
    }
    if(!globeSpainToponymsLayer){
