@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Toponimia mundial vectorial y dinámica decodificada directamente desde las teselas PBF de OpenFreeMap: grandes ciudades a escala planetaria; ciudades y poblaciones a escala regional; y pueblos, aldeas, barrios y núcleos menores al acercarse. En España y Canarias se mantiene NGBE/IGN.</li>
+<li>Toponimia mundial vectorial y dinámica decodificada directamente desde las teselas PBF de OpenFreeMap, con cinco niveles progresivos: grandes ciudades, ciudades principales, ciudades y poblaciones, pueblos y aldeas, y detalle local máximo. En España y Canarias se mantiene NGBE/IGN.</li>
           <li>Consulta de cualquier punto para identificar el topónimo más próximo, país, divisiones territoriales infraestatales, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales exclusivamente altimétricos, con países atravesados mediante llaves y una selección mínima de topónimos próximos —incluidos máximos y valles— en el eje superior.</li>
@@ -2486,11 +2486,26 @@ function vectorPlaceAllowedProps(p,band){
  const rank=Number(p.rank??99);
  const name=vectorPlaceDisplayProps(p);
  if(!name)return false;
- if(band==='global')return cls==='city'&&rank<=6;
+
+ if(band==='global'){
+  return cls==='city'&&rank<=5;
+ }
  if(band==='regional'){
-  if(cls==='city')return rank<=12;
+  if(cls==='city')return rank<=9;
+  if(cls==='town')return rank<=5;
+  return false;
+ }
+ if(band==='regional-detail'){
+  if(cls==='city')return rank<=13;
   if(cls==='town')return rank<=10;
-  if(cls==='village')return rank<=6;
+  if(cls==='village')return rank<=5;
+  return false;
+ }
+ if(band==='local'){
+  if(cls==='city'||cls==='town')return true;
+  if(cls==='village')return rank<=11;
+  if(cls==='hamlet')return rank<=7;
+  if(cls==='suburb'||cls==='quarter')return rank<=5;
   return false;
  }
  return ['city','town','village','hamlet','suburb','quarter','neighbourhood','isolated_dwelling'].includes(cls);
@@ -2499,17 +2514,29 @@ function vectorPlaceFontProps(p,band){
  const cls=String(p.class||'').toLowerCase();
  const capital=Number(p.capital||0)>0;
  if(capital)return band==='global'?'800 17px Montserrat, Arial, sans-serif':'800 15px Montserrat, Arial, sans-serif';
- if(cls==='city')return band==='global'?'800 15px Montserrat, Arial, sans-serif':'800 14px Montserrat, Arial, sans-serif';
- if(cls==='town')return '700 13px Montserrat, Arial, sans-serif';
- if(cls==='village')return '700 12px Montserrat, Arial, sans-serif';
- return '600 11px Montserrat, Arial, sans-serif';
+ if(cls==='city')return band==='global'?'800 15px Montserrat, Arial, sans-serif':'800 13px Montserrat, Arial, sans-serif';
+ if(cls==='town')return '700 12px Montserrat, Arial, sans-serif';
+ if(cls==='village')return '700 11px Montserrat, Arial, sans-serif';
+ return '600 10px Montserrat, Arial, sans-serif';
 }
 function worldLabelBand(){
  const h=globeCameraHeight();
- if(h>4200000)return {name:'global',z:4,r:1};
- if(h>500000)return {name:'regional',z:7,r:1};
- if(h>120000)return {name:'local',z:10,r:1};
- return {name:'local',z:12,r:1};
+
+ // 1) Vista planetaria / continental: solo grandes ciudades.
+ if(h>5500000)return {name:'global',z:4,r:1,maxLabels:34};
+
+ // 2) Vista subcontinental: ciudades principales y capitales regionales.
+ if(h>2500000)return {name:'regional',z:6,r:1,maxLabels:55};
+
+ // 3) Vista de país / gran región: ya aparecen ciudades medias y towns.
+ //    Antes este salto no llegaba hasta ~500 km; ahora entra mucho antes.
+ if(h>950000)return {name:'regional-detail',z:8,r:1,maxLabels:85};
+
+ // 4) Vista regional/local: pueblos y aldeas empiezan a aparecer pronto.
+ if(h>260000)return {name:'local',z:10,r:1,maxLabels:125};
+
+ // 5) Vista muy próxima: máximo detalle local disponible.
+ return {name:'local-detail',z:12,r:1,maxLabels:170};
 }
 async function fetchVectorPlaceTile(z,x,y){
  const key=z+'/'+x+'/'+y;
@@ -2605,7 +2632,7 @@ async function updateWorldVectorToponyms(force=false){
    return sb-sa;
   });
 
-  const maxLabels=band.name==='global'?45:band.name==='regional'?90:160;
+  const maxLabels=band.maxLabels||120;
   for(const item of candidates.slice(0,maxLabels)){
    const p=item.p,name=vectorPlaceDisplayProps(p);
    worldVectorLabelSource.entities.add({
@@ -2625,7 +2652,14 @@ async function updateWorldVectorToponyms(force=false){
     }
    });
   }
-  status('Toponimia vectorial · '+(band.name==='global'?'grandes ciudades':band.name==='regional'?'ciudades y poblaciones':'detalle local'));
+  const bandText={
+   'global':'grandes ciudades',
+   'regional':'ciudades principales',
+   'regional-detail':'ciudades y poblaciones',
+   'local':'pueblos y aldeas',
+   'local-detail':'detalle local máximo'
+  }[band.name]||'detalle dinámico';
+  status('Toponimia vectorial · '+bandText);
  }catch(e){
   console.error('Toponimia vectorial PBF:',e);
   if(worldVectorLabelSource)worldVectorLabelSource.show=false;
