@@ -515,7 +515,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
         <ul>
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
-<li>Red geográfica con Ecuador, Greenwich, Trópico de Cáncer y Trópico de Capricornio.</li>
+<li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
 <li>Topónimos mundiales que aumentan su nivel de detalle al acercarse.</li>
           <li>Consulta de cualquier punto para identificar país, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
@@ -2167,22 +2167,23 @@ function countryLabelName(p){
  return p.NAME_ES||p.ADMIN||p.NAME_LONG||p.NAME_EN||p.NAME||p.SOVEREIGNT||'';
 }
 
-function worldPlaceName(p){return p.NAMEPAR||p.NAMEASCII||p.NAME||p.LS_NAME||'';}
+function worldPlaceName(p){return p.NAMEASCII||p.NAME||p.NAMEPAR||p.NAMEPAR1||p.LS_NAME||p.GN_ASCII||'';}
 function worldPlaceMaxDistance(p){
  const minz=Number(p.MIN_ZOOM);
  if(Number.isFinite(minz)){
-  if(minz<=2.5)return 28000000;
-  if(minz<=4)return 17000000;
-  if(minz<=6)return 9500000;
-  if(minz<=8)return 5000000;
-  return 2500000;
+  if(minz<=2.5)return 36000000;
+  if(minz<=4)return 26000000;
+  if(minz<=6)return 18000000;
+  if(minz<=8)return 11000000;
+  if(minz<=10)return 6500000;
+  return 3800000;
  }
  const rank=Number(p.SCALERANK??p.LABELRANK??6);
- if(rank<=1)return 28000000;
- if(rank<=3)return 17000000;
- if(rank<=5)return 9500000;
- if(rank<=7)return 5000000;
- return 2500000;
+ if(rank<=1)return 36000000;
+ if(rank<=3)return 26000000;
+ if(rank<=5)return 18000000;
+ if(rank<=7)return 11000000;
+ return 6500000;
 }
 function worldPlaceFont(p){
  const fc=String(p.FEATURECLA||'').toLowerCase();
@@ -2268,16 +2269,17 @@ async function toggleCountryLabels(on){
       text:name,
       font:'700 13px Montserrat, Arial, sans-serif',
       fillColor:Cesium.Color.WHITE,
-      outlineColor:Cesium.Color.BLACK.withAlpha(.92),
-      outlineWidth:3,
+      outlineColor:Cesium.Color.BLACK.withAlpha(1),
+      outlineWidth:4,
       style:Cesium.LabelStyle.FILL_AND_OUTLINE,
-      showBackground:false,
+      showBackground:true,
+      backgroundColor:Cesium.Color.BLACK.withAlpha(.38),
+      backgroundPadding:new Cesium.Cartesian2(5,3),
       horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
       verticalOrigin:Cesium.VerticalOrigin.CENTER,
       disableDepthTestDistance:Number.POSITIVE_INFINITY,
-      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist),
-      scaleByDistance:new Cesium.NearFarScalar(800000,1.05,maxDist,.62),
-      translucencyByDistance:new Cesium.NearFarScalar(Math.min(2500000,maxDist*.3),1,maxDist,.15)
+      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist*1.45),
+      scaleByDistance:new Cesium.NearFarScalar(600000,1.12,maxDist*1.45,.78)
      }
     });
    }
@@ -2345,15 +2347,16 @@ async function ensureGlobe(){
   globeViewer.imageryLayers.addImageryProvider(sat);
   // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
   const gridSoft=Cesium.Color.WHITE.withAlpha(0.42);
-  const gridMain=Cesium.Color.fromCssColorString('#ff7043').withAlpha(0.98); // Ecuador y Greenwich
+  const gridMain=Cesium.Color.fromCssColorString('#ff7043').withAlpha(0.98); // Ecuador, Greenwich y antimeridiano
   const tropicColor=Cesium.Color.fromCssColorString('#ffd54a').withAlpha(0.98); // Trópicos
+  const polarColor=Cesium.Color.fromCssColorString('#5ed5ff').withAlpha(0.98); // Círculos polares
   const mkLine=(coords,main=false)=>globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(coords),width:main?2.7:1.0,material:main?gridMain:gridSoft,arcType:Cesium.ArcType.GEODESIC}});
-  const mkTropic=(lat,label)=>{
+  const mkSpecialParallel=(lat,label,color,dashLength=16)=>{
    const a=[];for(let lon=-180;lon<=180;lon+=2)a.push(lon,lat);
    globeViewer.entities.add({polyline:{
     positions:Cesium.Cartesian3.fromDegreesArray(a),
     width:2.2,
-    material:new Cesium.PolylineDashMaterialProperty({color:tropicColor,dashLength:16}),
+    material:new Cesium.PolylineDashMaterialProperty({color,dashLength}),
     arcType:Cesium.ArcType.GEODESIC
    }});
    globeViewer.entities.add({
@@ -2361,23 +2364,32 @@ async function ensureGlobe(){
     label:{
      text:label,
      font:'700 13px Montserrat, Arial, sans-serif',
-     fillColor:tropicColor,
-     outlineColor:Cesium.Color.BLACK.withAlpha(.85),
+     fillColor:color,
+     outlineColor:Cesium.Color.BLACK.withAlpha(.9),
      outlineWidth:2,
      style:Cesium.LabelStyle.FILL_AND_OUTLINE,
      showBackground:true,
-     backgroundColor:Cesium.Color.BLACK.withAlpha(.42),
+     backgroundColor:Cesium.Color.BLACK.withAlpha(.45),
      pixelOffset:new Cesium.Cartesian2(8,-4),
      disableDepthTestDistance:Number.POSITIVE_INFINITY
     }
    });
   };
-  for(let lon=-180;lon<180;lon+=15){const a=[];for(let lat=-85;lat<=85;lat+=5)a.push(lon,lat);mkLine(a,lon===0);}
+  for(let lon=-180;lon<180;lon+=15){
+   const a=[];for(let lat=-85;lat<=85;lat+=5)a.push(lon,lat);
+   mkLine(a,lon===0);
+  }
+  // Antimeridiano 180°, con la misma jerarquía visual que Greenwich.
+  const anti=[];for(let lat=-85;lat<=85;lat+=5)anti.push(180,lat);
+  mkLine(anti,true);
   for(let lat=-75;lat<=75;lat+=15){const a=[];for(let lon=-180;lon<=180;lon+=5)a.push(lon,lat);mkLine(a,lat===0);}
-  mkTropic(23.4366,'Trópico de Cáncer · 23°26′ N');
-  mkTropic(-23.4366,'Trópico de Capricornio · 23°26′ S');
-  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(2,1.5),label:{text:'Ecuador',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.8),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.48),pixelOffset:new Cesium.Cartesian2(8,8),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
-  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(0,42),label:{text:'Meridiano de Greenwich',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.8),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.48),pixelOffset:new Cesium.Cartesian2(8,0),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+  mkSpecialParallel(23.4366,'Trópico de Cáncer · 23°26′ N',tropicColor,16);
+  mkSpecialParallel(-23.4366,'Trópico de Capricornio · 23°26′ S',tropicColor,16);
+  mkSpecialParallel(66.5634,'Círculo Polar Ártico · 66°34′ N',polarColor,11);
+  mkSpecialParallel(-66.5634,'Círculo Polar Antártico · 66°34′ S',polarColor,11);
+  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(2,1.5),label:{text:'Ecuador',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.85),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.5),pixelOffset:new Cesium.Cartesian2(8,8),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(0,42),label:{text:'Meridiano de Greenwich · 0°',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.85),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.5),pixelOffset:new Cesium.Cartesian2(8,0),disableDepthTestDistance:Number.POSITIVE_INFINITY}});
+  globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(179.4,18),label:{text:'Antimeridiano · 180°',font:'700 14px Montserrat, Arial, sans-serif',fillColor:gridMain,outlineColor:Cesium.Color.BLACK.withAlpha(.85),outlineWidth:2,style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:true,backgroundColor:Cesium.Color.BLACK.withAlpha(.5),pixelOffset:new Cesium.Cartesian2(-8,0),horizontalOrigin:Cesium.HorizontalOrigin.RIGHT,disableDepthTestDistance:Number.POSITIVE_INFINITY}});
   globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
  finally{globeLoading=false;}
