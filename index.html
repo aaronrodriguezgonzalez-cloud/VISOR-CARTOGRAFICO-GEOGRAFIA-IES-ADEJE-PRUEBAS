@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Toponimia mundial vectorial y dinámica decodificada desde OpenFreeMap. Las teselas cubren toda la ventana visible —no solo el centro— y la selección se distribuye espacialmente para evitar vacíos y acumulaciones. Los perfiles mundiales usan la misma fuente vectorial y un respaldo por topónimo próximo. En España y Canarias se mantiene NGBE/IGN.</li>
+<li>Toponimia mundial vectorial y dinámica optimizada: carga únicamente las teselas necesarias de la ventana visible, reutiliza las ya descargadas y dibuja los rótulos mediante una colección gráfica ligera. Los perfiles mundiales usan la misma fuente vectorial y un respaldo por topónimo próximo. En España y Canarias se mantiene NGBE/IGN.</li>
           <li>Consulta de cualquier punto para identificar el topónimo más próximo, país, divisiones territoriales infraestatales, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales exclusivamente altimétricos, con países atravesados mediante llaves y una selección mínima de topónimos próximos —incluidos máximos y valles— en el eje superior.</li>
@@ -2245,7 +2245,7 @@ function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=doc
 let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeSpainToponymsLayer=null,worldTranslitSource=null,
 worldMvtGlobal=null,worldMvtRegional=null,worldMvtLocal=null,worldMvtRegionalKey='',worldMvtLocalKey='',
 worldMvtGeneration=0,worldMvtMoveHandlerInstalled=false,worldRasterFallbackLayer=null,
-worldVectorLabelSource=null,worldVectorLabelTileCache=new Map(),worldVectorLibsPromise=null,worldVectorLabelGeneration=0,
+worldVectorLabelSource=null,worldVectorLabelCollection=null,worldVectorLabelTileCache=new Map(),worldVectorLibsPromise=null,worldVectorLabelGeneration=0,worldVectorLabelRenderKey='',
 globeInfoCartesian=null,globeInfoPostRenderInstalled=false,globeReverseCache=new Map();
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
@@ -2542,20 +2542,20 @@ function worldLabelBand(){
  const h=globeCameraHeight();
 
  // 1) Vista planetaria / continental: solo grandes ciudades.
- if(h>5500000)return {name:'global',z:4,r:1,maxLabels:34};
+ if(h>5500000)return {name:'global',z:4,r:1,maxLabels:28};
 
  // 2) Vista subcontinental: ciudades principales y capitales regionales.
- if(h>2500000)return {name:'regional',z:6,r:1,maxLabels:55};
+ if(h>2500000)return {name:'regional',z:6,r:1,maxLabels:44};
 
  // 3) Vista de país / gran región: ya aparecen ciudades medias y towns.
  //    Antes este salto no llegaba hasta ~500 km; ahora entra mucho antes.
- if(h>950000)return {name:'regional-detail',z:8,r:1,maxLabels:85};
+ if(h>950000)return {name:'regional-detail',z:8,r:1,maxLabels:68};
 
  // 4) Vista regional/local: pueblos y aldeas empiezan a aparecer pronto.
- if(h>260000)return {name:'local',z:10,r:1,maxLabels:125};
+ if(h>260000)return {name:'local',z:10,r:1,maxLabels:96};
 
  // 5) Vista muy próxima: máximo detalle local disponible.
- return {name:'local-detail',z:12,r:1,maxLabels:170};
+ return {name:'local-detail',z:12,r:1,maxLabels:125};
 }
 async function fetchVectorPlaceTile(z,x,y){
  const key=z+'/'+x+'/'+y;
@@ -2589,7 +2589,7 @@ async function fetchVectorPlaceTile(z,x,y){
  return p;
 }
 function clearWorldVectorLabels(){
- if(worldVectorLabelSource)worldVectorLabelSource.entities.removeAll();
+ if(worldVectorLabelCollection)worldVectorLabelCollection.removeAll();
 }
 
 function worldVisibleRectangle(){
@@ -2691,7 +2691,7 @@ async function updateWorldVectorToponyms(force=false){
 
  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=spain;
  if(!enabled||spain){
-  if(worldVectorLabelSource)worldVectorLabelSource.show=false;
+  if(worldVectorLabelCollection)worldVectorLabelCollection.show=false;
   globeViewer.scene.requestRender();
   return;
  }
@@ -2702,13 +2702,18 @@ async function updateWorldVectorToponyms(force=false){
  const generation=++worldVectorLabelGeneration;
 
  try{
-  if(!worldVectorLabelSource){
-   worldVectorLabelSource=new Cesium.CustomDataSource('Toponimia mundial vectorial');
-   await globeViewer.dataSources.add(worldVectorLabelSource);
+  if(!worldVectorLabelCollection){
+   worldVectorLabelCollection=new Cesium.LabelCollection({scene:globeViewer.scene});
+   globeViewer.scene.primitives.add(worldVectorLabelCollection);
   }
-  worldVectorLabelSource.show=true;
+  worldVectorLabelCollection.show=true;
 
-  const tileKeys=worldVisibleTileKeys(band.z,1,band.name==='local-detail'?42:36);
+  const tileKeys=worldVisibleTileKeys(band.z,1,band.name==='local-detail'?30:26);
+  const renderKey=band.name+'|'+band.z+'|'+tileKeys.map(t=>t.z+'/'+t.x+'/'+t.y).sort().join(',');
+  if(!force&&renderKey===worldVectorLabelRenderKey){
+   globeViewer.scene.requestRender();
+   return;
+  }
   const tiles=await Promise.all(tileKeys.map(t=>fetchVectorPlaceTile(t.z,t.x,t.y)));
   if(generation!==worldVectorLabelGeneration)return;
 
@@ -2740,23 +2745,22 @@ async function updateWorldVectorToponyms(force=false){
   const selected=selectWorldLabelsSpatially(candidates,maxLabels,band.name);
   for(const item of selected){
    const p=item.p,name=vectorPlaceDisplayProps(p);
-   worldVectorLabelSource.entities.add({
+   worldVectorLabelCollection.add({
     position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
-    label:{
-     text:name,
-     font:vectorPlaceFontProps(p,band.name),
-     fillColor:pale,
-     outlineColor:Cesium.Color.BLACK.withAlpha(.98),
-     outlineWidth:3,
-     style:Cesium.LabelStyle.FILL_AND_OUTLINE,
-     showBackground:false,
-     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
-     verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
-     pixelOffset:new Cesium.Cartesian2(0,-4),
-     disableDepthTestDistance:0
-    }
+    text:name,
+    font:vectorPlaceFontProps(p,band.name),
+    fillColor:pale,
+    outlineColor:Cesium.Color.BLACK.withAlpha(.98),
+    outlineWidth:3,
+    style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+    showBackground:false,
+    horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
+    verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
+    pixelOffset:new Cesium.Cartesian2(0,-4),
+    disableDepthTestDistance:0
    });
   }
+  worldVectorLabelRenderKey=renderKey;
   const bandText={
    'global':'grandes ciudades',
    'regional':'ciudades principales',
@@ -2765,9 +2769,10 @@ async function updateWorldVectorToponyms(force=false){
    'local-detail':'detalle local máximo'
   }[band.name]||'detalle dinámico';
   status('Toponimia vectorial · '+bandText);
+  globeViewer.scene.requestRender();
  }catch(e){
   console.error('Toponimia vectorial PBF:',e);
-  if(worldVectorLabelSource)worldVectorLabelSource.show=false;
+  if(worldVectorLabelCollection)worldVectorLabelCollection.show=false;
   status('No se pudo cargar la toponimia vectorial mundial');
  }
  globeViewer.scene.requestRender();
@@ -2777,7 +2782,7 @@ function syncGlobeToponymLayers(){
  const enabled=!!document.getElementById('worldToponymsCheck')?.checked;
  const spain=enabled&&isSpainGlobeView();
  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=spain;
- if(worldVectorLabelSource)worldVectorLabelSource.show=enabled&&!spain;
+ if(worldVectorLabelCollection)worldVectorLabelCollection.show=enabled&&!spain;
  globeViewer.scene.requestRender();
 }
 async function toggleWorldToponyms(on){
@@ -2808,7 +2813,7 @@ async function toggleWorldToponyms(on){
    status('No se pudo cargar la toponimia');
   }
  }else{
-  if(worldVectorLabelSource)worldVectorLabelSource.show=false;
+  if(worldVectorLabelCollection)worldVectorLabelCollection.show=false;
   if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=false;
   globeViewer.scene.requestRender();
  }
@@ -3108,7 +3113,12 @@ async function ensureGlobe(){
   mkGeoLabel(179.4,18,'Antimeridiano · 180°',gridMain,{font:'700 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(-8,0),horizontalOrigin:Cesium.HorizontalOrigin.RIGHT});
   mkGeoLabel(0,89.2,'Polo Norte',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
   mkGeoLabel(0,-89.2,'Polo Sur',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
-  globeViewer.scene.globe.enableLighting=false;globeViewer.scene.requestRenderMode=true;installGlobeClickTools();
+  globeViewer.scene.globe.enableLighting=false;
+  globeViewer.scene.globe.maximumScreenSpaceError=3.25;
+  globeViewer.scene.globe.tileCacheSize=180;
+  globeViewer.scene.requestRenderMode=true;
+  globeViewer.scene.maximumRenderTimeChange=Infinity;
+  installGlobeClickTools();
   if(!globeInfoPostRenderInstalled){
    globeViewer.scene.postRender.addEventListener(()=>{if(globeInfoCartesian)positionGlobeInfo();});
    globeInfoPostRenderInstalled=true;
