@@ -604,6 +604,569 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
   .toolbar{top:64px!important}
 }
 
+
+/* Corrección móvil final: cabecera completa y perfiles realmente responsivos */
+@media(max-width:760px){
+  .brand.brandWide{
+    position:absolute!important;
+    top:4px!important;
+    left:48px!important;
+    right:6px!important;
+    width:auto!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:54px!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+    grid-template-columns:42px minmax(0,1fr) auto!important;
+    column-gap:7px!important;
+    padding:5px 7px!important;
+    border-radius:9px!important;
+  }
+  .brandWide .brandSideLeft{
+    display:flex!important;
+    width:42px!important;
+    min-width:42px!important;
+    padding:0!important;
+    border:0!important;
+  }
+  .brandWide .brandSideLeft img{
+    width:40px!important;
+    height:40px!important;
+    flex:0 0 40px!important;
+  }
+  .brandWide .brandLeftText{display:none!important}
+  .brandWide .brandCenter{
+    display:flex!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    gap:2px!important;
+  }
+  .brandWide .brandTitle{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    font-size:13px!important;
+    line-height:1.05!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .brandWide .brandTitle .brandBase{display:inline!important}
+  .brandWide .brandTitle .brandLogoWord{
+    display:inline!important;
+    font-size:18px!important;
+    line-height:1!important;
+  }
+  .brandWide .brandTeacher{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    font-size:9px!important;
+    line-height:1.1!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .brandWide .brandSideRight{
+    display:flex!important;
+    width:auto!important;
+    min-width:0!important;
+    padding:0!important;
+    border:0!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
+  .brandWide .brandRoles{display:none!important}
+  .brandWide .brandActions{
+    display:flex!important;
+    position:static!important;
+    margin:0!important;
+  }
+  .brandWide .brandWelcomeBtn{
+    display:block!important;
+    padding:5px 7px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+  .toolbar{top:64px!important}
+}
+@media(max-width:420px){
+  .brand.brandWide{
+    left:45px!important;
+    right:4px!important;
+    grid-template-columns:34px minmax(0,1fr) auto!important;
+    min-height:48px!important;
+    column-gap:5px!important;
+    padding:4px 5px!important;
+  }
+  .brandWide .brandSideLeft{width:34px!important;min-width:34px!important}
+  .brandWide .brandSideLeft img{width:32px!important;height:32px!important;flex-basis:32px!important}
+  .brandWide .brandTitle{font-size:11.5px!important}
+  .brandWide .brandTitle .brandLogoWord{font-size:16px!important}
+  .brandWide .brandTeacher{font-size:8px!important}
+  .brandWide .brandWelcomeBtn{padding:4px 5px!important;font-size:7px!important}
+  .toolbar{top:57px!important}
+  #profileModal{inset:4px!important;padding:7px!important}
+  #profileChartWrap{height:calc(100vh - 155px)!important;min-height:300px!important}
+}
+
+
+/* ANAMBRO móvil 2.0 */
+@media(max-width:760px){
+  .panel{
+    position:fixed!important;
+    left:6px!important;
+    right:6px!important;
+    top:auto!important;
+    bottom:6px!important;
+    width:auto!important;
+    max-width:none!important;
+    max-height:68vh!important;
+    overflow:auto!important;
+    border-radius:16px 16px 10px 10px!important;
+    padding:12px 12px 14px!important;
+    box-shadow:0 -8px 28px rgba(0,0,0,.28)!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .panel h3{
+    position:sticky!important;
+    top:-12px!important;
+    z-index:3!important;
+    margin:-12px -12px 8px!important;
+    padding:12px 12px 9px!important;
+    background:#fffef5f2!important;
+    border-bottom:1px solid #d8dde1!important;
+  }
+  .panel details>summary,
+  .panel label,
+  .panel button.action{
+    min-height:42px;
+    display:flex;
+    align-items:center;
+  }
+  .panel input[type="checkbox"],
+  .panel input[type="radio"]{
+    width:19px;
+    height:19px;
+    flex:0 0 19px;
+  }
+  .toolbar button,
+  .toolbar .toolBtn,
+  .toolbar .action{
+    min-width:42px!important;
+    min-height:42px!important;
+  }
+  .globeInfo{
+    border-radius:14px!important;
+    font-size:12px!important;
+    line-height:1.35!important;
+  }
+}
+
+
+/* Corrección definitiva de cabecera móvil */
+@media(max-width:760px){
+  .brand.brandWide{
+    left:46px!important;
+    right:6px!important;
+    top:4px!important;
+    width:auto!important;
+    max-width:none!important;
+    transform:none!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+}
+@media(max-width:420px){
+  .brand.brandWide{
+    left:43px!important;
+    right:4px!important;
+    top:3px!important;
+    width:auto!important;
+    transform:none!important;
+  }
+}
+
+
+@media(max-width:760px){
+  .brandWide .brandSideLeft{
+    width:34px!important;
+    min-width:34px!important;
+  }
+  .brandWide .brandSideLeft img{
+    width:32px!important;
+    height:32px!important;
+    flex:0 0 32px!important;
+  }
+  .brand.brandWide{
+    grid-template-columns:34px minmax(0,1fr) auto!important;
+    min-height:48px!important;
+  }
+  .brandWide .brandTitle{
+    font-size:12px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .brandWide .brandTitle .brandLogoWord{
+    font-size:17px!important;
+  }
+  .brandWide .brandTeacher{
+    font-size:8.5px!important;
+  }
+  .brandWide .brandWelcomeBtn{
+    padding:4px 6px!important;
+    font-size:7.5px!important;
+  }
+  .toolbar{top:57px!important}
+}
+
+
+/* MÓVIL 2.2 — cabecera realmente visible */
+@media(max-width:760px){
+  .brand.brandWide{
+    position:absolute!important;
+    z-index:5000!important;
+    top:4px!important;
+    left:6px!important;
+    right:6px!important;
+    width:auto!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:62px!important;
+    transform:none!important;
+    margin:0!important;
+    padding:7px 88px 7px 10px!important;
+    display:block!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    border-radius:11px!important;
+  }
+
+  /* En móvil sacrificamos el logo lateral para dar todo el ancho al título y al nombre. */
+  .brandWide .brandSideLeft{
+    display:none!important;
+  }
+
+  .brandWide .brandCenter{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-width:0!important;
+    gap:3px!important;
+    overflow:visible!important;
+  }
+
+  .brandWide .brandTitle{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    font-size:15px!important;
+    line-height:1.05!important;
+  }
+
+  .brandWide .brandTitle .brandBase{
+    display:inline!important;
+  }
+
+  .brandWide .brandTitle .brandLogoWord{
+    display:inline!important;
+    font-size:20px!important;
+    line-height:1!important;
+  }
+
+  .brandWide .brandTeacher{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    font-size:10.5px!important;
+    line-height:1.15!important;
+  }
+
+  .brandWide .brandSideRight{
+    display:block!important;
+    position:absolute!important;
+    top:10px!important;
+    right:8px!important;
+    width:auto!important;
+    min-width:0!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+  }
+
+  .brandWide .brandRoles{
+    display:none!important;
+  }
+
+  .brandWide .brandActions{
+    display:block!important;
+    position:static!important;
+    margin:0!important;
+  }
+
+  .brandWide .brandWelcomeBtn{
+    display:block!important;
+    padding:6px 8px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+
+  /* Empujar herramientas y zoom por debajo de la cabecera. */
+  .toolbar{
+    top:76px!important;
+  }
+  .leaflet-top.leaflet-left{
+    top:72px!important;
+  }
+}
+
+@media(max-width:430px){
+  .brand.brandWide{
+    min-height:58px!important;
+    padding:6px 77px 6px 8px!important;
+  }
+  .brandWide .brandTitle{
+    font-size:13px!important;
+  }
+  .brandWide .brandTitle .brandLogoWord{
+    font-size:18px!important;
+  }
+  .brandWide .brandTeacher{
+    font-size:9.5px!important;
+  }
+  .brandWide .brandSideRight{
+    top:9px!important;
+    right:6px!important;
+  }
+  .brandWide .brandWelcomeBtn{
+    padding:5px 6px!important;
+    font-size:7px!important;
+  }
+  .toolbar{
+    top:70px!important;
+  }
+  .leaflet-top.leaflet-left{
+    top:66px!important;
+  }
+}
+
+
+/* MÓVIL 2.4 — MISMA INFORMACIÓN QUE EN ESCRITORIO, SOLO REORDENADA */
+@media(max-width:760px){
+  .brand.brandWide{
+    position:absolute!important;
+    z-index:5000!important;
+    top:4px!important;
+    left:6px!important;
+    right:6px!important;
+    width:auto!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:94px!important;
+    transform:none!important;
+    margin:0!important;
+    padding:7px 8px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    grid-template-areas:
+      "center center center"
+      "left spacer right"!important;
+    column-gap:7px!important;
+    row-gap:5px!important;
+    align-items:center!important;
+  }
+
+  /* Título + nombre: primera fila completa */
+  .brandWide .brandCenter{
+    grid-area:center!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;
+    width:100%!important;
+    gap:2px!important;
+    overflow:visible!important;
+  }
+  .brandWide .brandTitle{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    font-size:15px!important;
+    line-height:1.02!important;
+  }
+  .brandWide .brandTitle .brandBase{
+    display:inline!important;
+  }
+  .brandWide .brandTitle .brandLogoWord{
+    display:inline!important;
+    font-size:20px!important;
+    line-height:1!important;
+  }
+  .brandWide .brandTeacher{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    font-size:10.5px!important;
+    line-height:1.12!important;
+  }
+
+  /* Logo + IES Adeje + herramienta + curso + versión: segunda fila izquierda */
+  .brandWide .brandSideLeft{
+    grid-area:left!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    width:auto!important;
+    min-width:0!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+  }
+  .brandWide .brandSideLeft img{
+    display:block!important;
+    width:36px!important;
+    height:36px!important;
+    flex:0 0 36px!important;
+  }
+  .brandWide .brandLeftText{
+    display:block!important;
+    min-width:0!important;
+  }
+  .brandWide .brandDept{
+    display:block!important;
+    margin:0!important;
+    text-align:left!important;
+    font-size:7.2px!important;
+    line-height:1.08!important;
+    color:#40596c!important;
+    white-space:nowrap!important;
+  }
+  .brandWide .brandDept b{
+    font-size:8px!important;
+  }
+  .brandWide .brandVersion{
+    position:static!important;
+    display:inline-block!important;
+    margin-top:2px!important;
+    padding:1px 4px!important;
+    font-size:6.5px!important;
+    line-height:1!important;
+  }
+
+  /* Funciones + botón: segunda fila derecha */
+  .brandWide .brandSideRight{
+    grid-area:right!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    gap:3px!important;
+    width:auto!important;
+    min-width:0!important;
+    padding:0!important;
+    margin:0!important;
+    border:0!important;
+  }
+  .brandWide .brandRoles{
+    display:block!important;
+    max-width:180px!important;
+    margin:0!important;
+    text-align:right!important;
+    font-size:6.8px!important;
+    line-height:1.12!important;
+    color:#4b6170!important;
+  }
+  .brandWide .brandRoles b{
+    font-size:7px!important;
+  }
+  .brandWide .brandActions{
+    display:flex!important;
+    position:static!important;
+    margin:0!important;
+    justify-content:flex-end!important;
+  }
+  .brandWide .brandWelcomeBtn{
+    display:block!important;
+    padding:4px 7px!important;
+    font-size:7.2px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+
+  /* Los controles quedan por debajo, sin cubrir la cabecera */
+  .toolbar{top:106px!important}
+  .leaflet-top.leaflet-left{top:102px!important}
+}
+
+@media(max-width:430px){
+  .brand.brandWide{
+    min-height:90px!important;
+    grid-template-columns:40px minmax(0,1fr) auto!important;
+    padding:6px!important;
+    column-gap:5px!important;
+    row-gap:4px!important;
+  }
+  .brandWide .brandTitle{font-size:13.2px!important}
+  .brandWide .brandTitle .brandLogoWord{font-size:18px!important}
+  .brandWide .brandTeacher{font-size:9.4px!important}
+  .brandWide .brandSideLeft img{
+    width:32px!important;
+    height:32px!important;
+    flex-basis:32px!important;
+  }
+  .brandWide .brandDept{
+    font-size:6.3px!important;
+    line-height:1.04!important;
+  }
+  .brandWide .brandDept b{font-size:7px!important}
+  .brandWide .brandVersion{font-size:5.8px!important}
+  .brandWide .brandRoles{
+    max-width:145px!important;
+    font-size:6px!important;
+    line-height:1.06!important;
+  }
+  .brandWide .brandRoles b{font-size:6.2px!important}
+  .brandWide .brandWelcomeBtn{
+    padding:3px 6px!important;
+    font-size:6.5px!important;
+  }
+  .toolbar{top:100px!important}
+  .leaflet-top.leaflet-left{top:96px!important}
+}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -683,7 +1246,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Capas y leyendas consultables de forma interactiva.</li>
           <li>Perfiles editables con fichas de información asociadas al recorrido.</li>
           <li>Una transición continua entre Canarias, el resto de España —territorio peninsular y Baleares— y el mundo.</li>
-          <li>Uso abierto para docencia, divulgación, análisis del paisaje y exploración territorial.</li>
+          <li>Uso abierto para docencia, divulgación, análisis del paisaje y exploración territorial, con interfaz adaptada a ordenador, tableta y móvil.</li>
         </ul>
       </section>
       <section class="welcomeCard">
@@ -760,8 +1323,8 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 </details>
 
 <details><summary>🌍 Mundo · globo 3D</summary>
-<label><input id="countriesCheck" type="checkbox" checked> <b>Fronteras internacionales</b></label>
-<label class="sub"><input id="countryLabelsCheck" type="checkbox" checked> Nombres de países</label>
+<label><input id="countriesCheck" type="checkbox"> <b>Fronteras internacionales</b></label>
+<label class="sub"><input id="countryLabelsCheck" type="checkbox"> Nombres de países</label>
 <label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales vectoriales · IGN en España</label>
 <div style="padding:2px 2px 5px 13px"><small>Fronteras internacionales · Natural Earth 1:10 M. Los topónimos mundiales aumentan su detalle con la escala. La identificación territorial y los perfiles funcionan aunque las capas de rótulos estén apagadas.</small></div>
 </details>
@@ -2049,7 +2612,11 @@ function drawProfileCountryBrackets(ctx,X,base,W,p,total,vegetationMode){
 
 function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  const c=document.getElementById('profileCanvasLarge'),wrap=document.getElementById('profileChartWrap');
- const dpr=Math.max(1,window.devicePixelRatio||1),cw=Math.max(700,wrap.clientWidth),ch=Math.max(400,wrap.clientHeight),skinMode=profileThemeMode(),vegetationMode=skinMode.startsWith('veg');
+ const dpr=Math.max(1,window.devicePixelRatio||1),
+       mobileProfile=window.innerWidth<=700,
+       cw=Math.max(mobileProfile?300:700,wrap.clientWidth),
+       ch=Math.max(mobileProfile?330:400,wrap.clientHeight),
+       skinMode=profileThemeMode(),vegetationMode=skinMode.startsWith('veg');
  c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);c.style.width=cw+'px';c.style.height=ch+'px';
  const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,countryMode=lastProfileSource==='globe'&&!!lastProfileCountries?.length,p={l:72,r:28,t:58,b:vegetationMode?(countryMode?154:118):(countryMode?96:64)};ctx.clearRect(0,0,W,H);
  let lo=Math.min(0,Math.floor((zmin-50)/100)*100),hi=Math.ceil((zmax+80)/100)*100;if(hi<=lo)hi=lo+100;
@@ -2096,8 +2663,12 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  const occupied=[...orientationBoxes],accepted=[];
  function collides(box){return occupied.some(o=>!(box.r+7<o.l||box.l-7>o.r||box.b+4<o.t||box.t-4>o.b));}
  function tryLabel(cand){
-  const x=X(cand.d),font=cand.source==='turn'?'600 11px system-ui,sans-serif':'700 12px system-ui,sans-serif';ctx.font=font;
-  const w=ctx.measureText(cand.text).width,h=cand.source==='turn'?14:15;
+  const x=X(cand.d),
+        font=cand.source==='turn'
+          ?(mobileProfile?'600 9.5px system-ui,sans-serif':'600 11px system-ui,sans-serif')
+          :(mobileProfile?'700 10px system-ui,sans-serif':'700 12px system-ui,sans-serif');
+  ctx.font=font;
+  const w=ctx.measureText(cand.text).width,h=cand.source==='turn'?(mobileProfile?12:14):(mobileProfile?13:15);
   // Las inflexiones se anclan a la piel; los topónimos territoriales ocupan tres niveles superiores.
   const levels=cand.source==='turn'?[Y(cand.z)-24,Y(cand.z)-42,Y(cand.z)+28]:[p.t+18,p.t+36,p.t+54];
   for(const cy of levels){
@@ -2107,12 +2678,26 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
   }
   return false;
  }
- for(const cand of labelCandidates)tryLabel(cand);
+ // En pantallas estrechas no intentamos meter la misma cantidad de rótulos que en escritorio.
+ // La cola ya está ordenada por relevancia, de modo que se conservan antes los nombres más útiles.
+ const plotWidth=Math.max(1,W-p.l-p.r);
+ const maxTopoLabels=Math.max(3,Math.min(18,Math.floor(plotWidth/(mobileProfile?105:82))));
+ const maxTurnLabels=Math.max(3,Math.min(14,Math.floor(plotWidth/(mobileProfile?120:95))));
+ let usedTopo=0,usedTurns=0;
+ for(const cand of labelCandidates){
+  if(cand.source==='topo'){
+   if(usedTopo>=maxTopoLabels)continue;
+   if(tryLabel(cand))usedTopo++;
+  }else{
+   if(usedTurns>=maxTurnLabels)continue;
+   if(tryLabel(cand))usedTurns++;
+  }
+ }
  // Dibujamos únicamente los rótulos aceptados. Las líneas-guía de los topónimos también
  // desaparecen cuando su etiqueta pierde una colisión, evitando ruido visual innecesario.
  for(const a of accepted){
   const isPeak=a.kind==='peak',isRelief=a.kind==='relief';
-  if(a.source==='topo'){ctx.strokeStyle=isPeak?'rgba(120,70,45,.48)':isRelief?'rgba(72,92,55,.48)':'rgba(23,50,77,.42)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(a.x,p.t);ctx.lineTo(a.x,base);ctx.stroke();ctx.setLineDash([]);ctx.font='700 12px system-ui,sans-serif';ctx.fillStyle=isPeak?'#75452f':isRelief?'#485c37':'#17324d';}
+  if(a.source==='topo'){ctx.strokeStyle=isPeak?'rgba(120,70,45,.48)':isRelief?'rgba(72,92,55,.48)':'rgba(23,50,77,.42)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(a.x,p.t);ctx.lineTo(a.x,base);ctx.stroke();ctx.setLineDash([]);ctx.font=mobileProfile?'700 10px system-ui,sans-serif':'700 12px system-ui,sans-serif';ctx.fillStyle=isPeak?'#75452f':isRelief?'#485c37':'#17324d';}
   else{
    // Flecha explícita entre el nombre/cota de la inflexión y el punto exacto de la piel.
    const py=Y(a.z),above=a.cy<py,fromY=above?a.cy+4:a.cy-15,toY=above?py-7:py+7;
@@ -2196,6 +2781,22 @@ function showProfilePoint(event){
  }
 }
 document.getElementById('profileCanvasLarge').addEventListener('click',showProfilePoint);
+let __profileResizeTimer=null;
+window.addEventListener('resize',()=>{
+ clearTimeout(__profileResizeTimer);
+ __profileResizeTimer=setTimeout(()=>{
+  if(document.getElementById('profileModal')?.classList.contains('open')&&lastProfileDraw){
+   drawProfileLarge(...lastProfileDraw);
+  }
+ },140);
+});
+window.addEventListener('orientationchange',()=>setTimeout(()=>{
+ if(globeViewer){configureGlobeMobileQuality();globeViewer.resize();}
+},180));
+window.addEventListener('resize',()=>{
+ if(globeViewer)configureGlobeMobileQuality();
+});
+
 function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;lastProfileSource='map';lastProfileCountries=[];const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
 
 
@@ -2431,7 +3032,8 @@ let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasure
 worldMvtGlobal=null,worldMvtRegional=null,worldMvtLocal=null,worldMvtRegionalKey='',worldMvtLocalKey='',
 worldMvtGeneration=0,worldMvtMoveHandlerInstalled=false,worldRasterFallbackLayer=null,
 worldVectorLabelSource=null,worldVectorLabelCollection=null,worldVectorLabelTileCache=new Map(),worldVectorLibsPromise=null,worldVectorLabelGeneration=0,worldVectorLabelRenderKey='',
-globeInfoCartesian=null,globeInfoPostRenderInstalled=false,globeReverseCache=new Map();
+globeInfoCartesian=null,globeInfoPostRenderInstalled=false,globeReverseCache=new Map(),
+globeMobileMoveTimer=null,globeMobileMoving=false,globeMobileToponymWasVisible=false;
 function globePickLatLng(pos){if(!globeViewer)return null;const ray=globeViewer.camera.getPickRay(pos);let c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;if(!c)c=globeViewer.camera.pickEllipsoid(pos,globeViewer.scene.globe.ellipsoid);if(!c)return null;const q=Cesium.Cartographic.fromCartesian(c);return L.latLng(Cesium.Math.toDegrees(q.latitude),Cesium.Math.toDegrees(q.longitude));}
 function globeEntityPoint(ll,color=Cesium.Color.WHITE,idx=null){const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0),point:{pixelSize:idx===null?10:14,color,outlineColor:Cesium.Color.BLACK,outlineWidth:2,disableDepthTestDistance:Number.POSITIVE_INFINITY}});if(idx!==null)e.__profileIndex=idx;return e;}
 function globeEntityLine(pts,color=Cesium.Color.CYAN,closed=false){const a=closed&&pts.length>2?[...pts,pts[0]]:pts;return globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(a.flatMap(p=>[p.lng,p.lat])),width:4,material:color,clampToGround:true,arcType:Cesium.ArcType.GEODESIC}});}
@@ -2644,6 +3246,49 @@ function isSpainGlobeView(){
  return ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
 }
 
+
+
+function isMobileUI(){
+ return window.matchMedia('(max-width: 760px)').matches || (('ontouchstart' in window) && window.innerWidth<900);
+}
+function configureGlobeMobileQuality(){
+ if(!globeViewer)return;
+ if(isMobileUI()){
+  // Menos píxeles físicos y geometría algo más permisiva en móvil.
+  globeViewer.resolutionScale=.82;
+  globeViewer.scene.globe.maximumScreenSpaceError=4.8;
+  globeViewer.scene.globe.tileCacheSize=110;
+ }else{
+  globeViewer.resolutionScale=1;
+  globeViewer.scene.globe.maximumScreenSpaceError=3.25;
+  globeViewer.scene.globe.tileCacheSize=180;
+ }
+ globeViewer.scene.requestRender();
+}
+function setMobileGlobeMotionState(moving){
+ if(!globeViewer||!isMobileUI())return;
+ globeMobileMoving=moving;
+ clearTimeout(globeMobileMoveTimer);
+
+ if(moving){
+  // Durante el gesto: máxima fluidez y sin rótulos densos.
+  globeViewer.resolutionScale=.68;
+  globeViewer.scene.globe.maximumScreenSpaceError=6.8;
+  globeMobileToponymWasVisible=!!document.getElementById('worldToponymsCheck')?.checked;
+  if(worldVectorLabelCollection)worldVectorLabelCollection.show=false;
+  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=false;
+ }else{
+  // Esperamos un poco por si el usuario encadena otro zoom o arrastre.
+  globeMobileMoveTimer=setTimeout(()=>{
+   configureGlobeMobileQuality();
+   if(globeMobileToponymWasVisible){
+    syncGlobeToponymLayers();
+    if(!isSpainGlobeView())updateWorldVectorToponyms(false);
+   }
+  },220);
+ }
+ globeViewer.scene.requestRender();
+}
 
 function globeCameraHeight(){
  if(!globeViewer)return Infinity;
@@ -3083,7 +3728,19 @@ async function toggleCountriesLayer(on){
 
 function placeGlobeInfoAtCanvasPoint(pos){
  const box=document.getElementById('globeInfo');
- if(!box||!pos||!globeViewer)return;
+ if(!box||!globeViewer)return;
+
+ if(isMobileUI()){
+  box.style.left='8px';
+  box.style.right='8px';
+  box.style.top='auto';
+  box.style.bottom='10px';
+  box.style.width='auto';
+  box.style.maxHeight='42vh';
+  return;
+ }
+
+ if(!pos)return;
  const rect=globeViewer.scene.canvas.getBoundingClientRect();
  const px=rect.left+Number(pos.x),py=rect.top+Number(pos.y);
  if(!Number.isFinite(px)||!Number.isFinite(py))return;
@@ -3096,6 +3753,7 @@ function placeGlobeInfoAtCanvasPoint(pos){
  box.style.top=top+'px';
  box.style.right='auto';
  box.style.bottom='auto';
+ box.style.width='';
 }
 
 function positionGlobeInfo(){
@@ -3299,19 +3957,23 @@ async function ensureGlobe(){
   mkGeoLabel(0,89.2,'Polo Norte',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
   mkGeoLabel(0,-89.2,'Polo Sur',Cesium.Color.WHITE,{font:'800 14px Montserrat, Arial, sans-serif',pixelOffset:new Cesium.Cartesian2(0,0),horizontalOrigin:Cesium.HorizontalOrigin.CENTER});
   globeViewer.scene.globe.enableLighting=false;
-  globeViewer.scene.globe.maximumScreenSpaceError=3.25;
-  globeViewer.scene.globe.tileCacheSize=180;
   globeViewer.scene.requestRenderMode=true;
   globeViewer.scene.maximumRenderTimeChange=Infinity;
+  configureGlobeMobileQuality();
   installGlobeClickTools();
   if(!globeInfoPostRenderInstalled){
    globeViewer.scene.postRender.addEventListener(()=>{if(globeInfoCartesian)positionGlobeInfo();});
    globeInfoPostRenderInstalled=true;
   }
   if(!worldMvtMoveHandlerInstalled){
+   globeViewer.camera.moveStart.addEventListener(()=>setMobileGlobeMotionState(true));
    globeViewer.camera.moveEnd.addEventListener(()=>{
-    syncGlobeToponymLayers();
-    if(document.getElementById('worldToponymsCheck')?.checked&&!isSpainGlobeView())updateWorldVectorToponyms(false);
+    if(isMobileUI()){
+     setMobileGlobeMotionState(false);
+    }else{
+     syncGlobeToponymLayers();
+     if(document.getElementById('worldToponymsCheck')?.checked&&!isSpainGlobeView())updateWorldVectorToponyms(false);
+    }
    });
    worldMvtMoveHandlerInstalled=true;
   }if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);
