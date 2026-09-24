@@ -516,7 +516,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Exploración mediante globo 3D con imagen satelital mundial.</li>
           <li>Visualización de fronteras internacionales y nombres de países.</li>
 <li>Red geográfica con Ecuador, Greenwich, antimeridiano de 180°, trópicos y círculos polares.</li>
-<li>Topónimos mundiales que aumentan su nivel de detalle al acercarse.</li>
+<li>Topónimos mundiales (capitales y ciudades) que aumentan su nivel de detalle al acercarse.</li>
           <li>Consulta de cualquier punto para identificar país, coordenadas y altitud aproximada.</li>
           <li>Medición de distancias y superficies directamente sobre el globo.</li>
           <li>Perfiles topográficos mundiales con los países atravesados indicados mediante llaves.</li>
@@ -2167,9 +2167,9 @@ function countryLabelName(p){
  return p.NAME_ES||p.ADMIN||p.NAME_LONG||p.NAME_EN||p.NAME||p.SOVEREIGNT||'';
 }
 
-function worldPlaceName(p){return p.NAMEASCII||p.NAME||p.NAMEPAR||p.NAMEPAR1||p.LS_NAME||p.GN_ASCII||'';}
+function worldPlaceName(p){return p.nameascii||p.name||p.namepar||p.namealt||p.ls_name||p.NAMEASCII||p.NAME||p.NAMEPAR||p.LS_NAME||'';}
 function worldPlaceMaxDistance(p){
- const minz=Number(p.MIN_ZOOM);
+ const minz=Number(p.min_zoom??p.MIN_ZOOM);
  if(Number.isFinite(minz)){
   if(minz<=2.5)return 36000000;
   if(minz<=4)return 26000000;
@@ -2178,7 +2178,7 @@ function worldPlaceMaxDistance(p){
   if(minz<=10)return 6500000;
   return 3800000;
  }
- const rank=Number(p.SCALERANK??p.LABELRANK??6);
+ const rank=Number(p.scalerank??p.labelrank??p.SCALERANK??p.LABELRANK??6);
  if(rank<=1)return 36000000;
  if(rank<=3)return 26000000;
  if(rank<=5)return 18000000;
@@ -2186,9 +2186,9 @@ function worldPlaceMaxDistance(p){
  return 6500000;
 }
 function worldPlaceFont(p){
- const fc=String(p.FEATURECLA||'').toLowerCase();
- const important=fc.includes('capital')||Number(p.WORLDCITY||0)===1||Number(p.MEGACITY||0)===1;
- return important?'800 13px Montserrat, Arial, sans-serif':'700 11px Montserrat, Arial, sans-serif';
+ const fc=String(p.featurecla||p.FEATURECLA||'').toLowerCase();
+ const important=fc.includes('capital')||Number(p.worldcity??p.WORLDCITY??0)===1||Number(p.megacity??p.MEGACITY??0)===1;
+ return important?'800 14px Montserrat, Arial, sans-serif':'700 11px Montserrat, Arial, sans-serif';
 }
 async function toggleWorldToponyms(on){
  if(!globeViewer)return;
@@ -2205,15 +2205,14 @@ async function toggleWorldToponyms(on){
     const lon=Number(g.coordinates[0]),lat=Number(g.coordinates[1]),name=worldPlaceName(p);
     if(!name||!Number.isFinite(lon)||!Number.isFinite(lat))continue;
     const maxDist=worldPlaceMaxDistance(p);
-    const fc=String(p.FEATURECLA||'').toLowerCase(),capital=fc.includes('capital');
+    const fc=String(p.featurecla||p.FEATURECLA||'').toLowerCase(),capital=fc.includes('capital');
     ds.entities.add({
-     position:Cesium.Cartesian3.fromDegrees(lon,lat,1500),
+     position:Cesium.Cartesian3.fromDegrees(lon,lat,9000),
      point:{
       pixelSize:capital?5:3.5,
       color:Cesium.Color.WHITE.withAlpha(.95),
       outlineColor:Cesium.Color.BLACK.withAlpha(.9),
       outlineWidth:1.3,
-      disableDepthTestDistance:Number.POSITIVE_INFINITY,
       distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist)
      },
      label:{
@@ -2226,7 +2225,6 @@ async function toggleWorldToponyms(on){
       pixelOffset:new Cesium.Cartesian2(7,-3),
       horizontalOrigin:Cesium.HorizontalOrigin.LEFT,
       verticalOrigin:Cesium.VerticalOrigin.CENTER,
-      disableDepthTestDistance:Number.POSITIVE_INFINITY,
       distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist),
       scaleByDistance:new Cesium.NearFarScalar(300000,1.05,maxDist,.62),
       translucencyByDistance:new Cesium.NearFarScalar(Math.min(1500000,maxDist*.30),1,maxDist,.08)
@@ -2264,7 +2262,7 @@ async function toggleCountryLabels(on){
     const rank=Number(p.LABELRANK??p.SCALERANK??5);
     const maxDist=rank<=2?22000000:rank===3?15000000:rank===4?10000000:6500000;
     ds.entities.add({
-     position:Cesium.Cartesian3.fromDegrees(pt[0],pt[1],1200),
+     position:Cesium.Cartesian3.fromDegrees(pt[0],pt[1],12000),
      label:{
       text:name,
       font:'700 13px Montserrat, Arial, sans-serif',
@@ -2277,7 +2275,6 @@ async function toggleCountryLabels(on){
       backgroundPadding:new Cesium.Cartesian2(5,3),
       horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
       verticalOrigin:Cesium.VerticalOrigin.CENTER,
-      disableDepthTestDistance:Number.POSITIVE_INFINITY,
       distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist*1.45),
       scaleByDistance:new Cesium.NearFarScalar(600000,1.12,maxDist*1.45,.78)
      }
