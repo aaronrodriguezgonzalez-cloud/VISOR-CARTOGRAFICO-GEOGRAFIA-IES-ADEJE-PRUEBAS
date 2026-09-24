@@ -454,71 +454,17 @@ const toponymy=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{
 
 // Cartografía geológica continua oficial GEODE (IGME-CSIC). Superposición activable.
 // Capas WMS: recintos, contactos, cuaternario, estructuras, indicios y rótulos.
-const geology=L.tileLayer.wms(
- 'https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',
- {
-   layers:'1,2,3,4,5,6,7,8,9',
-   format:'image/png',
-   transparent:true,
-   version:'1.1.1',
-   opacity:0.70,
-   attribution:'GEODE · © IGME-CSIC'
- }
-);
-geology.on('add',()=>{try{geology.redraw();}catch(e){}});
-map.on('zoomend moveend',()=>{if(map.hasLayer(geology)){try{geology.redraw();}catch(e){}}});
-
+const geology=L.tileLayer.wms('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{
+ layers:'1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,version:'1.3.0',
+ opacity:0.70,attribution:'GEODE · © IGME-CSIC'
+});
 
 
 // v4.0 · capas nacionales oficiales, apagadas por defecto y bajo demanda
 const vegetationPotential=L.geoJSON(null,{style:f=>({color:'#555',weight:.45,fillColor:vegetationColor((f.properties||{}).__serie||''),fillOpacity:.72})});
 const vegetationCanary=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{layers:'VREAL',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'Vegetación actual · © Gobierno de Canarias / GRAFCAN'});
 const vegetationCanaryPotential=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{layers:'VPOT',format:'image/png',transparent:true,version:'1.1.1',opacity:.72,attribution:'Vegetación potencial · © Gobierno de Canarias / GRAFCAN'});
-const mfeActual0=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/robledales_qrobur_qpetraea/wms',{layers:'foto_fija_mfe:robledales_qrobur_qpetraea',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual1=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/abedulares/wms',{layers:'foto_fija_mfe:abedulares',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual2=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/avellanedas/wms',{layers:'foto_fija_mfe:avellanedas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual3=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/robledales_roble_pubescente/wms',{layers:'foto_fija_mfe:robledales_roble_pubescente',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual4=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/quejigares/wms',{layers:'foto_fija_mfe:quejigares',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual5=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/quejigares_qcanariensis/wms',{layers:'foto_fija_mfe:quejigares_qcanariensis',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual6=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/castanares/wms',{layers:'foto_fija_mfe:castanares',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual7=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/fresnedas/wms',{layers:'foto_fija_mfe:fresnedas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual8=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/acebedas/wms',{layers:'foto_fija_mfe:acebedas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual9=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/encinares/wms',{layers:'foto_fija_mfe:encinares',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual10=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/alcornocales/wms',{layers:'foto_fija_mfe:alcornocales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual11=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/acebuchales/wms',{layers:'foto_fija_mfe:acebuchales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual12=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/madronales/wms',{layers:'foto_fija_mfe:madronales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual13=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/algarrobales/wms',{layers:'foto_fija_mfe:algarrobales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual14=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/abetales/wms',{layers:'foto_fija_mfe:abetales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual15=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinsapares/wms',{layers:'foto_fija_mfe:pinsapares',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual16=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/sabinares_jphoenicea/wms',{layers:'foto_fija_mfe:sabinares_jphoenicea',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual17=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/sabinares_albares/wms',{layers:'foto_fija_mfe:sabinares_albares',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual18=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/enebrales/wms',{layers:'foto_fija_mfe:enebrales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual19=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/sabinares_jphoenicea_turbinata/wms',{layers:'foto_fija_mfe:sabinares_jphoenicea_turbinata',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual20=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_albar/wms',{layers:'foto_fija_mfe:pinar_pino_albar',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual21=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_negro/wms',{layers:'foto_fija_mfe:pinar_pino_negro',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual22=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_pinonero/wms',{layers:'foto_fija_mfe:pinar_pino_pinonero',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual23=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_carrasco/wms',{layers:'foto_fija_mfe:pinar_pino_carrasco',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual24=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_salgareno/wms',{layers:'foto_fija_mfe:pinar_pino_salgareno',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual25=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_canario/wms',{layers:'foto_fija_mfe:pinar_pino_canario',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual26=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_pinaster_reg_mediterranea/wms',{layers:'foto_fija_mfe:pinar_pino_pinaster_reg_mediterranea',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual27=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/frondosas_aloctonas_invasoras/wms',{layers:'foto_fija_mfe:frondosas_aloctonas_invasoras',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual28=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/coniferas_aloctonas_gestion/wms',{layers:'foto_fija_mfe:coniferas_aloctonas_gestion',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual29=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/fayal_brezal/wms',{layers:'foto_fija_mfe:fayal_brezal',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual30=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/laurisilvas_macaronesicas/wms',{layers:'foto_fija_mfe:laurisilvas_macaronesicas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual31=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/frondosas_aloctonas_autoctonas/wms',{layers:'foto_fija_mfe:frondosas_aloctonas_autoctonas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual32=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/palmerales/wms',{layers:'foto_fija_mfe:palmerales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual33=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/mezcla_coniferas_autoctonas_aloctonas/wms',{layers:'foto_fija_mfe:mezcla_coniferas_autoctonas_aloctonas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual34=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/mezcla_coniferas_frondosas_autoctonas_aloctonas/wms',{layers:'foto_fija_mfe:mezcla_coniferas_frondosas_autoctonas_aloctonas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual35=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/bosque_ribereno/wms',{layers:'foto_fija_mfe:bosque_ribereno',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual36=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/dehesas/wms',{layers:'foto_fija_mfe:dehesas',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual37=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/choperas_plataneras_produccion/wms',{layers:'foto_fija_mfe:choperas_plataneras_produccion',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual38=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_pinaster_reg_atlantica/wms',{layers:'foto_fija_mfe:pinar_pino_pinaster_reg_atlantica',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual39=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/pinar_pino_radiata/wms',{layers:'foto_fija_mfe:pinar_pino_radiata',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual40=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/otras_coniferas_aloctonas_produccion/wms',{layers:'foto_fija_mfe:otras_coniferas_aloctonas_produccion',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual41=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/eucaliptales/wms',{layers:'foto_fija_mfe:eucaliptales',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual42=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/repoblacion_qrubra/wms',{layers:'foto_fija_mfe:repoblacion_qrubra',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const mfeActual43=L.tileLayer.wms('https://geoserver.iepnb.es/geoserver/foto_fija_mfe/otras_especies_produccion_mezcla/wms',{layers:'foto_fija_mfe:otras_especies_produccion_mezcla',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'MFE25 · © MITECO'});
-const vegetationMFE=L.layerGroup([mfeActual0,mfeActual1,mfeActual2,mfeActual3,mfeActual4,mfeActual5,mfeActual6,mfeActual7,mfeActual8,mfeActual9,mfeActual10,mfeActual11,mfeActual12,mfeActual13,mfeActual14,mfeActual15,mfeActual16,mfeActual17,mfeActual18,mfeActual19,mfeActual20,mfeActual21,mfeActual22,mfeActual23,mfeActual24,mfeActual25,mfeActual26,mfeActual27,mfeActual28,mfeActual29,mfeActual30,mfeActual31,mfeActual32,mfeActual33,mfeActual34,mfeActual35,mfeActual36,mfeActual37,mfeActual38,mfeActual39,mfeActual40,mfeActual41,mfeActual42,mfeActual43]);
+const vegetationMFE=L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx',{layers:'LC.LandCoverSurfaces',format:'image/png',transparent:true,version:'1.1.1',opacity:.72,attribution:'Mapa Forestal de España · © MITECO'});
 const vegetation=L.layerGroup([vegetationCanary,vegetationMFE]);
 const vegetationPotentialGroup=L.layerGroup([vegetationPotential,vegetationCanaryPotential]);
 let vegetationLoaded=false,vegetationLoading=null,vegetationFeatures=[];
@@ -888,13 +834,13 @@ async function geologyAt(lat,lon){
  if(!document.getElementById('geologyCheck').checked)return null;
  try{
   const base='https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8/query';
-  const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,CODE_COTR,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});
+  const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});
   const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)throw new Error('IGME HTTP '+r.status);
   const j=await r.json(),f=j&&j.features&&j.features[0];return f?f.attributes:null;
  }catch(err){console.warn('Consulta geológica IGME:',err);return {__error:true};}
 }
 async function geologyAtRaw(lat,lon){
- try{const base='https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8/query';const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,CODE_COTR,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)return null;const j=await r.json(),f=j&&j.features&&j.features[0];return f?f.attributes:null;}catch(e){return null;}
+ try{const base='https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8/query';const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)return null;const j=await r.json(),f=j&&j.features&&j.features[0];return f?f.attributes:null;}catch(e){return null;}
 }
 function geologyHtml(g){
  if(!document.getElementById('geologyCheck').checked)return '';
@@ -1015,44 +961,15 @@ const VEG_SERIES_INFO={
 function mitecoCleanRaw(f){const p=f.properties||{},code=String(p.__serie||'').trim(),vals=[];for(const [k,v] of Object.entries(p)){if(k.startsWith('__')||v==null)continue;const t=String(v).replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();if(t&&t!==code&&t.length>3&&!/^https?:/i.test(t))vals.push(t);}const desc=String(p.__description||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();return [...new Set([...vals,desc])].filter(Boolean).sort((a,b)=>b.length-a.length)[0]||'';}
 function mitecoParsedInfo(f){const p=f.properties||{},code=String(p.__serie||'').trim(),known=VEG_SERIES_INFO[code];if(known)return {code,series:known.name,formation:known.formation,dominant:known.dominant,association:known.association,floor:''};const raw=mitecoCleanRaw(f);let series='',formation='',dominant='',association='',floor='';let m=raw.match(/Definici[oó]n\s+Serie\s+(.+?)(?=\s+VP[,.:]|\s+Faciaci[oó]n|\s+Regi[oó]n|$)/i);if(m)series=m[1].trim();m=raw.match(/\bVP\s*[,.:]\s*([^.;]+?)(?=\s+Faciaci[oó]n|\s+Regi[oó]n|\s+Piso|$)/i);if(m)formation=m[1].trim().replace(/[,.]+$/,'');m=(series||raw).match(/de\s+([A-Z][a-z]+\s+[a-z-]+)\s+o\s+[^()]+\(([^()]+?sigmetum)\)/i);if(m){dominant=m[1].trim();association=m[2].trim();}else{m=(series||raw).match(/([A-Z][a-z]+\s+[a-z-]+)[^()]*\(([^()]+?sigmetum)\)/i);if(m){dominant=m[1].trim();association=m[2].trim();}}m=raw.match(/Piso(?:\s+Piso)?\s+([A-Za-záéíóúüñ-]+)(?=\s+Clima|\s+T\s|$)/i);if(m)floor=m[1].trim();return {code,series,formation,dominant,association,floor};}
 function mitecoFormationLabel(x){
- const f=cleanThemeText(x&&x.formation||''),t=cleanThemeText(x&&x.series||''),d=cleanThemeText(x&&x.dominant||''),a=cleanThemeText(x&&x.association||''),all=(f+' '+t+' '+d+' '+a).trim();
+ const f=cleanThemeText(x&&x.formation||''),t=cleanThemeText(x&&x.series||''),all=(f+' '+t).trim();
  const rules=[
-  [/laurisilv|monteverde/i,'Laurisilva / Monteverde'],
-  [/fayal.?brezal/i,'Fayal-brezal'],
-  [/tabaibal|cardonal|euphorbia canariensis|euphorbia balsamifera/i,'Tabaibal-cardonal'],
-  [/retamar|codesar|spartocytisus|adenocarpus viscosus/i,'Retamar-codesar'],
-  [/bosque.{0,8}ribera|ribereñ|alised|sauced|olmed|choper|tarayal|tamarix/i,'Vegetación de ribera'],
-  [/hayed|haya|fagus/i,'Hayedo'],
-  [/meloj|rebollo|pyrenaica/i,'Melojar'],
-  [/quejig|faginea|canariensis/i,'Quejigar'],
-  [/encinar|encina|carrasca|ilex|rotundifolia/i,'Encinar'],
-  [/alcorno|suber/i,'Alcornocal'],
-  [/robled|roble|robur|petraea|humilis/i,'Robledal'],
-  [/abedul|betula/i,'Abedular'],
-  [/fresn|fraxinus/i,'Fresneda'],
-  [/castañ|castanea/i,'Castañar'],
-  [/acebed|aquifolium/i,'Acebeda'],
-  [/acebuch|olea/i,'Acebuchal'],
-  [/madroñ|arbutus/i,'Madroñal'],
-  [/algarrob|ceratonia/i,'Algarrobal'],
-  [/pinsap|abies pinsapo/i,'Pinsapar'],
-  [/abet|abies alba/i,'Abetal'],
-  [/sabinar|sabina|thurifera|phoenicea|turbinata/i,'Sabinar'],
-  [/enebral|enebro|juniperus/i,'Enebral'],
-  [/coscoj|coccifera/i,'Coscojar'],
-  [/lentisc|pistacia lentiscus/i,'Lentiscar'],
-  [/pinar|pino|pinus/i,'Pinar'],
-  [/dehes/i,'Dehesa'],
-  [/eucalipt/i,'Eucaliptal'],
-  [/palmeral|phoenix/i,'Palmeral']
+  [/coscoj/i,'Coscojar'],[/encina|carrasca|rotundifolia/i,'Encinar'],[/alcornoque|suber/i,'Alcornocal'],[/quejig|faginea|canariensis/i,'Quejigar'],[/meloj|rebollo|pyrenaica/i,'Melojar'],[/sabina|thurifera|phoenicea/i,'Sabinar'],[/pinsap/i,'Pinsapar'],[/haya|fagus/i,'Hayedo'],[/abedul|betula/i,'Abedular'],[/pino|pinar|pinus/i,'Pinar'],[/roble|robur|petraea|humilis/i,'Robledal'],[/acebuch|olea/i,'Acebuchal'],[/lentisc/i,'Lentiscar'],[/fresn|fraxinus/i,'Fresneda'],[/castañ|castanea/i,'Castañar'],[/aceb|ilex aquifolium/i,'Acebeda'],[/madroñ|arbutus/i,'Madroñal'],[/algarrob|ceratonia/i,'Algarrobal']
  ];
  for(const [re,name] of rules)if(re.test(all))return name;
- return cleanThemeText(f)||cleanThemeText(d)||cleanThemeText(t)||'Unidad de vegetación potencial';
+ // Nunca convertimos el número/nombre de serie en categoría de leyenda.
+ return '';
 }
-function mitecoThemeObject(f){
- const x=mitecoParsedInfo(f),label=mitecoFormationLabel(x);
- return {code:x.code||'',label,detail:[x.series,x.dominant,x.association,x.floor].filter(Boolean).join(' · '),parsed:x};
-}
+function mitecoThemeObject(f){const x=mitecoParsedInfo(f),label=mitecoFormationLabel(x)||'Formación potencial no identificada';return {code:x.code||'',label,detail:[x.series,x.dominant,x.association,x.floor].filter(Boolean).join(' · '),parsed:x};}
 function mitecoVegetationSummary(f){const x=mitecoParsedInfo(f),rows=['<b>Serie:</b> '+escHtml(x.code||'sin código')];if(x.formation)rows.push('<b>Formación potencial:</b> '+escHtml(x.formation));if(x.dominant)rows.push('<b>Especie dominante:</b> <i>'+escHtml(x.dominant)+'</i>');if(x.association)rows.push('<b>Asociación:</b> <i>'+escHtml(x.association)+'</i>');if(x.floor)rows.push('<b>Piso bioclimático:</b> '+escHtml(x.floor));if(rows.length===1&&x.series)rows.push('<b>Serie:</b> '+escHtml(x.series));return rows.join('<br>');}
 function mfeCleanValue(v){return cleanThemeText(String(v||'').replace(/<[^>]+>/g,' '));}
 function mfeFormationFromText(txt){
@@ -1068,9 +985,7 @@ function mfeParseFeatureInfo(raw){
  if(!formation)return null;const species=[sp1,sp2,sp3].filter(Boolean);return {formation,concrete,species,text:text.slice(0,900)};
 }
 async function mfeVegetationAt(lat,lon){
- // La capa MFE nacional se dibuja con los WMS oficiales de cada formación.
- // No se asigna una formación/color inventado cuando el servicio no devuelve una identificación fiable.
- return null;
+ try{const d=.012,bbox=[lon-d,lat-d,lon+d,lat+d].join(','),q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetFeatureInfo',LAYERS:'LC.LandCoverSurfaces',QUERY_LAYERS:'LC.LandCoverSurfaces',STYLES:'',SRS:'EPSG:4326',BBOX:bbox,WIDTH:'101',HEIGHT:'101',X:'50',Y:'50',FORMAT:'image/png',INFO_FORMAT:'text/html',FEATURE_COUNT:'1'});const r=await fetch('https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx?'+q.toString(),{mode:'cors'});if(!r.ok)return null;const parsed=mfeParseFeatureInfo(await r.text());if(!parsed)return null;const rows=['<b>Formación:</b> '+escHtml(parsed.formation)];if(parsed.concrete&&parsed.concrete!==parsed.formation)rows.push('<b>Formación concreta:</b> '+escHtml(parsed.concrete));if(parsed.species.length)rows.push('<b>Especies dominantes:</b> <i>'+parsed.species.map(escHtml).join(', ')+'</i>');return {source:'mfe',html:rows.join('<br>'),themeLabel:parsed.formation,themeDetail:[parsed.concrete,...parsed.species].filter(Boolean).join(' · '),parsed};}catch(e){console.warn('Consulta MFE:',e);return null;}
 }
 async function vegetationAt(lat,lon){
  const actualOn=document.getElementById('vegetationCheck').checked,potOn=document.getElementById('vegetationPotentialCheck').checked;if(!actualOn&&!potOn)return null;
@@ -1080,7 +995,7 @@ async function vegetationAt(lat,lon){
  if(potOn){try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(f){const mt=mitecoThemeObject(f);out.potential={source:'miteco',html:mitecoVegetationSummary(f),code:mt.code,themeLabel:mt.label,themeDetail:mt.detail,parsed:mt.parsed};}}catch(e){out.potential={source:'miteco',__error:true};}}return out;
 }
 async function vegetationActualAtRaw(lat,lon){return isCanaryPoint(lat,lon)?canaryVegetationAt(lat,lon):mfeVegetationAt(lat,lon);}
-async function vegetationPotentialAtRaw(lat,lon){if(isCanaryPoint(lat,lon))return canaryPotentialVegetationAt(lat,lon);try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(!f)return null;const mt=mitecoThemeObject(f);return {source:'miteco',html:mitecoVegetationSummary(f),code:mt.code,themeLabel:mt.label,themeDetail:mt.detail,parsed:mt.parsed,feature:f};}catch(e){return null;}}
+async function vegetationPotentialAtRaw(lat,lon){if(isCanaryPoint(lat,lon))return canaryPotentialVegetationAt(lat,lon);try{await loadVegetationSeries();const f=vegetationFeatures.find(x=>featureContainsPoint(x,lat,lon));if(!f)return null;const mt=mitecoThemeObject(f);return {source:'miteco',html:mitecoVegetationSummary(f),code:mt.code,themeLabel:mt.label,themeDetail:mt.detail,parsed:mt.parsed};}catch(e){return null;}}
 function thematicPlain(html){const d=document.createElement('div');d.innerHTML=html||'';return (d.textContent||'').replace(/\s+/g,' ').trim();}
 function shortThemeLabel(kind,v){if(!v)return 'Sin dato';if(kind==='geo'){return (v.DESC_UNIT||v.CODE_UNIO||'Unidad geológica').replace(/\s+/g,' ').trim();}return thematicPlain(v.html||'').replace(/^(Formación:|Vegetación potencial · MITECO)/i,'').trim()||'Unidad vegetal';}
 function oneVegetationHtml(v,title){if(!v)return '<hr><b>🌿 '+title+':</b> sin dato en este punto';if(v.__error)return '<hr><b>🌿 '+title+':</b> no se pudo consultar la información descriptiva';return '<hr><b>🌿 '+title+'</b><br>'+v.html;}
@@ -1183,88 +1098,44 @@ function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt
 function cleanThemeText(txt){return cleanVegetationValue(String(txt||'').replace(/&[a-zA-Z#0-9]+;/g,' '));}
 function extractHtmlField(html,label){const re=new RegExp('<b>'+label+':<\\/b>\\s*([^<]+)','i'),m=String(html||'').match(re);return m?cleanThemeText(m[1]):'';}
 function vegetationTheme(v){
- if(!v)return {label:'Sin dato',detail:'',color:null,raw:null};if(v.source==='miteco'||v.source==='mfe'){const label=cleanThemeText(v.themeLabel)||'Formación vegetal no identificada',detail=cleanThemeText(v.themeDetail)||label;const unknown=/no identificada/i.test(label);
-   return {label,detail,color:unknown?null:(v.color||null),code:v.code||'',raw:v};}const html=v.html||'';let formation=extractHtmlField(html,'Formación')||extractHtmlField(html,'Formación potencial')||extractHtmlField(html,'Vegetación potencial');let species=extractHtmlField(html,'Nombre común')||extractHtmlField(html,'Especie dominante')||extractHtmlField(html,'Unidad');formation=cleanThemeText(formation)||'Formación vegetal no identificada';species=cleanThemeText(species);const unknown=/no identificada/i.test(formation);
- return {label:formation,detail:species&&species!==formation?formation+' · '+species:formation,color:unknown?null:(v.color||null),raw:v};
+ if(!v)return {label:'Sin dato',detail:'',color:null,raw:null};if(v.source==='miteco'||v.source==='mfe'){const label=cleanThemeText(v.themeLabel)||'Formación vegetal no identificada',detail=cleanThemeText(v.themeDetail)||label;return {label,detail,color:v.color||null,code:v.code||'',raw:v};}const html=v.html||'';let formation=extractHtmlField(html,'Formación')||extractHtmlField(html,'Formación potencial')||extractHtmlField(html,'Vegetación potencial');let species=extractHtmlField(html,'Nombre común')||extractHtmlField(html,'Especie dominante')||extractHtmlField(html,'Unidad');formation=cleanThemeText(formation)||'Unidad vegetal';species=cleanThemeText(species);return {label:formation,detail:species&&species!==formation?formation+' · '+species:formation,color:v.color||null,raw:v};
 }
-function geologyFormationLabel(g){
- const raw=cleanThemeText(String(g&&g.DESC_UNIT||g&&g.CODE_UNIO||''));
- const t=raw.toLowerCase();
- // Leyenda a nivel de grandes formaciones/unidades litológicas. El detalle original se conserva en la tarjeta.
- const rules=[
-  [/basalt|basan|tefrit|hawai|picrit/i,'Basaltos y rocas volcánicas básicas'],
-  [/traquit|fonolit/i,'Traquitas y fonolitas'],
-  [/riol|dacita/i,'Riolitas y dacitas'],
-  [/ignimbrit|toba|piroclast|lapilli|escoria|brecha volc/i,'Materiales piroclásticos'],
-  [/gabro|diorit/i,'Gabros y dioritas'],
-  [/granit|granodiorit|tonalit|monzogran/i,'Granitos y granitoides'],
-  [/gneis|gneiss/i,'Gneises'],
-  [/esquist|pizarra|filita/i,'Esquistos, pizarras y filitas'],
-  [/cuarcit/i,'Cuarcitas'],
-  [/marmol|mármol/i,'Mármoles'],
-  [/caliza|dolom/i,'Calizas y dolomías'],
-  [/marga/i,'Margas'],
-  [/arenisc/i,'Areniscas'],
-  [/conglomer|brecha sediment/i,'Conglomerados y brechas'],
-  [/arcilla|limo|lutita/i,'Arcillas, limos y lutitas'],
-  [/yeso|evaporit|salina/i,'Yesos y evaporitas'],
-  [/aluvial|coluvial|terraza|depósito|deposito|sediment.*reciente/i,'Depósitos cuaternarios']
- ];
- for(const [re,name] of rules)if(re.test(t))return name;
- // Si no entra en una gran familia segura, conserva el nombre IGME: nunca inventa una clasificación.
- return raw||'Unidad geológica';
+function geologyTheme(g){if(!g)return {label:'Sin dato',detail:'',color:null};let label=String(g.DESC_UNIT||g.CODE_UNIO||'Unidad geológica').replace(/^[-–—\\s]+/,'').replace(/\\s*\\([^)]*(?:file|shp|mdb|gdb)[^)]*\\)\\s*/gi,' ').replace(/\\s+/g,' ').trim();const age=String(g.ERA||g.SYSTEM||g.SERIES||g.AGE||'').replace(/\\s+/g,' ').trim();return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__profileColor||null,raw:g};}
+const thematicPixelCache=new Map();
+async function wmsPixelColor(base,params,lat,lon,keyPrefix){
+ const key=keyPrefix+':'+lat.toFixed(4)+','+lon.toFixed(4);
+ if(thematicPixelCache.has(key))return thematicPixelCache.get(key);
+ const promise=(async()=>{
+  try{
+   const d=.003,q=new URLSearchParams({...params,SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetMap',SRS:'EPSG:4326',BBOX:[lon-d,lat-d,lon+d,lat+d].join(','),WIDTH:' nine ',HEIGHT:' nine ',FORMAT:'image/png',TRANSPARENT:'TRUE'});
+   q.set('WIDTH','9');q.set('HEIGHT','9');
+   const r=await fetch(base+'?'+q.toString(),{mode:'cors',cache:'no-store'});if(!r.ok)return null;
+   const bmp=await createImageBitmap(await r.blob()),cv=document.createElement('canvas');cv.width=9;cv.height=9;
+   const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(bmp,0,0,9,9);if(bmp.close)bmp.close();
+   const a=cx.getImageData(0,0,9,9).data,counts=new Map();
+   for(let i=0;i<a.length;i+=4){
+    if(a[i+3]<80)continue;
+    const R=a[i],G=a[i+1],B=a[i+2],mx=Math.max(R,G,B),mn=Math.min(R,G,B);
+    // Ignore near-gray linework/text whenever a coloured polygon fill exists.
+    const chroma=mx-mn;
+    const hex='#'+[R,G,B].map(x=>x.toString(16).padStart(2,'0')).join('');
+    const rec=counts.get(hex)||{n:0,chroma};rec.n++;counts.set(hex,rec);
+   }
+   const entries=[...counts.entries()];
+   if(!entries.length)return null;
+   const coloured=entries.filter(([,v])=>v.chroma>=12);
+   const pool=coloured.length?coloured:entries;
+   pool.sort((a,b)=>b[1].n-a[1].n);
+   return pool[0][0];
+  }catch(e){return null;}
+ })();
+ thematicPixelCache.set(key,promise);return promise;
 }
-function geologyTheme(g){
- if(!g)return {label:'Sin dato',detail:'',color:null};
- const raw=cleanThemeText(String(g.DESC_UNIT||g.CODE_UNIO||'Unidad geológica')
-   .replace(/^[-–—\s]+/,'')
-   .replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ')
-   .replace(/\s+/g,' '));
- const age=cleanThemeText(String(g.ERA||g.SYSTEM||g.SERIES||g.AGE||''));
- return {
-   label:geologyFormationLabel(g),
-   detail:[raw,age].filter(Boolean).join(' · '),
-   color:g.__profileColor||null,
-   raw:g
- };
-}
-
-function kmlSourceColorFromFeature(f){
- const p=(f&&f.properties)||{};
- const candidates=[p.fill,p.fillColor,p.color,p['stroke'],p.styleUrl,p.Style,p.style];
- for(const raw of candidates){
-  const x=String(raw||'').trim();
-  if(/^#[0-9a-f]{6}$/i.test(x))return x.toLowerCase();
-  if(/^#[0-9a-f]{8}$/i.test(x))return '#'+x.slice(-6).toLowerCase();
- }
- return null;
-}
-async function vegetationMapColor(lat,lon,v,kind='actual'){if(v&&v.source==='miteco')return kmlSourceColorFromFeature(v.feature||v.rawFeature||null);if(v&&v.source==='mfe')return v.color||null;if(isCanaryPoint(lat,lon))return wmsPixelColor('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:''},lat,lon,kind==='potential'?'vegcanpot':'vegcan');return null;}
-let geodeRendererColors=null;
-async function loadGeodeRendererColors(){
- if(geodeRendererColors)return geodeRendererColors;
- const m=new Map();
- try{
-  const r=await fetch('https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8?f=pjson',{mode:'cors'});
-  if(r.ok){
-   const j=await r.json(),a=j&&j.drawingInfo&&j.drawingInfo.renderer&&j.drawingInfo.renderer.uniqueValueInfos||[];
-   for(const u of a){const c=u&&u.symbol&&u.symbol.color;if(u&&u.value&&Array.isArray(c)&&c.length>=4&&c[3]>0){const hex='#'+c.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');const k=String(u.value).trim();m.set(k,hex);m.set(k.replace(/^0+/,''),hex);}}
-  }
- }catch(e){console.warn('Simbología GEODE:',e);}
- geodeRendererColors=m;return m;
-}
-async function geologyMapColor(lat,lon,g){
- if(!g||!g.CODE_COTR)return null;
- const m=await loadGeodeRendererColors();
- const k=String(g.CODE_COTR).trim();return m.get(k)||m.get(k.replace(/^0+/,''))||null;
-}
+async function vegetationMapColor(lat,lon,v,kind='actual'){if(v&&v.source==='miteco')return vegetationColor(v.code||extractHtmlField(v.html||'','Serie')||'');if(v&&v.source==='mfe')return wmsPixelColor('https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx',{LAYERS:'LC.LandCoverSurfaces',STYLES:''},lat,lon,'mfeactual');if(isCanaryPoint(lat,lon))return wmsPixelColor('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{LAYERS:kind==='potential'?'VPOT':'VREAL',STYLES:''},lat,lon,kind==='potential'?'vegcanpot':'vegcan');return null;}
+async function geologyMapColor(lat,lon){return wmsPixelColor('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{LAYERS:'8',STYLES:''},lat,lon,'geode-fill');}
 function themeAtDistance(d,key){if(!lastProfileAnalysis||!lastProfileAnalysis.samples.length)return null;let best=lastProfileAnalysis.samples[0],bd=Math.abs(best.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}return best[key]||null;}
 function profileThemeMode(){return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';}
-function renderProfileLegend(){const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();if(mode==='alt'){const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];box.innerHTML=items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;}if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode==='veg'?'vegetación actual':mode==='vegpot'?'vegetación potencial':'geología')+'…</span>';return;}const seen=new Map();for(const x of lastProfileAnalysis.samples){const o=x[mode];
- if(o&&mode!=='geo'){
-  const normalized=mfeFormationFromText((o.label||'')+' '+(o.detail||''))||o.label;
-  if(normalized)o.label=normalized;
- }if(o&&o.label&&o.label!=='Sin dato'&&o.color&&!seen.has(o.label))seen.set(o.label,o);}if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}box.innerHTML=[...seen.values()].map(o=>'<span class="profileLegendItem" title="'+escHtml(o.detail||o.label)+'"><span class="profileLegendSw" style="background:'+(o.color||'transparent')+';'+(!o.color?'border:1px dashed #777;':'')+'"></span><span class="profileLegendText">'+escHtml(o.label)+'</span></span>').join('');}
+function renderProfileLegend(){const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();if(mode==='alt'){const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];box.innerHTML=items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;}if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode==='veg'?'vegetación actual':mode==='vegpot'?'vegetación potencial':'geología')+'…</span>';return;}const seen=new Map();for(const x of lastProfileAnalysis.samples){const o=x[mode];if(o&&o.label&&o.label!=='Sin dato'&&!seen.has(o.label))seen.set(o.label,o);}if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}box.innerHTML=[...seen.values()].map(o=>'<span class="profileLegendItem" title="'+escHtml(o.detail||o.label)+'"><span class="profileLegendSw" style="background:'+(o.color||'transparent')+'"></span><span class="profileLegendText">'+escHtml(o.label)+'</span></span>').join('');}
 function nearestProfileAnalysisAt(d){if(!lastProfileAnalysis||!lastProfileAnalysis.samples?.length)return null;let b=lastProfileAnalysis.samples[0],bd=Math.abs(b.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){b=x;bd=dd;}}return b;}
 function nearestProfileElevationAt(d){const a=lastProfileDraw&&lastProfileDraw[0];if(!a||!a.length)return null;let b=a[0],bd=Math.abs(b.d-d);for(const x of a){const dd=Math.abs(x.d-d);if(dd<bd){b=x;bd=dd;}}return b;}
 function profileCardHtml(mode,d){const a=nearestProfileAnalysisAt(d),e=nearestProfileElevationAt(d),ll=(a&&a.ll)||(e&&e.ll),c=ll?coordsDMS(ll.lat,ll.lng):null;let h='<b>'+fmtDistance(d)+' desde el inicio</b>';if(c)h+='<br>'+c.lat+' · '+c.lon;if(mode==='alt'){h+='<br><b>Altitud:</b> '+(e&&Number.isFinite(e.z)?fmtNum(e.z,0)+' m':'sin dato');return h;}const o=a&&a[mode];if(!o||o.label==='Sin dato')return h+'<br>Sin información temática en este punto.';if(mode==='geo'){const g=o.raw||{};h+='<br><b>Unidad geológica:</b> '+escHtml(g.DESC_UNIT||o.label);const age=[g.NAME_EDA1,g.NAME_EDA2].filter(Boolean);if(age.length)h+='<br><b>Edad:</b> '+escHtml([...new Set(age)].join(' – '));if(g.CODE_UNIO)h+='<br><small>Unidad '+escHtml(g.CODE_UNIO)+'</small>';return h;}const v=o.raw||{},p=v.parsed||{};h+='<br><b>Formación:</b> '+escHtml(o.label);if(v.source==='mfe'){const mp=v.parsed||{};if(mp.concrete&&mp.concrete!==o.label)h+='<br><b>Formación concreta:</b> '+escHtml(mp.concrete);if(mp.species?.length)h+='<br><b>Especies dominantes:</b> <i>'+mp.species.map(escHtml).join(', ')+'</i>';}else if(v.source==='miteco'){if(p.series)h+='<br><b>Serie:</b> '+escHtml(p.series);if(p.dominant)h+='<br><b>Especie dominante:</b> <i>'+escHtml(p.dominant)+'</i>';if(p.association)h+='<br><b>Asociación:</b> <i>'+escHtml(p.association)+'</i>';if(p.floor)h+='<br><b>Piso bioclimático:</b> '+escHtml(p.floor);}else{const html=v.html||'';const common=extractHtmlField(html,'Nombre común'),sci=extractHtmlField(html,'Unidad fitosociológica'),assoc=extractHtmlField(html,'Denominación asociada');if(common)h+='<br><b>Nombre común:</b> '+escHtml(cleanThemeText(common));if(sci)h+='<br><b>Unidad fitosociológica:</b> <i>'+escHtml(cleanThemeText(sci))+'</i>';if(assoc)h+='<br><b>Denominación asociada:</b> '+escHtml(cleanThemeText(assoc));}return h;}
@@ -1273,15 +1144,9 @@ document.getElementById('profileCanvasLarge')?.addEventListener('pointerdown',sh
 function redrawProfileTheme(){const card=document.getElementById('profileInfoCard');if(card)card.style.display='none';renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
 async function analyzeProfileTerritory(prof){
  const n=Math.min(96,Math.max(18,Math.round(prof.total/8000)+1)),q=interpolateProfilePoints(profilePts,n),arr=new Array(q.points.length);let next=0;const workers=Math.min(8,q.points.length);
- await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let veg={label:'Sin dato',detail:'',color:null},vegpot={label:'Sin dato',detail:'',color:null},geo={label:'Sin dato',detail:'',color:null};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const [va,vp,g]=await Promise.all([vegetationActualAtRaw(p.ll.lat,p.ll.lng),vegetationPotentialAtRaw(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);veg=vegetationTheme(va);vegpot=vegetationTheme(vp);geo=geologyTheme(g);
-    if(veg&&veg.label){const n=mfeFormationFromText((veg.label||'')+' '+(veg.detail||''));if(n)veg.label=n;}
-    if(vegpot&&vegpot.label){const n=mfeFormationFromText((vegpot.label||'')+' '+(vegpot.detail||''));if(n)vegpot.label=n;}const [vc,vpc,gc]=await Promise.all([vegetationMapColor(p.ll.lat,p.ll.lng,va,'actual'),vegetationMapColor(p.ll.lat,p.ll.lng,vp,'potential'),geologyMapColor(p.ll.lat,p.ll.lng,g)]);if(vc)veg.color=vc;if(vpc)vegpot.color=vpc;if(gc)geo.color=gc;}arr[i]={d:p.d,ll:p.ll,veg,vegpot,geo};}}));
- // Una formación = una categoría. El detalle técnico permanece en la tarjeta al pulsar.
- for(const key of ['veg','vegpot','geo']){
-  const formationColor=new Map();
-  for(const x of arr){const o=x[key];if(o&&o.label&&o.color&&!formationColor.has(o.label))formationColor.set(o.label,o.color);}
-  for(const x of arr){const o=x[key];if(o&&o.label&&formationColor.has(o.label))o.color=formationColor.get(o.label);}
- }
+ await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let veg={label:'Sin dato',detail:'',color:null},vegpot={label:'Sin dato',detail:'',color:null},geo={label:'Sin dato',detail:'',color:null};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const [va,vp,g]=await Promise.all([vegetationActualAtRaw(p.ll.lat,p.ll.lng),vegetationPotentialAtRaw(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);veg=vegetationTheme(va);vegpot=vegetationTheme(vp);geo=geologyTheme(g);const [vc,vpc,gc]=await Promise.all([vegetationMapColor(p.ll.lat,p.ll.lng,va,'actual'),vegetationMapColor(p.ll.lat,p.ll.lng,vp,'potential'),geologyMapColor(p.ll.lat,p.ll.lng)]);if(vc)veg.color=vc;if(vpc)vegpot.color=vpc;if(gc)geo.color=gc;}arr[i]={d:p.d,ll:p.ll,veg,vegpot,geo};}}));
+ // Canonizamos nombre→color una sola vez: piel y leyenda leen exactamente el mismo valor.
+ for(const key of ['veg','vegpot','geo']){const unit=new Map();for(const x of arr){const o=x[key];if(o&&o.label&&o.label!=='Sin dato'&&o.color&&!unit.has(o.label))unit.set(o.label,o.color);}for(const x of arr){const o=x[key];if(o&&unit.has(o.label))o.color=unit.get(o.label);}}
  lastProfileAnalysis={total:prof.total,samples:arr};redrawProfileTheme();
 }
 document.addEventListener('change',e=>{if(e.target&&e.target.name==='profileTheme')redrawProfileTheme();});
