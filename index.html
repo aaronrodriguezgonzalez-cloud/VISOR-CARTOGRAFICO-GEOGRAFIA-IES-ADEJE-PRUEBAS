@@ -2474,28 +2474,65 @@ function renderActiveSources(){
 }
 function openSourcesPanel(){closePanels();renderActiveSources();document.getElementById('sourcesPanel')?.classList.remove('hidden');}
 
-const map=L.map('map',{zoomControl:true,minZoom:2,worldCopyJump:false,preferCanvas:true}).setView([28.30,-16.55],9);
+const WORLD_VIEW_BOUNDS=L.latLngBounds([[-84.8,-180],[84.8,180]]);
+const map=L.map('map',{
+ zoomControl:true,
+ minZoom:0,
+ worldCopyJump:false,
+ preferCanvas:true,
+ maxBounds:WORLD_VIEW_BOUNDS,
+ maxBoundsViscosity:1.0
+}).setView([28.30,-16.55],9);
 L.control.scale({metric:true,imperial:false,position:'bottomleft'}).addTo(map);
 if(map.attributionControl)map.attributionControl.setPrefix(false);
 
+let dynamicWorldMinZoom=0;
+function calculateDynamicWorldMinZoom(){
+ // Zoom máximo al que el marco mundial completo sigue cabiendo en el viewport.
+ // Restamos una pequeña tolerancia para no cortar las líneas de ±180°.
+ const fit=map.getBoundsZoom(WORLD_VIEW_BOUNDS,false,[8,8]);
+ return Math.max(0,fit);
+}
+function applyDynamicWorldMinZoom(){
+ const z=calculateDynamicWorldMinZoom();
+ dynamicWorldMinZoom=z;
+ map.setMinZoom(z);
+ map.setMaxBounds(WORLD_VIEW_BOUNDS);
+ if(map.getZoom()<z)map.setZoom(z,{animate:false});
+ // Si el viewport cambia de proporción, recentramos solo cuando el mapa
+ // intenta quedar fuera del marco mundial.
+ const c=map.getCenter();
+ const lat=Math.max(-84.8,Math.min(84.8,c.lat));
+ const lng=Math.max(-180,Math.min(180,c.lng));
+ if(Math.abs(lat-c.lat)>.0001||Math.abs(lng-c.lng)>.0001)map.panTo([lat,lng],{animate:false});
+}
+function fitWorldToViewport(){
+ applyDynamicWorldMinZoom();
+ map.fitBounds(WORLD_VIEW_BOUNDS,{padding:[8,8],animate:false,maxZoom:dynamicWorldMinZoom});
+}
+setTimeout(applyDynamicWorldMinZoom,0);
+window.addEventListener('resize',()=>setTimeout(applyDynamicWorldMinZoom,80));
+window.addEventListener('orientationchange',()=>setTimeout(applyDynamicWorldMinZoom,180));
+
+
 // Fondos equivalentes a los disponibles en Iberpix/IGN
-const raster=L.tileLayer('https://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
-const pnoa=L.tileLayer('https://www.ign.es/wmts/pnoa-ma?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'PNOA · © IGN/CNIG'});
-const street=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
+const raster=L.tileLayer('https://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
+const pnoa=L.tileLayer('https://www.ign.es/wmts/pnoa-ma?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'PNOA · © IGN/CNIG'});
+const street=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
 const labels=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=IGNBaseOrto&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
 const hybrid=L.layerGroup([pnoa,labels]);
-const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
-const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
-const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
+const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
+const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
+const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
 
 // Capas temáticas mundiales: se cargan únicamente al activarlas.
-const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{
+const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{noWrap:true,z}/{y}/{x}',{
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
-const canaryClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{
+const canaryClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{noWrap:true,z}/{y}/{x}',{
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[27.0,-18.9],[29.8,-12.7]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
-const spainClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{
+const spainClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{noWrap:true,z}/{y}/{x}',{
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[35.0,-10.8],[44.7,5.2]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
 function climateEnabledAt(lat,lon){
@@ -2640,100 +2677,174 @@ const ECO_PHRASES_ES=[
 ];
 function translateRealmEs(value){const s=String(value||'').trim();return WORLD_REALM_ES[s]||s;}
 function translateBiomeNameEs(value){const s=String(value||'').trim();return BIOME_NAME_ES[s]||s;}
-function translateEcoregionEs(value){
- let s=String(value||'').trim();if(!s)return s;
+const ECOREGION_ES_CATALOG_BY_ID=new Map();
+const ECOREGION_ES_CATALOG_BY_NAME=new Map();
 
- const exact={
-  'West Sahara desert':'Desierto del Sáhara occidental',
-  'Sahara desert':'Desierto del Sáhara',
-  'Atlantic coastal desert':'Desierto costero atlántico',
-  'North Saharan steppe and woodlands':'Estepas y bosques abiertos del Sáhara septentrional',
-  'South Saharan steppe and woodlands':'Estepas y bosques abiertos del Sáhara meridional',
-  'West Saharan montane xeric woodlands':'Bosques abiertos xéricos montanos del Sáhara occidental',
-  'Saharan halophytics':'Vegetación halófila sahariana',
-  'Sahelian Acacia savanna':'Sabana saheliana de acacias',
-  'Arabian Desert and East Sahero-Arabian xeric shrublands':'Desierto arábigo y matorrales xéricos saharo-arábigos orientales'
- };
- if(exact[s])return exact[s];
+const ECOREGION_EXACT_ES={
+ 'West Sahara desert':'Desierto del Sáhara occidental',
+ 'Sahara desert':'Desierto del Sáhara',
+ 'North Sahara desert':'Desierto del Sáhara septentrional',
+ 'South Sahara desert':'Desierto del Sáhara meridional',
+ 'Atlantic coastal desert':'Desierto costero atlántico',
+ 'North Saharan steppe and woodlands':'Estepas y bosques abiertos del Sáhara septentrional',
+ 'South Saharan steppe and woodlands':'Estepas y bosques abiertos del Sáhara meridional',
+ 'West Saharan montane xeric woodlands':'Bosques abiertos xéricos montanos del Sáhara occidental',
+ 'Saharan halophytics':'Vegetación halófila sahariana',
+ 'Sahelian Acacia savanna':'Sabana saheliana de acacias',
+ 'Arabian Desert and East Sahero-Arabian xeric shrublands':'Desierto arábigo y matorrales xéricos saharo-arábigos orientales',
+ 'Canary Islands dry woodlands and forests':'Bosques y formaciones secas de las Islas Canarias',
+ 'Madeira evergreen forests':'Bosques perennifolios de Madeira',
+ 'Azores temperate mixed forests':'Bosques templados mixtos de las Azores',
+ 'Iberian sclerophyllous and semi-deciduous forests':'Bosques esclerófilos y semicaducifolios ibéricos',
+ 'Southwest Iberian Mediterranean sclerophyllous and mixed forests':'Bosques esclerófilos y mixtos mediterráneos del suroeste ibérico',
+ 'Northeast Spain and Southern France Mediterranean forests':'Bosques mediterráneos del noreste de España y sur de Francia',
+ 'Northwest Iberian montane forests':'Bosques montanos del noroeste ibérico',
+ 'Pyrenees conifer and mixed forests':'Bosques de coníferas y mixtos de los Pirineos',
+ 'Alps conifer and mixed forests':'Bosques de coníferas y mixtos de los Alpes',
+ 'Italian sclerophyllous and semi-deciduous forests':'Bosques esclerófilos y semicaducifolios italianos',
+ 'Tyrrhenian-Adriatic sclerophyllous and mixed forests':'Bosques esclerófilos y mixtos tirreno-adriáticos',
+ 'Central European mixed forests':'Bosques mixtos de Europa central',
+ 'Western European broadleaf forests':'Bosques de frondosas de Europa occidental',
+ 'Atlantic mixed forests':'Bosques mixtos atlánticos',
+ 'Baltic mixed forests':'Bosques mixtos bálticos',
+ 'Scandinavian and Russian taiga':'Taiga escandinava y rusa',
+ 'Scandinavian Montane Birch forest and grasslands':'Bosques montanos de abedul y pastizales escandinavos',
+ 'British Isles temperate forests':'Bosques templados de las Islas Británicas',
+ 'Mojave desert':'Desierto de Mojave',
+ 'Sonoran desert':'Desierto de Sonora',
+ 'Chihuahuan desert':'Desierto de Chihuahua',
+ 'Atacama desert':'Desierto de Atacama',
+ 'Sechura desert':'Desierto de Sechura',
+ 'Namib desert':'Desierto del Namib',
+ 'Gobi desert':'Desierto del Gobi',
+ 'Taklimakan desert':'Desierto de Taklamakán',
+ 'Thar desert':'Desierto de Thar',
+ 'Arabian desert':'Desierto arábigo',
+ 'Sinai desert':'Desierto del Sinaí',
+ 'Patagonian steppe':'Estepa patagónica',
+ 'Great Basin shrub steppe':'Estepa arbustiva de la Gran Cuenca',
+ 'Kalahari xeric savanna':'Sabana xérica del Kalahari',
+ 'Tibetan Plateau alpine shrublands and meadows':'Matorrales y praderas alpinas de la meseta tibetana',
+ 'Himalayan alpine shrub and meadows':'Matorrales y praderas alpinas del Himalaya'
+};
 
- // Traducimos los elementos ecológicos y direccionales, conservando
- // los nombres geográficos propios cuando no tienen equivalente inequívoco.
- const wordPairs=[
-  ['tropical and subtropical moist broadleaf forests','bosques tropicales y subtropicales húmedos'],
-  ['tropical and subtropical dry broadleaf forests','bosques tropicales y subtropicales secos'],
-  ['tropical and subtropical coniferous forests','bosques tropicales y subtropicales de coníferas'],
-  ['temperate broadleaf and mixed forests','bosques templados caducifolios y mixtos'],
-  ['temperate conifer forests','bosques templados de coníferas'],
-  ['temperate grasslands, savannas and shrublands','pastizales, sabanas y matorrales templados'],
-  ['tropical and subtropical grasslands, savannas and shrublands','pastizales, sabanas y matorrales tropicales y subtropicales'],
-  ['mediterranean forests, woodlands and scrub','bosques y matorrales mediterráneos'],
-  ['montane grasslands and shrublands','pastizales y matorrales de montaña'],
-  ['flooded grasslands and savannas','pastizales y sabanas inundables'],
-  ['deserts and xeric shrublands','desiertos y matorrales xéricos'],
-  ['xeric woodlands','bosques abiertos xéricos'],
-  ['xeric shrublands','matorrales xéricos'],
-  ['moist broadleaf forests','bosques húmedos de frondosas'],
-  ['dry broadleaf forests','bosques secos de frondosas'],
-  ['broadleaf forests','bosques de frondosas'],
-  ['conifer forests','bosques de coníferas'],
-  ['mixed forests','bosques mixtos'],
-  ['evergreen forests','bosques perennifolios'],
-  ['deciduous forests','bosques caducifolios'],
-  ['pine forests','pinares'],
-  ['swamp forests','bosques pantanosos'],
-  ['grasslands','pastizales'],['savannas','sabanas'],['savanna','sabana'],
-  ['shrublands','matorrales'],['shrubland','matorral'],
-  ['woodlands','bosques abiertos'],['woodland','bosque abierto'],
-  ['forests','bosques'],['forest','bosque'],
-  ['deserts','desiertos'],['desert','desierto'],
-  ['steppes','estepas'],['steppe','estepa'],
-  ['scrub','matorral'],['tundra','tundra'],['mangroves','manglares'],
-  ['montane','montano'],['subalpine','subalpino'],['alpine','alpino'],
-  ['lowland','de tierras bajas'],['highland','de tierras altas'],
-  ['coastal','costero'],['coast','costa'],
-  ['halophytics','vegetación halófila'],['halophytic','halófilo'],
-  ['acacia','acacia'],['acacias','acacias']
- ];
- for(const [en,es] of wordPairs){
+const ECO_DESCRIPTOR_RULES=[
+ ['tropical and subtropical moist broadleaf forests','bosques tropicales y subtropicales húmedos'],
+ ['tropical and subtropical dry broadleaf forests','bosques tropicales y subtropicales secos'],
+ ['tropical and subtropical coniferous forests','bosques tropicales y subtropicales de coníferas'],
+ ['temperate broadleaf and mixed forests','bosques templados caducifolios y mixtos'],
+ ['temperate conifer forests','bosques templados de coníferas'],
+ ['temperate grasslands, savannas and shrublands','pastizales, sabanas y matorrales templados'],
+ ['tropical and subtropical grasslands, savannas and shrublands','pastizales, sabanas y matorrales tropicales y subtropicales'],
+ ['mediterranean forests, woodlands and scrub','bosques y matorrales mediterráneos'],
+ ['montane grasslands and shrublands','pastizales y matorrales de montaña'],
+ ['flooded grasslands and savannas','pastizales y sabanas inundables'],
+ ['deserts and xeric shrublands','desiertos y matorrales xéricos'],
+ ['sclerophyllous and mixed forests','bosques esclerófilos y mixtos'],
+ ['sclerophyllous and semi-deciduous forests','bosques esclerófilos y semicaducifolios'],
+ ['semi-deciduous forests','bosques semicaducifolios'],
+ ['conifer and mixed forests','bosques de coníferas y mixtos'],
+ ['moist broadleaf forests','bosques húmedos de frondosas'],
+ ['dry broadleaf forests','bosques secos de frondosas'],
+ ['broadleaf forests','bosques de frondosas'],
+ ['conifer forests','bosques de coníferas'],
+ ['mixed forests','bosques mixtos'],
+ ['evergreen forests','bosques perennifolios'],
+ ['deciduous forests','bosques caducifolios'],
+ ['montane forests','bosques montanos'],
+ ['temperate forests','bosques templados'],
+ ['xeric woodlands','bosques abiertos xéricos'],
+ ['xeric shrublands','matorrales xéricos'],
+ ['pine forests','pinares'],
+ ['swamp forests','bosques pantanosos'],
+ ['grasslands','pastizales'],['grassland','pastizal'],
+ ['meadows','praderas'],['meadow','pradera'],
+ ['savannas','sabanas'],['savanna','sabana'],
+ ['shrublands','matorrales'],['shrubland','matorral'],
+ ['woodlands','bosques abiertos'],['woodland','bosque abierto'],
+ ['forests','bosques'],['forest','bosque'],
+ ['deserts','desiertos'],['desert','desierto'],
+ ['steppes','estepas'],['steppe','estepa'],
+ ['scrub','matorral'],['tundra','tundra'],
+ ['mangroves','manglares'],['mangrove','manglar'],
+ ['halophytics','vegetación halófila'],['halophytic','halófilo'],
+ ['alpine','alpino'],['subalpine','subalpino'],['montane','montano'],
+ ['lowland','de tierras bajas'],['highland','de tierras altas'],
+ ['coastal','costero'],['coast','costa'],
+ ['river','río'],['valley','valle'],['basin','cuenca'],['plateau','meseta'],
+ ['mountains','montañas'],['mountain','montaña'],
+ ['lakes','lagos'],['lake','lago'],
+ ['islands','islas'],['island','isla'],
+ ['birch','abedul'],['acacia','acacia'],['acacias','acacias']
+];
+
+const ECO_GEO_ADJECTIVES=[
+ ['Saharan','sahariano'],['Sahelian','saheliano'],['Arabian','arábigo'],
+ ['Sahero-Arabian','saharo-arábigo'],['Ethiopian','etíope'],['Somali','somalí'],
+ ['Iberian','ibérico'],['Mediterranean','mediterráneo'],['Atlantic','atlántico'],
+ ['Pacific','pacífico'],['Himalayan','himalayo'],['Tibetan','tibetano'],
+ ['Patagonian','patagónico'],['Andean','andino'],['Amazonian','amazónico'],
+ ['European','europeo'],['Scandinavian','escandinavo'],['Russian','ruso'],
+ ['Italian','italiano'],['British','británico'],['African','africano'],
+ ['Asian','asiático'],['American','americano'],['Australian','australiano']
+];
+
+function buildEcoregionSpanishName(original,ecoId,biomeName,realmName){
+ original=String(original||'').trim();
+ if(!original)return 'Ecorregión '+String(ecoId??'sin identificar');
+
+ if(ECOREGION_EXACT_ES[original])return ECOREGION_EXACT_ES[original];
+
+ let s=original;
+ for(const [en,es] of ECO_DESCRIPTOR_RULES){
   const rx=new RegExp(en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'ig');
   s=s.replace(rx,es);
  }
+ for(const [en,es] of ECO_GEO_ADJECTIVES)s=s.replace(new RegExp('\\b'+en+'\\b','ig'),es);
 
- const geoPairs=[
-  ['Saharan','sahariano'],['Sahara','Sáhara'],
-  ['Sahelian','saheliano'],['Arabian','arábigo'],['Ethiopian','etíope'],
-  ['Somali','somalí'],['Iberian','ibérico'],['Mediterranean','mediterráneo'],
-  ['Atlantic','atlántico'],['Pacific','pacífico'],['Himalayan','himalayo'],
-  ['Tibetan','tibetano'],['Patagonian','patagónico'],['Andean','andino'],
-  ['Amazonian','amazónico']
- ];
- for(const [en,es] of geoPairs)s=s.replace(new RegExp('\\b'+en+'\\b','ig'),es);
-
- // Puntos cardinales: si encabezan el nombre, los convertimos en adjetivo final.
- const dir=[
-  [/^West\s+/i,'occidental'],[/^East\s+/i,'oriental'],
-  [/^North\s+/i,'septentrional'],[/^South\s+/i,'meridional'],
-  [/^Central\s+/i,'central']
- ];
- for(const [rx,adj] of dir){
-  if(rx.test(s)){s=s.replace(rx,'').trim()+' '+adj;break;}
- }
- s=s.replace(/\bwestern\b/ig,'occidental')
-    .replace(/\beastern\b/ig,'oriental')
-    .replace(/\bnorthern\b/ig,'septentrional')
-    .replace(/\bsouthern\b/ig,'meridional')
-    .replace(/\bcentral\b/ig,'central')
+ s=s.replace(/\bWestern\b/gi,'occidental')
+    .replace(/\bEastern\b/gi,'oriental')
+    .replace(/\bNorthern\b/gi,'septentrional')
+    .replace(/\bSouthern\b/gi,'meridional')
+    .replace(/\bCentral\b/gi,'central')
     .replace(/\band\b/gi,'y')
+    .replace(/\bof the\b/gi,'del')
     .replace(/\bof\b/gi,'de')
     .replace(/\bthe\b/gi,'')
     .replace(/\s+/g,' ').trim();
 
- // Reordenaciones españolas frecuentes.
- s=s.replace(/^Sáhara desierto occidental$/i,'Desierto del Sáhara occidental')
-    .replace(/^Sáhara desierto$/i,'Desierto del Sáhara')
-    .replace(/^atlántico costero desierto$/i,'Desierto costero atlántico');
+ // Nunca mostramos una mezcla español-inglés.
+ const residue=/\b(west|east|north|south|central|asian|african|american|australian|forest|forests|woodland|woodlands|desert|deserts|shrubland|shrublands|grassland|grasslands|savanna|savannas|steppe|steppes|moist|dry|temperate|tropical|subtropical|montane|alpine|coastal|plateau|basin|valley|river|lake|island|islands|taiga|scrub|mangrove|mangroves)\b/i;
+ if(residue.test(s)){
+  const b=translateBiomeNameEs(biomeName)||'bioma terrestre';
+  const r=translateRealmEs(realmName)||'reino biogeográfico correspondiente';
+  return 'Ecorregión '+String(ecoId??'')+' · '+b+' · '+r;
+ }
 
  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+function buildCompleteEcoregionSpanishCatalog(features){
+ ECOREGION_ES_CATALOG_BY_ID.clear();
+ ECOREGION_ES_CATALOG_BY_NAME.clear();
+ for(const f of features||[]){
+  const p=f?.properties||{};
+  const id=p.eco_id??p.objectid_1??p.objectid??'';
+  const original=String(p.eco_name||'').trim();
+  if(!original)continue;
+  const es=buildEcoregionSpanishName(original,id,p.biome_name,p.realm);
+  if(id!==''&&id!==null&&id!==undefined)ECOREGION_ES_CATALOG_BY_ID.set(String(id),es);
+  ECOREGION_ES_CATALOG_BY_NAME.set(original,es);
+ }
+}
+
+function translateEcoregionEs(value,ecoId='',biomeName='',realmName=''){
+ const original=String(value||'').trim();if(!original)return '';
+ const byId=ecoId!==''&&ecoId!==null&&ecoId!==undefined?ECOREGION_ES_CATALOG_BY_ID.get(String(ecoId)):null;
+ if(byId)return byId;
+ const byName=ECOREGION_ES_CATALOG_BY_NAME.get(original);
+ if(byName)return byName;
+ return buildEcoregionSpanishName(original,ecoId,biomeName,realmName);
 }
 function translateScientificTextEs(value){
  let s=String(value??'').trim();if(!s)return s;
@@ -2764,7 +2875,7 @@ function biomeDetailHtml(value){
  const name=typeof value==='string'?value:(value.name||'');
  const m=biomeMeta(name);
  let h='<hr><b>🌿 Bioma terrestre (RESOLVE 2017):</b> '+escHtml(m?.es||translateBiomeNameEs(name));
- if(value&&typeof value==='object'&&value.ecoregion)h+='<br><b>Ecorregión:</b> '+escHtml(translateEcoregionEs(value.ecoregion));
+ if(value&&typeof value==='object'&&value.ecoregion)h+='<br><b>Ecorregión:</b> '+escHtml(translateEcoregionEs(value.ecoregion,value.ecoId,name,value.realm));
  if(value&&typeof value==='object'&&value.realm)h+='<br><b>Reino biogeográfico:</b> '+escHtml(translateRealmEs(value.realm));
  if(m){
   h+='<br><b>Temperaturas características:</b> '+escHtml(m.temp);
@@ -2778,12 +2889,12 @@ function biomeDetailHtml(value){
 async function worldBiomeAt(lat,lon){
  const u='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query?'+new URLSearchParams({
   where:'1=1',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',
-  spatialRel:'esriSpatialRelIntersects',outFields:'biome_name,eco_name,realm,color_bio,license',
+  spatialRel:'esriSpatialRelIntersects',outFields:'eco_id,biome_name,eco_name,realm,color_bio,license',
   returnGeometry:'false',f:'json'
  });
  const r=await fetch(u);if(!r.ok)throw new Error('Bioma '+r.status);
  const d=await r.json(),a=d?.features?.[0]?.attributes||null;
- return a?{name:a.biome_name,ecoregion:a.eco_name,realm:a.realm,color:a.color_bio,license:a.license}:null;
+ return a?{ecoId:a.eco_id,name:a.biome_name,ecoregion:a.eco_name,realm:a.realm,color:a.color_bio,license:a.license}:null;
 }
 
 const wikipediaUrlCache=new Map();
@@ -2887,7 +2998,7 @@ async function ensureWorldBiomes(){
  worldBiomesLoading=(async()=>{
   const params=new URLSearchParams({
    where:'1=1',
-   outFields:'biome_name,eco_name,realm,color_bio,license',
+   outFields:'eco_id,biome_name,eco_name,realm,color_bio,license',
    returnGeometry:'true',
    outSR:'4326',
    maxAllowableOffset:'0.035',
@@ -2896,7 +3007,7 @@ async function ensureWorldBiomes(){
   const r=await fetch(base+'?'+params);
   if(!r.ok)throw new Error('RESOLVE '+r.status);
   const g=await r.json();
-  worldBiomesData=g;
+  worldBiomesData=g;buildCompleteEcoregionSpanishCatalog(g.features||[]);
   worldBiomesLayer=L.geoJSON(g,{
    style:f=>{
     const p=f?.properties||{},c=p.color_bio||biomeColor(p.biome_name||'');
@@ -3320,7 +3431,7 @@ async function ensureWorldVolcanoes(){
 
 // Toponimia oficial enriquecida: Nomenclátor Geográfico Básico de España (IGN/CNIG).
 // Es una superposición independiente del mapa de fondo y el servidor adapta el contenido a la escala.
-const toponymy=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{
+const toponymy=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{noWrap:true,
  layers:'GN.GeographicalNames',format:'image/png',transparent:true,version:'1.3.0',
  minZoom:6,maxZoom:19,opacity:0.90,attribution:'Toponimia · NGBE · © IGN/CNIG · CC BY 4.0'
 });
@@ -3328,11 +3439,11 @@ const toponymy=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{
 // Cartografía geológica continua oficial GEODE (IGME-CSIC). Superposición activable.
 // Capas WMS: recintos, contactos, cuaternario, estructuras, indicios y rótulos.
 const GEOLOGY_WMS='https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer';
-const geologyCanary=L.tileLayer.wms(GEOLOGY_WMS,{
+const geologyCanary=L.tileLayer.wms(GEOLOGY_WMS,{noWrap:true,
  layers:'1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,version:'1.3.0',
  opacity:0.70,bounds:L.latLngBounds([[27.0,-18.9],[29.8,-12.7]]),attribution:'GEODE · © IGME-CSIC'
 });
-const geologySpain=L.tileLayer.wms(GEOLOGY_WMS,{
+const geologySpain=L.tileLayer.wms(GEOLOGY_WMS,{noWrap:true,
  layers:'1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,version:'1.3.0',
  opacity:0.70,bounds:L.latLngBounds([[35.0,-10.8],[44.7,5.2]]),attribution:'GEODE · © IGME-CSIC'
 });
@@ -3351,12 +3462,12 @@ function bringGeologyToFront(){
 
 // v4.0 · capas nacionales oficiales, apagadas por defecto y bajo demanda
 const vegetationPotential=L.geoJSON(null,{style:f=>({color:'#555',weight:.45,fillColor:vegetationColor((f.properties||{}).__serie||''),fillOpacity:.72})});
-const vegetationCanary=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{layers:'VREAL',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'Mapa de Vegetación · © Gobierno de Canarias / GRAFCAN'});
-const vegetationCanaryPotential=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{layers:'VPOT',format:'image/png',transparent:true,version:'1.1.1',opacity:.55,attribution:'Vegetación potencial · © Gobierno de Canarias / GRAFCAN'});
+const vegetationCanary=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{noWrap:true,layers:'VREAL',format:'image/png',transparent:true,version:'1.1.1',opacity:.78,attribution:'Mapa de Vegetación · © Gobierno de Canarias / GRAFCAN'});
+const vegetationCanaryPotential=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/Vegetacion',{noWrap:true,layers:'VPOT',format:'image/png',transparent:true,version:'1.1.1',opacity:.55,attribution:'Vegetación potencial · © Gobierno de Canarias / GRAFCAN'});
 const MFE_FORMATION_COLORS={"Encinar":"#518b45","Alcornocal":"#698c57","Melojar":"#a18e59","Quejigar":"#b8a065","Coscojar":"#919f40","Sabinar":"#80a18f","Pinar":"#4b8e78","Hayedo":"#7d9ab5","Robledal":"#8d9c67","Abetal":"#5685a0","Pinsapar":"#447a89","Vegetación de ribera":"#5e9cb8","Matorral":"#bba279","Pastizal":"#d4c38b","Cultivo":"#d8bc7c","Artificial":"#a1a1a1","Agua":"#75a4ca","Formación no determinada":"#a9a9a9"};
 const MFE25_URL='https://geoserver.iepnb.es/geoserver/foto_fija_mfe/ff_uso/wms';
 const MFE25_SLD="<StyledLayerDescriptor version=\"1.0.0\" xmlns=\"http://www.opengis.net/sld\" xmlns:ogc=\"http://www.opengis.net/ogc\"><NamedLayer><Name>ff_uso</Name><UserStyle><FeatureTypeStyle><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*encinar*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#518b45</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*alcornocal*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#698c57</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*melojar*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#a18e59</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*quejigar*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#b8a065</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*coscojar*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#919f40</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*sabinar*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#80a18f</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*pinar*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#4b8e78</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*hayed*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#7d9ab5</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*robledal*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#8d9c67</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*ribereñ*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#5e9cb8</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*matorral*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#bba279</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ogc:Filter><ogc:Or><ogc:PropertyIsLike wildCard=\"*\" singleChar=\"?\" escape=\"!\" matchCase=\"false\"><ogc:PropertyName>descr_forarb</ogc:PropertyName><ogc:Literal>*pastizal*</ogc:Literal></ogc:PropertyIsLike></ogc:Or></ogc:Filter><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#d4c38b</CssParameter></Fill></PolygonSymbolizer></Rule><Rule><ElseFilter/><PolygonSymbolizer><Fill><CssParameter name=\"fill\">#a9a9a9</CssParameter><CssParameter name=\"fill-opacity\">0.6</CssParameter></Fill></PolygonSymbolizer></Rule></FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>";
-const mfeCurrent=L.tileLayer.wms(MFE25_URL,{layers:'ff_uso',format:'image/png',transparent:true,version:'1.1.1',sld_body:MFE25_SLD,opacity:.80,maxZoom:19,attribution:'MFE25 · © MITECO'});
+const mfeCurrent=L.tileLayer.wms(MFE25_URL,{noWrap:true,layers:'ff_uso',format:'image/png',transparent:true,version:'1.1.1',sld_body:MFE25_SLD,opacity:.80,maxZoom:19,attribution:'MFE25 · © MITECO'});
 const vegetation=L.layerGroup([vegetationCanary]);
 let vegetationLoaded=false,vegetationLoading=null,vegetationFeatures=[];
 function vegetationColor(v){let h=0;for(const c of String(v))h=(h*31+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 48%)';}
@@ -3385,17 +3496,17 @@ async function loadVegetationSeries(){
  return vegetationLoading;
 }
 
-const transport=L.tileLayer.wms('https://servicios.idee.es/wms-inspire/transportes',{
+const transport=L.tileLayer.wms('https://servicios.idee.es/wms-inspire/transportes',{noWrap:true,
  layers:'TN.RailTransportNetwork.RailwayLink,TN.RoadTransportNetwork.RoadLink',format:'image/png',transparent:true,version:'1.1.1',opacity:0.85,minZoom:6,maxZoom:19,attribution:'IGR Redes de Transporte · © IGN/CNIG'
 });
 // El WMS de Unidades Administrativas adapta la simbología a la escala.
-const adminCCAA=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{
+const adminCCAA=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{noWrap:true,
  layers:'AU.AdministrativeBoundary',format:'image/png',transparent:true,version:'1.3.0',opacity:0.95,minZoom:4,maxZoom:7,attribution:'Unidades administrativas · © IGN/CNIG'
 });
-const adminProv=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{
+const adminProv=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{noWrap:true,
  layers:'AU.AdministrativeBoundary',format:'image/png',transparent:true,version:'1.3.0',opacity:0.95,minZoom:6,maxZoom:9,attribution:'Unidades administrativas · © IGN/CNIG'
 });
-const adminMun=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{
+const adminMun=L.tileLayer.wms('https://www.ign.es/wms-inspire/unidades-administrativas',{noWrap:true,
  layers:'AU.AdministrativeBoundary',format:'image/png',transparent:true,version:'1.3.0',opacity:0.95,minZoom:8,maxZoom:19,attribution:'Unidades administrativas · © IGN/CNIG'
 });
 function bindOverlayCheck(id,layer,label){
@@ -6161,7 +6272,7 @@ async function updateWorldToponyms2D(force=false){
  if(spain){
   if(worldToponyms2DLayer){map.removeLayer(worldToponyms2DLayer);worldToponyms2DLayer=null;}
   if(!worldToponyms2DSpain){
-   worldToponyms2DSpain=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{
+   worldToponyms2DSpain=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{noWrap:true,
     layers:'GN.GeographicalNames',format:'image/png',transparent:true,version:'1.3.0',
     attribution:'Toponimia NGBE · © IGN/CNIG',opacity:.96
    });
@@ -6580,6 +6691,7 @@ async function toggleWorldBiomesGlobe(on){
    for(const ent of ds.entities.values){
     const name=ent.properties?.biome_name?.getValue?.()||'Bioma terrestre';
     const ecoregion=ent.properties?.eco_name?.getValue?.()||'';
+    const ecoId=ent.properties?.eco_id?.getValue?.()??'';
     const realm=ent.properties?.realm?.getValue?.()||'';
     const sourceColor=ent.properties?.color_bio?.getValue?.()||biomeColor(name);
     if(ent.polygon){
@@ -6588,7 +6700,7 @@ async function toggleWorldBiomesGlobe(on){
     }
     ent.__anambroBiome=true;
     ent.name=name;
-    ent.__anambroBiomeData={name,ecoregion,realm,color:sourceColor};
+    ent.__anambroBiomeData={ecoId,name,ecoregion,realm,color:sourceColor};
     ent.description='';
    }
    globeBiomesSource=ds;
