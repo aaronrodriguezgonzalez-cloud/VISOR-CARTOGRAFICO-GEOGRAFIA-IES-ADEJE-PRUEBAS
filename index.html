@@ -1911,6 +1911,19 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  .volcanoPhoto{max-height:175px!important}.volcanoLoading{min-width:0!important;font-size:12px!important}.volcanoNote{font-size:9.5px!important}
 }
 
+
+.brandSourcesBtn{white-space:nowrap}
+.brandActions{display:flex!important;gap:5px!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important}
+@media(max-width:760px) and (orientation:portrait){
+ .brandActions{gap:3px!important;flex-wrap:nowrap!important}
+ .brandWelcomeBtn{padding:4px 6px!important;font-size:7px!important;line-height:1!important}
+ .brandSourcesBtn{font-size:6.7px!important}
+}
+@media(max-width:950px) and (orientation:landscape){
+ .brandActions{gap:3px!important;flex-wrap:nowrap!important}
+ .brandWelcomeBtn{padding:4px 7px!important;font-size:7.5px!important}
+}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -1935,6 +1948,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="brandRoles"><b>Proyecto elaborado en el marco de su actividad docente en el IES Adeje</b><br>Departamento de Geografía e Historia · Coordinador de Patrimonio Natural, Social y Cultural Canario</div>
     <div class="brandActions">
       <button type="button" class="brandWelcomeBtn" onclick="toggleWelcome(true)">👋 ¡Bienvenido!</button>
+      <button type="button" class="brandWelcomeBtn brandSourcesBtn" onclick="openSourcesPanel()">ⓘ Fuentes y licencias</button>
     </div>
   </div>
 </div>
@@ -1986,7 +2000,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>, con fichas interactivas al pulsar: clima y bioma muestran rangos bioclimáticos comparables, y los volcanes consultan datos del Smithsonian GVP y, cuando existen, del USGS para ampliar morfología, contexto tectónico, estado operativo, última erupción, VEI, actividad eruptiva documentada, altitud, altura del edificio, coordenadas, fotografía disponible y enlaces de referencia.</li>
           <li>Las capas mundiales se cargan únicamente cuando se activan para mantener el visor ligero y rápido.</li>
           <li><b>Composición e impresión cartográfica:</b> ANAMBRO incorpora un editor de maquetación tipo SIG para preparar mapas de Canarias, España o cualquier zona del mundo, con título, leyenda de capas activas, orientación y escala gráfica. Los elementos pueden desplazarse y redimensionarse antes de exportar el resultado directamente a PDF en A4 o A3, vertical u horizontal.</li>
-          <li><b>Fuentes y trazabilidad:</b> el botón «ⓘ Fuentes y licencias» documenta procedencia, condiciones de reutilización y atribución. Los PDF incorporan automáticamente las fuentes asociadas a las capas activas.</li>
+          <li><b>Fuentes y trazabilidad:</b> el botón «ⓘ Fuentes y licencias» de la cabecera documenta procedencia, condiciones de reutilización y atribución. Los PDF incorporan automáticamente las fuentes asociadas a las capas activas.</li>
         </ul>
       </section>
       <section class="welcomeCard">
@@ -2024,7 +2038,6 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <button class="tool" onclick="togglePanel('profilePanel')"><span>⛰️</span> Perfil</button>
 <button class="tool" onclick="togglePanel('searchPanel')"><span>🔎</span> Buscar topónimo</button>
 <button class="tool" onclick="openLayoutEditor()"><span>🖨️</span> Imprimir / PDF</button>
-<button class="tool" onclick="openSourcesPanel()"><span>ⓘ</span> Fuentes y licencias</button>
 
 </div>
 
@@ -2523,11 +2536,12 @@ function biomeDetailHtml(value){
 async function worldBiomeAt(lat,lon){
  const u='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query?'+new URLSearchParams({
   where:'1=1',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',
-  spatialRel:'esriSpatialRelIntersects',outFields:'BIOME_NAME,ECO_NAME,REALM',returnGeometry:'false',f:'json'
+  spatialRel:'esriSpatialRelIntersects',outFields:'biome_name,eco_name,realm,color_bio,license',
+  returnGeometry:'false',f:'json'
  });
  const r=await fetch(u);if(!r.ok)throw new Error('Bioma '+r.status);
  const d=await r.json(),a=d?.features?.[0]?.attributes||null;
- return a?{name:a.BIOME_NAME,ecoregion:a.ECO_NAME,realm:a.REALM}:null;
+ return a?{name:a.biome_name,ecoregion:a.eco_name,realm:a.realm,color:a.color_bio,license:a.license}:null;
 }
 
 const wikipediaUrlCache=new Map();
@@ -2601,7 +2615,13 @@ function renderWorldBiomesLegend(){
   'Tropical & Subtropical Moist Broadleaf Forests':'Bosques tropicales y subtropicales húmedos',
   'Tundra':'Tundra'
  };
- el.innerHTML=WORLD_BIOME_COLORS.map(([n,c])=>'<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 7px 2px 0"><span class="sw" style="background:'+c+'"></span>'+escHtml(es[n]||n)+'</span>').join('');
+ const colors=new Map();
+ for(const f of worldBiomesData?.features||[]){
+  const p=f.properties||{},name=p.biome_name;
+  if(name&&!colors.has(name))colors.set(name,p.color_bio||biomeColor(name));
+ }
+ const items=colors.size?[...colors.entries()]:WORLD_BIOME_COLORS;
+ el.innerHTML='<b>Leyenda · biomas RESOLVE 2017</b><br>'+items.map(([n,c])=>'<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 7px 2px 0"><span class="sw" style="background:'+c+'"></span>'+escHtml(es[n]||n)+'</span>').join('');
  el.style.display=document.getElementById('worldBiomesCheck')?.checked?'block':'none';
 }
 async function fetchArcGISGeoJSONPaged(baseUrl,outFields='*',pageSize=500){
@@ -2622,13 +2642,31 @@ async function ensureWorldBiomes(){
  if(worldBiomesLayer)return worldBiomesLayer;
  if(worldBiomesLoading)return worldBiomesLoading;
  const base='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query';
- worldBiomesLoading=fetchArcGISGeoJSONPaged(base,'BIOME_NAME,ECO_NAME,REALM',350).then(g=>{worldBiomesData=g;
+ worldBiomesLoading=(async()=>{
+  const params=new URLSearchParams({
+   where:'1=1',
+   outFields:'biome_name,eco_name,realm,color_bio,license',
+   returnGeometry:'true',
+   outSR:'4326',
+   maxAllowableOffset:'0.035',
+   f:'geojson'
+  });
+  const r=await fetch(base+'?'+params);
+  if(!r.ok)throw new Error('RESOLVE '+r.status);
+  const g=await r.json();
+  worldBiomesData=g;
   worldBiomesLayer=L.geoJSON(g,{
-   style:f=>({color:'#666',weight:.25,opacity:.35,fillColor:biomeColor(f?.properties?.BIOME_NAME||''),fillOpacity:.58}),
-   onEachFeature:(f,l)=>{const p=f.properties||{};l.bindPopup(biomeDetailHtml({name:p.BIOME_NAME,ecoregion:p.ECO_NAME,realm:p.REALM}),{maxWidth:440});}
+   style:f=>{
+    const p=f?.properties||{},c=p.color_bio||biomeColor(p.biome_name||'');
+    return {color:'#5c5c5c',weight:.35,opacity:.45,fillColor:c,fillOpacity:.58};
+   },
+   onEachFeature:(f,l)=>{
+    const p=f.properties||{};
+    l.bindPopup(biomeDetailHtml({name:p.biome_name,ecoregion:p.eco_name,realm:p.realm,color:p.color_bio,license:p.license}),{maxWidth:440});
+   }
   });
   return worldBiomesLayer;
- }).catch(err=>{worldBiomesLoading=null;throw err;});
+ })().catch(err=>{worldBiomesLoading=null;throw err;});
  return worldBiomesLoading;
 }
 function volcanoProp(p,...keys){for(const k of keys)if(p&&p[k]!==undefined&&p[k]!==null&&p[k]!=='')return p[k];return null;}
@@ -2647,27 +2685,28 @@ function joinVolcanoValues(...vals){
 function volcanoDetailsFromPlainProps(p={},lat=null,lon=null){
  const gp=(...k)=>volcanoPropLoose(p,...k);
  return {
-  name:gp('Volcano Name','Volcano_Name','VOLCANONAME','NAME','Name','volcano_na','VolcanoName')||'Volcán',
-  number:gp('Volcano Number','Volcano_Number','NUMBER','volcano_nu','VolcanoNumber','VolcanoNumberNew'),
-  type:gp('Primary Volcano Type','Primary_Volcano_Type','TYPE','Type','Volcano_Type','primary_vo','Volcano Type'),
-  landform:gp('Volcano Landform','Volcano_Landform','Landform','LAND_FORM'),
-  nature:gp('Tectonic Setting','Tectonic_Setting','TectonicSetting','TECTONIC','Tectonic'),
+  name:gp('volcano_na','Volcano Name','Volcano_Name','VOLCANONAME','NAME','Name','VolcanoName')||'Volcán',
+  number:gp('volcano_nu','Volcano Number','Volcano_Number','NUMBER','VolcanoNumber','VolcanoNumberNew'),
+  type:gp('primary_vo','Primary Volcano Type','Primary_Volcano_Type','TYPE','Type','Volcano_Type','Volcano Type'),
+  landform:gp('primary_ph','primary__1','primary__2','Volcano Landform','Volcano_Landform','Landform','LAND_FORM'),
+  nature:gp('tectonic_s','Tectonic Setting','Tectonic_Setting','TectonicSetting','TECTONIC','Tectonic'),
   rocks:joinVolcanoValues(
-    gp('Major Rock 1','Major_Rock_1','Major Rock Type','Major_Rock_Type','MajorRockType'),
-    gp('Major Rock 2','Major_Rock_2'),gp('Major Rock 3','Major_Rock_3'),
-    gp('Minor Rock 1','Minor_Rock_1'),gp('Rock Types','Rock_Types','RockTypes')
+    gp('major_rock','Major Rock 1','Major_Rock_1','Major Rock Type','Major_Rock_Type','MajorRockType'),
+    gp('primary__1'),gp('primary__2')
   ),
-  region:gp('Volcanic Region','Volcanic_Region','VolcanicRegion','REGION','Region','Subregion','SUBREGION'),
-  country:gp('Country','COUNTRY','country','State','LOCATION'),
-  elev:gp('Elevation','Elevation (m)','Elevation_m','ELEV','ELEVATION','elevation','Summit_Elev_m','SummitElevM'),
-  erupt:gp('Last Eruption Year','Last_Eruption_Year','LAST_ERUPT','Last_Eruption','last_erupt','YEAR','LastKnownEruption'),
-  evidence:gp('Evidence','EVIDENCE','Eruption Evidence','Eruption_Evidence','EruptionEvidence'),
+  geological:gp('geological','Geological Summary','Geological_Summary'),
+  geologicEvidence:gp('geologic_e','Geologic Evidence','Geologic_Evidence'),
+  evidence:gp('evidence_c','Evidence Category','Evidence_Category','Evidence'),
+  region:joinVolcanoValues(gp('region','Region'),gp('subregion','Subregion')),
+  country:gp('country','Country','COUNTRY','State','LOCATION'),
+  elev:gp('elevation','Elevation','Elevation (m)','Elevation_m','ELEV','ELEVATION','Summit_Elev_m','SummitElevM'),
+  erupt:gp('last_erupt','Last Eruption Year','Last_Eruption_Year','LAST_ERUPT','Last_Eruption','YEAR','LastKnownEruption'),
   pop5:gp('Population within 5 km','Population_5_km','Pop_5_km','Population5km'),
   pop10:gp('Population within 10 km','Population_10_km','Pop_10_km','Population10km'),
   pop30:gp('Population within 30 km','Population_30_km','Pop_30_km','Population30km'),
   pop100:gp('Population within 100 km','Population_100_km','Pop_100_km','Population100km'),
-  lat:lat??gp('Latitude','LATITUDE','lat','LocationLatitude'),
-  lon:lon??gp('Longitude','LONGITUDE','lon','LocationLongitude')
+  lat:lat??gp('latitude','Latitude','LATITUDE','lat','LocationLatitude'),
+  lon:lon??gp('longitude','Longitude','LONGITUDE','lon','LocationLongitude')
  };
 }
 function volcanoPlainPropsFromCesium(ent){
@@ -2772,6 +2811,71 @@ async function fetchGvpEruptions(vnum,name){
  if(name){const q=cqlQuote(name);f.push('"Volcano Name"='+q,'Volcano_Name='+q,'VolcanoName='+q);}
  return gvpWfsFeature('GVP-VOTW:Smithsonian_VOTW_Holocene_Eruptions',f,1000);
 }
+
+const GVP_MIRROR_BASE='https://rmgir.proyectomesoamerica.org/server/rest/services/Hosted/Volcanes_del_mundo/FeatureServer';
+
+async function fetchGvpMirrorVolcano(v){
+ const filters=[];
+ if(v.number)filters.push('volcano_nu='+encodeURIComponent(v.number));
+ if(v.name)filters.push("volcano_na='"+String(v.name).replace(/'/g,"''")+"'");
+ for(const where of filters){
+  try{
+   const u=GVP_MIRROR_BASE+'/0/query?'+new URLSearchParams({
+    where,outFields:'*',returnGeometry:'true',outSR:'4326',f:'json'
+   });
+   const r=await fetch(u);if(!r.ok)continue;
+   const d=await r.json(),f=d?.features?.[0];
+   if(f){
+    const a=f.attributes||{},g=f.geometry||{};
+    return volcanoDetailsFromPlainProps(a,g.y??v.lat,g.x??v.lon);
+   }
+  }catch(e){}
+ }
+ return null;
+}
+function mirrorEruptionYear(a){
+ const raw=volcanoPropLoose(a,'startdatey','StartDateY','Start Year','start_year');
+ const n=Number(raw);
+ return Number.isFinite(n)?n:-Infinity;
+}
+async function fetchGvpMirrorEruptions(v){
+ const filters=[];
+ if(v.number)filters.push('volcano_nu='+encodeURIComponent(v.number));
+ if(v.name)filters.push("volcano_na='"+String(v.name).replace(/'/g,"''")+"'");
+ for(const where of filters){
+  try{
+   const u=GVP_MIRROR_BASE+'/1/query?'+new URLSearchParams({
+    where,outFields:'*',returnGeometry:'false',f:'json',resultRecordCount:'2000'
+   });
+   const r=await fetch(u);if(!r.ok)continue;
+   const d=await r.json(),arr=(d?.features||[]).map(x=>x.attributes||{});
+   if(arr.length){
+    arr.sort((a,b)=>mirrorEruptionYear(b)-mirrorEruptionYear(a));
+    return arr;
+   }
+  }catch(e){}
+ }
+ return [];
+}
+function mirrorEruptionDetails(a){
+ if(!a)return null;
+ return {
+  number:volcanoPropLoose(a,'eruption_n','Eruption_N','Eruption Number'),
+  activityType:volcanoPropLoose(a,'activity_t','Activity_T','Activity Type'),
+  vei:volcanoPropLoose(a,'explosivit','Explosivit','VEI'),
+  veiQualifier:volcanoPropLoose(a,'explosiv_1','Explosiv_1'),
+  activityArea:volcanoPropLoose(a,'activityar','ActivityAr','Activity Area'),
+  activityUnit:volcanoPropLoose(a,'activityun','ActivityUn','Activity Unit'),
+  startEvidence:volcanoPropLoose(a,'startevide','StartEvide','Start Evidence'),
+  startYear:volcanoPropLoose(a,'startdatey','StartDateY','Start Year'),
+  startMonth:volcanoPropLoose(a,'startdatem','StartDateM','Start Month'),
+  startDay:volcanoPropLoose(a,'startdated','StartDateD','Start Day'),
+  endYear:volcanoPropLoose(a,'enddateyea','EndDateYea','End Year'),
+  endMonth:volcanoPropLoose(a,'enddatemon','EndDateMon','End Month'),
+  endDay:volcanoPropLoose(a,'enddateday','EndDateDay','End Day')
+ };
+}
+
 async function fetchUsgsVolcano(vnum){
  if(!vnum)return {info:null,status:null};
  let info=null,status=null;
@@ -2789,28 +2893,33 @@ async function enrichVolcano(v){
  const key=String(v.number||v.name||'').toLowerCase();
  if(volcanoEnrichmentCache.has(key))return volcanoEnrichmentCache.get(key);
  const p=(async()=>{
-  const record=await fetchGvpVolcanoRecord(v.number,v.name);
-  const recordDetails=record?volcanoDetailsFromPlainProps(record.properties||{},v.lat,v.lon):null;
-  const effectiveNumber=recordDetails?.number||v.number;
-  const effectiveName=(recordDetails?.name&&recordDetails.name!=='Volcán')?recordDetails.name:v.name;
-  const [eru,usgs,wiki]=await Promise.all([
-   fetchGvpEruptions(effectiveNumber,effectiveName),
-   fetchUsgsVolcano(effectiveNumber),
-   resolveWikipediaUrl(effectiveName).catch(()=>wikipediaFallbackUrl(effectiveName))
+  const mirrorRecord=await fetchGvpMirrorVolcano(v);
+  const effective={...v,...Object.fromEntries(Object.entries(mirrorRecord||{}).filter(([,x])=>x!==null&&x!==undefined&&x!==''))};
+  const [mirrorEruptions,usgs,wiki]=await Promise.all([
+   fetchGvpMirrorEruptions(effective),
+   fetchUsgsVolcano(effective.number),
+   resolveWikipediaUrl(effective.name).catch(()=>wikipediaFallbackUrl(effective.name))
   ]);
-  eru.sort((a,b)=>eruptionYear(b)-eruptionYear(a));
-  const latest=eru[0]||null,uinfo=usgs.info||{},ust=usgs.status||{};
+  const latestRaw=mirrorEruptions[0]||null,latest=mirrorEruptionDetails(latestRaw);
+  const uinfo=usgs.info||{},ust=usgs.status||{};
   return {
-   wiki,recordDetails,effectiveNumber,
-   gvpEruptions:eru.length,
-   latestStart:latest?eruptionField(latest,'Start Year','Start_Year','StartYear','Eruption Start Year','Eruption_Start_Year','start_year'):null,
-   latestStartMonth:latest?eruptionField(latest,'Start Month','Start_Month','StartMonth'):null,
-   latestStartDay:latest?eruptionField(latest,'Start Day','Start_Day','StartDay'):null,
-   latestEnd:latest?eruptionField(latest,'End Year','End_Year','EndYear','Eruption End Year','Eruption_End_Year','end_year'):null,
-   vei:latest?eruptionField(latest,'VEI','vei','Vei'):null,
-   eruptionType:latest?eruptionField(latest,'Eruption Category','Eruption_Category','EruptionCategory','Eruption Type','Eruption_Type','EruptionType','Category'):null,
-   eruptionStyle:latest?eruptionField(latest,'Area of Activity','Area_of_Activity','Eruption Style','Eruption_Style','EruptionStyle','Activity Type','Activity_Type','Phenomena','Events','Event Types','Event_Types'):null,
-   evidence:latest?eruptionField(latest,'Evidence Method (dating)','Evidence Method','Evidence_Method','EvidenceMethod','Evidence'):null,
+   wiki,
+   recordDetails:effective,
+   effectiveNumber:effective.number,
+   gvpEruptions:mirrorEruptions.length,
+   latestStart:latest?.startYear??null,
+   latestStartMonth:latest?.startMonth??null,
+   latestStartDay:latest?.startDay??null,
+   latestEnd:latest?.endYear??null,
+   latestEndMonth:latest?.endMonth??null,
+   latestEndDay:latest?.endDay??null,
+   vei:latest?.vei??null,
+   veiQualifier:latest?.veiQualifier??null,
+   eruptionType:latest?.activityType??null,
+   eruptionStyle:joinVolcanoValues(latest?.activityArea,latest?.activityUnit),
+   evidence:latest?.startEvidence??effective.evidence??effective.geologicEvidence,
+   geological:effective.geological,
+   geologicEvidence:effective.geologicEvidence,
    usgsStatus:normalizeStatus(firstDeep(ust,/(alert|status|level)$/i)),
    aviation:normalizeAviation(firstDeep(ust,/(color|aviation)/i)),
    observatory:firstDeep(ust,/(observatory|obsName|obs_name)/i)||firstDeep(uinfo,/(observatory|obsName|obs_name)/i),
@@ -2826,10 +2935,11 @@ async function enrichVolcano(v){
 function volcanoStatusText(v,e){
  if(e?.usgsStatus&&e.usgsStatus!=='NORMAL')return e.usgsStatus+' (USGS)';
  if(e?.usgsStatus==='NORMAL')return 'NORMAL (USGS)';
- const vv=e?.recordDetails||v,y=Number(vv.erupt),nowYear=new Date().getFullYear();
- if(Number.isFinite(y)&&y>=nowYear-1)return 'Actividad eruptiva muy reciente documentada por el GVP';
- if(Number.isFinite(y)&&y>=1900)return 'Volcán holoceno con actividad histórica documentada';
- if(Number.isFinite(y))return 'Volcán holoceno · última erupción conocida '+y;
+ const latest=Number(e?.latestStart),catalog=Number((e?.recordDetails||v)?.erupt),nowYear=new Date().getFullYear();
+ const y=Number.isFinite(latest)&&latest!==0?latest:(Number.isFinite(catalog)&&catalog!==0?catalog:null);
+ if(y!==null&&y>=nowYear-1)return 'Actividad eruptiva muy reciente documentada por el GVP';
+ if(y!==null&&y>=1900)return 'Volcán holoceno con actividad histórica documentada';
+ if(y!==null)return 'Volcán holoceno · última erupción conocida '+(y<0?Math.abs(y)+' a. C.':y);
  return 'Volcán incluido en la base holocena del Smithsonian GVP';
 }
 function formatMaybeNumber(v){
@@ -2850,58 +2960,72 @@ function vf(label,value){
 function enrichedVolcanoHtml(v,e=null){
  const vv=e?.recordDetails?{...v,...Object.fromEntries(Object.entries(e.recordDetails).filter(([,x])=>x!==null&&x!==undefined&&x!==''))}:v;
  const lat=Number(vv.lat),lon=Number(vv.lon),coords=(Number.isFinite(lat)&&Number.isFinite(lon))?coordsDMS(lat,lon):null;
- const elev=(e?.summitElev??vv.elev),wiki=e?.wiki||wikipediaFallbackUrl(vv.name),latestDate=formatEruptionDate(e?.latestStart,e?.latestStartMonth,e?.latestStartDay);
+ const elev=(e?.summitElev??vv.elev),wiki=e?.wiki||wikipediaFallbackUrl(vv.name);
+ const latestDate=formatEruptionDate(e?.latestStart,e?.latestStartMonth,e?.latestStartDay);
  let h='<div class="volcanoCard">';
  if(e?.usgsPhoto)h+='<img class="volcanoPhoto" src="'+escHtml(String(e.usgsPhoto))+'" alt="'+escHtml(String(vv.name||'Volcán'))+'" onerror="this.style.display=\'none\'">';
  h+='<div class="volcanoTitle">🌋 '+escHtml(String(vv.name||'Volcán'))+'</div>';
  h+='<div class="volcanoStatus"><b>Estado de referencia:</b> '+escHtml(volcanoStatusText(vv,e))+(e?.aviation?' · <b>Código de aviación:</b> '+escHtml(e.aviation):'')+'</div>';
  h+='<div class="volcanoGrid">';
+
  h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Ficha básica</div>';
- h+=vf('País / territorio',vv.country)+vf('Región volcánica',vv.region)+vf('Morfología principal',trVolcano(vv.type))+vf('Forma del edificio',trVolcano(vv.landform));
+ h+=vf('País / territorio',vv.country)+vf('Región / subregión',vv.region)+vf('Morfología principal',trVolcano(vv.type))+vf('Forma / rasgos del edificio',trVolcano(vv.landform));
  if(elev!==null&&elev!==undefined&&elev!=='')h+=vf('Altitud máxima / cumbre',formatMaybeNumber(elev)+' m s. n. m.');
- if(e?.edificeHeight!==null&&e?.edificeHeight!==undefined&&e?.edificeHeight!=='')h+=vf('Altura del edificio volcánico',formatMaybeNumber(e.edificeHeight)+' m');
+ if(e?.edificeHeight!==null&&e?.edificeHeight!==undefined&&e?.edificeHeight!=='')h+=vf('Altura aproximada del edificio volcánico',formatMaybeNumber(e.edificeHeight)+' m');
  if(coords)h+=vf('Coordenadas',coords.lat+', '+coords.lon+' ('+lat.toFixed(4)+'°, '+lon.toFixed(4)+'°)');
  if(vv.number||e?.effectiveNumber)h+=vf('Número GVP',vv.number||e.effectiveNumber);
  h+='</section>';
- h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Geología</div>';
- h+=vf('Contexto tectónico',trVolcano(vv.nature))+vf('Composición / rocas principales',trVolcano(vv.rocks));
- if(!vv.nature&&!vv.rocks)h+='<div class="volcanoField">Sin datos geológicos adicionales en el registro estructurado recuperado.</div>';
- h+='</section>';
- h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Actividad eruptiva</div>';
- h+=vf('Última erupción conocida',vv.erupt);
- if(latestDate)h+=vf('Inicio del último episodio GVP recuperado',latestDate);
- if(e?.latestEnd!==null&&e?.latestEnd!==undefined&&e?.latestEnd!=='')h+=vf('Fin del episodio',e.latestEnd);
- h+=vf('Categoría de la erupción',trVolcano(e?.eruptionType))+vf('Área / estilo o fenómenos documentados',trVolcano(e?.eruptionStyle));
- if(e?.vei!==null&&e?.vei!==undefined&&e?.vei!=='')h+=vf('VEI',e.vei);
- h+=vf('Método / evidencia de datación',trVolcano(e?.evidence));
- if(e?.gvpEruptions)h+=vf('Erupciones recuperadas de la base GVP',e.gvpEruptions);
- h+='</section>';
- h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Vigilancia y población</div>';
- if(e?.usgsStatus)h+=vf('Nivel de alerta USGS',e.usgsStatus);
- if(e?.aviation)h+=vf('Código de aviación',e.aviation);
- if(e?.observatory)h+=vf('Observatorio USGS responsable',e.observatory);
- if(vv.pop5)h+=vf('Población a ≤ 5 km',formatMaybeNumber(vv.pop5));
- if(vv.pop10)h+=vf('Población a ≤ 10 km',formatMaybeNumber(vv.pop10));
- if(vv.pop30)h+=vf('Población a ≤ 30 km',formatMaybeNumber(vv.pop30));
- if(vv.pop100)h+=vf('Población a ≤ 100 km',formatMaybeNumber(vv.pop100));
- if(!e?.usgsStatus&&!e?.observatory&&!vv.pop5&&!vv.pop10&&!vv.pop30&&!vv.pop100)h+='<div class="volcanoField">Sin datos operativos adicionales para este volcán.</div>';
- h+='</section>';
- h+='<section class="volcanoSection full"><div class="volcanoSectionTitle">Cómo interpretar la ficha</div>';
- h+='<div class="volcanoField">ANAMBRO separa <b>morfología</b>, <b>VEI</b>, <b>fenómenos eruptivos observados</b> y <b>estado operativo</b>. No convierte automáticamente una erupción antigua en «dormido» o «extinto», ni deduce «pliniano», «peleano» o «hawaiano» únicamente a partir del VEI.</div>';
+
+ const hasGeo=vv.nature||vv.rocks||vv.geological||vv.geologicEvidence;
+ if(hasGeo){
+  h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Geología</div>';
+  h+=vf('Contexto tectónico',trVolcano(vv.nature))+vf('Composición / rocas principales',trVolcano(vv.rocks));
+  h+=vf('Caracterización geológica',trVolcano(vv.geological))+vf('Evidencia geológica',trVolcano(vv.geologicEvidence));
+  h+='</section>';
+ }
+
+ const hasEruption=e?.latestStart||e?.eruptionType||e?.eruptionStyle||e?.vei!==null&&e?.vei!==undefined||e?.evidence||e?.gvpEruptions;
+ if(hasEruption){
+  h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Actividad eruptiva documentada</div>';
+  if(latestDate)h+=vf('Inicio del último episodio recuperado',latestDate);
+  if(e?.latestEnd!==null&&e?.latestEnd!==undefined&&e?.latestEnd!==''&&Number(e.latestEnd)!==0)h+=vf('Fin del episodio',e.latestEnd);
+  h+=vf('Tipo de actividad',trVolcano(e?.eruptionType))+vf('Área / unidad de actividad',trVolcano(e?.eruptionStyle));
+  if(e?.vei!==null&&e?.vei!==undefined&&e?.vei!=='')h+=vf('Índice de Explosividad Volcánica (VEI)',e.vei+(e?.veiQualifier?' · '+e.veiQualifier:''));
+  h+=vf('Evidencia del inicio / datación',trVolcano(e?.evidence));
+  if(e?.gvpEruptions)h+=vf('Episodios eruptivos recuperados',e.gvpEruptions);
+  h+='</section>';
+ }
+
+ const hasWatch=e?.usgsStatus||e?.aviation||e?.observatory||vv.pop5||vv.pop10||vv.pop30||vv.pop100;
+ if(hasWatch){
+  h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Vigilancia y entorno humano</div>';
+  if(e?.usgsStatus)h+=vf('Nivel de alerta USGS',e.usgsStatus);
+  if(e?.aviation)h+=vf('Código de aviación',e.aviation);
+  if(e?.observatory)h+=vf('Observatorio USGS responsable',e.observatory);
+  if(vv.pop5)h+=vf('Población a ≤ 5 km',formatMaybeNumber(vv.pop5));
+  if(vv.pop10)h+=vf('Población a ≤ 10 km',formatMaybeNumber(vv.pop10));
+  if(vv.pop30)h+=vf('Población a ≤ 30 km',formatMaybeNumber(vv.pop30));
+  if(vv.pop100)h+=vf('Población a ≤ 100 km',formatMaybeNumber(vv.pop100));
+  h+='</section>';
+ }
+
+ h+='<section class="volcanoSection full"><div class="volcanoSectionTitle">Lectura científica</div>';
+ h+='<div class="volcanoField">La ficha distingue <b>tipo de edificio</b>, <b>contexto tectónico</b>, <b>composición</b>, <b>actividad eruptiva</b>, <b>VEI</b> y <b>estado operativo</b>. Un volcán no se clasifica aquí como «dormido» o «extinto» salvo que una fuente científica lo indique expresamente.</div>';
  if(vv.type)h+='<span class="volcanoBadge">'+escHtml(trVolcano(vv.type))+'</span>';
  if(vv.nature)h+='<span class="volcanoBadge">'+escHtml(trVolcano(vv.nature))+'</span>';
  if(e?.vei!==null&&e?.vei!==undefined&&e?.vei!=='')h+='<span class="volcanoBadge">VEI '+escHtml(String(e.vei))+'</span>';
  h+='</section></div>';
+
  const n=vv.number||e?.effectiveNumber;
  h+='<div class="volcanoLinks">';
  if(n){
-  h+='<a href="https://volcano.si.edu/volcano.cfm?vn='+encodeURIComponent(String(n))+'" target="_blank" rel="noopener">🌋 Perfil completo Smithsonian GVP</a>';
+  h+='<a href="https://volcano.si.edu/volcano.cfm?vn='+encodeURIComponent(String(n))+'" target="_blank" rel="noopener">🌋 Perfil Smithsonian GVP</a>';
   h+=' · <a href="https://volcano.si.edu/volcano.cfm?vn='+encodeURIComponent(String(n))+'#bgvn" target="_blank" rel="noopener">Informes de actividad</a>';
   h+=' · <a href="https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcano?vnum='+encodeURIComponent(String(n))+'" target="_blank" rel="noopener">USGS</a>';
  }
  h+=(n?' · ':'')+'<a href="'+escHtml(wiki)+'" target="_blank" rel="noopener">Wikipedia</a></div>';
- h+='<div class="volcanoSourceLine">Fuente principal: Global Volcanism Program, Smithsonian Institution · Volcanoes of the World v5.4.0 (2026). Datos USGS añadidos cuando están disponibles.</div>';
- h+='<div class="volcanoNote">Las fotografías solo se muestran cuando el servicio consultado proporciona una imagen utilizable. Si los derechos de una imagen del Smithsonian no son inequívocos, ANAMBRO enlaza a la fuente original en vez de redistribuirla.</div></div>';
+ h+='<div class="volcanoSourceLine">Datos volcánicos: Smithsonian Global Volcanism Program, Volcanoes of the World v5.4.0 (2026). La ficha combina el registro de volcanes y el de erupciones; USGS se añade cuando existe cobertura.</div>';
+ h+='</div>';
  return h;
 }
 function volcanoDetailHtml(v,wikiUrl=null){
@@ -2914,8 +3038,12 @@ async function fetchSmithsonianVolcanoes(){
  return r.json();
 }
 async function fetchVolcanoFallback(){
- const base='https://services.arcgis.com/BG6nSlhZSAWtExvp/ArcGIS/rest/services/World_Volcanoes/FeatureServer/0/query';
- return fetchArcGISGeoJSONPaged(base,'*',700);
+ const base=GVP_MIRROR_BASE+'/0/query';
+ const u=base+'?'+new URLSearchParams({
+  where:'1=1',outFields:'*',returnGeometry:'true',outSR:'4326',f:'geojson'
+ });
+ const r=await fetch(u);if(!r.ok)throw new Error('GVP mirror '+r.status);
+ return r.json();
 }
 async function ensureWorldVolcanoes(){
  if(worldVolcanoesLayer)return worldVolcanoesLayer;
@@ -5957,7 +6085,7 @@ async function toggleWorldBiomesGlobe(on){
    const ds=await Cesium.GeoJsonDataSource.load(worldBiomesData,{clampToGround:true,stroke:Cesium.Color.WHITE.withAlpha(.22),strokeWidth:.5});
    const alpha=+(document.getElementById('worldBiomesOpacity')?.value||.58);
    for(const ent of ds.entities.values){
-    const name=ent.properties?.BIOME_NAME?.getValue?.()||'Bioma terrestre';
+    const name=ent.properties?.biome_name?.getValue?.()||'Bioma terrestre';
     if(ent.polygon){
      ent.polygon.material=Cesium.Color.fromCssColorString(biomeColor(name)).withAlpha(alpha);
      ent.polygon.outline=false;
@@ -6083,7 +6211,7 @@ document.getElementById('worldBiomesOpacity').addEventListener('input',e=>{
  if(worldBiomesLayer)worldBiomesLayer.setStyle({fillOpacity:o});
  if(globeBiomesSource)for(const ent of globeBiomesSource.entities.values){
   if(ent.polygon){
-   const name=ent.properties?.BIOME_NAME?.getValue?.()||'';
+   const name=ent.properties?.biome_name?.getValue?.()||'';
    ent.polygon.material=Cesium.Color.fromCssColorString(biomeColor(name)).withAlpha(o);
   }
  }
