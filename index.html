@@ -1790,6 +1790,74 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  .layoutPage{transform-origin:top center;transform:scale(.55);margin-bottom:-42%}
 }
 
+
+/* Autoría ANAMBRO · visible y equilibrada en escritorio y móvil */
+.brandAuthorshipPrefix{font-weight:600;color:#536b7b}
+
+.welcomeAuthor{
+  margin-top:9px;
+  padding:8px 10px;
+  border-left:4px solid #0f9d8a;
+  border-radius:6px;
+  background:#f1f8f7;
+  color:#314b5d;
+  line-height:1.32;
+}
+.welcomeAuthorName{
+  font-size:13px;
+  color:#17324d;
+}
+.welcomeAuthorName b{font-weight:900}
+.welcomeAuthorName span{font-weight:700}
+.welcomeAuthorContext{
+  margin-top:2px;
+  font-size:11.5px;
+}
+
+@media(min-width:761px){
+  .brandWide .brandTeacher{
+    font-size:12.7px!important;
+    line-height:1.12!important;
+  }
+  .brandWide .brandRoles{
+    font-size:8.8px!important;
+    line-height:1.15!important;
+  }
+}
+
+@media(max-width:760px) and (orientation:portrait){
+  .brandWide .brandTeacher{
+    font-size:9.1px!important;
+    line-height:1!important;
+  }
+  .brandWide .brandRoles{
+    font-size:6.7px!important;
+    line-height:1.05!important;
+  }
+  .brandAuthorshipPrefix{
+    display:inline!important;
+    font-size:inherit!important;
+  }
+  .welcomeAuthor{
+    margin-top:7px;
+    padding:7px 8px;
+  }
+  .welcomeAuthorName{font-size:11.5px}
+  .welcomeAuthorContext{font-size:10.5px}
+}
+
+@media(max-width:950px) and (orientation:landscape){
+  .brandWide .brandTeacher{
+    font-size:9.4px!important;
+  }
+  .brandWide .brandRoles{
+    font-size:6.9px!important;
+    line-height:1.05!important;
+  }
+  .welcomeAuthorName{font-size:11.5px}
+  .welcomeAuthorContext{font-size:10.5px}
+}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -1807,11 +1875,11 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 
   <div class="brandText brandCenter">
     <div class="brandTitle"><span class="brandBase">VISOR CARTOGRÁFICO</span> <span class="brandLogoWord">ANAMBRO</span></div>
-    <div class="brandTeacher">Aarón Rodríguez González <span style="font-weight:700">(Geógrafo)</span></div>
+    <div class="brandTeacher"><span class="brandAuthorshipPrefix">Elaborado por </span>Aarón Rodríguez González <span style="font-weight:700">(Geógrafo)</span></div>
   </div>
 
   <div class="brandSide brandSideRight">
-    <div class="brandRoles"><b>Docente del Departamento de Geografía e Historia</b><br>Coordinador de Patrimonio Natural, Social y Cultural Canario</div>
+    <div class="brandRoles"><b>Proyecto elaborado en el marco de su actividad docente en el IES Adeje</b><br>Departamento de Geografía e Historia · Coordinador de Patrimonio Natural, Social y Cultural Canario</div>
     <div class="brandActions">
       <button type="button" class="brandWelcomeBtn" onclick="toggleWelcome(true)">👋 ¡Bienvenido!</button>
     </div>
@@ -1823,6 +1891,10 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
       <div>
         <div id="welcomeTitle" class="welcomeTitle">VISOR CARTOGRÁFICO <span class="brandLogoWord">ANAMBRO</span></div>
         <div class="welcomeSub"><b>ANAMBRO</b> es una plataforma cartográfica abierta para explorar, medir, comparar y comprender el territorio desde distintas escalas. Nace en Canarias y sitúa al Archipiélago en el centro del proyecto, pero permite ampliar el análisis hacia el resto de España —territorio peninsular y Baleares— y hacia el conjunto del planeta mediante un mapamundi 2D y un globo 3D. Reúne cartografía oficial, ortofotografía, información temática, perfiles topográficos y herramientas de consulta en una sola interfaz. Está concebida especialmente para la enseñanza de la <b>Geografía de España</b>, la <b>Geografía e Historia de 1.º a 4.º de ESO</b>, <b>Biología y Geología</b> y otras materias vinculadas al territorio, el paisaje y el medio natural.</div>
+        <div class="welcomeAuthor">
+          <div class="welcomeAuthorName">Elaborado por <b>Aarón Rodríguez González</b> <span>(Geógrafo)</span></div>
+          <div class="welcomeAuthorContext">Proyecto desarrollado en el marco de su actividad docente en el <b>IES Adeje</b>, desde el Departamento de Geografía e Historia y la coordinación del eje de Patrimonio Natural, Social y Cultural Canario.</div>
+        </div>
       </div>
       <button type="button" class="welcomeClose" onclick="toggleWelcome(false)" aria-label="Cerrar bienvenida">×</button>
     </div>
@@ -1858,7 +1930,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Red geográfica mundial y consulta de puntos con topónimo próximo, país, divisiones territoriales, coordenadas y altitud aproximada.</li>
           <li>Búsqueda mundial de lugares también desde el mapa 2D, además del globo 3D.</li>
           <li>Medición de distancias y superficies y perfiles topográficos altimétricos de ámbito mundial.</li>
-          <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>.</li>
+          <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>, con fichas interactivas al pulsar: clima y bioma muestran rangos bioclimáticos comparables, y los volcanes ofrecen morfología, contexto geológico disponible, última erupción, altitud, coordenadas y enlaces al Smithsonian y Wikipedia.</li>
           <li>Las capas mundiales se cargan únicamente cuando se activan para mantener el visor ligero y rápido.</li>
           <li><b>Composición e impresión cartográfica:</b> ANAMBRO incorpora un editor de maquetación tipo SIG para preparar mapas de Canarias, España o cualquier zona del mundo, con título, leyenda de capas activas, orientación y escala gráfica. Los elementos pueden desplazarse y redimensionarse antes de exportar el resultado directamente a PDF en A4 o A3, vertical u horizontal.</li>
         </ul>
@@ -1885,7 +1957,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
       </section>
 
     </div>
-    <div class="welcomeFooter"><b>ANAMBRO · Versión 1.0 · Curso 2026-2027.</b> Esta primera versión es solo el comienzo: ANAMBRO se irá actualizando con nuevas capas, fuentes, herramientas y ámbitos de análisis, manteniendo Canarias como núcleo del proyecto y ampliando progresivamente sus posibilidades para España y el mundo. Puedes volver a abrir esta ventana cuando quieras pulsando el botón <b>¡Bienvenido!</b> de la cabecera.</div>
+    <div class="welcomeFooter"><b>ANAMBRO · Versión 1.0 · Curso 2026-2027.</b> Elaborado por <b>Aarón Rodríguez González</b> en el marco de su actividad docente en el <b>IES Adeje</b>. Esta primera versión es solo el comienzo: ANAMBRO se irá actualizando con nuevas capas, fuentes, herramientas y ámbitos de análisis, manteniendo Canarias como núcleo del proyecto y ampliando progresivamente sus posibilidades para España y el mundo. Puedes volver a abrir esta ventana cuando quieras pulsando el botón <b>¡Bienvenido!</b> de la cabecera.</div>
   </div>
 </div>
 
@@ -2248,11 +2320,111 @@ async function worldClimateAt(lat,lon){
  const r=await fetch(u);if(!r.ok)throw new Error('Clima '+r.status);
  const d=await r.json();return d?.features?.[0]?.attributes?.Clima||null;
 }
-function climateHtml(c){
- return document.getElementById('worldClimateCheck')?.checked
-  ?'<hr><b>🌦️ Clima Köppen-Geiger:</b> '+(c?escHtml(c):'sin dato')
-  :'';
+const WORLD_CLIMATE_META={
+ 'Ecuatorial o trópical húmedo':{temp:'24–28 °C',mean:'≈ 25–27 °C',precip:'> 1.800–2.000 mm/año',season:'Sin estación seca marcada; todos los meses muy húmedos',criterion:'Todos los meses ≥ 18 °C; precipitación muy abundante y regular.'},
+ 'Ecuatorial o tropical húmedo':{temp:'24–28 °C',mean:'≈ 25–27 °C',precip:'> 1.800–2.000 mm/año',season:'Sin estación seca marcada; todos los meses muy húmedos',criterion:'Todos los meses ≥ 18 °C; precipitación muy abundante y regular.'},
+ 'Tropical monzónico':{temp:'24–29 °C',mean:'≈ 25–28 °C',precip:'1.500–3.500 mm/año',season:'Estación lluviosa muy intensa y estación seca corta',criterion:'Todos los meses ≥ 18 °C; breve estación seca compensada por lluvias monzónicas.'},
+ 'Tropical sabana':{temp:'20–30 °C',mean:'≈ 24–27 °C',precip:'700–1.600 mm/año',season:'Estación seca bien marcada y estación lluviosa',criterion:'Todos los meses ≥ 18 °C; sequía estacional acusada.'},
+ 'Estepario':{temp:'5–28 °C según latitud',mean:'≈ 10–22 °C',precip:'250–600 mm/año',season:'Semiárido; lluvias escasas e irregulares',criterion:'Clima seco (B), pero menos árido que el desértico. El umbral real depende de temperatura y estacionalidad.'},
+ 'Desértico cálido':{temp:'15–35 °C',mean:'≥ 18 °C',precip:'habitualmente < 250 mm/año',season:'Aridez extrema; gran insolación y fuerte evaporación',criterion:'Clima desértico BWh: precipitación por debajo del umbral de aridez y temperatura media anual ≥ 18 °C.'},
+ 'Desértico frío':{temp:'−5–25 °C',mean:'< 18 °C',precip:'habitualmente < 250 mm/año',season:'Aridez extrema con invierno frío',criterion:'Clima desértico BWk: precipitación por debajo del umbral de aridez y temperatura media anual < 18 °C.'},
+ 'Mediterráneo':{temp:'invierno suave; verano cálido',mean:'≈ 10–20 °C',precip:'300–1.000 mm/año',season:'Verano seco; máximos de lluvia fuera del verano',criterion:'Clima templado C con sequía estival; mes más cálido > 10 °C.'},
+ 'Subtrópical húmedo':{temp:'invierno suave; verano cálido o muy cálido',mean:'≈ 14–22 °C',precip:'700–2.000 mm/año',season:'Húmedo gran parte del año; máximo estival frecuente',criterion:'Climas Cfa/Cwa agrupados en la adaptación educativa.'},
+ 'Subtropical húmedo':{temp:'invierno suave; verano cálido o muy cálido',mean:'≈ 14–22 °C',precip:'700–2.000 mm/año',season:'Húmedo gran parte del año; máximo estival frecuente',criterion:'Climas Cfa/Cwa agrupados en la adaptación educativa.'},
+ 'Oceánico':{temp:'inviernos suaves; veranos frescos',mean:'≈ 8–15 °C',precip:'600–2.500 mm/año',season:'Precipitaciones repartidas; amplitud térmica moderada',criterion:'Climas Cfb/Cfc y afines agrupados; mes más cálido > 10 °C y sin verano seco mediterráneo.'},
+ 'Continental cálido':{temp:'inviernos fríos; veranos cálidos',mean:'≈ 5–15 °C',precip:'400–1.200 mm/año',season:'Gran amplitud térmica anual',criterion:'Climas D con verano cálido; al menos un mes > 10 °C y mes frío por debajo del umbral templado.'},
+ 'Continental frío':{temp:'inviernos muy fríos; veranos suaves',mean:'≈ 0–10 °C',precip:'300–1.000 mm/año',season:'Gran amplitud térmica; nieve invernal frecuente',criterion:'Climas D con verano moderado o fresco.'},
+ 'Subártico continental':{temp:'inviernos extremos; verano corto',mean:'≈ −5 a 5 °C',precip:'200–700 mm/año',season:'Invierno muy largo; 1–3 meses templados',criterion:'Climas D subárticos: pocos meses > 10 °C y fuerte continentalidad.'},
+ 'Tundra':{temp:'mes más cálido 0–10 °C',mean:'habitualmente < 0–5 °C',precip:'100–500 mm/año',season:'Verano brevísimo; permafrost frecuente',criterion:'ET: ningún mes alcanza 10 °C, pero al menos uno supera 0 °C.'},
+ 'Hielos perpetuos':{temp:'todos los meses < 0 °C',mean:'habitualmente < −10 °C',precip:'generalmente < 250 mm/año',season:'Sin verdadero verano; hielo permanente',criterion:'EF: el mes más cálido permanece por debajo de 0 °C.'}
+};
+function climateMeta(c){return WORLD_CLIMATE_META[String(c||'').trim()]||null;}
+function climateDetailHtml(c){
+ if(!document.getElementById('worldClimateCheck')?.checked)return '';
+ if(!c)return '<hr><b>🌦️ Clima Köppen-Geiger:</b> sin dato';
+ const m=climateMeta(c);
+ let h='<hr><b>🌦️ Clima Köppen-Geiger:</b> '+escHtml(c);
+ if(m){
+  h+='<br><b>Temperaturas características:</b> '+escHtml(m.temp);
+  h+='<br><b>Temperatura media orientativa:</b> '+escHtml(m.mean);
+  h+='<br><b>Precipitación anual orientativa:</b> '+escHtml(m.precip);
+  h+='<br><b>Régimen:</b> '+escHtml(m.season);
+  h+='<br><small><b>Criterio climático:</b> '+escHtml(m.criterion)+'</small>';
+  h+='<br><small>Los rangos son orientativos: Köppen-Geiger clasifica mediante umbrales mensuales y estacionales, no por un único valor medio.</small>';
+ }
+ return h;
 }
+function climateHtml(c){return climateDetailHtml(c);}
+
+const WORLD_BIOME_META={
+ 'Boreal Forests/Taiga':{es:'Bosques boreales / taiga',temp:'≈ −5 a 10 °C de media anual',precip:'300–850 mm/año',structure:'Bosques dominados por coníferas; sotobosque pobre, musgos y líquenes',climate:'Inviernos largos y muy fríos; veranos cortos'},
+ 'Deserts & Xeric Shrublands':{es:'Desiertos y matorrales xéricos',temp:'muy variable; de desiertos fríos a > 25 °C de media',precip:'normalmente < 250–500 mm/año',structure:'Vegetación muy abierta, xerófitas, suculentas y matorral adaptado a la sequía',climate:'Déficit hídrico persistente y elevada evapotranspiración'},
+ 'Flooded Grasslands & Savannas':{es:'Pastizales y sabanas inundables',temp:'≈ 15–30 °C',precip:'500–2.000+ mm/año',structure:'Herbazales y sabanas condicionados por inundaciones estacionales o permanentes',climate:'La hidrología local es tan importante como el clima regional'},
+ 'Lake':{es:'Lagos',temp:'variable',precip:'variable',structure:'Ecosistema acuático continental',climate:'Condicionado por cuenca, balance hídrico y régimen térmico'},
+ 'Mangroves':{es:'Manglares',temp:'habitualmente > 20 °C',precip:'≈ 1.000–3.000+ mm/año, aunque depende del aporte hídrico',structure:'Bosques halófitos intermareales con raíces aéreas o zancudas',climate:'Costas tropicales y subtropicales, aguas cálidas y baja frecuencia de heladas'},
+ 'Mediterranean Forests, Woodlands & Scrub':{es:'Bosques y matorrales mediterráneos',temp:'≈ 10–20 °C de media anual',precip:'300–1.000 mm/año',structure:'Bosques esclerófilos, matorrales y formaciones adaptadas a sequía estival e incendios',climate:'Inviernos suaves y húmedos; veranos secos'},
+ 'Montane Grasslands & Shrublands':{es:'Pastizales y matorrales de montaña',temp:'baja a moderada según altitud y latitud',precip:'≈ 300–1.500+ mm/año',structure:'Pastizales, matorrales almohadillados y vegetación alpina o subalpina',climate:'Frío de montaña, viento, heladas y corta estación de crecimiento'},
+ 'Rock and Ice':{es:'Roca y hielo',temp:'muy baja',precip:'generalmente baja a moderada, a menudo nival',structure:'Vegetación ausente o extremadamente dispersa',climate:'Ambientes glaciares, nivales o rocosos extremos'},
+ 'Temperate Broadleaf & Mixed Forests':{es:'Bosques templados caducifolios y mixtos',temp:'≈ 5–15 °C de media anual',precip:'600–2.000 mm/año',structure:'Bosques caducifolios y mixtos con marcada estacionalidad',climate:'Cuatro estaciones; humedad suficiente para bosque cerrado'},
+ 'Temperate Conifer Forests':{es:'Bosques templados de coníferas',temp:'≈ 5–15 °C',precip:'500–2.500+ mm/año',structure:'Coníferas dominantes, a menudo en montaña o fachadas oceánicas',climate:'Templado a fresco; desde relativamente seco a hiperhúmedo'},
+ 'Temperate Grasslands, Savannas & Shrublands':{es:'Pastizales, sabanas y matorrales templados',temp:'≈ 5–18 °C',precip:'250–1.000 mm/año',structure:'Gramíneas dominantes, con árboles escasos; praderas, estepas y pampas',climate:'Estacionalidad térmica y humedad insuficiente o fuego/pastoreo que limitan el bosque'},
+ 'Tropical & Subtropical Coniferous Forests':{es:'Bosques tropicales y subtropicales de coníferas',temp:'≈ 15–25 °C',precip:'500–2.000 mm/año',structure:'Pinares y otras coníferas tropicales/subtropicales, frecuentemente montanos',climate:'Cálido a templado; marcada influencia de altitud y estación seca'},
+ 'Tropical & Subtropical Dry Broadleaf Forests':{es:'Bosques tropicales y subtropicales secos',temp:'≈ 20–30 °C',precip:'500–1.500 mm/año',structure:'Bosques caducifolios o semicaducifolios durante la estación seca',climate:'Cálido con estación seca prolongada'},
+ 'Tropical & Subtropical Grasslands, Savannas & Shrublands':{es:'Pastizales, sabanas y matorrales tropicales',temp:'≈ 20–30 °C',precip:'500–1.500 mm/año',structure:'Matriz herbácea con arbustos y árboles dispersos',climate:'Cálido con alternancia de estación húmeda y seca; fuego frecuente'},
+ 'Tropical & Subtropical Moist Broadleaf Forests':{es:'Bosques tropicales y subtropicales húmedos',temp:'≈ 20–30 °C',precip:'1.500–4.000+ mm/año',structure:'Bosques densos, perennifolios o semiperennifolios, con gran estratificación',climate:'Cálido y muy húmedo; estación seca débil o inexistente'},
+ 'Tundra':{es:'Tundra',temp:'media anual frecuentemente < 0–5 °C; verano < 10 °C',precip:'150–500 mm/año',structure:'Musgos, líquenes, gramíneas y arbustos bajos; ausencia de arbolado continuo',climate:'Permafrost, verano corto y frío intenso'}
+};
+function biomeMeta(name){return WORLD_BIOME_META[String(name||'').trim()]||null;}
+function biomeDetailHtml(name){
+ if(!document.getElementById('worldBiomesCheck')?.checked)return '';
+ if(!name)return '<hr><b>🌿 Bioma terrestre:</b> sin dato';
+ const m=biomeMeta(name);
+ let h='<hr><b>🌿 Bioma terrestre:</b> '+escHtml(m?.es||name);
+ if(m){
+  h+='<br><b>Temperaturas características:</b> '+escHtml(m.temp);
+  h+='<br><b>Precipitación característica:</b> '+escHtml(m.precip);
+  h+='<br><b>Estructura vegetal:</b> '+escHtml(m.structure);
+  h+='<br><b>Condiciones ambientales:</b> '+escHtml(m.climate);
+  h+='<br><small>Son rangos bioclimáticos orientativos: un bioma integra clima, suelos, relieve, perturbaciones y biogeografía.</small>';
+ }
+ return h;
+}
+async function worldBiomeAt(lat,lon){
+ const u='https://services.arcgis.com/BG6nSlhZSAWtExvp/arcgis/rest/services/GlobalBiomes/FeatureServer/0/query?'+new URLSearchParams({
+  where:'1=1',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',
+  spatialRel:'esriSpatialRelIntersects',outFields:'BIOME_DESC',returnGeometry:'false',f:'json'
+ });
+ const r=await fetch(u);if(!r.ok)throw new Error('Bioma '+r.status);
+ const d=await r.json();return d?.features?.[0]?.attributes?.BIOME_DESC||null;
+}
+
+const wikipediaUrlCache=new Map();
+function wikipediaFallbackUrl(name){
+ return 'https://es.wikipedia.org/wiki/Especial:Buscar?search='+encodeURIComponent(name||'volcán');
+}
+async function resolveWikipediaUrl(name){
+ const key=String(name||'').trim().toLowerCase();
+ if(!key)return wikipediaFallbackUrl(name);
+ if(wikipediaUrlCache.has(key))return wikipediaUrlCache.get(key);
+ const p=(async()=>{
+  for(const lang of ['es','en']){
+   try{
+    const q=(lang==='es'?'volcán ':'volcano ')+name;
+    const u='https://'+lang+'.wikipedia.org/w/api.php?'+new URLSearchParams({
+     action:'opensearch',search:q,limit:'1',namespace:'0',format:'json',origin:'*'
+    });
+    const r=await fetch(u);if(!r.ok)continue;
+    const d=await r.json();
+    if(d?.[3]?.[0])return d[3][0];
+   }catch(e){}
+  }
+  return wikipediaFallbackUrl(name);
+ })();
+ wikipediaUrlCache.set(key,p);
+ return p;
+}
+
+function climateHtml(c){return climateDetailHtml(c);}
 
 let worldBiomesLayer=null,worldBiomesLoading=null,worldBiomesData=null,worldVolcanoesLayer=null,worldVolcanoesLoading=null,worldVolcanoesData=null;
 const WORLD_BIOME_COLORS=[
@@ -2328,6 +2500,50 @@ async function ensureWorldBiomes(){
  return worldBiomesLoading;
 }
 function volcanoProp(p,...keys){for(const k of keys)if(p&&p[k]!==undefined&&p[k]!==null&&p[k]!=='')return p[k];return null;}
+function volcanoDetailsFromPlainProps(p={},lat=null,lon=null){
+ return {
+  name:volcanoProp(p,'Volcano_Name','VOLCANONAME','NAME','Name','volcano_na','VolcanoName')||'Volcán',
+  type:volcanoProp(p,'Primary_Volcano_Type','TYPE','Type','Volcano_Type','primary_vo','VolcanoLandform','Volcano_Landform'),
+  nature:volcanoProp(p,'Tectonic_Setting','TectonicSetting','TECTONIC','Tectonic','Rock_Types','RockTypes','Major_Rock_Type','MajorRockType'),
+  region:volcanoProp(p,'Volcanic_Region','VolcanicRegion','REGION','Region','Subregion','SUBREGION'),
+  country:volcanoProp(p,'Country','COUNTRY','country','State','LOCATION'),
+  elev:volcanoProp(p,'Elevation','ELEV','ELEVATION','elevation','Summit_Elev_m','SummitElevM'),
+  erupt:volcanoProp(p,'Last_Eruption_Year','LAST_ERUPT','Last_Eruption','last_erupt','YEAR','LastKnownEruption'),
+  number:volcanoProp(p,'Volcano_Number','NUMBER','volcano_nu','VolcanoNumber','VolcanoNumberNew'),
+  evidence:volcanoProp(p,'Evidence','EVIDENCE','Eruption_Evidence','EruptionEvidence'),
+  lat:lat??volcanoProp(p,'Latitude','LATITUDE','lat','LocationLatitude'),
+  lon:lon??volcanoProp(p,'Longitude','LONGITUDE','lon','LocationLongitude')
+ };
+}
+function volcanoPlainPropsFromCesium(ent){
+ const out={},props=ent?.properties;
+ if(!props)return out;
+ for(const k of props.propertyNames||[])try{out[k]=props[k]?.getValue?.()??props[k];}catch(e){}
+ return out;
+}
+function volcanoDetailHtml(v,wikiUrl=null){
+ const lat=Number(v.lat),lon=Number(v.lon),coords=(Number.isFinite(lat)&&Number.isFinite(lon))?coordsDMS(lat,lon):null;
+ let h='<b>🌋 '+escHtml(String(v.name||'Volcán'))+'</b>';
+ if(v.type)h+='<br><b>Tipo / morfología:</b> '+escHtml(String(v.type));
+ if(v.nature)h+='<br><b>Naturaleza geológica / contexto:</b> '+escHtml(String(v.nature));
+ if(v.region)h+='<br><b>Región volcánica:</b> '+escHtml(String(v.region));
+ if(v.country)h+='<br><b>País / territorio:</b> '+escHtml(String(v.country));
+ if(v.evidence)h+='<br><b>Evidencia eruptiva:</b> '+escHtml(String(v.evidence));
+ if(v.erupt!==null&&v.erupt!==undefined&&v.erupt!=='')h+='<br><b>Última erupción conocida:</b> '+escHtml(String(v.erupt));
+ if(v.elev!==null&&v.elev!==undefined&&v.elev!=='')h+='<br><b>Altitud:</b> '+escHtml(String(v.elev))+' m';
+ if(coords){
+  h+='<br><b>Latitud:</b> '+coords.lat+' <small>('+lat.toFixed(4)+'°)</small>';
+  h+='<br><b>Longitud:</b> '+coords.lon+' <small>('+lon.toFixed(4)+'°)</small>';
+ }
+ if(v.number){
+  h+='<br><b>GVP:</b> <a href="https://volcano.si.edu/volcano.cfm?vn='+encodeURIComponent(String(v.number))+'" target="_blank" rel="noopener">ficha oficial Smithsonian</a>';
+ }
+ const wu=wikiUrl||wikipediaFallbackUrl(v.name);
+ h+='<br><b>Wikipedia:</b> <a href="'+escHtml(wu)+'" target="_blank" rel="noopener">abrir artículo</a>';
+ h+='<br><small>Fuente volcánica: Smithsonian Global Volcanism Program / capa cartográfica asociada.</small>';
+ return h;
+}
+
 async function fetchSmithsonianVolcanoes(){
  const url='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW%3ASmithsonian_VOTW_Holocene_Volcanoes&outputFormat=application%2Fjson&maxFeatures=2000';
  const r=await fetch(url);if(!r.ok)throw new Error('GVP '+r.status);
@@ -2348,20 +2564,14 @@ async function ensureWorldVolcanoes(){
   worldVolcanoesLayer=L.geoJSON(g,{
    pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:4.2,color:'#4a160e',weight:1.2,fillColor:'#d8432f',fillOpacity:.92}),
    onEachFeature:(f,l)=>{
-    const p=f.properties||{};
-    const name=volcanoProp(p,'Volcano_Name','VOLCANONAME','NAME','Name','volcano_na','VolcanoName')||'Volcán';
-    const type=volcanoProp(p,'Primary_Volcano_Type','TYPE','Type','Volcano_Type','primary_vo');
-    const country=volcanoProp(p,'Country','COUNTRY','country','State','LOCATION');
-    const elev=volcanoProp(p,'Elevation','ELEV','ELEVATION','elevation','Summit_Elev_m','SummitElevM');
-    const erupt=volcanoProp(p,'Last_Eruption_Year','LAST_ERUPT','Last_Eruption','last_erupt','YEAR');
-    const number=volcanoProp(p,'Volcano_Number','NUMBER','volcano_nu','VolcanoNumber');
-    let html='<b>🌋 '+escHtml(String(name))+'</b>';
-    if(type)html+='<br><b>Tipo:</b> '+escHtml(String(type));
-    if(country)html+='<br><b>País / región:</b> '+escHtml(String(country));
-    if(elev!==null)html+='<br><b>Altitud:</b> '+escHtml(String(elev))+' m';
-    if(erupt!==null)html+='<br><b>Última erupción:</b> '+escHtml(String(erupt));
-    if(number!==null)html+='<br><small>Identificador: '+escHtml(String(number))+'</small>';
-    l.bindPopup(html);
+    const p=f.properties||{},co=f.geometry?.coordinates||[],v=volcanoDetailsFromPlainProps(p,co[1],co[0]);
+    l.bindPopup(volcanoDetailHtml(v),{maxWidth:440});
+    l.on('popupopen',async()=>{
+     try{
+      const wiki=await resolveWikipediaUrl(v.name);
+      if(l.isPopupOpen())l.setPopupContent(volcanoDetailHtml(v,wiki));
+     }catch(e){}
+    });
    }
   });
   return worldVolcanoesLayer;
@@ -2980,16 +3190,16 @@ function adminHtml(a){
  if(document.getElementById('ccaaCheck').checked&&a.ccaa)rows.push('<b>Comunidad autónoma:</b> '+escHtml(a.ccaa));
  return rows.length?'<br>'+rows.join('<br>'):'';
 }
-function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…',geo=null,veg=null,topo=null,adm=null,pending=false,climate=null){
+function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…',geo=null,veg=null,topo=null,adm=null,pending=false,climate=null,biome=null){
  const c=coordsDMS(lat,lon),topoHtml=topo?'<br><b>Topónimo próximo:</b> '+escHtml(topo.name)+(Number.isFinite(topo.dist)?' <small>('+fmtDistance(topo.dist)+')</small>':''):'<br><b>Topónimo próximo:</b> '+(pending?'consultando…':'sin dato');
- return '<b>📍 '+title+'</b>'+topoHtml+adminHtml(adm)+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(pending&&document.getElementById('geologyCheck').checked?'<hr><b>🪨 Geología:</b> consultando…':geologyHtml(geo))+(pending&&(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked))?'<hr><b>🌿 Vegetación:</b> consultando…':vegetationHtml(veg))+(pending&&document.getElementById('worldClimateCheck')?.checked?'<hr><b>🌦️ Clima Köppen-Geiger:</b> consultando…':climateHtml(climate))+'<br><small>IGN/CNIG · CartoCiudad · MDT25/IDEE'+(document.getElementById('geologyCheck').checked?' · IGME-CSIC':'')+(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked)?' · MITECO/GRAFCAN':'')+(document.getElementById('worldClimateCheck')?.checked?' · Beck et al.':'')+'</small>';
+ return '<b>📍 '+title+'</b>'+topoHtml+adminHtml(adm)+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(pending&&document.getElementById('geologyCheck').checked?'<hr><b>🪨 Geología:</b> consultando…':geologyHtml(geo))+(pending&&(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked))?'<hr><b>🌿 Vegetación:</b> consultando…':vegetationHtml(veg))+(pending&&document.getElementById('worldClimateCheck')?.checked?'<hr><b>🌦️ Clima Köppen-Geiger:</b> consultando…':climateHtml(climate))+(pending&&document.getElementById('worldBiomesCheck')?.checked?'<hr><b>🌿 Bioma terrestre:</b> consultando…':biomeDetailHtml(biome))+'<br><small>IGN/CNIG · CartoCiudad · MDT25/IDEE'+(document.getElementById('geologyCheck').checked?' · IGME-CSIC':'')+(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked)?' · MITECO/GRAFCAN':'')+(document.getElementById('worldClimateCheck')?.checked?' · Beck et al.':'')+'</small>';
 }
 let coordMarker=null,coordQuerySeq=0;
 async function showPoint(ll,title='Punto consultado',useMarker=true){
  const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng,geoOn=document.getElementById('geologyCheck').checked,vegOn=['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked),c=coordsDMS(lat,lon);
- const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null};
- const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c));coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
- if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null),{maxWidth:430}).openPopup();}
+ const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null,b:null};
+ const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c,state.b));coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
+ if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null,null),{maxWidth:430}).openPopup();}
  status(c.lat+' · '+c.lon+' · consultando altitud…');
  // PRIORIDAD 1: elevación. Se lanza antes que cualquier consulta territorial/temática.
  const pz=elevationAt(lat,lon).then(x=>{state.z=x;state.zDone=true;render();return x;}).catch(()=>{state.zDone=true;render();return null;});
@@ -2998,6 +3208,9 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
   if(seq!==coordQuerySeq)return;
   if(document.getElementById('worldClimateCheck')?.checked){
    worldClimateAt(lat,lon).then(x=>{state.c=x;render();}).catch(()=>{state.c=null;render();});
+  }
+  if(document.getElementById('worldBiomesCheck')?.checked){
+   worldBiomeAt(lat,lon).then(x=>{state.b=x;render();}).catch(()=>{state.b=null;render();});
   }
   if(profileIsSpainLatLng(ll)){
    nearestToponymAt(lat,lon).then(x=>{state.t=x;render();});
@@ -5167,11 +5380,13 @@ async function showGlobePoint(ll,screenPos=null){
   '<b>Altitud aprox.:</b> calculando…';
 
  const inSpain=ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8;
- const [country,z,adm,reverse]=await Promise.all([
+ const [country,z,adm,reverse,climate,biome]=await Promise.all([
   countryAt(ll.lat,ll.lng),
   elevationAt(ll.lat,ll.lng),
   inSpain?adminAt(ll.lat,ll.lng):Promise.resolve(null),
-  reverseWorldAt(ll.lat,ll.lng)
+  reverseWorldAt(ll.lat,ll.lng),
+  document.getElementById('worldClimateCheck')?.checked?worldClimateAt(ll.lat,ll.lng).catch(()=>null):Promise.resolve(null),
+  document.getElementById('worldBiomesCheck')?.checked?worldBiomeAt(ll.lat,ll.lng).catch(()=>null):Promise.resolve(null)
  ]);
 
  const territory=globeTerritorialRows(reverse,adm,country);
@@ -5191,16 +5406,50 @@ async function showGlobePoint(ll,screenPos=null){
  if(reverse?.display&&reverse.display!==reverse.place){
   html+='<br><span style="display:block;margin-top:5px;color:#667;font-size:11px"><b>Referencia:</b> '+escHtml(reverse.display)+'</span>';
  }
+ if(document.getElementById('worldClimateCheck')?.checked)html+=climateDetailHtml(climate);
+ if(document.getElementById('worldBiomesCheck')?.checked)html+=biomeDetailHtml(biome);
 
  box.innerHTML=html;
  requestAnimationFrame(()=>{if(screenPos)placeGlobeInfoAtCanvasPoint(screenPos);else positionGlobeInfo();});
+}
+
+
+async function showGlobeVolcanoEntity(ent,screenPos=null){
+ const box=document.getElementById('globeInfo');
+ const pos=ent?.position?.getValue?.(Cesium.JulianDate.now());
+ let lat=null,lon=null;
+ if(pos){
+  const carto=Cesium.Cartographic.fromCartesian(pos);
+  lat=Cesium.Math.toDegrees(carto.latitude);lon=Cesium.Math.toDegrees(carto.longitude);
+  globeInfoCartesian=Cesium.Cartesian3.clone(pos);
+ }else globeInfoCartesian=null;
+ const p=volcanoPlainPropsFromCesium(ent);
+ const v=volcanoDetailsFromPlainProps(p,lat,lon);
+ box.classList.remove('empty');
+ box.innerHTML='<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add(\'empty\')">×</button>'+
+   volcanoDetailHtml(v);
+ requestAnimationFrame(()=>{if(screenPos)placeGlobeInfoAtCanvasPoint(screenPos);else positionGlobeInfo();});
+ try{
+  const wiki=await resolveWikipediaUrl(v.name);
+  box.innerHTML='<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add(\'empty\')">×</button>'+
+   volcanoDetailHtml(v,wiki);
+  requestAnimationFrame(()=>{if(screenPos)placeGlobeInfoAtCanvasPoint(screenPos);else positionGlobeInfo();});
+ }catch(e){}
 }
 
 function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;globeClickHandler=new Cesium.ScreenSpaceEventHandler(globeViewer.scene.canvas);
  globeClickHandler.setInputAction(ev=>{const picked=globeViewer.scene.pick(ev.position);if(Cesium.defined(picked)&&picked.id&&Number.isInteger(picked.id.__profileIndex)){globeDragIndex=picked.id.__profileIndex;globeViewer.scene.screenSpaceCameraController.enableRotate=false;return;}},Cesium.ScreenSpaceEventType.LEFT_DOWN);
  globeClickHandler.setInputAction(ev=>{if(globeDragIndex<0)return;const ll=globePickLatLng(ev.endPosition);if(!ll)return;globeProfilePts[globeDragIndex]=ll;const ent=globeProfileHandles.find(e=>e.__profileIndex===globeDragIndex);if(ent)ent.position=Cesium.Cartesian3.fromDegrees(ll.lng,ll.lat,0);updateGlobeProfileFast();},Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  globeClickHandler.setInputAction(async()=>{if(globeDragIndex<0)return;globeDragIndex=-1;globeViewer.scene.screenSpaceCameraController.enableRotate=true;await finishGlobeProfile();},Cesium.ScreenSpaceEventType.LEFT_UP);
- globeClickHandler.setInputAction(ev=>{if(globeDragIndex>=0)return;const ll=globePickLatLng(ev.position);if(!ll)return;if(globeProfileMode){globeProfilePts.push(ll);redrawGlobeProfile();document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+(globeProfilePts.length>1?fmtDistance(measurePerimeter(globeProfilePts,false)):'—');return;}if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();return;}showGlobePoint(ll,ev.position);},Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ globeClickHandler.setInputAction(ev=>{
+  if(globeDragIndex>=0)return;
+  const ll=globePickLatLng(ev.position);if(!ll)return;
+  if(globeProfileMode){globeProfilePts.push(ll);redrawGlobeProfile();document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+(globeProfilePts.length>1?fmtDistance(measurePerimeter(globeProfilePts,false)):'—');return;}
+  if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();return;}
+  const picked=globeViewer.scene.pick(ev.position),ent=Cesium.defined(picked)?picked.id:null;
+  if(ent?.__anambroVolcano){showGlobeVolcanoEntity(ent,ev.position);return;}
+  showGlobePoint(ll,ev.position);
+ },Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 async function ensureGlobe(){
  if(globeViewer||globeLoading)return;globeLoading=true;status('Cargando globo 3D…');
@@ -5323,8 +5572,9 @@ async function toggleWorldBiomesGlobe(on){
      ent.polygon.material=Cesium.Color.fromCssColorString(biomeColor(name)).withAlpha(alpha);
      ent.polygon.outline=false;
     }
+    ent.__anambroBiome=true;
     ent.name=name;
-    ent.description='<b>Bioma terrestre</b><br>'+escHtml(String(name));
+    ent.description=biomeDetailHtml(name);
    }
    globeBiomesSource=ds;
    await globeViewer.dataSources.add(ds);
@@ -5352,19 +5602,13 @@ async function toggleWorldVolcanoesGlobe(on){
      heightReference:Cesium.HeightReference.NONE,
      distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,18000000)
     });
-    const p=ent.properties;
-    const val=k=>p?.[k]?.getValue?.();
-    const name=val('Volcano_Name')||val('volcano_na')||ent.name||'Volcán';
-    const type=val('Primary_Volcano_Type')||val('primary_vo');
-    const country=val('Country')||val('country')||val('State');
-    const elev=val('Elevation')||val('elevation')||val('SummitElevM');
-    const erupt=val('Last_Eruption_Year')||val('last_erupt')||val('Last_Eruption');
-    let html='<b>🌋 '+escHtml(String(name))+'</b>';
-    if(type)html+='<br><b>Tipo:</b> '+escHtml(String(type));
-    if(country)html+='<br><b>País:</b> '+escHtml(String(country));
-    if(elev!==undefined&&elev!==null&&elev!=='')html+='<br><b>Altitud:</b> '+escHtml(String(elev))+' m';
-    if(erupt!==undefined&&erupt!==null&&erupt!=='')html+='<br><b>Última erupción:</b> '+escHtml(String(erupt));
-    ent.name=String(name);ent.description=html;
+    ent.__anambroVolcano=true;
+    const plain=volcanoPlainPropsFromCesium(ent);
+    const pos=ent.position?.getValue?.(Cesium.JulianDate.now());
+    let lat=null,lon=null;
+    if(pos){const ca=Cesium.Cartographic.fromCartesian(pos);lat=Cesium.Math.toDegrees(ca.latitude);lon=Cesium.Math.toDegrees(ca.longitude);}
+    const v=volcanoDetailsFromPlainProps(plain,lat,lon);
+    ent.name=String(v.name);ent.description=volcanoDetailHtml(v);
    }
    globeVolcanoesSource=ds;
    await globeViewer.dataSources.add(ds);
