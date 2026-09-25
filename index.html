@@ -1997,7 +1997,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Red geográfica mundial y consulta de puntos con topónimo próximo, país, divisiones territoriales, coordenadas y altitud aproximada.</li>
           <li>Búsqueda mundial de lugares también desde el mapa 2D, además del globo 3D.</li>
           <li>Medición de distancias y superficies y perfiles topográficos altimétricos de ámbito mundial.</li>
-          <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>, con fichas interactivas al pulsar: clima y bioma muestran rangos bioclimáticos comparables, y los volcanes consultan datos del Smithsonian GVP y, cuando existen, del USGS para ampliar morfología, contexto tectónico, estado operativo, última erupción, VEI, actividad eruptiva documentada, altitud, altura del edificio, coordenadas, fotografía disponible y enlaces de referencia.</li>
+          <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>. En clima y biomas, al pulsar cualquier punto se muestra una <b>ficha territorial completa</b> —topónimo, país, divisiones administrativas, coordenadas, altitud y datos temáticos— tanto en el mapamundi 2D como en el globo 3D. Los volcanes consultan además Smithsonian GVP y, cuando existen, datos USGS.</li>
           <li>Las capas mundiales se cargan únicamente cuando se activan para mantener el visor ligero y rápido.</li>
           <li><b>Composición e impresión cartográfica:</b> ANAMBRO incorpora un editor de maquetación tipo SIG para preparar mapas de Canarias, España o cualquier zona del mundo, con título, leyenda de capas activas, orientación y escala gráfica. Los elementos pueden desplazarse y redimensionarse antes de exportar el resultado directamente a PDF en A4 o A3, vertical u horizontal.</li>
           <li><b>Fuentes y trazabilidad:</b> el botón «ⓘ Fuentes y licencias» de la cabecera documenta procedencia, condiciones de reutilización y atribución. Los PDF incorporan automáticamente las fuentes asociadas a las capas activas.</li>
@@ -2521,7 +2521,7 @@ function biomeDetailHtml(value){
  if(!value)return '<hr><b>🌿 Bioma terrestre:</b> sin dato';
  const name=typeof value==='string'?value:(value.name||'');
  const m=biomeMeta(name);
- let h='<hr><b>🌿 Bioma terrestre:</b> '+escHtml(m?.es||name);
+ let h='<hr><b>🌿 Bioma terrestre (RESOLVE 2017):</b> '+escHtml(m?.es||name);
  if(value&&typeof value==='object'&&value.ecoregion)h+='<br><b>Ecorregión:</b> '+escHtml(value.ecoregion);
  if(value&&typeof value==='object'&&value.realm)h+='<br><b>Reino biogeográfico:</b> '+escHtml(value.realm);
  if(m){
@@ -2661,8 +2661,10 @@ async function ensureWorldBiomes(){
     return {color:'#5c5c5c',weight:.35,opacity:.45,fillColor:c,fillOpacity:.58};
    },
    onEachFeature:(f,l)=>{
-    const p=f.properties||{};
-    l.bindPopup(biomeDetailHtml({name:p.biome_name,ecoregion:p.eco_name,realm:p.realm,color:p.color_bio,license:p.license}),{maxWidth:440});
+    l.on('click',e=>{
+     L.DomEvent.stopPropagation(e);
+     showPoint(e.latlng,'Punto consultado',true);
+    });
    }
   });
   return worldBiomesLayer;
@@ -5966,6 +5968,11 @@ function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;glob
   if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();return;}
   const picked=globeViewer.scene.pick(ev.position),ent=Cesium.defined(picked)?picked.id:null;
   if(ent?.__anambroVolcano){showGlobeVolcanoEntity(ent,ev.position);return;}
+  if(ent?.__anambroBiome){
+   globeViewer.selectedEntity=undefined;
+   showGlobePoint(ll,ev.position);
+   return;
+  }
   showGlobePoint(ll,ev.position);
  },Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
@@ -6086,13 +6093,17 @@ async function toggleWorldBiomesGlobe(on){
    const alpha=+(document.getElementById('worldBiomesOpacity')?.value||.58);
    for(const ent of ds.entities.values){
     const name=ent.properties?.biome_name?.getValue?.()||'Bioma terrestre';
+    const ecoregion=ent.properties?.eco_name?.getValue?.()||'';
+    const realm=ent.properties?.realm?.getValue?.()||'';
+    const sourceColor=ent.properties?.color_bio?.getValue?.()||biomeColor(name);
     if(ent.polygon){
-     ent.polygon.material=Cesium.Color.fromCssColorString(biomeColor(name)).withAlpha(alpha);
+     ent.polygon.material=Cesium.Color.fromCssColorString(sourceColor).withAlpha(alpha);
      ent.polygon.outline=false;
     }
     ent.__anambroBiome=true;
     ent.name=name;
-    ent.description=biomeDetailHtml(name);
+    ent.__anambroBiomeData={name,ecoregion,realm,color:sourceColor};
+    ent.description='';
    }
    globeBiomesSource=ds;
    await globeViewer.dataSources.add(ds);
@@ -6212,7 +6223,8 @@ document.getElementById('worldBiomesOpacity').addEventListener('input',e=>{
  if(globeBiomesSource)for(const ent of globeBiomesSource.entities.values){
   if(ent.polygon){
    const name=ent.properties?.biome_name?.getValue?.()||'';
-   ent.polygon.material=Cesium.Color.fromCssColorString(biomeColor(name)).withAlpha(o);
+   const sourceColor=ent.properties?.color_bio?.getValue?.()||biomeColor(name);
+   ent.polygon.material=Cesium.Color.fromCssColorString(sourceColor).withAlpha(o);
   }
  }
  if(globeViewer)globeViewer.scene.requestRender();
