@@ -1924,6 +1924,16 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  .brandWelcomeBtn{padding:4px 7px!important;font-size:7.5px!important}
 }
 
+
+.layersRule{padding:0 2px 7px;color:#5b6570;font-size:11px;line-height:1.35}
+.layerThemeTitle{
+ margin:9px 0 4px;padding:4px 6px;border-radius:6px;background:#edf5f3;border-left:4px solid #16866f;
+ color:#17324d;font:850 11px/1.15 Montserrat,Arial,sans-serif;text-transform:uppercase;letter-spacing:.025em
+}
+.layerThemeTitle.secondary{background:#f3f5f7;border-left-color:#71808b;color:#42515b}
+.layerSubBlock{padding:2px 2px 6px 13px}
+.miniThemeLegend{margin-top:6px;padding:6px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:10.5px;line-height:1.25}
+@media(max-width:760px){.layerThemeTitle{font-size:9.5px;margin-top:7px}.layersRule{font-size:9.5px}}
 </style>
 </head><body>
 <div id="map"></div>
@@ -2001,6 +2011,8 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Las capas mundiales se cargan únicamente cuando se activan para mantener el visor ligero y rápido.</li>
           <li><b>Composición e impresión cartográfica:</b> ANAMBRO incorpora un editor de maquetación tipo SIG para preparar mapas de Canarias, España o cualquier zona del mundo, con título, leyenda de capas activas, orientación y escala gráfica. Los elementos pueden desplazarse y redimensionarse antes de exportar el resultado directamente a PDF en A4 o A3, vertical u horizontal.</li>
           <li><b>Fuentes y trazabilidad:</b> el botón «ⓘ Fuentes y licencias» de la cabecera documenta procedencia, condiciones de reutilización y atribución. Los PDF incorporan automáticamente las fuentes asociadas a las capas activas.</li>
+          <li><b>Organización de capas:</b> todas las capas se agrupan primero por territorio —Canarias, España y Mundo— y dentro de cada ámbito siguen un mismo orden: Geología, Clima y Vegetación / biomas. Municipios de Canarias, municipios de España y regiones infraestatales del mundo permanecen en sus carpetas territoriales respectivas.</li>
+          <li><b>Idioma:</b> la interfaz y la información temática de ANAMBRO se muestran en español. Se mantienen sin traducir únicamente los topónimos y los nombres propios de las fuentes cuando corresponde.</li>
         </ul>
       </section>
       <section class="welcomeCard">
@@ -2041,25 +2053,53 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 
 </div>
 
+
 <div id="layersPanel" class="panel hidden"><h3>Capas</h3>
-<div style="padding:0 2px 7px;color:#5b6570;font-size:11px;line-height:1.35">
-  Organización por ámbito territorial: <b>Canarias</b> como núcleo de ANAMBRO, después el <b>resto de España</b> y, finalmente, el <b>mundo</b>. Las capas comunes aparecen al final.
+<div class="layersRule">
+  <b>Criterio único:</b> primero el ámbito territorial —<b>Canarias, España, Mundo</b>— y dentro de cada ámbito
+  el mismo orden temático: <b>Geología → Clima → Vegetación / biomas</b>. Después aparecen las capas de
+  territorio, patrimonio y referencia.
 </div>
 
-<details open><summary>🏝️ Canarias · territorio, paisaje y patrimonio natural</summary>
+<details open><summary>🏝️ Canarias</summary>
+
+<div class="layerThemeTitle">🪨 Geología</div>
+<label><input id="canaryGeologyCheck" type="checkbox"> <b>Mapa geológico continuo · Canarias (GEODE)</b></label>
+<div class="layerSubBlock">
+  <small>IGME-CSIC · limitado al Archipiélago Canario.</small>
+  <small><b>Opacidad</b> <span id="canaryGeologyOpacityValue">70 %</span></small>
+  <input id="canaryGeologyOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
+  <div id="canaryGeologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
+    <small><b>Leyenda geológica · IGME</b></small>
+    <div style="max-height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
+      <img alt="Leyenda GEODE Canarias" style="display:block;max-width:none" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=8">
+    </div>
+  </div>
+</div>
+
+<div class="layerThemeTitle">🌦️ Clima</div>
+<label><input id="canaryClimateCheck" type="checkbox"> <b>Climas Köppen-Geiger · Canarias</b></label>
+<div class="layerSubBlock">
+  <small>Beck et al. · representación limitada a Canarias.</small>
+  <small><b>Opacidad</b> <span id="canaryClimateOpacityValue">72 %</span></small>
+  <input id="canaryClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
+  <div id="canaryClimateLegend" class="miniThemeLegend" style="display:none"></div>
+</div>
+
+<div class="layerThemeTitle">🌿 Vegetación</div>
 <label><input id="vegetationCheck" type="checkbox"> <b>Vegetación actual · Canarias (GRAFCAN)</b></label>
 <label><input id="vegetationPotentialCanaryCheck" type="checkbox"> <b>Vegetación potencial · Canarias (GRAFCAN)</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small>Vegetación actual VREAL y potencial VPOT · Gobierno de Canarias / GRAFCAN</small>
-<input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-<div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px">
-<small>En Canarias puedes combinar vegetación actual (VREAL) y potencial (VPOT); fuera de Canarias se representa la vegetación potencial de MITECO.</small>
+<div class="layerSubBlock">
+  <small>Gobierno de Canarias / GRAFCAN.</small>
+  <input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
+  <div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"></div>
 </div>
-</div>
-<label><input id="munCheck" type="checkbox" checked> <b>Límites municipales · Canarias (detalle)</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small><b>Opacidad</b> <span id="munOpacityValue">100 %</span></small>
-<input id="munOpacity" type="range" min="0" max="1" value="1" step="0.05" style="width:100%">
+
+<div class="layerThemeTitle secondary">🧭 Territorio y patrimonio</div>
+<label><input id="munCheck" type="checkbox" checked> <b>Municipios · Canarias</b></label>
+<div class="layerSubBlock">
+  <small><b>Opacidad</b> <span id="munOpacityValue">100 %</span></small>
+  <input id="munOpacity" type="range" min="0" max="1" value="1" step="0.05" style="width:100%">
 </div>
 <label><input id="enpMaster" type="checkbox"> <b>Espacios Naturales Protegidos · Canarias</b></label>
 <div style="padding:2px 2px 7px 13px">
@@ -2075,85 +2115,101 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <label class="sub"><input type="checkbox" data-enp="Reserva Natural Integral"> <span class="sw" style="background:#075a46"></span>Reserva Natural Integral</label>
 <label class="sub"><input type="checkbox" data-enp="Sitio de Interés Científico"> <span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico</label>
 <details><summary>Leyenda ENP</summary><div><span class="sw" style="background:#0d4d7c"></span>Monumento Natural (52)</div><div><span class="sw" style="background:#7d99bb"></span>Paisaje Protegido (27)</div><div><span class="sw" style="background:#f58220"></span>Parque Nacional (4)</div><div><span class="sw" style="background:#f9ad4b"></span>Parque Natural (11)</div><div><span class="sw" style="background:#d9343f"></span>Parque Rural (7)</div><div><span class="sw" style="background:#699884"></span>Reserva Natural Especial (15)</div><div><span class="sw" style="background:#075a46"></span>Reserva Natural Integral (11)</div><div><span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico (20)</div></details>
+
+<div class="layerThemeTitle secondary">🗺️ Cartografía base</div>
+<label><input type="radio" data-base-choice="raster" name="baseCanary"> Mapa topográfico · MTN</label>
+<label><input type="radio" data-base-choice="pnoa" name="baseCanary"> Imagen · PNOA máxima actualidad</label>
+<label><input type="radio" data-base-choice="street" name="baseCanary"> Callejero · IGN Base</label>
+<label><input type="radio" data-base-choice="hybrid" name="baseCanary" checked> Híbrido · PNOA + cartografía</label>
+<label><input type="radio" data-base-choice="lidar" name="baseCanary"> LiDAR · relieve</label>
+<label><input type="radio" data-base-choice="land" name="baseCanary"> Ocupación del suelo</label>
+<label><input type="radio" data-base-choice="historic" name="baseCanary"> Mapa histórico · 1.ª edición MTN50</label>
 </details>
 
-<details><summary>🇪🇸 Resto de España · territorio y paisaje</summary>
-<label><input id="mfeCheck" type="checkbox"> <b>Vegetación actual · territorio peninsular y Baleares (MFE25)</b></label>
-<label><input id="mitecoPotentialCheck" type="checkbox"> <b>Vegetación potencial · territorio peninsular y Baleares (MITECO)</b></label>
+<details><summary>🇪🇸 España · territorio peninsular y Baleares</summary>
+
+<div class="layerThemeTitle">🪨 Geología</div>
+<label><input id="spainGeologyCheck" type="checkbox"> <b>Mapa geológico continuo · España peninsular y Baleares (GEODE)</b></label>
+<div class="layerSubBlock">
+  <small>IGME-CSIC · excluye Canarias.</small>
+  <small><b>Opacidad</b> <span id="spainGeologyOpacityValue">70 %</span></small>
+  <input id="spainGeologyOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
+  <div id="spainGeologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
+    <small><b>Leyenda geológica · IGME</b></small>
+    <div style="max-height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
+      <img alt="Leyenda GEODE España" style="display:block;max-width:none" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=8">
+    </div>
+  </div>
+</div>
+
+<div class="layerThemeTitle">🌦️ Clima</div>
+<label><input id="spainClimateCheck" type="checkbox"> <b>Climas Köppen-Geiger · España peninsular y Baleares</b></label>
+<div class="layerSubBlock">
+  <small>Beck et al. · representación limitada al territorio peninsular y balear.</small>
+  <small><b>Opacidad</b> <span id="spainClimateOpacityValue">72 %</span></small>
+  <input id="spainClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
+  <div id="spainClimateLegend" class="miniThemeLegend" style="display:none"></div>
+</div>
+
+<div class="layerThemeTitle">🌿 Vegetación</div>
+<label><input id="mfeCheck" type="checkbox"> <b>Vegetación actual · España peninsular y Baleares (MFE25)</b></label>
+<label><input id="mitecoPotentialCheck" type="checkbox"> <b>Vegetación potencial · España peninsular y Baleares (MITECO)</b></label>
+
+<div class="layerThemeTitle secondary">🧭 Territorio y comunicaciones</div>
 <label><input id="transportCheck" type="checkbox"> <b>Vías de comunicación · IGN</b></label>
-<div style="padding:2px 2px 5px 13px"><small>IGR Redes de Transporte · carreteras y ferrocarril</small><input id="transportOpacity" type="range" min="0" max="1" value="0.85" step="0.05" style="width:100%"></div>
+<div class="layerSubBlock"><small>IGR Redes de Transporte.</small><input id="transportOpacity" type="range" min="0" max="1" value="0.85" step="0.05" style="width:100%"></div>
 <label><input id="ccaaCheck" type="checkbox"> <b>Comunidades autónomas</b></label>
 <label><input id="provCheck" type="checkbox"> <b>Provincias</b></label>
-<label><input id="munSpainCheck" type="checkbox"> <b>Municipios</b></label>
-<div style="padding:2px 2px 5px 13px"><small>IGN/CNIG · visualización inteligente según escala</small><input id="adminOpacity" type="range" min="0" max="1" value="0.95" step="0.05" style="width:100%"></div>
+<label><input id="munSpainCheck" type="checkbox"> <b>Municipios · España peninsular y Baleares</b></label>
+<div class="layerSubBlock"><small>IGN/CNIG · visualización inteligente según escala.</small><input id="adminOpacity" type="range" min="0" max="1" value="0.95" step="0.05" style="width:100%"></div>
+<label><input id="toponymyCheck" type="checkbox"> <b>Toponimia enriquecida · IGN</b></label>
+<div class="layerSubBlock"><small>Nomenclátor Geográfico Básico de España.</small><input id="toponymyOpacity" type="range" min="0" max="1" value="0.90" step="0.05" style="width:100%"></div>
+
+<div class="layerThemeTitle secondary">🗺️ Cartografía base</div>
+<label><input type="radio" data-base-choice="raster" name="baseSpain"> Mapa topográfico · MTN</label>
+<label><input type="radio" data-base-choice="pnoa" name="baseSpain"> Imagen · PNOA máxima actualidad</label>
+<label><input type="radio" data-base-choice="street" name="baseSpain"> Callejero · IGN Base</label>
+<label><input type="radio" data-base-choice="hybrid" name="baseSpain" checked> Híbrido · PNOA + cartografía</label>
+<label><input type="radio" data-base-choice="lidar" name="baseSpain"> LiDAR · relieve</label>
+<label><input type="radio" data-base-choice="land" name="baseSpain"> Ocupación del suelo</label>
+<label><input type="radio" data-base-choice="historic" name="baseSpain"> Mapa histórico · 1.ª edición MTN50</label>
 </details>
 
-<details><summary>🌐 Mundo · clima, vegetación y volcanes</summary>
-<label><input id="worldClimateCheck" type="checkbox"> <b>Climas del mundo · Köppen-Geiger</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small>Mapa climático mundial. Capa desactivada de inicio.</small>
-<small><b>Opacidad</b> <span id="worldClimateOpacityValue">72 %</span></small>
-<input id="worldClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-<div id="worldClimateLegend" style="display:none;margin-top:6px;padding:6px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:10.5px;line-height:1.25"></div>
-</div>
-<label><input id="worldBiomesCheck" type="checkbox"> <b>Vegetación mundial · grandes biomas (RESOLVE 2017)</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small>Grandes formaciones vegetales terrestres a escala mundial. Capa desactivada de inicio.</small>
-<small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small>
-<input id="worldBiomesOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%">
-<div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div>
-</div>
+<details><summary>🌍 Mundo</summary>
+
+<div class="layerThemeTitle">🪨 Geología y vulcanismo</div>
 <label><input id="worldVolcanoesCheck" type="checkbox"> <b>Volcanes del mundo · Smithsonian GVP</b></label>
-<div style="padding:2px 2px 5px 13px"><small>Volcanes holocenos del Global Volcanism Program. Capa desactivada de inicio; pulsa un símbolo para consultar sus datos.</small></div>
-</details>
+<div class="layerSubBlock"><small>Volcanes holocenos del Global Volcanism Program.</small></div>
 
-<details><summary>🌍 Mundo · capas 2D / 3D</summary>
+<div class="layerThemeTitle">🌦️ Clima</div>
+<label><input id="worldClimateCheck" type="checkbox"> <b>Climas del mundo · Köppen-Geiger</b></label>
+<div class="layerSubBlock">
+  <small>Beck et al.</small>
+  <small><b>Opacidad</b> <span id="worldClimateOpacityValue">72 %</span></small>
+  <input id="worldClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
+  <div id="worldClimateLegend" class="miniThemeLegend" style="display:none"></div>
+</div>
+
+<div class="layerThemeTitle">🌿 Vegetación / biomas</div>
+<label><input id="worldBiomesCheck" type="checkbox"> <b>Grandes biomas terrestres · RESOLVE 2017</b></label>
+<div class="layerSubBlock">
+  <small>Ecorregiones y biomas mundiales · Dinerstein et al. (2017).</small>
+  <small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small>
+  <input id="worldBiomesOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%">
+  <div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div>
+</div>
+
+<div class="layerThemeTitle secondary">🧭 Territorio mundial</div>
 <label><input id="countriesCheck" type="checkbox"> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox"> Nombres de países</label>
+<label><input id="worldAdmin1Check" type="checkbox"> <b>Regiones infraestatales · estados, provincias y equivalentes</b></label>
+<div class="layerSubBlock"><small>Natural Earth Admin-1 · límites vectoriales de primer orden administrativo.</small></div>
 <label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · vectoriales / IGN en España</label>
-<div style="padding:2px 2px 5px 13px"><small>Fronteras internacionales · Natural Earth 1:10 M. Los topónimos mundiales aumentan su detalle con la escala. La identificación territorial y los perfiles funcionan aunque las capas de rótulos estén apagadas.</small></div>
 </details>
 
-<details><summary>🗺️ Cartografía base · Canarias y resto de España</summary>
-<label><input type="radio" name="base" value="raster"> Mapa topográfico · MTN</label>
-<label><input type="radio" name="base" value="pnoa"> Imagen · PNOA máxima actualidad</label>
-<label><input type="radio" name="base" value="street"> Callejero · IGN Base</label>
-<label><input type="radio" name="base" value="hybrid" checked> Híbrido · PNOA + cartografía</label>
-<label><input type="radio" name="base" value="lidar"> LiDAR · relieve</label>
-<label><input type="radio" name="base" value="land"> Ocupación del suelo</label>
-<label><input type="radio" name="base" value="historic"> Mapa histórico · 1.ª edición MTN50</label>
-</details>
-
-<details><summary>🪨 Geología · Canarias y resto de España</summary>
-<label><input id="geologyCheck" type="checkbox"> <b>Mapa geológico continuo · GEODE</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small>IGME-CSIC · 1:50.000 en territorio peninsular y 1:25.000 en territorios insulares</small>
-<small><b>Opacidad</b> <span id="geologyOpacityValue">70 %</span></small>
-<input id="geologyOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
-<div id="geologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
-<small><b>Leyenda geológica · IGME</b></small>
-<div style="max-height:230px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
-<img id="geologyLegendImg" alt="Leyenda del mapa geológico GEODE" style="display:block;max-width:none" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=8">
-</div>
-<small>Con la capa activa, pulsa cualquier punto del mapa para consultar la unidad geológica.</small>
-</div>
-</div>
-</details>
-
-<details><summary>🏷️ Toponimia · España</summary>
-<label><input id="toponymyCheck" type="checkbox"> <b>Toponimia enriquecida · IGN</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small>Nomenclátor Geográfico Básico de España · densidad adaptada por el servicio a la escala</small>
-<input id="toponymyOpacity" type="range" min="0" max="1" value="0.90" step="0.05" style="width:100%">
-</div>
-</details>
-
-<details><summary>🧭 Red geográfica</summary>
+<details><summary>🧭 Herramientas cartográficas comunes</summary>
 <label><input id="gridCheck" type="checkbox" checked> <b>Paralelos y meridianos</b></label>
-<div style="padding:2px 2px 5px 13px">
-<small><b>Opacidad</b> <span id="gridOpacityValue">70 %</span> · todas las líneas graduadas</small>
-<input id="gridOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
-</div>
+<div class="layerSubBlock"><small><b>Opacidad</b> <span id="gridOpacityValue">70 %</span></small><input id="gridOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%"></div>
 </details>
 
 <details><summary>📍 Lugares buscados</summary>
@@ -2164,7 +2220,6 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 
 <button class="action" onclick="closePanels()">Cerrar</button>
 </div>
-
 
 <div id="dynamicLegend" class="panel hidden" role="region" aria-label="Leyenda activa">
 <h3>Leyenda activa</h3>
@@ -2396,12 +2451,12 @@ const ANAMBRO_SOURCES={
 function activeSourceKeys(){
  const s=new Set(['ign']);
  if(document.getElementById('vegetationCheck')?.checked||document.getElementById('vegetationPotentialCanaryCheck')?.checked)s.add('grafcan');
- if(document.getElementById('geologyCheck')?.checked)s.add('igme');
+ if(document.getElementById('canaryGeologyCheck')?.checked||document.getElementById('spainGeologyCheck')?.checked)s.add('igme');
  if(document.getElementById('mfeCheck')?.checked||document.getElementById('mitecoPotentialCheck')?.checked)s.add('miteco');
- if(document.getElementById('worldClimateCheck')?.checked)s.add('beck');
+ if(document.getElementById('worldClimateCheck')?.checked||document.getElementById('canaryClimateCheck')?.checked||document.getElementById('spainClimateCheck')?.checked)s.add('beck');
  if(document.getElementById('worldBiomesCheck')?.checked)s.add('resolve');
  if(document.getElementById('worldVolcanoesCheck')?.checked)s.add('gvp');
- if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
+ if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked||document.getElementById('worldAdmin1Check')?.checked)s.add('naturalearth');
  if(document.getElementById('worldToponymsCheck')?.checked){s.add('openfreemap');s.add('osm');}
  if(document.body.classList.contains('globe-mode'))s.add('esri');
  return [...s];
@@ -2431,6 +2486,19 @@ const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=
 const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
+const canaryClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{
+ minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[27.0,-18.9],[29.8,-12.7]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
+});
+const spainClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{
+ minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[35.0,-10.8],[44.7,5.2]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
+});
+function climateEnabledAt(lat,lon){
+ const ll={lat,lng:lon};
+ if(document.getElementById('worldClimateCheck')?.checked)return true;
+ if(document.getElementById('canaryClimateCheck')?.checked&&isCanaryLatLng(ll))return true;
+ if(document.getElementById('spainClimateCheck')?.checked&&isPeninsularBalearicLatLng(ll))return true;
+ return false;
+}
 
 const WORLD_CLIMATE_INFO=[
  ['Ecuatorial o tropical húmedo','#006d2c'],
@@ -2481,7 +2549,10 @@ const WORLD_CLIMATE_META={
 };
 function climateMeta(c){return WORLD_CLIMATE_META[String(c||'').trim()]||null;}
 function climateDetailHtml(c){
- if(!document.getElementById('worldClimateCheck')?.checked)return '';
+ const anyClimate=document.getElementById('worldClimateCheck')?.checked||
+                  document.getElementById('canaryClimateCheck')?.checked||
+                  document.getElementById('spainClimateCheck')?.checked;
+ if(!anyClimate)return '';
  if(!c)return '<hr><b>🌦️ Clima Köppen-Geiger:</b> sin dato';
  const m=climateMeta(c);
  let h='<hr><b>🌦️ Clima Köppen-Geiger:</b> '+escHtml(c);
@@ -2491,7 +2562,7 @@ function climateDetailHtml(c){
   h+='<br><b>Precipitación anual orientativa:</b> '+escHtml(m.precip);
   h+='<br><b>Régimen:</b> '+escHtml(m.season);
   h+='<br><small><b>Criterio climático:</b> '+escHtml(m.criterion)+'</small>';
-  h+='<br><small>Los rangos son orientativos: Köppen-Geiger clasifica mediante umbrales mensuales y estacionales, no por un único valor medio.</small>';
+  h+='<br><small>Los rangos son orientativos: Köppen-Geiger clasifica mediante umbrales mensuales y estacionales, no mediante un único valor medio.</small>';
  }
  return h;
 }
@@ -2516,14 +2587,92 @@ const WORLD_BIOME_META={
  'Tundra':{es:'Tundra',temp:'media anual frecuentemente < 0–5 °C; verano < 10 °C',precip:'150–500 mm/año',structure:'Musgos, líquenes, gramíneas y arbustos bajos; ausencia de arbolado continuo',climate:'Permafrost, verano corto y frío intenso'}
 };
 function biomeMeta(name){return WORLD_BIOME_META[String(name||'').trim()]||null;}
+const WORLD_REALM_ES={
+ 'Afrotropic':'Afrotropical','Afrotropical':'Afrotropical','Australasia':'Australasia',
+ 'Indomalayan':'Indomalayo','Indo-Malay':'Indomalayo','Nearctic':'Neártico',
+ 'Neotropic':'Neotropical','Neotropical':'Neotropical','Oceania':'Oceanía','Palearctic':'Paleártico'
+};
+const BIOME_NAME_ES={
+ 'Boreal Forests/Taiga':'Bosques boreales / taiga',
+ 'Deserts & Xeric Shrublands':'Desiertos y matorrales xéricos',
+ 'Flooded Grasslands & Savannas':'Pastizales y sabanas inundables',
+ 'Lake':'Lagos','Mangroves':'Manglares',
+ 'Mediterranean Forests, Woodlands & Scrub':'Bosques y matorrales mediterráneos',
+ 'Montane Grasslands & Shrublands':'Pastizales y matorrales de montaña',
+ 'Rock and Ice':'Roca y hielo',
+ 'Temperate Broadleaf & Mixed Forests':'Bosques templados caducifolios y mixtos',
+ 'Temperate Conifer Forests':'Bosques templados de coníferas',
+ 'Temperate Grasslands, Savannas & Shrublands':'Pastizales, sabanas y matorrales templados',
+ 'Tropical & Subtropical Coniferous Forests':'Bosques tropicales y subtropicales de coníferas',
+ 'Tropical & Subtropical Dry Broadleaf Forests':'Bosques tropicales y subtropicales secos',
+ 'Tropical & Subtropical Grasslands, Savannas & Shrublands':'Pastizales, sabanas y matorrales tropicales y subtropicales',
+ 'Tropical & Subtropical Moist Broadleaf Forests':'Bosques tropicales y subtropicales húmedos',
+ 'Tundra':'Tundra'
+};
+const ECO_PHRASES_ES=[
+ ['tropical and subtropical moist broadleaf forests','bosques tropicales y subtropicales húmedos'],
+ ['tropical and subtropical dry broadleaf forests','bosques tropicales y subtropicales secos'],
+ ['tropical and subtropical coniferous forests','bosques tropicales y subtropicales de coníferas'],
+ ['temperate broadleaf and mixed forests','bosques templados caducifolios y mixtos'],
+ ['temperate conifer forests','bosques templados de coníferas'],
+ ['temperate grasslands, savannas and shrublands','pastizales, sabanas y matorrales templados'],
+ ['tropical and subtropical grasslands, savannas and shrublands','pastizales, sabanas y matorrales tropicales y subtropicales'],
+ ['mediterranean forests, woodlands and scrub','bosques y matorrales mediterráneos'],
+ ['montane grasslands and shrublands','pastizales y matorrales de montaña'],
+ ['flooded grasslands and savannas','pastizales y sabanas inundables'],
+ ['deserts and xeric shrublands','desiertos y matorrales xéricos'],
+ ['moist broadleaf forests','bosques húmedos de frondosas'],['dry broadleaf forests','bosques secos de frondosas'],
+ ['broadleaf forests','bosques de frondosas'],['conifer forests','bosques de coníferas'],
+ ['mixed forests','bosques mixtos'],['evergreen forests','bosques perennifolios'],['deciduous forests','bosques caducifolios'],
+ ['pine forests','pinares'],['swamp forests','bosques pantanosos'],['grasslands','pastizales'],['savannas','sabanas'],
+ ['shrublands','matorrales'],['woodlands','bosques abiertos'],['forests','bosques'],['forest','bosque'],
+ ['desert','desierto'],['steppe','estepa'],['mangroves','manglares'],['montane','de montaña'],
+ ['subalpine','subalpino'],['alpine','alpino'],['lowland','de tierras bajas'],['highland','de tierras altas'],
+ ['coastal','costero'],['northern','septentrional'],['southern','meridional'],['eastern','oriental'],['western','occidental'],
+ ['river','río'],['valley','valle'],['basin','cuenca'],['plateau','meseta'],['mountains','montañas'],['mountain','montaña'],
+ ['islands','islas'],['island','isla']
+];
+function translateRealmEs(value){const s=String(value||'').trim();return WORLD_REALM_ES[s]||s;}
+function translateBiomeNameEs(value){const s=String(value||'').trim();return BIOME_NAME_ES[s]||s;}
+function translateEcoregionEs(value){
+ let s=String(value||'').trim();if(!s)return s;
+ for(const [en,es] of ECO_PHRASES_ES){
+  const rx=new RegExp(en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'ig');s=s.replace(rx,es);
+ }
+ s=s.replace(/\band\b/gi,'y').replace(/\bof\b/gi,'de').replace(/\bthe\b/gi,'').replace(/\s+/g,' ').trim();
+ return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function translateScientificTextEs(value){
+ let s=String(value??'').trim();if(!s)return s;
+ const exact={
+  'Stratovolcano':'Estratovolcán','Shield volcano':'Volcán en escudo','Shield':'Volcán en escudo',
+  'Caldera':'Caldera','Complex volcano':'Complejo volcánico','Complex':'Complejo volcánico',
+  'Pyroclastic cone':'Cono piroclástico','Lava dome':'Domo de lava','Volcanic field':'Campo volcánico',
+  'Fissure vent':'Fisura eruptiva','Submarine':'Volcán submarino',
+  'Subduction zone':'Zona de subducción','Rift zone':'Zona de rift','Intraplate':'Intraplaca',
+  'Explosive':'Explosivo','Effusive':'Efusivo','Confirmed Eruption':'Erupción confirmada',
+  'Uncertain Eruption':'Erupción incierta','Historical':'Histórica','Radiocarbon':'Radiocarbono'
+ };
+ if(exact[s])return exact[s];
+ const pairs=[
+  ['subduction','subducción'],['continental crust','corteza continental'],['oceanic crust','corteza oceánica'],
+  ['explosive','explosivo'],['effusive','efusivo'],['eruption','erupción'],['lava flows','coladas de lava'],
+  ['lava flow','colada de lava'],['pyroclastic flows','flujos piroclásticos'],['pyroclastic flow','flujo piroclástico'],
+  ['ash','ceniza'],['crater','cráter'],['summit','cumbre'],['flank','flanco'],['fissure','fisura'],
+  ['unknown','desconocido'],['confirmed','confirmado'],['uncertain','incierto']
+ ];
+ for(const [en,es] of pairs)s=s.replace(new RegExp(en,'ig'),es);
+ return s;
+}
+
 function biomeDetailHtml(value){
  if(!document.getElementById('worldBiomesCheck')?.checked)return '';
  if(!value)return '<hr><b>🌿 Bioma terrestre:</b> sin dato';
  const name=typeof value==='string'?value:(value.name||'');
  const m=biomeMeta(name);
- let h='<hr><b>🌿 Bioma terrestre (RESOLVE 2017):</b> '+escHtml(m?.es||name);
- if(value&&typeof value==='object'&&value.ecoregion)h+='<br><b>Ecorregión:</b> '+escHtml(value.ecoregion);
- if(value&&typeof value==='object'&&value.realm)h+='<br><b>Reino biogeográfico:</b> '+escHtml(value.realm);
+ let h='<hr><b>🌿 Bioma terrestre (RESOLVE 2017):</b> '+escHtml(m?.es||translateBiomeNameEs(name));
+ if(value&&typeof value==='object'&&value.ecoregion)h+='<br><b>Ecorregión:</b> '+escHtml(translateEcoregionEs(value.ecoregion));
+ if(value&&typeof value==='object'&&value.realm)h+='<br><b>Reino biogeográfico:</b> '+escHtml(translateRealmEs(value.realm));
  if(m){
   h+='<br><b>Temperaturas características:</b> '+escHtml(m.temp);
   h+='<br><b>Precipitación característica:</b> '+escHtml(m.precip);
@@ -2735,7 +2884,7 @@ const VOLCANO_TRANSLATIONS={
 function trVolcano(v){
  const s=String(v??'').trim();if(!s)return s;
  if(VOLCANO_TRANSLATIONS[s])return VOLCANO_TRANSLATIONS[s];
- return s.split(/\s*\/\s*/).map(x=>VOLCANO_TRANSLATIONS[x]||x).join(' / ');
+ return s.split(/\s*\/\s*/).map(x=>VOLCANO_TRANSLATIONS[x]||translateScientificTextEs(x)).join(' / ');
 }
 function deepFindValues(obj,keyRx,out=[]){
  if(obj==null)return out;
@@ -3085,10 +3234,26 @@ const toponymy=L.tileLayer.wms('https://www.ign.es/wms-inspire/ngbe',{
 
 // Cartografía geológica continua oficial GEODE (IGME-CSIC). Superposición activable.
 // Capas WMS: recintos, contactos, cuaternario, estructuras, indicios y rótulos.
-const geology=L.tileLayer.wms('https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer',{
+const GEOLOGY_WMS='https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer';
+const geologyCanary=L.tileLayer.wms(GEOLOGY_WMS,{
  layers:'1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,version:'1.3.0',
- opacity:0.70,attribution:'GEODE · © IGME-CSIC'
+ opacity:0.70,bounds:L.latLngBounds([[27.0,-18.9],[29.8,-12.7]]),attribution:'GEODE · © IGME-CSIC'
 });
+const geologySpain=L.tileLayer.wms(GEOLOGY_WMS,{
+ layers:'1,2,3,4,5,6,7,8,9',format:'image/png',transparent:true,version:'1.3.0',
+ opacity:0.70,bounds:L.latLngBounds([[35.0,-10.8],[44.7,5.2]]),attribution:'GEODE · © IGME-CSIC'
+});
+function isCanaryLatLng(ll){return !!ll&&ll.lat>=27.0&&ll.lat<=29.8&&ll.lng>=-18.9&&ll.lng<=-12.7;}
+function isPeninsularBalearicLatLng(ll){return !!ll&&ll.lat>=35.0&&ll.lat<=44.7&&ll.lng>=-10.8&&ll.lng<=5.2;}
+function geologyEnabledAt(lat,lon){
+ const ll={lat,lng:lon};
+ return (!!document.getElementById('canaryGeologyCheck')?.checked&&isCanaryLatLng(ll))||
+        (!!document.getElementById('spainGeologyCheck')?.checked&&isPeninsularBalearicLatLng(ll));
+}
+function bringGeologyToFront(){
+ if(map.hasLayer(geologyCanary))geologyCanary.bringToFront();
+ if(map.hasLayer(geologySpain))geologySpain.bringToFront();
+}
 
 
 // v4.0 · capas nacionales oficiales, apagadas por defecto y bajo demanda
@@ -3161,17 +3326,28 @@ document.getElementById('adminOpacity').oninput=e=>[adminCCAA,adminProv,adminMun
 const bases={raster,pnoa,street,hybrid,lidar,land,historic};
 let activeBase=hybrid;
 hybrid.addTo(map);
-document.querySelectorAll('input[name=base]').forEach(r=>r.addEventListener('change',()=>{map.removeLayer(activeBase);activeBase=bases[r.value];activeBase.addTo(map);if(document.getElementById('geologyCheck').checked)geology.bringToFront();if(document.getElementById('toponymyCheck').checked)toponymy.bringToFront();status('Fondo: '+r.parentElement.textContent.trim());}));
+document.querySelectorAll('input[data-base-choice]').forEach(r=>r.addEventListener('change',()=>{
+ const value=r.dataset.baseChoice;
+ map.removeLayer(activeBase);activeBase=bases[value];activeBase.addTo(map);
+ document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice===value));
+ bringGeologyToFront();
+ if(document.getElementById('toponymyCheck')?.checked)toponymy.bringToFront();
+ status('Fondo: '+r.parentElement.textContent.trim());
+}));
 document.getElementById('toponymyCheck').onchange=e=>{if(e.target.checked){toponymy.addTo(map);toponymy.bringToFront();status('Toponimia IGN activada');}else{map.removeLayer(toponymy);status('Toponimia IGN desactivada');}};
 document.getElementById('toponymyOpacity').oninput=e=>toponymy.setOpacity(+e.target.value);
-document.getElementById('geologyCheck').onchange=e=>{
- document.getElementById('geologyLegendWrap').style.display=e.target.checked?'block':'none';
- if(e.target.checked){geology.addTo(map);geology.bringToFront();if(document.getElementById('toponymyCheck').checked)toponymy.bringToFront();status('Mapa geológico GEODE activado · pulsa el mapa para consultar materiales');}
- else{map.removeLayer(geology);status('Mapa geológico GEODE desactivado');}
-};
-document.getElementById('geologyOpacity').oninput=e=>{
- const v=+e.target.value;geology.setOpacity(v);document.getElementById('geologyOpacityValue').textContent=Math.round(v*100)+' %';
-};
+function bindScopedGeology(checkId,layer,legendId,opacityId,valueId,label){
+ const check=document.getElementById(checkId),legend=document.getElementById(legendId),slider=document.getElementById(opacityId);
+ check.onchange=e=>{
+  legend.style.display=e.target.checked?'block':'none';
+  if(e.target.checked){layer.addTo(map);layer.bringToFront();if(document.getElementById('toponymyCheck')?.checked)toponymy.bringToFront();status('Geología GEODE · '+label+' activada');}
+  else{if(map.hasLayer(layer))map.removeLayer(layer);status('Geología GEODE · '+label+' desactivada');}
+  setTimeout(updateLegend,0);
+ };
+ slider.oninput=e=>{const v=+e.target.value;layer.setOpacity(v);document.getElementById(valueId).textContent=Math.round(v*100)+' %';};
+}
+bindScopedGeology('canaryGeologyCheck',geologyCanary,'canaryGeologyLegendWrap','canaryGeologyOpacity','canaryGeologyOpacityValue','Canarias');
+bindScopedGeology('spainGeologyCheck',geologySpain,'spainGeologyLegendWrap','spainGeologyOpacity','spainGeologyOpacityValue','España peninsular y Baleares');
 
 
 // Red geográfica adaptativa (WGS84)
@@ -3475,7 +3651,7 @@ function dmsPart(value,isLat){
 function coordsDMS(lat,lon){return {lat:dmsPart(lat,true),lon:dmsPart(lon,false)};}
 function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 async function geologyAt(lat,lon){
- if(!document.getElementById('geologyCheck').checked)return null;
+ if(!geologyEnabledAt(lat,lon))return null;
  try{
   const base='https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8/query';
   const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});
@@ -3487,7 +3663,7 @@ async function geologyAtRaw(lat,lon){
  try{const base='https://mapas.igme.es/gis/rest/services/Cartografia_Geologica/IGME_Geode_50/MapServer/8/query';const q=new URLSearchParams({f:'json',geometry:lon+','+lat,geometryType:'esriGeometryPoint',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'CODE_UNIO,CODE_COTR,DESC_UNIT,NAME_EDA1,NAME_EDA2,ZONA',returnGeometry:'false'});const r=await fetch(base+'?'+q.toString(),{mode:'cors'});if(!r.ok)return null;const j=await r.json(),f=j&&j.features&&j.features[0];return f?f.attributes:null;}catch(e){return null;}
 }
 function geologyHtml(g){
- if(!document.getElementById('geologyCheck').checked)return '';
+ if(!(document.getElementById('canaryGeologyCheck')?.checked||document.getElementById('spainGeologyCheck')?.checked))return '';
  if(!g)return '<hr><b>🪨 Geología · GEODE:</b> sin unidad identificada en este punto';
  if(g.__error)return '<hr><b>🪨 Geología · GEODE:</b> no se pudo consultar el servicio';
  const age1=g.NAME_EDA1||'',age2=g.NAME_EDA2||'',age=age1&&age2&&age1!==age2?age1+' – '+age2:(age1||age2||'');
@@ -3689,11 +3865,11 @@ function adminHtml(a){
 }
 function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…',geo=null,veg=null,topo=null,adm=null,pending=false,climate=null,biome=null){
  const c=coordsDMS(lat,lon),topoHtml=topo?'<br><b>Topónimo próximo:</b> '+escHtml(topo.name)+(Number.isFinite(topo.dist)?' <small>('+fmtDistance(topo.dist)+')</small>':''):'<br><b>Topónimo próximo:</b> '+(pending?'consultando…':'sin dato');
- return '<b>📍 '+title+'</b>'+topoHtml+adminHtml(adm)+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(pending&&document.getElementById('geologyCheck').checked?'<hr><b>🪨 Geología:</b> consultando…':geologyHtml(geo))+(pending&&(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked))?'<hr><b>🌿 Vegetación:</b> consultando…':vegetationHtml(veg))+(pending&&document.getElementById('worldClimateCheck')?.checked?'<hr><b>🌦️ Clima Köppen-Geiger:</b> consultando…':climateHtml(climate))+(pending&&document.getElementById('worldBiomesCheck')?.checked?'<hr><b>🌿 Bioma terrestre:</b> consultando…':biomeDetailHtml(biome))+'<br><small>IGN/CNIG · CartoCiudad · MDT25/IDEE'+(document.getElementById('geologyCheck').checked?' · IGME-CSIC':'')+(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked)?' · MITECO/GRAFCAN':'')+(document.getElementById('worldClimateCheck')?.checked?' · Beck et al.':'')+'</small>';
+ return '<b>📍 '+title+'</b>'+topoHtml+adminHtml(adm)+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(pending&&geologyEnabledAt(lat,lon)?'<hr><b>🪨 Geología:</b> consultando…':geologyHtml(geo))+(pending&&(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked))?'<hr><b>🌿 Vegetación:</b> consultando…':vegetationHtml(veg))+(pending&&climateEnabledAt(lat,lon)?'<hr><b>🌦️ Clima Köppen-Geiger:</b> consultando…':climateHtml(climate))+(pending&&document.getElementById('worldBiomesCheck')?.checked?'<hr><b>🌿 Bioma terrestre:</b> consultando…':biomeDetailHtml(biome))+'<br><small>IGN/CNIG · CartoCiudad · MDT25/IDEE'+(geologyEnabledAt(lat,lon)?' · IGME-CSIC':'')+(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked)?' · MITECO/GRAFCAN':'')+(climateEnabledAt(lat,lon)?' · Beck et al.':'')+'</small>';
 }
 let coordMarker=null,coordQuerySeq=0;
 async function showPoint(ll,title='Punto consultado',useMarker=true){
- const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng,geoOn=document.getElementById('geologyCheck').checked,vegOn=['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked),c=coordsDMS(lat,lon);
+ const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng,geoOn=geologyEnabledAt(lat,lon),vegOn=['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked),c=coordsDMS(lat,lon);
  const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null,b:null};
  const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c,state.b));coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
  if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null,null),{maxWidth:430}).openPopup();}
@@ -3703,7 +3879,7 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
  // Dejamos al navegador iniciar la petición de elevación antes de lanzar el resto.
  setTimeout(()=>{
   if(seq!==coordQuerySeq)return;
-  if(document.getElementById('worldClimateCheck')?.checked){
+  if(climateEnabledAt(lat,lon)){
    worldClimateAt(lat,lon).then(x=>{state.c=x;render();}).catch(()=>{state.c=null;render();});
   }
   if(document.getElementById('worldBiomesCheck')?.checked){
@@ -4761,6 +4937,15 @@ function updateLegend(){
  });
  if(visibleENP.length) h+='<div style="margin-bottom:8px"><b>Espacios Naturales Protegidos</b>'+visibleENP.join('')+'</div>';
 
+ // Capas temáticas territoriales
+ if(document.getElementById('canaryGeologyCheck')?.checked&&map.hasLayer(geologyCanary))h+='<div style="margin-bottom:8px"><b>Geología · Canarias</b><br>GEODE · IGME-CSIC</div>';
+ if(document.getElementById('spainGeologyCheck')?.checked&&map.hasLayer(geologySpain))h+='<div style="margin-bottom:8px"><b>Geología · España peninsular y Baleares</b><br>GEODE · IGME-CSIC</div>';
+ if((document.getElementById('canaryClimateCheck')?.checked&&map.hasLayer(canaryClimate))||(document.getElementById('spainClimateCheck')?.checked&&map.hasLayer(spainClimate))){
+  h+='<div style="margin-bottom:8px"><b>Clima Köppen-Geiger</b><br>'+WORLD_CLIMATE_INFO.map(([n,c])=>'<div><span class="sw" style="background:'+c+'"></span>'+esc(n)+'</div>').join('')+'</div>';
+ }
+ if(document.getElementById('worldAdmin1Check')?.checked){
+  h+='<div style="margin-bottom:8px"><b>Regiones infraestatales</b><br><span style="display:inline-block;width:24px;border-top:2px solid #ffd66b;vertical-align:middle;margin-right:6px"></span>Estados, provincias y equivalentes</div>';
+ }
  // Capas mundiales temáticas
  if(document.getElementById('worldClimateCheck')?.checked && map.hasLayer(worldClimate)){
    h+='<div style="margin-bottom:8px"><b>Climas del mundo · Köppen-Geiger</b><br>'+WORLD_CLIMATE_INFO.map(([n,c])=>'<div><span class="sw" style="background:'+c+'"></span>'+esc(n)+'</div>').join('')+'</div>';
@@ -5572,6 +5757,56 @@ async function toggleCountryLabels(on){
 let countries2DLayer=null,countryLabels2DLayer=null,worldToponyms2DLayer=null,worldToponyms2DSpain=null;
 let worldToponyms2DGeneration=0;
 
+
+let worldAdmin1Data=null,worldAdmin1Loading=null,worldAdmin1Layer=null,worldAdmin1Source=null;
+async function loadWorldAdmin1(){
+ if(worldAdmin1Data)return worldAdmin1Data;
+ if(worldAdmin1Loading)return worldAdmin1Loading;
+ worldAdmin1Loading=(async()=>{
+  const urls=[
+   'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_admin_1_states_provinces.geojson',
+   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces.geojson'
+  ];
+  for(const u of urls){
+   try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){worldAdmin1Data=await r.json();return worldAdmin1Data;}}catch(e){}
+  }
+  throw new Error('No se pudo cargar Natural Earth Admin-1');
+ })().finally(()=>worldAdmin1Loading=null);
+ return worldAdmin1Loading;
+}
+function admin1DisplayName(p={}){
+ return p.name_es||p.name_local||p.name||p.name_en||p.woe_label||'Región';
+}
+async function toggleWorldAdmin1_2D(on){
+ if(on){
+  try{
+   const data=await loadWorldAdmin1();
+   if(!document.getElementById('worldAdmin1Check')?.checked)return;
+   if(worldAdmin1Layer)map.removeLayer(worldAdmin1Layer);
+   worldAdmin1Layer=L.geoJSON(data,{
+    style:{color:'#ffd66b',weight:1.05,opacity:.82,fill:false},
+    onEachFeature:(f,l)=>l.bindTooltip(admin1DisplayName(f.properties||{}),{sticky:true,direction:'top'})
+   }).addTo(map);
+   status('Regiones infraestatales · Natural Earth Admin-1');
+  }catch(e){console.error(e);document.getElementById('worldAdmin1Check').checked=false;status('No se pudieron cargar las regiones infraestatales');}
+ }else if(worldAdmin1Layer){map.removeLayer(worldAdmin1Layer);worldAdmin1Layer=null;}
+}
+async function toggleWorldAdmin1Globe(on){
+ if(!globeViewer)return;
+ if(on){
+  try{
+   const data=await loadWorldAdmin1();
+   if(worldAdmin1Source)globeViewer.dataSources.remove(worldAdmin1Source,true);
+   const ds=await Cesium.GeoJsonDataSource.load(data,{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#ffd66b').withAlpha(.9),fill:Cesium.Color.TRANSPARENT,strokeWidth:1.2});
+   for(const ent of ds.entities.values){
+    if(ent.polygon){ent.polygon.fill=false;ent.polygon.outline=true;ent.polygon.outlineColor=Cesium.Color.fromCssColorString('#ffd66b').withAlpha(.9);}
+   }
+   worldAdmin1Source=ds;await globeViewer.dataSources.add(ds);
+  }catch(e){console.error('Admin-1 globo:',e);}
+ }else if(worldAdmin1Source){globeViewer.dataSources.remove(worldAdmin1Source,true);worldAdmin1Source=null;}
+ globeViewer.scene.requestRender();
+}
+
 async function toggleCountries2D(on){
  if(on){
   try{
@@ -6058,7 +6293,7 @@ async function ensureGlobe(){
     }
    });
    worldMvtMoveHandlerInstalled=true;
-  }if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);syncWorldThematicGlobe();
+  }if(document.getElementById('countriesCheck').checked)toggleCountriesLayer(true);if(document.getElementById('countryLabelsCheck').checked)toggleCountryLabels(true);if(document.getElementById('worldToponymsCheck').checked)toggleWorldToponyms(true);syncWorldThematicGlobe();if(document.getElementById('worldAdmin1Check')?.checked)toggleWorldAdmin1Globe(true);
  }catch(err){console.error(err);document.body.classList.remove('globe-mode');alert('No se pudo cargar el globo 3D. El mapa 2D sigue disponible.');}
  finally{globeLoading=false;}
 }
@@ -6176,6 +6411,10 @@ async function toggleGlobe(){
   },80);
  }
 }
+document.getElementById('worldAdmin1Check').addEventListener('change',e=>{
+ toggleWorldAdmin1_2D(e.target.checked);
+ if(globeViewer)toggleWorldAdmin1Globe(e.target.checked);
+});
 document.getElementById('countriesCheck').addEventListener('change',e=>{
  toggleCountries2D(e.target.checked);
  if(globeViewer)toggleCountriesLayer(e.target.checked);
@@ -6188,6 +6427,23 @@ document.getElementById('worldToponymsCheck').addEventListener('change',e=>{
  toggleWorldToponyms2D(e.target.checked);
  if(globeViewer)toggleWorldToponyms(e.target.checked);
 });
+
+
+function climateLegendHtml(){
+ return '<b>Leyenda · Köppen-Geiger</b><br>'+WORLD_CLIMATE_INFO.map(([n,c])=>'<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0"><span class="sw" style="background:'+c+'"></span>'+escHtml(n)+'</span>').join('');
+}
+function bindScopedClimate(checkId,layer,opacityId,valueId,legendId,label){
+ const check=document.getElementById(checkId),slider=document.getElementById(opacityId),legend=document.getElementById(legendId);
+ legend.innerHTML=climateLegendHtml();
+ check.addEventListener('change',e=>{
+  if(e.target.checked){layer.addTo(map);status('Clima Köppen-Geiger · '+label+' activado');}
+  else{if(map.hasLayer(layer))map.removeLayer(layer);status('Clima Köppen-Geiger · '+label+' desactivado');}
+  legend.style.display=e.target.checked?'block':'none';setTimeout(updateLegend,0);
+ });
+ slider.addEventListener('input',e=>{const o=+e.target.value;layer.setOpacity(o);document.getElementById(valueId).textContent=Math.round(o*100)+' %';});
+}
+bindScopedClimate('canaryClimateCheck',canaryClimate,'canaryClimateOpacity','canaryClimateOpacityValue','canaryClimateLegend','Canarias');
+bindScopedClimate('spainClimateCheck',spainClimate,'spainClimateOpacity','spainClimateOpacityValue','spainClimateLegend','España peninsular y Baleares');
 
 document.getElementById('worldClimateCheck').addEventListener('change',e=>{
  if(e.target.checked){worldClimate.addTo(map);status('Climas del mundo · Köppen-Geiger · pulsa el mapa para consultar el clima');}
