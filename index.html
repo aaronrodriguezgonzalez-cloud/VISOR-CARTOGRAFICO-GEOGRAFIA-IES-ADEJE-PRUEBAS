@@ -2488,7 +2488,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock">
   <small>Hechos históricos geolocalizados y sincronizados con el mismo año del control temporal. ANAMBRO usa coordenadas propias del acontecimiento o, cuando Wikidata no las aporta directamente, las del lugar asociado.</small>
-  <small>ANAMBRO prioriza acontecimientos con mayor presencia enciclopédica y descarta ruido evidente. Al alejar el mapa se muestran solo los más relevantes. Al arrastrar el año, la consulta se lanza al detener el control para evitar saturar Wikidata.</small>
+  <small>ANAMBRO prioriza acontecimientos con mayor presencia enciclopédica y descarta ruido evidente. Los datos se cargan en bloques de 25 años: una vez cargado un bloque, moverse entre esos años es inmediato y no requiere nuevas consultas a Wikidata.</small>
   <small id="historicalEventsStatus">Capa desactivada.</small>
 </div>
 <div class="layerThemeTitle">📻 Radio mundial</div>
@@ -9102,7 +9102,7 @@ document.getElementById('worldHistoryOpacity')?.addEventListener('input',e=>{his
 // ACONTECIMIENTOS HISTÓRICOS · WIKIDATA
 // ================================================================
 const HIST_EVENTS_ENDPOINT='https://query.wikidata.org/sparql';
-let historicalEventsCache=new Map(),historicalEventsLayer2D=null,historicalEventsCurrent=[],historicalEventsReqSeq=0,historicalEventsGlobePoints=null,historicalEventsRenderTimer=null,historicalEventsDebounce=null;
+let historicalEventsCache=new Map(),historicalEventsBucketPromises=new Map(),historicalEventsLayer2D=null,historicalEventsCurrent=[],historicalEventsReqSeq=0,historicalEventsGlobePoints=null,historicalEventsRenderTimer=null,historicalEventsDebounce=null;
 
 function historicalEventsStatus(msg){const el=document.getElementById('historicalEventsStatus');if(el)el.textContent=msg;}
 function historicalEventsEnsureLayer(){if(!historicalEventsLayer2D)historicalEventsLayer2D=L.layerGroup();return historicalEventsLayer2D;}
@@ -9125,8 +9125,13 @@ function historicalEventCategory(e){
 }
 function historicalEventDateText(v){const m=String(v||'').match(/^(-?\d+)-(\d\d)-(\d\d)/);if(!m)return '';const y=parseInt(m[1],10),mo=+m[2],d=+m[3],months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];const yy=y<0?Math.abs(y)+' a. C.':y;if(mo>=1&&mo<=12&&d>=1)return d+' de '+months[mo-1]+' de '+yy;return String(yy);}
 function historicalEventScore(e){return Math.log2(Math.max(1,e.sitelinks||1))*10+(e.description?2:0);}
-function historicalEventsSPARQL(year){
+function historicalEventsBucket(year){
  const y=Math.trunc(Number(year)||1);
+ const size=25;
+ const start=Math.floor(y/size)*size;
+ return {start,end:start+size-1,key:start+':'+(start+size-1)};
+}
+function historicalEventsSPARQL(startYear,endYear){
  return `SELECT DISTINCT ?event ?date ?coord ?sitelinks WHERE {
   { ?event wdt:P585 ?date . } UNION { ?event wdt:P580 ?date . }
 
@@ -9138,14 +9143,17 @@ function historicalEventsSPARQL(year){
   }
 
   ?event wikibase:sitelinks ?sitelinks .
-  FILTER(YEAR(?date) = ${y})
-  FILTER(?sitelinks >= 1)
+  FILTER(YEAR(?date) >= ${startYear} && YEAR(?date) <= ${endYear})
+  FILTER(?sitelinks >= 2)
   FILTER NOT EXISTS { ?event wdt:P31 wd:Q5 . }
  }
  ORDER BY DESC(?sitelinks)
- LIMIT 220`;
+ LIMIT 650`;
 }
-
+function historicalEventYearFromDate(v){
+ const m=String(v||'').match(/^(-?\d{1,6})-/);
+ return m?parseInt(m[1],10):null;
+}
 async function historicalEventLabels(qids){
  const out=new Map();
  for(let i=0;i<qids.length;i+=45){
@@ -9164,39 +9172,64 @@ async function historicalEventLabels(qids){
  }
  return out;
 }
+async function fetchHistoricalEventsBucket(year){
+ const bucket=historicalEventsBucket(year);
+ if(historicalEventsBucketPromises.has(bucket.key))return historicalEventsBucketPromises.get(bucket.key);
+
+ const promise=(async()=>{
+  const query=historicalEventsSPARQL(bucket.start,bucket.end);
+  const url=HIST_EVENTS_ENDPOINT+'?format=json&query='+encodeURIComponent(query);
+  const r=await fetch(url,{headers:{'Accept':'application/sparql-results+json'},cache:'default'});
+  if(!r.ok)throw new Error('Wikidata Query Service HTTP '+r.status);
+
+  const j=await r.json(),rows=j?.results?.bindings||[];
+  const prelim=[];
+  for(const b of rows){
+   const coord=historicalEventCoord(b.coord?.value),qid=historicalEventQid(b.event?.value);
+   const eventYear=historicalEventYearFromDate(b.date?.value);
+   if(!coord||!qid||eventYear===null)continue;
+   prelim.push({
+    qid,date:b.date?.value||'',year:eventYear,lat:coord.lat,lon:coord.lon,
+    sitelinks:Number(b.sitelinks?.value)||0
+   });
+  }
+
+  const labels=await historicalEventLabels([...new Set(prelim.map(x=>x.qid))]);
+  const grouped=new Map();
+  for(let y=bucket.start;y<=bucket.end;y++)grouped.set(y,new Map());
+
+  for(const p of prelim){
+   const lab=labels.get(p.qid)||{label:p.qid,description:''};
+   const e={...p,label:lab.label,description:lab.description,type:''};
+   if(historicalEventReject(e))continue;
+   const yearMap=grouped.get(e.year);
+   if(!yearMap)continue;
+   const prev=yearMap.get(e.qid);
+   if(!prev||historicalEventScore(e)>historicalEventScore(prev))yearMap.set(e.qid,e);
+  }
+
+  for(let y=bucket.start;y<=bucket.end;y++){
+   const arr=[...(grouped.get(y)?.values()||[])]
+    .sort((a,b)=>historicalEventScore(b)-historicalEventScore(a)||b.sitelinks-a.sitelinks);
+   historicalEventsCache.set(y,arr);
+  }
+
+  // Limitar memoria a unos 250 años cacheados.
+  while(historicalEventsCache.size>250)historicalEventsCache.delete(historicalEventsCache.keys().next().value);
+  return bucket;
+ })().finally(()=>{
+  // La promesa deja de ser necesaria; los años ya están en cache.
+  historicalEventsBucketPromises.delete(bucket.key);
+ });
+
+ historicalEventsBucketPromises.set(bucket.key,promise);
+ return promise;
+}
 async function fetchHistoricalEvents(year){
  const y=Math.trunc(Number(year)||1);
  if(historicalEventsCache.has(y))return historicalEventsCache.get(y);
-
- const url=HIST_EVENTS_ENDPOINT+'?format=json&query='+encodeURIComponent(historicalEventsSPARQL(y));
- const r=await fetch(url,{headers:{'Accept':'application/sparql-results+json'},cache:'default'});
- if(!r.ok)throw new Error('Wikidata Query Service HTTP '+r.status);
-
- const j=await r.json(),rows=j?.results?.bindings||[];
- const prelim=[];
- for(const b of rows){
-  const coord=historicalEventCoord(b.coord?.value),qid=historicalEventQid(b.event?.value);
-  if(!coord||!qid)continue;
-  prelim.push({
-   qid,date:b.date?.value||'',lat:coord.lat,lon:coord.lon,
-   sitelinks:Number(b.sitelinks?.value)||0
-  });
- }
-
- const labels=await historicalEventLabels([...new Set(prelim.map(x=>x.qid))]);
- const byId=new Map();
- for(const p of prelim){
-  const lab=labels.get(p.qid)||{label:p.qid,description:''};
-  const e={...p,label:lab.label,description:lab.description,type:''};
-  if(historicalEventReject(e))continue;
-  const prev=byId.get(e.qid);
-  if(!prev||historicalEventScore(e)>historicalEventScore(prev))byId.set(e.qid,e);
- }
-
- const out=[...byId.values()].sort((a,b)=>historicalEventScore(b)-historicalEventScore(a)||b.sitelinks-a.sitelinks);
- historicalEventsCache.set(y,out);
- if(historicalEventsCache.size>40)historicalEventsCache.delete(historicalEventsCache.keys().next().value);
- return out;
+ await fetchHistoricalEventsBucket(y);
+ return historicalEventsCache.get(y)||[];
 }
 
 function historicalEventsVisible(){const b=map.getBounds(),z=map.getZoom();const arr=(historicalEventsCurrent||[]).filter(e=>b.contains([e.lat,e.lon]));const max=z<=2?32:z<=4?50:z<=6?75:110;return arr.slice(0,max);}
@@ -9228,40 +9261,65 @@ function showHistoricalEventGlobe(e,pos){const b=document.getElementById('globeI
 function requestHistoricalEventsYear(year,now=false){
  if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
  clearTimeout(historicalEventsDebounce);
+ const y=Math.trunc(Number(year)||1);
+
+ const renderCached=()=>{
+  if(!historicalEventsCache.has(y))return false;
+  historicalEventsReqSeq++;
+  historicalEventsCurrent=historicalEventsCache.get(y)||[];
+  renderHistoricalEvents2D();
+  if(globeViewer)renderHistoricalEventsGlobe();
+  updateLegend();renderActiveSources();
+  if(!historicalEventsCurrent.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados para el año exacto '+historyYearText(y)+'.');
+  return true;
+ };
+
+ // Si ya cargamos el bloque temporal, cambiar de año es instantáneo.
+ if(renderCached())return;
 
  const run=async()=>{
   const seq=++historicalEventsReqSeq;
-  historicalEventsStatus('Consultando Wikidata para '+historyYearText(year)+'…');
+  const bucket=historicalEventsBucket(y);
+  historicalEventsStatus('Cargando acontecimientos '+historyYearText(bucket.start)+'–'+historyYearText(bucket.end)+'…');
   try{
-   const data=await fetchHistoricalEvents(year);
+   const data=await fetchHistoricalEvents(y);
    if(seq!==historicalEventsReqSeq||!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
    historicalEventsCurrent=data;
    renderHistoricalEvents2D();
    if(globeViewer)renderHistoricalEventsGlobe();
    updateLegend();renderActiveSources();
-   if(!data.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados para el año exacto '+historyYearText(year)+'.');
+   if(!data.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados para el año exacto '+historyYearText(y)+'.');
   }catch(e){
    console.error('Acontecimientos históricos',e);
    if(seq!==historicalEventsReqSeq)return;
-   historicalEventsCurrent=[];
-   historicalEventsEnsureLayer().clearLayers();
-   clearHistoricalEventsGlobe();
-
+   // No borramos los puntos anteriores: evitamos que la capa "desaparezca"
+   // por un fallo transitorio de Wikidata.
    const msg=String(e?.message||e);
    if(/429|too many|rate/i.test(msg)){
-    historicalEventsStatus('Wikidata ha limitado temporalmente las consultas. Espera un instante y vuelve a mover el año.');
+    historicalEventsStatus('Wikidata ha limitado temporalmente la consulta. Los acontecimientos anteriores permanecen visibles.');
    }else{
-    historicalEventsStatus('Wikidata no respondió para '+historyYearText(year)+'.');
+    historicalEventsStatus('No se pudo actualizar '+historyYearText(y)+'. Los acontecimientos anteriores permanecen visibles.');
    }
   }
  };
 
- // Mientras se arrastra el deslizador NO bombardeamos Wikidata.
- // Al soltarlo (change) la llamada es inmediata.
+ // Durante arrastre esperamos un poco; al soltar el control se ejecuta ya.
  if(now)run();
- else historicalEventsDebounce=setTimeout(run,500);
+ else historicalEventsDebounce=setTimeout(run,350);
 }
-function syncHistoricalTimelineVisibility(){const on=!!(document.getElementById('worldHistoryCheck')?.checked||document.getElementById('worldHistoricalEventsCheck')?.checked);document.getElementById('historyTimeline')?.classList.toggle('visible',on);if(!on&&historyPlayRunning)toggleHistoryPlay();}
+function syncHistoricalTimelineVisibility(){
+ const borders=!!document.getElementById('worldHistoryCheck')?.checked;
+ const events=!!document.getElementById('worldHistoricalEventsCheck')?.checked;
+ const on=borders||events;
+ document.getElementById('historyTimeline')?.classList.toggle('visible',on);
+ const title=document.querySelector('#historyTimeline .historyTitle');
+ if(title){
+  title.textContent=borders&&events?'🏛️ Historia mundial · fronteras y acontecimientos':
+   borders?'🏛️ Historia mundial · fronteras políticas históricas':
+   '📍 Historia mundial · acontecimientos históricos';
+ }
+ if(!on&&historyPlayRunning)toggleHistoryPlay();
+}
 function setHistoricalEventsVisible(on){
  const layer=historicalEventsEnsureLayer();syncHistoricalTimelineVisibility();
  if(on)requestHistoricalEventsYear(historyYear,true);
