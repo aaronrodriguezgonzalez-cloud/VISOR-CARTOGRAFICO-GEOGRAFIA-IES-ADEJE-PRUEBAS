@@ -3552,10 +3552,7 @@ async function resolveWikipediaUrl(name){
 
 function climateHtml(c){return climateDetailHtml(c);}
 
-let worldBiomesLayer=null,worldBiomesLoading=null,worldBiomesData=null,
-    worldBiomes2DTimer=null,worldBiomes2DRequest=0,worldBiomesGlobeTimer=null,worldBiomesGlobeRequest=0,
-    worldBiomesCatalogLoaded=false,worldBiomesCatalogPromise=null,worldBiomesCache=new Map(),
-    worldVolcanoesLayer=null,worldVolcanoesLoading=null,worldVolcanoesData=null;
+let worldBiomesLayer=null,worldBiomesLoading=null,worldBiomesData=null,worldVolcanoesLayer=null,worldVolcanoesLoading=null,worldVolcanoesData=null;
 const WORLD_BIOME_COLORS=[
  ['Boreal Forests/Taiga','#73b2ff'],
  ['Deserts & Xeric Shrublands','#ffebbe'],
@@ -3584,7 +3581,8 @@ function renderWorldBiomesLegend(){
   'Boreal Forests/Taiga':'Bosques boreales / taiga',
   'Deserts & Xeric Shrublands':'Desiertos y matorrales xéricos',
   'Flooded Grasslands & Savannas':'Pastizales y sabanas inundables',
-  'Lake':'Lagos','Mangroves':'Manglares',
+  'Lake':'Lagos',
+  'Mangroves':'Manglares',
   'Mediterranean Forests, Woodlands & Scrub':'Bosques y matorrales mediterráneos',
   'Montane Grasslands & Shrublands':'Pastizales y matorrales de montaña',
   'Rock and Ice':'Roca y hielo',
@@ -3597,8 +3595,13 @@ function renderWorldBiomesLegend(){
   'Tropical & Subtropical Moist Broadleaf Forests':'Bosques tropicales y subtropicales húmedos',
   'Tundra':'Tundra'
  };
- el.innerHTML='<b>Leyenda · biomas RESOLVE 2017</b><br>'+
-  WORLD_BIOME_COLORS.map(([n,c])=>'<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 7px 2px 0"><span class="sw" style="background:'+c+'"></span>'+escHtml(es[n]||n)+'</span>').join('');
+ const colors=new Map();
+ for(const f of worldBiomesData?.features||[]){
+  const p=f.properties||{},name=p.biome_name;
+  if(name&&!colors.has(name))colors.set(name,p.color_bio||biomeColor(name));
+ }
+ const items=colors.size?[...colors.entries()]:WORLD_BIOME_COLORS;
+ el.innerHTML='<b>Leyenda · biomas RESOLVE 2017</b><br>'+items.map(([n,c])=>'<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 7px 2px 0"><span class="sw" style="background:'+c+'"></span>'+escHtml(es[n]||n)+'</span>').join('');
  el.style.display=document.getElementById('worldBiomesCheck')?.checked?'block':'none';
 }
 async function fetchArcGISGeoJSONPaged(baseUrl,outFields='*',pageSize=500){
@@ -3615,190 +3618,39 @@ async function fetchArcGISGeoJSONPaged(baseUrl,outFields='*',pageSize=500){
  }
  return {type:'FeatureCollection',features};
 }
-const RESOLVE_ECOREGIONS_QUERY='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query';
-
-function biomeOffsetForZoom(z){
- if(z<=2)return .55;
- if(z===3)return .28;
- if(z===4)return .12;
- if(z===5)return .055;
- if(z===6)return .025;
- if(z===7)return .012;
- return .006;
-}
-function biomeBoundsParts(bounds){
- let w=Math.max(-180,bounds.getWest()),e=Math.min(180,bounds.getEast());
- const s=Math.max(-85,bounds.getSouth()),n=Math.min(85,bounds.getNorth());
- if(bounds.getWest()<-180||bounds.getEast()>180){
-  const rawW=bounds.getWest(),rawE=bounds.getEast();
-  if(rawW<-180)return [[rawW+360,s,180,n],[-180,s,rawE,n]];
-  if(rawE>180)return [[rawW,s,180,n],[-180,s,rawE-360,n]];
- }
- return [[w,s,e,n]];
-}
-function biomeCacheKey(bbox,z){
- const step=z<=3?2:z<=5?1:z<=7?.35:.12;
- return [z,...bbox.map(v=>Math.round(v/step)*step)].join('|');
-}
-async function loadWorldBiomesCatalog(){
- if(worldBiomesCatalogLoaded)return;
- if(worldBiomesCatalogPromise)return worldBiomesCatalogPromise;
- worldBiomesCatalogPromise=(async()=>{
-  try{
-   const p=new URLSearchParams({
-    where:'1=1',
-    outFields:'eco_id,biome_name,eco_name,realm,color_bio,license',
-    returnGeometry:'false',f:'json'
-   });
-   const r=await fetch(RESOLVE_ECOREGIONS_QUERY+'?'+p);
-   if(!r.ok)throw new Error('RESOLVE catálogo '+r.status);
-   const d=await r.json(),rows=d?.features||[];
-   buildCompleteEcoregionSpanishCatalog(rows.map(x=>({properties:x.attributes||{}})));
-   worldBiomesCatalogLoaded=true;
-  }catch(e){console.warn('Catálogo RESOLVE:',e);}
- })().finally(()=>{worldBiomesCatalogPromise=null;});
- return worldBiomesCatalogPromise;
-}
-async function fetchWorldBiomesExtent(bounds,z){
- const parts=biomeBoundsParts(bounds),features=[];
- for(const bb of parts){
-  const key=biomeCacheKey(bb,z);
-  let prom=worldBiomesCache.get(key);
-  if(!prom){
-   prom=(async()=>{
-    const p=new URLSearchParams({
-     where:'1=1',
-     geometry:bb.join(','),
-     geometryType:'esriGeometryEnvelope',
-     inSR:'4326',spatialRel:'esriSpatialRelIntersects',
-     outFields:'eco_id,biome_name,eco_name,realm,color_bio,license',
-     returnGeometry:'true',outSR:'4326',
-     maxAllowableOffset:String(biomeOffsetForZoom(z)),
-     geometryPrecision:z<=4?'3':z<=6?'4':'5',
-     f:'geojson'
-    });
-    const r=await fetch(RESOLVE_ECOREGIONS_QUERY+'?'+p);
-    if(!r.ok)throw new Error('RESOLVE '+r.status);
-    return r.json();
-   })();
-   worldBiomesCache.set(key,prom);
-   if(worldBiomesCache.size>36){
-    const first=worldBiomesCache.keys().next().value;
-    worldBiomesCache.delete(first);
-   }
-  }
-  try{
-   const g=await prom;
-   features.push(...(g?.features||[]));
-  }catch(e){
-   worldBiomesCache.delete(key);
-   throw e;
-  }
- }
- const seen=new Set(),unique=[];
- for(const f of features){
-  const id=f?.properties?.eco_id ?? f?.id ?? JSON.stringify(f?.geometry?.coordinates?.[0]?.[0]||'');
-  if(seen.has(id))continue;seen.add(id);unique.push(f);
- }
- return {type:'FeatureCollection',features:unique};
-}
-function biomeLeafletOptions(){
- return {
-  style:f=>{
-   const p=f?.properties||{},c=p.color_bio||biomeColor(p.biome_name||'');
-   const o=+(document.getElementById('worldBiomesOpacity')?.value||.58);
-   return {color:'#5c5c5c',weight:.35,opacity:.45,fillColor:c,fillOpacity:o};
-  },
-  onEachFeature:(f,l)=>{
-   l.on('click',e=>{
-    L.DomEvent.stopPropagation(e);
-    showPoint(e.latlng,'Punto consultado',true);
-   });
-  }
- };
-}
 async function ensureWorldBiomes(){
- if(!worldBiomesLayer)worldBiomesLayer=L.geoJSON(null,biomeLeafletOptions());
- loadWorldBiomesCatalog();
- return worldBiomesLayer;
-}
-async function updateWorldBiomes2D(force=false){
- const check=document.getElementById('worldBiomesCheck');
- if(!check?.checked)return;
- await ensureWorldBiomes();
- const req=++worldBiomes2DRequest;
- const z=map.getZoom(),bounds=map.getBounds().pad(.12);
- try{
-  const g=await fetchWorldBiomesExtent(bounds,z);
-  if(req!==worldBiomes2DRequest||!check.checked)return;
-  worldBiomesData=g;
-  worldBiomesLayer.clearLayers();
-  worldBiomesLayer.addData(g);
-  if(!map.hasLayer(worldBiomesLayer))worldBiomesLayer.addTo(map);
-  renderWorldBiomesLegend();
-  setTimeout(updateLegend,0);
- }catch(e){console.error('Biomas 2D dinámicos:',e);}
-}
-function scheduleWorldBiomes2D(){
- if(!document.getElementById('worldBiomesCheck')?.checked)return;
- clearTimeout(worldBiomes2DTimer);
- worldBiomes2DTimer=setTimeout(()=>updateWorldBiomes2D(),220);
-}
-function globeBiomeView(){
- if(!globeViewer)return null;
- const rect=globeViewer.camera.computeViewRectangle(globeViewer.scene.globe.ellipsoid);
- if(!rect)return L.latLngBounds([[-85,-180],[85,180]]);
- let w=Cesium.Math.toDegrees(rect.west),e=Cesium.Math.toDegrees(rect.east);
- const s=Cesium.Math.toDegrees(rect.south),n=Cesium.Math.toDegrees(rect.north);
- if(e<w)e+=360;
- return L.latLngBounds([[Math.max(-85,s),w],[Math.min(85,n),e]]);
-}
-function globeBiomePseudoZoom(){
- const h=globeCameraHeight();
- if(h>12000000)return 2;
- if(h>6500000)return 3;
- if(h>3200000)return 4;
- if(h>1600000)return 5;
- if(h>800000)return 6;
- if(h>350000)return 7;
- return 8;
-}
-async function updateWorldBiomesGlobe(){
- if(!globeViewer||!document.getElementById('worldBiomesCheck')?.checked)return;
- const req=++worldBiomesGlobeRequest;
- const bounds=globeBiomeView();if(!bounds)return;
- const z=globeBiomePseudoZoom();
- try{
-  const g=await fetchWorldBiomesExtent(bounds.pad(.10),z);
-  if(req!==worldBiomesGlobeRequest||!document.getElementById('worldBiomesCheck')?.checked)return;
-  const ds=await Cesium.GeoJsonDataSource.load(g,{clampToGround:true,stroke:Cesium.Color.WHITE.withAlpha(.18),strokeWidth:.4});
-  const alpha=+(document.getElementById('worldBiomesOpacity')?.value||.58);
-  for(const ent of ds.entities.values){
-   const name=ent.properties?.biome_name?.getValue?.()||'Bioma terrestre';
-   const ecoregion=ent.properties?.eco_name?.getValue?.()||'';
-   const ecoId=ent.properties?.eco_id?.getValue?.()??'';
-   const realm=ent.properties?.realm?.getValue?.()||'';
-   const sourceColor=ent.properties?.color_bio?.getValue?.()||biomeColor(name);
-   if(ent.polygon){
-    ent.polygon.material=Cesium.Color.fromCssColorString(sourceColor).withAlpha(alpha);
-    ent.polygon.outline=false;
+ if(worldBiomesLayer)return worldBiomesLayer;
+ if(worldBiomesLoading)return worldBiomesLoading;
+ const base='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query';
+ worldBiomesLoading=(async()=>{
+  const params=new URLSearchParams({
+   where:'1=1',
+   outFields:'eco_id,biome_name,eco_name,realm,color_bio,license',
+   returnGeometry:'true',
+   outSR:'4326',
+   maxAllowableOffset:'0.035',
+   f:'geojson'
+  });
+  const r=await fetch(base+'?'+params);
+  if(!r.ok)throw new Error('RESOLVE '+r.status);
+  const g=await r.json();
+  worldBiomesData=g;buildCompleteEcoregionSpanishCatalog(g.features||[]);
+  worldBiomesLayer=L.geoJSON(g,{
+   style:f=>{
+    const p=f?.properties||{},c=p.color_bio||biomeColor(p.biome_name||'');
+    return {color:'#5c5c5c',weight:.35,opacity:.45,fillColor:c,fillOpacity:.58};
+   },
+   onEachFeature:(f,l)=>{
+    l.on('click',e=>{
+     L.DomEvent.stopPropagation(e);
+     showPoint(e.latlng,'Punto consultado',true);
+    });
    }
-   ent.__anambroBiome=true;ent.name=name;
-   ent.__anambroBiomeData={ecoId,name,ecoregion,realm,color:sourceColor};
-   ent.description='';
-  }
-  if(globeBiomesSource)globeViewer.dataSources.remove(globeBiomesSource,true);
-  globeBiomesSource=ds;
-  await globeViewer.dataSources.add(ds);
-  globeViewer.scene.requestRender();
- }catch(e){console.error('Biomas globo dinámicos:',e);}
+  });
+  return worldBiomesLayer;
+ })().catch(err=>{worldBiomesLoading=null;throw err;});
+ return worldBiomesLoading;
 }
-function scheduleWorldBiomesGlobe(){
- if(!globeViewer||!document.getElementById('worldBiomesCheck')?.checked)return;
- clearTimeout(worldBiomesGlobeTimer);
- worldBiomesGlobeTimer=setTimeout(()=>updateWorldBiomesGlobe(),260);
-}
-
 function volcanoProp(p,...keys){for(const k of keys)if(p&&p[k]!==undefined&&p[k]!==null&&p[k]!=='')return p[k];return null;}
 function normPropKey(k){return String(k||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
 function volcanoPropLoose(p,...keys){
@@ -7713,12 +7565,10 @@ async function ensureGlobe(){
     if(isMobileUI()){
      setMobileGlobeMotionState(false);
      scheduleWorldAdminsGlobe();
-     scheduleWorldBiomesGlobe();
     }else{
      syncGlobeToponymLayers();
      if(document.getElementById('worldToponymsCheck')?.checked&&!isSpainGlobeView())updateWorldVectorToponyms(false);
      scheduleWorldAdminsGlobe();
-     scheduleWorldBiomesGlobe();
     }
    });
    worldMvtMoveHandlerInstalled=true;
@@ -7794,18 +7644,35 @@ async function toggleWorldClimateGlobe(on){
 }
 async function toggleWorldBiomesGlobe(on){
  if(!globeViewer)return;
- if(!on){
-  worldBiomesGlobeRequest++;
-  clearTimeout(worldBiomesGlobeTimer);
-  if(globeBiomesSource){
-   globeViewer.dataSources.remove(globeBiomesSource,true);
-   globeBiomesSource=null;
-  }
-  globeViewer.scene.requestRender();
-  return;
+ if(on){
+  try{
+   await ensureWorldBiomes();
+   if(!worldBiomesData)return;
+   if(globeBiomesSource)globeViewer.dataSources.remove(globeBiomesSource,true);
+   const ds=await Cesium.GeoJsonDataSource.load(worldBiomesData,{clampToGround:true,stroke:Cesium.Color.WHITE.withAlpha(.22),strokeWidth:.5});
+   const alpha=+(document.getElementById('worldBiomesOpacity')?.value||.58);
+   for(const ent of ds.entities.values){
+    const name=ent.properties?.biome_name?.getValue?.()||'Bioma terrestre';
+    const ecoregion=ent.properties?.eco_name?.getValue?.()||'';
+    const ecoId=ent.properties?.eco_id?.getValue?.()??'';
+    const realm=ent.properties?.realm?.getValue?.()||'';
+    const sourceColor=ent.properties?.color_bio?.getValue?.()||biomeColor(name);
+    if(ent.polygon){
+     ent.polygon.material=Cesium.Color.fromCssColorString(sourceColor).withAlpha(alpha);
+     ent.polygon.outline=false;
+    }
+    ent.__anambroBiome=true;
+    ent.name=name;
+    ent.__anambroBiomeData={ecoId,name,ecoregion,realm,color:sourceColor};
+    ent.description='';
+   }
+   globeBiomesSource=ds;
+   await globeViewer.dataSources.add(ds);
+  }catch(e){console.error('Biomas globo:',e);}
+ }else if(globeBiomesSource){
+  globeViewer.dataSources.remove(globeBiomesSource,true);globeBiomesSource=null;
  }
- await ensureWorldBiomes();
- scheduleWorldBiomesGlobe();
+ globeViewer.scene.requestRender();
 }
 async function toggleWorldVolcanoesGlobe(on){
  if(!globeViewer)return;
@@ -7896,7 +7763,6 @@ function clampWorldAtMinZoom(){
 }
 
 map.on('moveend zoomend',scheduleWorldAdmins2D);
-map.on('moveend zoomend',scheduleWorldBiomes2D);
 map.on('moveend zoomend',clampWorldAtMinZoom);
 document.getElementById('countriesCheck').addEventListener('change',e=>{
  toggleCountries2D(e.target.checked);
@@ -7961,35 +7827,24 @@ document.getElementById('worldClimateOpacity').addEventListener('input',e=>{
 });
 document.getElementById('worldBiomesCheck').addEventListener('change',async e=>{
  if(!e.target.checked){
-  worldBiomes2DRequest++;worldBiomesGlobeRequest++;
-  clearTimeout(worldBiomes2DTimer);clearTimeout(worldBiomesGlobeTimer);
   if(worldBiomesLayer&&map.hasLayer(worldBiomesLayer))map.removeLayer(worldBiomesLayer);
   const bl=document.getElementById('worldBiomesLegend');if(bl)bl.style.display='none';
   if(globeViewer)toggleWorldBiomesGlobe(false);
   status('Biomas mundiales desactivados');return;
  }
- status('Cargando biomas visibles…');
+ status('Cargando biomas mundiales…');
  try{
   const l=await ensureWorldBiomes();
   if(e.target.checked){
-   if(!map.hasLayer(l))l.addTo(map);
-   renderWorldBiomesLegend();
-   updateWorldBiomes2D(true);
-   if(globeViewer)toggleWorldBiomesGlobe(true);
-   status('Vegetación mundial · grandes biomas (carga dinámica RESOLVE 2017)');
+   l.addTo(map);renderWorldBiomesLegend();
+   if(globeViewer)await toggleWorldBiomesGlobe(true);
+   status('Vegetación mundial · grandes biomas (RESOLVE 2017)');
   }
- }catch(err){
-  console.warn(err);e.target.checked=false;
-  alert('No se pudo cargar ahora la capa mundial de biomas.');
- }
+ }catch(err){console.warn(err);e.target.checked=false;alert('No se pudo cargar ahora la capa mundial de biomas.');}
 });
 document.getElementById('worldBiomesOpacity').addEventListener('input',e=>{
- const o=+e.target.value;
- document.getElementById('worldBiomesOpacityValue').textContent=Math.round(o*100)+' %';
- if(worldBiomesLayer)worldBiomesLayer.setStyle(f=>{
-  const p=f?.properties||{},c=p.color_bio||biomeColor(p.biome_name||'');
-  return {color:'#5c5c5c',weight:.35,opacity:.45,fillColor:c,fillOpacity:o};
- });
+ const o=+e.target.value;document.getElementById('worldBiomesOpacityValue').textContent=Math.round(o*100)+' %';
+ if(worldBiomesLayer)worldBiomesLayer.setStyle({fillOpacity:o});
  if(globeBiomesSource)for(const ent of globeBiomesSource.entities.values){
   if(ent.polygon){
    const name=ent.properties?.biome_name?.getValue?.()||'';
