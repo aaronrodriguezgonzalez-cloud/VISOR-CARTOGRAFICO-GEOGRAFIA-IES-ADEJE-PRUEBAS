@@ -1958,6 +1958,24 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .volcanoPhotoWrap figcaption{font-size:9.5px;color:#5d6870;margin-top:3px;text-align:right}
 .volcanoPhoto{width:100%!important;max-height:230px!important;object-fit:cover!important}
 
+
+.eruptionRecent{margin-top:2px}
+.eruptionSubTitle{font-weight:900;color:#17324d;margin:0 0 7px;font-size:12px}
+.eruptionRow{display:grid;grid-template-columns:minmax(118px,.8fr) 1.7fr;gap:7px;padding:6px 0;border-bottom:1px solid #e5e8ea}
+.eruptionRow:last-child{border-bottom:0}
+.eruptionWhen{font-weight:800;color:#1d354c}
+.eruptionNum{display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;border-radius:999px;background:#edf2f5;border:1px solid #ccd5dc;margin-right:6px;font-size:10px}
+.eruptionMeta{color:#303b44;line-height:1.3}
+.eruptionCount{margin-top:7px;padding-top:6px;border-top:1px solid #dde2e5;font-size:11px;color:#52606b}
+.eruptionHistoryDetails{margin-top:7px;border-top:1px solid #dde2e5;padding-top:6px}
+.eruptionHistoryDetails>summary{cursor:pointer;font-weight:850;color:#0b5fa5;user-select:none}
+.eruptionHistoryList{max-height:260px;overflow:auto;margin-top:6px;padding-right:4px}
+@media(max-width:760px){
+ .eruptionRow{grid-template-columns:1fr;gap:2px;padding:5px 0}
+ .eruptionMeta{padding-left:26px}
+ .eruptionHistoryList{max-height:210px}
+}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -3425,13 +3443,16 @@ async function enrichVolcano(v){
    fetchUsgsVolcano(effective.number),
    resolveWikipediaUrl(effective.name).catch(()=>wikipediaFallbackUrl(effective.name))
   ]);
-  const latestRaw=mirrorEruptions[0]||null,latest=mirrorEruptionDetails(latestRaw);
+  const eruptionHistory=mirrorEruptions.map(mirrorEruptionDetails).filter(Boolean);
+  const latest=eruptionHistory[0]||null;
   const uinfo=usgs.info||{},ust=usgs.status||{};
   return {
    wiki,
    recordDetails:effective,
    effectiveNumber:effective.number,
-   gvpEruptions:mirrorEruptions.length,
+   gvpEruptions:eruptionHistory.length,
+   recentEruptions:eruptionHistory.slice(0,5),
+   eruptionHistory,
    latestStart:latest?.startYear??null,
    latestStartMonth:latest?.startMonth??null,
    latestStartDay:latest?.startDay??null,
@@ -3478,6 +3499,59 @@ function formatEruptionDate(y,m,d){
  if(mm>0)s=(dd>0?String(dd).padStart(2,'0')+'/':'')+String(mm).padStart(2,'0')+'/'+s;
  return s;
 }
+
+function eruptionDateLabel(er,which='start'){
+ if(!er)return null;
+ const y=validEruptionYear(which==='start'?er.startYear:er.endYear);
+ if(y===null)return null;
+ const m=Number(which==='start'?er.startMonth:er.endMonth);
+ const d=Number(which==='start'?er.startDay:er.endDay);
+ return formatEruptionDate(y,m,d);
+}
+function eruptionIntervalLabel(er){
+ const a=eruptionDateLabel(er,'start'),b=eruptionDateLabel(er,'end');
+ if(a&&b&&a!==b)return a+' – '+b;
+ return a||b||'Fecha no precisada';
+}
+function eruptionTypeEs(er){
+ const parts=[];
+ if(er?.activityType)parts.push(trVolcano(er.activityType));
+ const area=joinVolcanoValues(er?.activityArea,er?.activityUnit);
+ if(area)parts.push(trVolcano(area));
+ return parts.join(' · ');
+}
+function eruptionEvidenceEs(er){
+ return er?.startEvidence?translateVolcanoEvidenceEs(er.startEvidence):'';
+}
+function eruptionVeiEs(er){
+ if(er?.vei===null||er?.vei===undefined||er?.vei==='')return '';
+ const n=Number(er.vei);
+ if(!Number.isFinite(n)||n<0)return '';
+ return 'VEI '+er.vei+(er?.veiQualifier?' · '+trVolcano(er.veiQualifier):'');
+}
+function eruptionHistoryRow(er,index){
+ const bits=[eruptionTypeEs(er),eruptionVeiEs(er),eruptionEvidenceEs(er)].filter(Boolean);
+ return '<div class="eruptionRow">'
+   +'<div class="eruptionWhen"><span class="eruptionNum">'+(index+1)+'</span>'+escHtml(eruptionIntervalLabel(er))+'</div>'
+   +(bits.length?'<div class="eruptionMeta">'+escHtml(bits.join(' · '))+'</div>':'')
+   +'</div>';
+}
+function recentEruptionsHtml(e){
+ const arr=(e?.recentEruptions||[]).filter(er=>validEruptionYear(er?.startYear)!==null||validEruptionYear(er?.endYear)!==null);
+ if(!arr.length)return '';
+ let h='<div class="eruptionRecent"><div class="eruptionSubTitle">Últimas erupciones documentadas</div>';
+ h+=arr.map((er,i)=>eruptionHistoryRow(er,i)).join('');
+ h+='</div>';
+ return h;
+}
+function fullEruptionHistoryHtml(e){
+ const arr=(e?.eruptionHistory||[]).filter(er=>validEruptionYear(er?.startYear)!==null||validEruptionYear(er?.endYear)!==null);
+ if(arr.length<=5)return '';
+ return '<details class="eruptionHistoryDetails"><summary>Ver historial eruptivo completo ('+arr.length+' episodios)</summary>'
+   +'<div class="eruptionHistoryList">'+arr.map((er,i)=>eruptionHistoryRow(er,i)).join('')+'</div>'
+   +'</details>';
+}
+
 function vf(label,value){
  if(value===null||value===undefined||value==='')return '';
  return '<div class="volcanoField"><b>'+escHtml(label)+':</b> '+escHtml(String(value))+'</div>';
@@ -3509,15 +3583,18 @@ function enrichedVolcanoHtml(v,e=null){
  if(vv.geologicEvidence)geology.push(vf('Evidencia geológica',translateVolcanoEvidenceEs(vv.geologicEvidence)));
 
  const eruption=[];
- if(catalogYear!==null)eruption.push(vf('Última erupción conocida en el catálogo',catalogYear<0?Math.abs(catalogYear)+' a. C.':catalogYear));
- if(latestDate)eruption.push(vf('Inicio del último episodio recuperado',latestDate));
- if(ey!==null)eruption.push(vf('Fin del episodio',ey<0?Math.abs(ey)+' a. C.':ey));
- if(e?.eruptionType)eruption.push(vf('Tipo de actividad',trVolcano(e.eruptionType)));
- if(e?.eruptionStyle)eruption.push(vf('Área / unidad de actividad',trVolcano(e.eruptionStyle)));
- if(e?.vei!==null&&e?.vei!==undefined&&e?.vei!==''&&Number(e.vei)>=0)eruption.push(vf('Índice de Explosividad Volcánica (VEI)',e.vei+(e?.veiQualifier?' · '+trVolcano(e.veiQualifier):'')));
- if(e?.evidence)eruption.push(vf('Evidencia del inicio / datación',translateVolcanoEvidenceEs(e.evidence)));
- if(e?.gvpEruptions)eruption.push(vf('Episodios eruptivos recuperados',e.gvpEruptions));
- if(sy!==null&&ey===null&&sy>=1900)eruption.push(vf('Situación del episodio','Sin fecha de finalización consignada en el registro consultado'));
+ const recentHtml=recentEruptionsHtml(e);
+ const fullHistoryHtml=fullEruptionHistoryHtml(e);
+ if(recentHtml)eruption.push(recentHtml);
+ else{
+  if(catalogYear!==null)eruption.push(vf('Última erupción conocida en el catálogo',catalogYear<0?Math.abs(catalogYear)+' a. C.':catalogYear));
+  if(latestDate)eruption.push(vf('Inicio del último episodio recuperado',latestDate));
+  if(ey!==null)eruption.push(vf('Fin del episodio',ey<0?Math.abs(ey)+' a. C.':ey));
+  if(e?.eruptionType)eruption.push(vf('Tipo de actividad',trVolcano(e.eruptionType)));
+  if(e?.vei!==null&&e?.vei!==undefined&&e?.vei!==''&&Number(e.vei)>=0)eruption.push(vf('Índice de Explosividad Volcánica (VEI)',e.vei+(e?.veiQualifier?' · '+trVolcano(e.veiQualifier):'')));
+ }
+ if(e?.gvpEruptions)eruption.push('<div class="eruptionCount"><b>Episodios recuperados del GVP:</b> '+escHtml(String(e.gvpEruptions))+'</div>');
+ if(fullHistoryHtml)eruption.push(fullHistoryHtml);
 
  const watch=[];
  if(e?.usgsStatus)watch.push(vf('Nivel de alerta USGS',e.usgsStatus));
