@@ -2487,7 +2487,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"></div>
 <label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock">
-  <small>Hechos históricos geolocalizados y sincronizados con el mismo año del control temporal.</small>
+  <small>Hechos históricos geolocalizados y sincronizados con el mismo año del control temporal. ANAMBRO usa coordenadas propias del acontecimiento o, cuando Wikidata no las aporta directamente, las del lugar asociado.</small>
   <small>ANAMBRO prioriza acontecimientos con mayor presencia enciclopédica y descarta ruido evidente. Al alejar el mapa se muestran solo los más relevantes.</small>
   <small id="historicalEventsStatus">Capa desactivada.</small>
 </div>
@@ -9108,7 +9108,10 @@ function historicalEventsStatus(msg){const el=document.getElementById('historica
 function historicalEventsEnsureLayer(){if(!historicalEventsLayer2D)historicalEventsLayer2D=L.layerGroup();return historicalEventsLayer2D;}
 function historicalEventCoord(wkt){const m=String(wkt||'').match(/Point\(\s*([+-]?\d+(?:\.\d+)?)\s+([+-]?\d+(?:\.\d+)?)\s*\)/i);if(!m)return null;const lon=+m[1],lat=+m[2];return Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null;}
 function historicalEventQid(url){const m=String(url||'').match(/\/(Q\d+)$/);return m?m[1]:'';}
-function historicalEventReject(e){const t=normalizeHistoryText([e.label,e.description,e.type].join(' '));return /\bfootball\b|\bfutbol\b|\bsoccer\b|\btennis\b|\btenis\b|\bbasketball\b|\bbaloncesto\b|\bbaseball\b|\bcricket\b|\bgrand prix\b|\bolympic\b|\bolimpic\b|\bchampionship\b|\bcampeonato\b|\btournament\b|\btorneo\b|\bconcert\b|\bconcierto\b|\bfestival\b|\bfilm festival\b|\baward ceremony\b|\bpremios?\b|\bseason\b|\btemporada\b/.test(t);}
+function historicalEventReject(e){
+ const t=normalizeHistoryText([e.label,e.description,e.type].join(' '));
+ return /\bfootball\b|\bfutbol\b|\bsoccer\b|\btennis\b|\btenis\b|\bbasketball\b|\bbaloncesto\b|\bbaseball\b|\bcricket\b|\bgrand prix\b|\bolympic\b|\bolimpic\b|\bchampionship\b|\bcampeonato\b|\btournament\b|\btorneo\b|\bconcert\b|\bconcierto\b|\bfilm festival\b|\baward ceremony\b|\bpremios?\b|\bseason\b|\btemporada\b/.test(t);
+}
 function historicalEventCategory(e){
  const t=normalizeHistoryText([e.type,e.label,e.description].join(' '));
  if(/\bbattle\b|\bbatalla\b|\bsiege\b|\bsitio\b|\bwar\b|\bguerra\b|\bcombat\b|\bconquest\b|\bconquista\b/.test(t))return {label:'Conflicto / batalla',icon:'⚔️'};
@@ -9126,15 +9129,23 @@ function historicalEventsSPARQL(year){
  const y=Math.trunc(Number(year)||1);
  return `SELECT DISTINCT ?event ?date ?coord ?sitelinks WHERE {
   { ?event wdt:P585 ?date . } UNION { ?event wdt:P580 ?date . }
-  ?event wdt:P625 ?coord ;
-         wikibase:sitelinks ?sitelinks .
+
+  {
+    ?event wdt:P625 ?coord .
+  } UNION {
+    ?event wdt:P276 ?place .
+    ?place wdt:P625 ?coord .
+  }
+
+  ?event wikibase:sitelinks ?sitelinks .
   FILTER(YEAR(?date) = ${y})
-  FILTER(?sitelinks >= 5)
+  FILTER(?sitelinks >= 1)
   FILTER NOT EXISTS { ?event wdt:P31 wd:Q5 . }
  }
  ORDER BY DESC(?sitelinks)
- LIMIT 120`;
+ LIMIT 220`;
 }
+
 async function historicalEventLabels(qids){
  const out=new Map();
  for(let i=0;i<qids.length;i+=45){
@@ -9188,7 +9199,7 @@ async function fetchHistoricalEvents(year){
  return out;
 }
 
-function historicalEventsVisible(){const b=map.getBounds(),z=map.getZoom();const arr=(historicalEventsCurrent||[]).filter(e=>b.contains([e.lat,e.lon]));const max=z<=2?24:z<=4?36:z<=6?55:80;return arr.slice(0,max);}
+function historicalEventsVisible(){const b=map.getBounds(),z=map.getZoom();const arr=(historicalEventsCurrent||[]).filter(e=>b.contains([e.lat,e.lon]));const max=z<=2?32:z<=4?50:z<=6?75:110;return arr.slice(0,max);}
 function historicalEventCardHtml(e){
  const c=historicalEventCategory(e),wd='https://www.wikidata.org/wiki/'+encodeURIComponent(e.qid);
  return '<div class="histEventCard"><div class="histEventTitle">'+c.icon+' '+escHtml(e.label)+'</div><div class="histEventMeta">'+escHtml(historicalEventDateText(e.date))+(e.type?' · '+escHtml(e.type):'')+'</div><span class="histEventBadge">'+escHtml(c.label)+'</span>'+(e.description?'<div class="histEventDesc">'+escHtml(e.description)+'</div>':'')+'<div class="histEventLinks"><a href="'+wd+'" target="_blank" rel="noopener">Wikidata · '+escHtml(e.qid)+'</a> · '+e.sitelinks.toLocaleString('es-ES')+' enlaces Wikimedia</div><div class="historyCardNote">Fuente estructurada: Wikidata · CC0. La jerarquía visual automática no equivale a una valoración historiográfica definitiva.</div></div>';
@@ -9208,7 +9219,7 @@ function clearHistoricalEventsGlobe(){if(!globeViewer||!historicalEventsGlobePoi
 function renderHistoricalEventsGlobe(){
  if(!globeViewer)return;clearHistoricalEventsGlobe();if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
  const pc=new Cesium.PointPrimitiveCollection();
- for(const e of (historicalEventsCurrent||[]).slice(0,90)){
+ for(const e of (historicalEventsCurrent||[]).slice(0,120)){
   pc.add({position:Cesium.Cartesian3.fromDegrees(e.lon,e.lat,13000),pixelSize:Math.max(10,Math.min(18,10+Math.log2(Math.max(1,e.sitelinks))/2.5)),color:Cesium.Color.fromCssColorString('#8e63b8').withAlpha(.98),outlineColor:Cesium.Color.WHITE.withAlpha(1),outlineWidth:2.5,id:{__anambroHistoricalEvent:true,event:e}});
  }
  historicalEventsGlobePoints=globeViewer.scene.primitives.add(pc);globeViewer.scene.requestRender();
@@ -9221,7 +9232,7 @@ async function requestHistoricalEventsYear(year,now=false){
   const data=await fetchHistoricalEvents(year);
   if(seq!==historicalEventsReqSeq||!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
   historicalEventsCurrent=data;renderHistoricalEvents2D();if(globeViewer)renderHistoricalEventsGlobe();updateLegend();renderActiveSources();
-  if(!data.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados en Wikidata para '+historyYearText(year)+'.');
+  if(!data.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados para el año exacto '+historyYearText(year)+'.');
  }catch(e){
   console.error('Acontecimientos históricos',e);if(seq!==historicalEventsReqSeq)return;
   historicalEventsCurrent=[];historicalEventsEnsureLayer().clearLayers();clearHistoricalEventsGlobe();historicalEventsStatus('Wikidata no respondió para este año.');
