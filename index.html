@@ -2309,7 +2309,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
   <div id="profileModalSummary"></div>
   <div id="profileChartWrap"><canvas id="profileCanvasLarge"></canvas><div id="profilePointInfo" class="hidden" role="status" style="position:absolute;z-index:2;top:8px;right:10px;background:#fffef7;border:1px solid #738497;border-radius:8px;box-shadow:0 2px 10px #0005;padding:9px;max-width:min(310px,70%);font-size:12px;pointer-events:auto"></div></div>
   <div id="profileBands"><div class="profileBandControls"><label><input name="profileTheme" id="profileAltTheme" type="radio" value="alt" checked> Altimetría</label><label><input name="profileTheme" id="profileVegActualTheme" type="radio" value="veg_actual"> Vegetación actual</label><label><input name="profileTheme" id="profileVegPotentialTheme" type="radio" value="veg_potential"> Vegetación potencial</label><label><input name="profileTheme" id="profileGeoTheme" type="radio" value="geo"> Geología</label></div><div id="profileBandsContent" class="profileLegend"><span class="profileLegendHint">La leyenda cambia con la piel seleccionada.</span></div></div>
-  <div id="profileTopoNote">Piel seleccionable: altimetría, vegetación o geología · MDT25/IGN en España · DEM mundial Terrarium/AWS fuera de España · topónimos IGN en España</div>
+  <div id="profileTopoNote">Piel seleccionable: altimetría, vegetación/biomas o geología · España: MITECO/GRAFCAN + GEODE · Mundo: RESOLVE 2017 + Macrostrat · altimetría MDT25/IGN y DEM mundial Terrarium/AWS</div>
 </div>
 <div id="searchPanel" class="panel hidden"><h3>Buscar topónimo</h3>
 <input id="searchQ" type="text" placeholder="Ej.: Teide, Taganana, Adeje…">
@@ -5089,7 +5089,9 @@ async function finishProfileFromPoints(profileInputPts){
  const oldPts=profilePts;profilePts=profileInputPts;
  try{
  if(profilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}profileMode=false;redrawProfileLine();
- const prof=interpolateProfilePoints(profilePts,100);prof.path=profilePts.slice();const result=document.getElementById('profileResult');result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total)+' · calculando altitudes…';
+ const prof=interpolateProfilePoints(profilePts,100);prof.path=profilePts.slice();
+ lastProfileWorld=lastProfileSource==='globe'||profilePts.some(ll=>!profileIsSpainLatLng(ll));
+ const result=document.getElementById('profileResult');result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total)+' · calculando altitudes…';
  // Calcula las cotas en paralelo con concurrencia limitada. Las consultas que caen
  // en una misma tesela nacional comparten la promesa de nationalDemTileCache, de modo
  // que cada PNG se descarga/decodifica una sola vez por sesión.
@@ -5124,12 +5126,12 @@ async function finishProfileFromPoints(profileInputPts){
  }else lastProfileCountries=[];
  updateProfileThemeAvailability();
  openProfileModal();lastProfilePath=prof;lastProfileAnalysis=null;lastProfileDraw=[samples,prof.total,zmin,zmax,profileLabels,profileTurns];requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));renderProfileLegend();
- if(lastProfileSource!=='globe')analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis territorial.</span>';});
+ analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis temático del perfil.</span>';});
  status('Perfil topográfico generado · '+fmtDistance(prof.total));
 
  }finally{profilePts=oldPts;}
 }
-let lastProfileAnalysis=null,lastProfileDraw=null,lastProfilePath=null,lastProfileSource='map',lastProfileCountries=[];
+let lastProfileAnalysis=null,lastProfileDraw=null,lastProfilePath=null,lastProfileSource='map',lastProfileCountries=[],lastProfileWorld=false;
 function profileVegetationKind(){return document.querySelector('input[name="profileTheme"]:checked')?.value==='veg_potential'?'potential':'actual';}
 function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 68%)';}
 function cleanThemeText(txt){return cleanGrafcanValue(txt);}
@@ -5194,22 +5196,44 @@ async function geodeOriginalColor(code){
 function geologyTheme(g){if(!g)return {label:'Sin dato',detail:''};let label=cleanThemeText(g.DESC_UNIT||'Unidad geológica');label=label.replace(/^[-–—\s]+/,'').replace(/\s*\([^)]*(?:file|shp|mdb|gdb)[^)]*\)\s*/gi,' ').replace(/\s+/g,' ').trim();const a1=cleanThemeText(g.NAME_EDA1||''),a2=cleanThemeText(g.NAME_EDA2||''),age=a1&&a2&&a1!==a2?a1+' – '+a2:(a1||a2||'');const id=String(g.CODE_UNIO||g.CODE_COTR||label);return {label:label||'Unidad geológica',detail:age?(label+' · '+age):label,color:g.__color||null,unit:'geode:'+id,code:normalizeGeodeCode(g.CODE_COTR||''),categoryKey:'geo|'+normalizeThemeCategory(id)};}
 function themeAtDistance(d,key){if(!lastProfileAnalysis||!lastProfileAnalysis.samples.length)return null;let best=lastProfileAnalysis.samples[0],bd=Math.abs(best.d-d);for(const x of lastProfileAnalysis.samples){const dd=Math.abs(x.d-d);if(dd<bd){best=x;bd=dd;}}return best[key]||null;}
 function profileThemeMode(){
- if(lastProfileSource==='globe')return 'alt';
- return document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';
+ const mode=document.querySelector('input[name="profileTheme"]:checked')?.value||'alt';
+ if(lastProfileWorld&&mode==='veg_potential')return 'alt';
+ return mode;
+}
+function setProfileThemeLabel(id,text){
+ const el=document.getElementById(id),lab=el?.parentElement;if(!el||!lab)return;
+ const node=[...lab.childNodes].find(n=>n.nodeType===3);
+ if(node)node.nodeValue=' '+text;
 }
 function updateProfileThemeAvailability(){
- const globe=lastProfileSource==='globe';
+ const world=!!lastProfileWorld;
  const alt=document.getElementById('profileAltTheme');
- const thematic=['profileVegActualTheme','profileVegPotentialTheme','profileGeoTheme'];
- if(globe&&alt)alt.checked=true;
- for(const id of thematic){
-  const el=document.getElementById(id);if(!el)continue;
-  el.disabled=globe;
-  if(el.parentElement){
-   el.parentElement.style.opacity=globe?'.35':'';
-   el.parentElement.style.cursor=globe?'not-allowed':'pointer';
-   el.parentElement.title=globe?'Esta capa temática no está disponible todavía a escala mundial.':'';
-  }
+ const actual=document.getElementById('profileVegActualTheme');
+ const potential=document.getElementById('profileVegPotentialTheme');
+ const geo=document.getElementById('profileGeoTheme');
+
+ setProfileThemeLabel('profileVegActualTheme',world?'Biomas':'Vegetación actual');
+ setProfileThemeLabel('profileVegPotentialTheme','Vegetación potencial');
+ setProfileThemeLabel('profileGeoTheme','Geología');
+
+ if(actual){
+  actual.disabled=false;
+  actual.parentElement.style.opacity='';
+  actual.parentElement.style.cursor='pointer';
+  actual.parentElement.title=world?'Grandes biomas y ecorregiones · RESOLVE 2017':'';
+ }
+ if(geo){
+  geo.disabled=false;
+  geo.parentElement.style.opacity='';
+  geo.parentElement.style.cursor='pointer';
+  geo.parentElement.title=world?'Geología mundial · Macrostrat':'';
+ }
+ if(potential){
+  potential.disabled=world;
+  potential.parentElement.style.opacity=world?'.35':'';
+  potential.parentElement.style.cursor=world?'not-allowed':'pointer';
+  potential.parentElement.title=world?'La vegetación potencial MITECO se utiliza en los perfiles de España.':'';
+  if(world&&potential.checked&&alt)alt.checked=true;
  }
 }
 function validProfileFormation(name){
@@ -5221,10 +5245,10 @@ function renderProfileLegend(){
  const box=document.getElementById('profileBandsContent');if(!box)return;const mode=profileThemeMode();
  if(mode==='alt'){
   const items=[['0–200 m',hypsometricColor(100)],['200–500 m',hypsometricColor(350)],['500–1000 m',hypsometricColor(750)],['1000–1500 m',hypsometricColor(1250)],['1500–2000 m',hypsometricColor(1750)],['2000–2500 m',hypsometricColor(2250)],['2500–3000 m',hypsometricColor(2750)],['> 3000 m',hypsometricColor(3200)]];
-  const note=lastProfileSource==='globe'?'<span class="profileLegendHint" style="flex-basis:100%">Perfil mundial: por ahora solo se representa la altimetría.</span>':'';
+  const note=lastProfileWorld?'<span class="profileLegendHint" style="flex-basis:100%">Perfil mundial: puedes alternar entre altimetría, biomas RESOLVE y geología Macrostrat.</span>':'';
   box.innerHTML=note+items.map(x=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></span>').join('');return;
  }
- if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode.startsWith('veg')?'vegetación':'geología')+'…</span>';return;}
+ if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode.startsWith('veg')?(lastProfileWorld?'biomas y ecorregiones':'vegetación'):'geología')+'…</span>';return;}
  if(mode==='geo'){
   const seen=new Map();for(const x of lastProfileAnalysis.samples){const u=x.geo;if(!u||!u.label||u.label==='Sin dato')continue;seen.set(profileCategoryKey(u),u);}
   if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}
@@ -5246,9 +5270,108 @@ function renderProfileLegend(){
 }
 
 function redrawProfileTheme(){updateProfileThemeAvailability();renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
+const PROFILE_RESOLVE_QUERY='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query';
+function worldBiomeProfileTheme(f){
+ if(!f)return {label:'Sin dato',formation:'Sin dato',detail:'',color:null};
+ const p=f.properties||{};
+ const biome=translateBiomeNameEs(p.biome_name||'')||'Bioma terrestre';
+ const eco=translateEcoregionEs(p.eco_name||'',p.eco_id||'',p.biome_name||'',p.realm||'')||biome;
+ const realm=translateRealmEs(p.realm||'');
+ const color=p.color_bio||biomeColor(p.biome_name||'')||'#aab0b6';
+ return {
+  label:eco,formation:biome,concrete:eco,detail:eco,association:realm,
+  color,officialColor:true,unit:String(p.eco_id??eco),
+  categoryKey:'worldbiome|'+String(p.eco_id??normalizeThemeCategory(eco))
+ };
+}
+function worldGeologyProfileTheme(g){
+ if(!g)return {label:'Sin dato',detail:'',color:null};
+ const label=macrostratDisplayName(g)||'Unidad geológica';
+ const age=macrostratAgeText(g)||'';
+ const color=macrostratFeatureColor(g)||'#aab0b6';
+ const id=g.unit_id??g.map_id??g.source_id??g.strat_name??g.name??label;
+ return {
+  label,detail:age?(label+' · '+age):label,age,color,officialColor:true,
+  unit:String(id),categoryKey:'macrogeo|'+normalizeThemeCategory(String(id))
+ };
+}
+function profileWorldMacrostratZoom(total){
+ if(total<100000)return 10;
+ if(total<350000)return 9;
+ if(total<900000)return 8;
+ if(total<2200000)return 7;
+ if(total<5000000)return 6;
+ return 5;
+}
+function profileChunkBBoxes(points,pad=.18){
+ if(!points.length)return [];
+ const lats=points.map(p=>p.ll.lat),lngs=points.map(p=>p.ll.lng);
+ const minLat=Math.max(-85,Math.min(...lats)-pad),maxLat=Math.min(85,Math.max(...lats)+pad);
+ const minLon=Math.min(...lngs),maxLon=Math.max(...lngs);
+ if(maxLon-minLon<=180)return [[Math.max(-180,minLon-pad),minLat,Math.min(180,maxLon+pad),maxLat]];
+ const west=points.filter(p=>p.ll.lng<0).map(p=>p.ll.lng),east=points.filter(p=>p.ll.lng>=0).map(p=>p.ll.lng);
+ const boxes=[];
+ if(west.length)boxes.push([Math.max(-180,Math.min(...west)-pad),minLat,Math.min(180,Math.max(...west)+pad),maxLat]);
+ if(east.length)boxes.push([Math.max(-180,Math.min(...east)-pad),minLat,Math.min(180,Math.max(...east)+pad),maxLat]);
+ return boxes;
+}
+async function profileWorldBiomeFeatures(prof){
+ const probe=interpolateProfilePoints(prof.path,Math.min(180,Math.max(48,Math.ceil(prof.total/18000))));
+ const chunks=[],size=36;
+ for(let i=0;i<probe.points.length;i+=size)chunks.push(probe.points.slice(i,i+size));
+ const features=[],seen=new Set();
+ for(const chunk of chunks){
+  for(const bb of profileChunkBBoxes(chunk)){
+   try{
+    const p=new URLSearchParams({
+     where:'1=1',geometry:bb.join(','),geometryType:'esriGeometryEnvelope',
+     inSR:'4326',spatialRel:'esriSpatialRelIntersects',
+     outFields:'eco_id,biome_name,eco_name,realm,color_bio,license',
+     returnGeometry:'true',outSR:'4326',maxAllowableOffset:'0.008',f:'geojson'
+    });
+    const r=await fetch(PROFILE_RESOLVE_QUERY+'?'+p);
+    if(!r.ok)continue;
+    const g=await r.json();
+    for(const f of g?.features||[]){
+     const key=String(f?.properties?.eco_id??f?.id??'')+'|'+String(f?.properties?.eco_name??'');
+     if(seen.has(key))continue;seen.add(key);features.push(f);
+    }
+   }catch(e){console.warn('RESOLVE perfil:',e);}
+  }
+ }
+ return features;
+}
+function profileWorldBiomeAtFeatures(features,lat,lon){
+ for(const f of features)if(featureContainsPoint(f,lat,lon))return f;
+ return null;
+}
+async function analyzeWorldProfileThemes(prof,seq){
+ const n=Math.min(360,Math.max(72,Math.ceil(prof.total/7000)));
+ const q=interpolateProfilePoints(prof.path,n),arr=new Array(q.points.length);
+ const biomeFeatures=await profileWorldBiomeFeatures(prof);
+ if(seq!==profileTerritorySeq)return;
+ const mz=profileWorldMacrostratZoom(prof.total);
+ let next=0;const workers=Math.min(10,q.points.length);
+ await Promise.all(Array.from({length:workers},async()=>{
+  while(true){
+   const i=next++;if(i>=q.points.length)break;
+   const p=q.points[i];
+   const bf=profileWorldBiomeAtFeatures(biomeFeatures,p.ll.lat,p.ll.lng);
+   const biome=worldBiomeProfileTheme(bf);
+   let geo={label:'Sin dato',detail:'',color:null};
+   try{geo=worldGeologyProfileTheme(await macrostratGeologyAt(p.ll.lat,p.ll.lng,mz));}catch(e){}
+   arr[i]={d:p.d,vegActual:biome,vegPotential:{label:'Sin dato',detail:''},geo};
+  }
+ }));
+ if(seq!==profileTerritorySeq)return;
+ lastProfileAnalysis={total:prof.total,samples:arr};
+ redrawProfileTheme();
+}
+
 let profileTerritorySeq=0;
 async function analyzeProfileTerritory(prof){
  const seq=++profileTerritorySeq;
+ if(lastProfileWorld)return analyzeWorldProfileThemes(prof,seq);
  const n=Math.min(900,Math.max(64,Math.ceil(prof.total/950)));const q=interpolateProfilePoints(prof.path,n),arr=new Array(q.points.length);let next=0;const workers=Math.min(12,q.points.length);
  await Promise.all(Array.from({length:workers},async()=>{while(true){const i=next++;if(i>=q.points.length)break;const p=q.points[i];let vegActual={label:'Sin dato',detail:''},vegPotential={label:'Sin dato',detail:''},geo={label:'Sin dato',detail:''};const inSpain=(p.ll.lat>=27&&p.ll.lat<=44.5&&p.ll.lng>=-18.5&&p.ll.lng<=4.8);if(inSpain){const canary=isCanaryPoint(p.ll.lat,p.ll.lng);const [va,vp,g]=await Promise.all([canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'actual'):mfeAt(p.ll.lat,p.ll.lng),canary?canaryVegetationAt(p.ll.lat,p.ll.lng,'potential'):mitecoVegetationAt(p.ll.lat,p.ll.lng),geologyAtRaw(p.ll.lat,p.ll.lng)]);vegActual=vegetationTheme(va);vegPotential=vegetationTheme(vp);geo=geologyTheme(g);
    const [ac,pc,gc]=await Promise.all([
@@ -5682,8 +5805,20 @@ function showProfilePoint(event){
  const nearest=lastProfileDraw[0].reduce((best,p)=>Number.isFinite(p.z)&&(!best||Math.abs(p.d-distance)<Math.abs(best.d-distance))?p:best,null);
  const position=lastProfilePath?.path?interpolateProfilePoints(lastProfilePath.path,Math.min(1200,Math.max(200,Math.ceil(total/150)))).points.reduce((best,p)=>!best||Math.abs(p.d-distance)<Math.abs(best.d-distance)?p:best,null):null;
  const request=++profilePointRequest;
- const rows=mode==='alt'?[]:mode==='geo'?[['Unidad geológica',u?.label||'Sin dato'],['Edad',u?.detail&&u.detail!==u.label?u.detail.replace(u.label+' · ',''):'']]:[[u?.coverType?'Cobertura/uso':'Formación',validProfileFormation(u?.formation)?u.formation:''],['Formación concreta',u?.concrete&&u.concrete!==u.formation?u.concrete:''],['Especie dominante',u?.dominant],['Nombre común',u?.detail&&u.detail!==u.concrete&&u.detail!==u.formation?u.detail:''],['Unidad fitosociológica',u?.association]];
- const heading=mode==='alt'?'⛰️ Altimetría':mode==='geo'?'🪨 Geología':'🌿 Vegetación '+(mode==='veg_potential'?'potencial':'actual');
+ const rows=mode==='alt'?[]:
+  mode==='geo'?[['Unidad geológica',u?.label||'Sin dato'],['Edad',u?.age||((u?.detail&&u.detail!==u.label)?u.detail.replace(u.label+' · ',''):'')]]:
+  (lastProfileWorld?[
+   ['Bioma',u?.formation||''],
+   ['Ecorregión',u?.concrete||u?.label||''],
+   ['Reino biogeográfico',u?.association||'']
+  ]:[
+   [u?.coverType?'Cobertura/uso':'Formación',validProfileFormation(u?.formation)?u.formation:''],
+   ['Formación concreta',u?.concrete&&u.concrete!==u.formation?u.concrete:''],
+   ['Especie dominante',u?.dominant],
+   ['Nombre común',u?.detail&&u.detail!==u.concrete&&u.detail!==u.formation?u.detail:''],
+   ['Unidad fitosociológica',u?.association]
+  ]);
+ const heading=mode==='alt'?'⛰️ Altimetría':mode==='geo'?'🪨 Geología':(lastProfileWorld?'🌿 Biomas y ecorregiones':'🌿 Vegetación '+(mode==='veg_potential'?'potencial':'actual'));
  const profileCountry=profileCountryAtDistance(distance);
  if(profileCountry)rows.unshift(['País/territorio',profileCountry]);
  rows.unshift(['Altitud aproximada',nearest?fmtNum(nearest.z,0)+' m':'Sin dato']);
@@ -5899,7 +6034,7 @@ window.addEventListener('resize',()=>{
  if(globeViewer)configureGlobeMobileQuality();
 });
 
-function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;lastProfileSource='map';lastProfileCountries=[];const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];profileClosed=false;if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
+function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;lastProfileSource='map';lastProfileCountries=[];lastProfileWorld=false;const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];profileClosed=false;if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
 
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfileModal();});
@@ -6217,7 +6352,7 @@ function finishGlobeMeasure(){if(!globeMeasureMode)return;redrawGlobeMeasure();g
 function clearGlobeMeasure(reset=true){if(globeViewer)for(const e of globeMeasureEntities)globeViewer.entities.remove(e);globeMeasureEntities=[];globeMeasurePts=[];if(reset)globeMeasureMode=null;if(globeViewer)globeViewer.scene.requestRender();}
 function redrawGlobeProfile(){if(!globeViewer)return;for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];globeProfileHandles=[];globeProfileLine=null;globeProfilePts.forEach((p,i)=>{const endpoint=i===0||i===globeProfilePts.length-1,e=globeEntityPoint(p,endpoint?Cesium.Color.YELLOW:Cesium.Color.ORANGE,endpoint?i:null);globeProfileEntities.push(e);if(endpoint)globeProfileHandles.push(e);});if(globeProfilePts.length>1){globeProfileLine=globeEntityLine(globeProfilePts,Cesium.Color.YELLOW,false);globeProfileEntities.push(globeProfileLine);}globeViewer.scene.requestRender();}
 function updateGlobeProfileFast(){if(globeProfileLine)globeProfileLine.polyline.positions=Cesium.Cartesian3.fromDegreesArray(globeProfilePts.flatMap(p=>[p.lng,p.lat]));const d=measurePerimeter(globeProfilePts,false);document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+fmtDistance(d)+' · suelta el extremo para recalcular';status('Perfil · '+fmtDistance(d));globeViewer.scene.requestRender();}
-function startGlobeProfile(){globeMeasureMode=null;globeProfileMode=true;globeProfilePts=[];clearGlobeProfile(false);document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('PERFIL EN GLOBO · marca al menos dos puntos');}
+function startGlobeProfile(){globeMeasureMode=null;globeProfileMode=true;globeProfilePts=[];clearGlobeProfile(false);document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('PERFIL EN GLOBO · marca al menos dos puntos · altimetría + biomas + geología');}
 async function finishGlobeProfile(){if(globeProfilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}globeProfileMode=false;redrawGlobeProfile();lastProfileSource='globe';lastProfileCountries=[];await finishProfileFromPoints(globeProfilePts.slice());}
 function clearGlobeProfile(reset=true){if(globeViewer)for(const e of globeProfileEntities)globeViewer.entities.remove(e);globeProfileEntities=[];globeProfileHandles=[];globeProfileLine=null;globeProfilePts=[];if(reset)globeProfileMode=false;if(globeViewer)globeViewer.scene.requestRender();}
 function countryName(p){return p.ADMIN||p.NAME_ES||p.NAME_EN||p.NAME||p.SOVEREIGNT||p.BRK_NAME||'Territorio sin identificar';}
