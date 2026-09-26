@@ -2205,6 +2205,18 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .histEventLinks a{color:#0b5fa5;font-weight:800;text-decoration:none}
 
 </style>
+
+<style id="anambro-physical-labels-css">
+/* ANAMBRO · toponimia física mundial permanente */
+.physical-label{font-family:Montserrat,Arial,sans-serif;text-align:center;white-space:nowrap;pointer-events:none;user-select:none;text-shadow:-1px -1px 0 rgba(255,255,255,.92),1px -1px 0 rgba(255,255,255,.92),-1px 1px 0 rgba(255,255,255,.92),1px 1px 0 rgba(255,255,255,.92),0 1px 4px rgba(255,255,255,.9),0 2px 5px rgba(0,0,0,.58)}
+.physical-continent{font-weight:900;font-size:15px;letter-spacing:2.2px;color:#243746;text-transform:uppercase}
+.physical-ocean{font-weight:800;font-size:14px;letter-spacing:1.7px;color:#295f82;font-style:italic;text-transform:uppercase}
+.physical-sea{font-weight:800;font-size:11px;letter-spacing:.7px;color:#2d6d92;font-style:italic}
+.physical-island{font-weight:850;font-size:10.5px;color:#3e4f3f;letter-spacing:.25px}
+.physical-peninsula{font-weight:850;font-size:10.5px;color:#624f36;letter-spacing:.2px}
+.physical-range{font-weight:850;font-size:10px;color:#765a45;letter-spacing:.55px;text-transform:uppercase}
+@media(max-width:760px){.physical-continent{font-size:12px;letter-spacing:1.5px}.physical-ocean{font-size:11px;letter-spacing:1.1px}.physical-sea{font-size:9px}.physical-island,.physical-peninsula{font-size:9px}.physical-range{font-size:8.5px}}
+</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -9975,4 +9987,94 @@ window.addEventListener('resize',()=>{clearTimeout(window.__mapResizeT);window._
 function toggleWelcome(force){const ov=document.getElementById('welcomeOverlay');if(!ov)return;const open=(typeof force==='boolean')?force:!ov.classList.contains('open');ov.classList.toggle('open',open);ov.setAttribute('aria-hidden',open?'false':'true');document.body.style.overflow=open?'hidden':'';}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleWelcome(false);});
 document.addEventListener('click',e=>{const ov=document.getElementById('welcomeOverlay');if(!ov||!ov.classList.contains('open'))return;if(e.target===ov)toggleWelcome(false);});
-</script></body></html>
+</script>
+<script id="anambro-physical-labels-js">
+/* ANAMBRO · toponimia física mundial permanente en 2D y 3D.
+   Independiente de las capas políticas: permanece visible sobre mapas temáticos e históricos. */
+const ANAMBRO_PHYSICAL_LABELS=[
+ // Continentes
+ {n:'AMÉRICA DEL NORTE',lat:48,lon:-106,t:'continent',z0:2,z1:5},{n:'AMÉRICA DEL SUR',lat:-18,lon:-61,t:'continent',z0:2,z1:5},
+ {n:'EUROPA',lat:51,lon:17,t:'continent',z0:2,z1:5},{n:'ÁFRICA',lat:7,lon:21,t:'continent',z0:2,z1:5},{n:'ASIA',lat:46,lon:87,t:'continent',z0:2,z1:5},
+ {n:'OCEANÍA',lat:-24,lon:137,t:'continent',z0:2,z1:5},{n:'ANTÁRTIDA',lat:-78,lon:20,t:'continent',z0:2,z1:4},
+ // Océanos
+ {n:'OCÉANO PACÍFICO',lat:8,lon:-145,t:'ocean',z0:2,z1:5},{n:'OCÉANO PACÍFICO',lat:-17,lon:156,t:'ocean',z0:2,z1:5},
+ {n:'OCÉANO ATLÁNTICO',lat:10,lon:-35,t:'ocean',z0:2,z1:5},{n:'OCÉANO ÍNDICO',lat:-18,lon:79,t:'ocean',z0:2,z1:5},
+ {n:'OCÉANO GLACIAL ÁRTICO',lat:79,lon:20,t:'ocean',z0:2,z1:4},{n:'OCÉANO AUSTRAL',lat:-60,lon:85,t:'ocean',z0:2,z1:4},
+ // Grandes mares y golfos
+ {n:'Mar Mediterráneo',lat:35.2,lon:18,t:'sea',z0:3,z1:7},{n:'Mar Caribe',lat:15.2,lon:-75,t:'sea',z0:3,z1:7},{n:'Golfo de México',lat:24.2,lon:-90,t:'sea',z0:3,z1:7},
+ {n:'Mar del Norte',lat:56.5,lon:3,t:'sea',z0:4,z1:7},{n:'Mar Báltico',lat:58,lon:20,t:'sea',z0:4,z1:7},{n:'Mar Negro',lat:43,lon:34,t:'sea',z0:4,z1:7},
+ {n:'Mar Rojo',lat:20,lon:38.5,t:'sea',z0:4,z1:7},{n:'Mar Arábigo',lat:14,lon:64,t:'sea',z0:3,z1:7},{n:'Bahía de Bengala',lat:15,lon:88,t:'sea',z0:3,z1:7},
+ {n:'Mar de China Meridional',lat:12,lon:114,t:'sea',z0:3,z1:7},{n:'Mar de Japón',lat:40,lon:134,t:'sea',z0:4,z1:7},{n:'Mar de Bering',lat:58,lon:-178,t:'sea',z0:3,z1:6},
+ // Penínsulas
+ {n:'Península Ibérica',lat:40.3,lon:-4.2,t:'peninsula',z0:4,z1:8},{n:'Península Itálica',lat:42,lon:12.5,t:'peninsula',z0:5,z1:8},{n:'Península Balcánica',lat:42.3,lon:21.5,t:'peninsula',z0:4,z1:8},
+ {n:'Península Escandinava',lat:64,lon:16,t:'peninsula',z0:4,z1:8},{n:'Jutlandia',lat:56.3,lon:9.2,t:'peninsula',z0:5,z1:8},{n:'Península de Anatolia',lat:39,lon:33,t:'peninsula',z0:4,z1:8},
+ {n:'Península Arábiga',lat:23,lon:46,t:'peninsula',z0:3,z1:8},{n:'Península del Sinaí',lat:29.5,lon:33.7,t:'peninsula',z0:5,z1:8},{n:'Península del Indostán',lat:19.5,lon:78.5,t:'peninsula',z0:3,z1:8},
+ {n:'Indochina',lat:17,lon:103,t:'peninsula',z0:4,z1:8},{n:'Península de Malaca',lat:6,lon:101,t:'peninsula',z0:5,z1:8},{n:'Península de Corea',lat:38,lon:127.5,t:'peninsula',z0:5,z1:8},
+ {n:'Kamchatka',lat:57,lon:160,t:'peninsula',z0:4,z1:8},{n:'Alaska',lat:63,lon:-151,t:'peninsula',z0:4,z1:8},{n:'Labrador',lat:54,lon:-61,t:'peninsula',z0:4,z1:8},
+ {n:'Florida',lat:28,lon:-82,t:'peninsula',z0:5,z1:8},{n:'Yucatán',lat:20,lon:-89,t:'peninsula',z0:5,z1:8},{n:'Baja California',lat:27.5,lon:-113,t:'peninsula',z0:5,z1:8},
+ // Grandes islas y archipiélagos
+ {n:'Groenlandia',lat:72,lon:-41,t:'island',z0:3,z1:8},{n:'Islandia',lat:65,lon:-19,t:'island',z0:4,z1:8},{n:'Gran Bretaña',lat:54.5,lon:-2.5,t:'island',z0:5,z1:8},
+ {n:'Irlanda',lat:53.3,lon:-8,t:'island',z0:5,z1:8},{n:'Sicilia',lat:37.6,lon:14,t:'island',z0:6,z1:9},{n:'Cerdeña',lat:40,lon:9,t:'island',z0:6,z1:9},{n:'Córcega',lat:42.1,lon:9,t:'island',z0:6,z1:9},
+ {n:'Creta',lat:35.2,lon:24.8,t:'island',z0:6,z1:9},{n:'Chipre',lat:35.1,lon:33.2,t:'island',z0:6,z1:9},{n:'Madagascar',lat:-19.3,lon:46.7,t:'island',z0:4,z1:8},
+ {n:'Sri Lanka',lat:7.7,lon:80.7,t:'island',z0:5,z1:9},{n:'Borneo',lat:0.7,lon:114,t:'island',z0:4,z1:8},{n:'Sumatra',lat:-0.5,lon:101,t:'island',z0:4,z1:8},
+ {n:'Java',lat:-7.3,lon:110,t:'island',z0:5,z1:9},{n:'Sulawesi',lat:-2,lon:121,t:'island',z0:5,z1:9},{n:'Nueva Guinea',lat:-5.5,lon:141,t:'island',z0:4,z1:8},
+ {n:'Filipinas',lat:12.5,lon:122,t:'island',z0:4,z1:8},{n:'Japón',lat:37,lon:138,t:'island',z0:4,z1:8},{n:'Nueva Zelanda',lat:-42,lon:173,t:'island',z0:4,z1:8},
+ {n:'Tasmania',lat:-42,lon:147,t:'island',z0:5,z1:9},{n:'Cuba',lat:21.7,lon:-79.5,t:'island',z0:5,z1:9},{n:'La Española',lat:19,lon:-70.5,t:'island',z0:5,z1:9},
+ {n:'Terranova',lat:49,lon:-56,t:'island',z0:5,z1:9},{n:'Tierra del Fuego',lat:-54,lon:-68,t:'island',z0:5,z1:9},{n:'Islas Canarias',lat:28.2,lon:-15.7,t:'island',z0:5,z1:10},
+ {n:'Azores',lat:38.5,lon:-28,t:'island',z0:5,z1:9},{n:'Hawái',lat:20.7,lon:-157,t:'island',z0:5,z1:9},
+ // Grandes cordilleras como referencia física complementaria
+ {n:'ANDES',lat:-18,lon:-70,t:'range',z0:4,z1:7},{n:'MONTAÑAS ROCOSAS',lat:45,lon:-112,t:'range',z0:4,z1:7},{n:'ALPES',lat:46.4,lon:10,t:'range',z0:5,z1:8},
+ {n:'HIMALAYA',lat:29.5,lon:84,t:'range',z0:4,z1:7},{n:'ATLAS',lat:31.5,lon:-6,t:'range',z0:5,z1:8},{n:'URALES',lat:58,lon:60,t:'range',z0:4,z1:7},{n:'CÁUCASO',lat:42.3,lon:44.5,t:'range',z0:5,z1:8}
+];
+let anambroPhysical2D=null,anambroPhysical3D=[];
+function physicalLabelClass(t){return 'physical-label physical-'+t;}
+function ensurePhysicalLabels2D(){
+ if(typeof map==='undefined'||typeof L==='undefined')return;
+ if(!map.getPane('physicalLabelsPane')){const p=map.createPane('physicalLabelsPane');p.style.zIndex='590';p.style.pointerEvents='none';}
+ if(!anambroPhysical2D)anambroPhysical2D=L.layerGroup().addTo(map);
+ anambroPhysical2D.clearLayers();
+ const z=map.getZoom();
+ for(const x of ANAMBRO_PHYSICAL_LABELS){
+  if(z<x.z0||z>x.z1)continue;
+  const w=x.t==='continent'?220:x.t==='ocean'?220:x.t==='sea'?170:x.t==='range'?170:160;
+  const h=x.t==='continent'||x.t==='ocean'?28:22;
+  const icon=L.divIcon({className:'',html:'<div class="'+physicalLabelClass(x.t)+'">'+escHtml(x.n)+'</div>',iconSize:[w,h],iconAnchor:[w/2,h/2]});
+  L.marker([x.lat,x.lon],{icon,pane:'physicalLabelsPane',interactive:false,keyboard:false,riseOnHover:false}).addTo(anambroPhysical2D);
+ }
+ if(map.hasLayer(anambroPhysical2D))anambroPhysical2D.bringToFront?.();
+}
+function physical3DStyle(t){
+ const C=Cesium.Color;
+ if(t==='ocean'||t==='sea')return {fill:C.fromCssColorString('#9ddcff'),outline:C.BLACK,font:t==='ocean'?'italic 800 17px Montserrat, Arial, sans-serif':'italic 750 13px Montserrat, Arial, sans-serif'};
+ if(t==='continent')return {fill:C.fromCssColorString('#ffffff'),outline:C.BLACK,font:'900 18px Montserrat, Arial, sans-serif'};
+ if(t==='range')return {fill:C.fromCssColorString('#ffd6ad'),outline:C.BLACK,font:'850 12px Montserrat, Arial, sans-serif'};
+ if(t==='peninsula')return {fill:C.fromCssColorString('#ffe0a6'),outline:C.BLACK,font:'800 12px Montserrat, Arial, sans-serif'};
+ return {fill:C.fromCssColorString('#d7ffd8'),outline:C.BLACK,font:'800 12px Montserrat, Arial, sans-serif'};
+}
+function physical3DDistance(x){
+ if(x.t==='continent'||x.t==='ocean')return [1800000,50000000];
+ if(x.t==='sea')return [450000,28000000];
+ if(x.t==='range')return [180000,15000000];
+ return [120000,18000000];
+}
+function ensurePhysicalLabels3D(){
+ if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
+ if(anambroPhysical3D.length)return;
+ for(const x of ANAMBRO_PHYSICAL_LABELS){
+  const st=physical3DStyle(x.t),d=physical3DDistance(x);
+  const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(x.lon,x.lat,18000),label:{
+   text:x.n,font:st.font,fillColor:st.fill,outlineColor:st.outline.withAlpha(.92),outlineWidth:3,style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+   showBackground:false,horizontalOrigin:Cesium.HorizontalOrigin.CENTER,verticalOrigin:Cesium.VerticalOrigin.CENTER,
+   disableDepthTestDistance:Number.POSITIVE_INFINITY,distanceDisplayCondition:new Cesium.DistanceDisplayCondition(d[0],d[1]),
+   scaleByDistance:new Cesium.NearFarScalar(d[0],1.05,d[1],.72)
+  }});
+  anambroPhysical3D.push(e);
+ }
+ globeViewer.scene.requestRender();
+}
+map.on('zoomend moveend',ensurePhysicalLabels2D);
+ensurePhysicalLabels2D();
+const __anambroToggleGlobeBase=toggleGlobe;
+toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.classList.contains('globe-mode'))ensurePhysicalLabels3D();};
+</script>
+</body></html>
