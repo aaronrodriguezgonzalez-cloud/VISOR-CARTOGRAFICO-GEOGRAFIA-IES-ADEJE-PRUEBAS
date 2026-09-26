@@ -2473,7 +2473,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label>
 <div class="layerSubBlock">
   <small>Ciudades y emisoras de todo el mundo. Pulsa un punto y después ▶ para escuchar la emisión.</small>
-  <small><b>Integración no oficial:</b> utiliza la API interna de Radio Garden y puede dejar de funcionar si el servicio cambia sus endpoints.</small>
+  <small><b>Integración no oficial:</b> en GitHub Pages se usa una instantánea pública del directorio para evitar el bloqueo CORS de la API JSON de Radio Garden; la reproducción intenta el stream en directo.</small>
   <small id="radioGardenLayerStatus">Capa desactivada.</small>
 </div>
 <div class="layerThemeTitle secondary">🧭 Territorio mundial</div>
@@ -2558,7 +2558,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
     <div class="sourceItem sourceOk"><b>RESOLVE / Dinerstein et al. (2017)</b> · ecorregiones y grandes biomas terrestres.<br><small>CC BY 4.0.</small><br><a href="https://doi.org/10.1093/biosci/bix014" target="_blank" rel="noopener">Dinerstein et al. (2017)</a></div>
-    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div><div class="sourceItem sourceReview"><b>Radio Garden</b> · ciudades y emisoras de radio en directo.<br><small>Integración no oficial mediante la API interna no documentada de Radio Garden. ANAMBRO no almacena ni redistribuye las emisiones: solicita el stream al servicio cuando el usuario pulsa reproducir. Los endpoints pueden cambiar o restringirse sin previo aviso.</small><br><a href="https://radio.garden/" target="_blank" rel="noopener">Radio Garden</a></div><div class="sourceItem sourceOk"><b>Wikipedia / Wikimedia</b> · contexto histórico bajo demanda de las entidades políticas representadas.<br><small>ANAMBRO consulta la API pública de MediaWiki mediante CORS y prioriza Wikipedia en español. Los extractos y resultados se muestran como contexto auxiliar y enlazan a sus artículos de origen. Texto de Wikipedia bajo CC BY-SA 4.0.</small><br><a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a></div>
+    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div><div class="sourceItem sourceReview"><b>Radio Garden</b> · ciudades y emisoras de radio en directo.<br><small>Integración no oficial. Radio Garden no permite acceso CORS directo a su API JSON desde un sitio estático como GitHub Pages; ANAMBRO usa una instantánea pública del directorio como fallback y solicita el stream de audio al reproducir. Los endpoints pueden cambiar o restringirse sin previo aviso.</small><br><a href="https://radio.garden/" target="_blank" rel="noopener">Radio Garden</a></div><div class="sourceItem sourceOk"><b>Wikipedia / Wikimedia</b> · contexto histórico bajo demanda de las entidades políticas representadas.<br><small>ANAMBRO consulta la API pública de MediaWiki mediante CORS y prioriza Wikipedia en español. Los extractos y resultados se muestran como contexto auxiliar y enlazan a sus artículos de origen. Texto de Wikipedia bajo CC BY-SA 4.0.</small><br><a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a></div>
     <div class="sourceItem sourceOk"><b>Smithsonian Global Volcanism Program</b> · Volcanoes of the World y erupciones holocenas.<br><small>Uso educativo y no comercial permitido con cita. Cita: Global Volcanism Program, 2026, Volcanoes of the World v5.4.0, Smithsonian Institution, compiled by Venzke, E.</small><br><a href="https://volcano.si.edu/gvp_termsofuse.cfm" target="_blank" rel="noopener">GVP Terms of Use</a> · <a href="https://volcano.si.edu/database/webservices.cfm" target="_blank" rel="noopener">Webservices</a></div>
     <div class="sourceItem sourceOk"><b>USGS Volcano Hazards Program</b> · información adicional y estado operativo de volcanes estadounidenses cuando existe.<br><small>Las fotografías se muestran únicamente cuando el servicio devuelve una imagen utilizable; las imágenes de terceros conservan sus propios derechos.</small><br><a href="https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits" target="_blank" rel="noopener">USGS Copyrights and Credits</a></div>
     <div class="sourceItem sourceReview"><b>Esri World Imagery</b> · fondo satelital del globo 3D.<br><small>ANAMBRO consume el servicio de teselas y mantiene la atribución a Esri y sus proveedores; no redistribuye el mosaico.</small></div>
@@ -9126,11 +9126,20 @@ document.getElementById('worldHistoryOpacity')?.addEventListener('input',e=>{his
 
 // ================================================================
 // RADIO MUNDIAL · RADIO GARDEN
-// API interna no oficial. Se carga únicamente al activar la capa.
+// GitHub Pages no puede consultar directamente la API JSON de Radio
+// Garden porque ésta no expone CORS para navegadores. ANAMBRO usa
+// primero instantáneas estáticas públicas de OpenRadio (jsDelivr),
+// y deja la API directa solo como último recurso.
 // ================================================================
 const RG_API='https://radio.garden/api';
+const RG_SNAPSHOT_BASES=[
+ 'https://cdn.jsdelivr.net/gh/PierrunoYT/openradio.world@main/data/',
+ 'https://openradio.world/data/'
+];
 let radioGardenPlaces=null;
+let radioGardenStationsSnapshot=null;
 let radioGardenLoadPromise=null;
+let radioGardenStationsPromise=null;
 let radioGardenLayer2D=null;
 let radioGardenRenderTimer=null;
 let radioGardenGlobePoints=null;
@@ -9140,25 +9149,77 @@ function radioGardenStatus(msg){
  if(el)el.textContent=msg;
 }
 function radioGardenPlaceCoords(p){
- const g=Array.isArray(p?.geo)?p.geo:[];
- const lon=Number(g[0]),lat=Number(g[1]);
+ const g=Array.isArray(p?.geo)?p.geo:(Array.isArray(p?.coordinates)?p.coordinates:null);
+ let lon,lat;
+ if(g&&g.length>=2){lon=Number(g[0]);lat=Number(g[1]);}
+ else{lon=Number(p?.lon??p?.lng??p?.longitude);lat=Number(p?.lat??p?.latitude);}
  return Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null;
+}
+function rgArrayFromJson(j){
+ if(Array.isArray(j))return j;
+ if(Array.isArray(j?.data))return j.data;
+ if(Array.isArray(j?.data?.list))return j.data.list;
+ if(Array.isArray(j?.places))return j.places;
+ if(Array.isArray(j?.stations))return j.stations;
+ if(Array.isArray(j?.list))return j.list;
+ return null;
+}
+async function rgFetchJson(url,opts={}){
+ const r=await fetch(url,{cache:opts.cache||'force-cache',mode:'cors'});
+ if(!r.ok)throw new Error('HTTP '+r.status+' · '+url);
+ return r.json();
+}
+async function rgFetchSnapshotFile(name){
+ let last=null;
+ for(const base of RG_SNAPSHOT_BASES){
+  try{return await rgFetchJson(base+name,{cache:'force-cache'});}
+  catch(e){last=e;}
+ }
+ throw last||new Error('Snapshot no disponible');
+}
+function normalizeRadioGardenPlace(p){
+ const c=radioGardenPlaceCoords(p);if(!c)return null;
+ return {
+  ...p,
+  id:String(p?.id??p?.placeId??p?.place_id??p?.map??''),
+  title:String(p?.title??p?.name??p?.city??'Radio'),
+  country:String(p?.country??p?.countryName??p?.country_name??''),
+  size:Number(p?.size??p?.stationCount??p?.count??0)||0,
+  geo:[c.lon,c.lat]
+ };
 }
 async function loadRadioGardenPlaces(){
  if(radioGardenPlaces)return radioGardenPlaces;
  if(radioGardenLoadPromise)return radioGardenLoadPromise;
  radioGardenStatus('Cargando localidades con emisoras…');
  radioGardenLoadPromise=(async()=>{
-  const r=await fetch(RG_API+'/ara/content/places',{cache:'force-cache'});
-  if(!r.ok)throw new Error('Radio Garden HTTP '+r.status);
-  const j=await r.json();
-  const list=(j?.data?.list||[]).filter(p=>radioGardenPlaceCoords(p));
-  radioGardenPlaces=list;
-  radioGardenStatus(list.length.toLocaleString('es-ES')+' localidades disponibles.');
-  return list;
+  let list=null,source='';
+
+  // 1) Instantánea estática: funciona desde GitHub Pages porque jsDelivr
+  // sí permite CORS.
+  try{
+   const j=await rgFetchSnapshotFile('places.json');
+   list=rgArrayFromJson(j);
+   source='instantánea pública';
+  }catch(e){console.warn('Radio snapshot places',e);}
+
+  // 2) Último recurso: API directa (normalmente bloqueada por CORS).
+  if(!list){
+   try{
+    const j=await rgFetchJson(RG_API+'/ara/content/places',{cache:'force-cache'});
+    list=j?.data?.list||null;
+    source='API directa';
+   }catch(e){console.warn('Radio Garden API directa bloqueada',e);}
+  }
+
+  const normalized=(list||[]).map(normalizeRadioGardenPlace).filter(p=>p&&p.id);
+  if(!normalized.length)throw new Error('No se pudo obtener el directorio de localidades');
+  radioGardenPlaces=normalized;
+  radioGardenStatus(normalized.length.toLocaleString('es-ES')+' localidades · '+source+'.');
+  return normalized;
  })().catch(e=>{
   radioGardenLoadPromise=null;
-  radioGardenStatus('No se pudo conectar con Radio Garden.');
+  radioGardenStatus('No se pudo cargar el directorio de radio.');
   throw e;
  });
  return radioGardenLoadPromise;
@@ -9206,32 +9267,112 @@ function renderRadioGarden2D(){
  radioGardenStatus((radioGardenPlaces.length||0).toLocaleString('es-ES')+' localidades · mostrando '+layer.getLayers().length.toLocaleString('es-ES')+' en la vista.');
 }
 function radioGardenChannelId(ch){
- const href=String(ch?.href||ch?.url||'');
+ const direct=ch?.id??ch?.channelId??ch?.channel_id??ch?.stationId??ch?.station_id;
+ if(direct)return String(direct);
+ const href=String(ch?.href||ch?.url||ch?.path||'');
  const parts=href.split('/').filter(Boolean);
  return parts.length?parts[parts.length-1]:'';
 }
-async function radioGardenChannels(placeId){
- const r=await fetch(RG_API+'/ara/content/page/'+encodeURIComponent(placeId)+'/channels',{cache:'no-store'});
- if(!r.ok)throw new Error('Radio Garden HTTP '+r.status);
- const j=await r.json();
- const groups=Array.isArray(j?.data?.content)?j.data.content:[];
+function rgStationPlaceId(s){
+ return String(s?.placeId??s?.place_id??s?.place?.id??s?.place?.map??s?.map??'');
+}
+function rgStationTitle(s){
+ return String(s?.title??s?.name??s?.station??'Emisora');
+}
+function rgStationStream(s){
+ return String(s?.streamUrl??s?.stream_url??s?.stream??s?.urlResolved??s?.resolvedUrl??s?.listenUrl??'');
+}
+function flattenStationSnapshot(j){
+ const arr=rgArrayFromJson(j);
+ if(arr)return arr;
  const out=[];
- for(const g of groups){
-  const items=Array.isArray(g?.items)?g.items:[];
-  for(const ch of items){
-   const id=radioGardenChannelId(ch);
-   if(id&&!out.some(x=>x.id===id))out.push({id,title:ch.title||'Emisora',href:ch.href||''});
+ const walk=(v,ctxPlace='')=>{
+  if(!v)return;
+  if(Array.isArray(v)){for(const x of v)walk(x,ctxPlace);return;}
+  if(typeof v!=='object')return;
+  const possibleId=radioGardenChannelId(v);
+  const title=v.title??v.name;
+  const stream=rgStationStream(v);
+  const placeId=rgStationPlaceId(v)||ctxPlace;
+  if(possibleId&&title&&(stream||placeId)){
+   out.push({...v,__anambroPlaceId:placeId});
+   return;
   }
- }
+  for(const [k,val] of Object.entries(v)){
+   const nextCtx=(Array.isArray(val)&&/^[A-Za-z0-9_-]{5,}$/.test(k))?k:ctxPlace;
+   if(typeof val==='object')walk(val,nextCtx);
+  }
+ };
+ walk(j);
  return out;
 }
+async function loadRadioGardenStationSnapshot(){
+ if(radioGardenStationsSnapshot)return radioGardenStationsSnapshot;
+ if(radioGardenStationsPromise)return radioGardenStationsPromise;
+ radioGardenStationsPromise=(async()=>{
+  const j=await rgFetchSnapshotFile('stations.json');
+  const list=flattenStationSnapshot(j);
+  if(!list.length)throw new Error('Snapshot de estaciones vacío');
+  radioGardenStationsSnapshot=list;
+  return list;
+ })().catch(e=>{
+  radioGardenStationsPromise=null;
+  throw e;
+ });
+ return radioGardenStationsPromise;
+}
+function normalizeRGChannel(ch,place){
+ const id=radioGardenChannelId(ch);
+ return {
+  id,
+  title:rgStationTitle(ch),
+  href:ch?.href||ch?.url||'',
+  stream:rgStationStream(ch),
+  placeId:rgStationPlaceId(ch)||ch?.__anambroPlaceId||place?.id||''
+ };
+}
+async function radioGardenChannels(placeId){
+ const place=(radioGardenPlaces||[]).find(p=>String(p.id)===String(placeId))||{id:placeId};
+
+ // 1) Intento directo: puede funcionar si Radio Garden cambia CORS.
+ try{
+  const r=await fetch(RG_API+'/ara/content/page/'+encodeURIComponent(placeId)+'/channels',{cache:'no-store',mode:'cors'});
+  if(r.ok){
+   const j=await r.json();
+   const groups=Array.isArray(j?.data?.content)?j.data.content:[];
+   const out=[];
+   for(const g of groups){
+    for(const ch of (Array.isArray(g?.items)?g.items:[])){
+     const n=normalizeRGChannel(ch,place);
+     if(n.id&&!out.some(x=>x.id===n.id))out.push(n);
+    }
+   }
+   if(out.length)return out;
+  }
+ }catch(e){console.warn('Radio Garden canales directos bloqueados por CORS',e);}
+
+ // 2) Fallback estático.
+ try{
+  const all=await loadRadioGardenStationSnapshot();
+  const pid=String(placeId);
+  const out=[];
+  for(const s of all){
+   const sp=String(rgStationPlaceId(s)||s?.__anambroPlaceId||'');
+   if(sp!==pid)continue;
+   const n=normalizeRGChannel(s,place);
+   if(n.id&&!out.some(x=>x.id===n.id))out.push(n);
+  }
+  if(out.length)return out;
+ }catch(e){console.warn('Snapshot estaciones',e);}
+
+ return [];
+}
 function radioGardenStationListHtml(place,channels){
- if(!channels.length)return '<div class="rgNote">No se encontraron emisoras disponibles en este momento.</div>';
+ if(!channels.length)return '<div class="rgNote">No se encontraron emisoras disponibles en la instantánea actual.</div>';
  const rows=channels.slice(0,80).map(ch=>{
-  const id=encodeURIComponent(ch.id),title=encodeURIComponent(ch.title||'Emisora');
-  const placeName=encodeURIComponent(place?.title||''),country=encodeURIComponent(place?.country||'');
+  const payload=encodeURIComponent(JSON.stringify({id:ch.id,title:ch.title,stream:ch.stream||'',place:place?.title||'',country:place?.country||''}));
   return '<div class="rgStation"><div class="rgStationName">'+escHtml(ch.title||'Emisora')+'</div>'+
-    '<button class="rgPlay" data-id="'+id+'" data-title="'+title+'" data-place="'+placeName+'" data-country="'+country+'" onclick="radioGardenPlayButton(this)">▶ Escuchar</button></div>';
+    '<button class="rgPlay" data-rg="'+payload+'" onclick="radioGardenPlayButton(this)">▶ Escuchar</button></div>';
  }).join('');
  return '<div class="rgStations">'+rows+'</div>';
 }
@@ -9240,7 +9381,7 @@ function radioGardenCardHtml(place,content){
  return '<div class="rgCard"><div class="rgTitle">📻 '+escHtml(place?.title||'Radio')+'</div>'+
   '<div class="rgMeta">'+(place?.country?escHtml(place.country):'')+(count?' · '+count.toLocaleString('es-ES')+' emisora'+(count===1?'':'s'):'')+'</div>'+
   content+
-  '<div class="rgNote">Radio Garden · integración no oficial. La reproducción depende de la disponibilidad de cada emisora y del servicio de Radio Garden.</div></div>';
+  '<div class="rgNote">Datos de directorio procedentes de Radio Garden mediante una integración no oficial. En GitHub Pages ANAMBRO usa una instantánea pública para evitar el bloqueo CORS de la API JSON.</div></div>';
 }
 async function openRadioGardenPlace2D(place,marker){
  marker.bindPopup(radioGardenCardHtml(place,'<div class="rgNote">Cargando emisoras…</div>'),{maxWidth:450,className:'radioGardenPopup'}).openPopup();
@@ -9252,26 +9393,42 @@ async function openRadioGardenPlace2D(place,marker){
  }
 }
 function radioGardenPlayButton(btn){
- const id=decodeURIComponent(btn.dataset.id||'');
- const title=decodeURIComponent(btn.dataset.title||'Emisora');
- const place=decodeURIComponent(btn.dataset.place||'');
- const country=decodeURIComponent(btn.dataset.country||'');
- radioGardenPlay(id,title,place,country);
+ try{
+  const p=JSON.parse(decodeURIComponent(btn.dataset.rg||''));
+  radioGardenPlay(p.id,p.title,p.place,p.country,p.stream);
+ }catch(e){console.error(e);}
 }
-function radioGardenPlay(id,title,place,country){
- if(!id)return;
+function radioGardenPlay(id,title,place,country,directStream=''){
+ if(!id&&!directStream)return;
  const audio=document.getElementById('radioGardenAudio');
  const box=document.getElementById('radioGardenPlayer');
  const now=document.getElementById('radioGardenNow');
- const src=RG_API+'/ara/content/listen/'+encodeURIComponent(id)+'/channel.mp3';
- audio.src=src;
+
+ // El endpoint de escucha se puede usar como media aunque la API JSON no
+ // permita CORS. Si existe un stream HTTPS archivado, lo guardamos como
+ // fallback en caso de error.
+ const liveSrc=id?RG_API+'/ara/content/listen/'+encodeURIComponent(id)+'/channel.mp3':'';
+ let triedFallback=false;
+
+ audio.onerror=()=>{
+  if(triedFallback)return;
+  triedFallback=true;
+  if(directStream&&/^https:\/\//i.test(directStream)){
+   audio.src=directStream;
+   audio.play().catch(()=>{});
+   status('Radio: usando stream HTTPS de respaldo.');
+  }else{
+   status('Esta emisora no pudo reproducirse en el navegador.');
+  }
+ };
+ audio.src=liveSrc||directStream;
  now.innerHTML='<b>'+escHtml(title||'Emisora')+'</b><span>'+escHtml([place,country].filter(Boolean).join(' · '))+'</span>';
  box.classList.add('open');
  audio.play().catch(()=>{status('Pulsa ▶ en el reproductor para iniciar la emisión.');});
 }
 function radioGardenStop(){
  const audio=document.getElementById('radioGardenAudio');
- if(audio){audio.pause();audio.removeAttribute('src');audio.load();}
+ if(audio){audio.pause();audio.onerror=null;audio.removeAttribute('src');audio.load();}
  document.getElementById('radioGardenPlayer')?.classList.remove('open');
 }
 async function toggleRadioGarden2D(on){
@@ -9288,7 +9445,8 @@ async function toggleRadioGarden2D(on){
  }catch(e){
   console.error('Radio Garden',e);
   document.getElementById('worldRadioGardenCheck').checked=false;
-  alert('No se pudo conectar con Radio Garden. Su API es interna y no oficial, por lo que puede cambiar o bloquearse.');
+  radioGardenStatus('Directorio no disponible.');
+  alert('No se pudo cargar el directorio de Radio Garden. ANAMBRO ha probado la instantánea pública y la API directa.');
  }
  updateLegend();renderActiveSources();
 }
@@ -9337,6 +9495,7 @@ document.getElementById('worldRadioGardenCheck')?.addEventListener('change',e=>{
  if(globeViewer)toggleRadioGardenGlobe(e.target.checked);
 });
 map.on('moveend zoomend',()=>{if(document.getElementById('worldRadioGardenCheck')?.checked)radioGardenSchedule2D();});
+
 
 function syncWorldThematicGlobe(){
  if(!globeViewer)return;
