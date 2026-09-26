@@ -2347,7 +2347,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
     <div class="sourceItem sourceOk"><b>RESOLVE / Dinerstein et al. (2017)</b> · ecorregiones y grandes biomas terrestres.<br><small>CC BY 4.0.</small><br><a href="https://doi.org/10.1093/biosci/bix014" target="_blank" rel="noopener">Dinerstein et al. (2017)</a></div>
-    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div>
+    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div><div class="sourceItem sourceOk"><b>Wikipedia / Wikimedia</b> · contexto histórico bajo demanda de las entidades políticas representadas.<br><small>ANAMBRO consulta la API pública de MediaWiki mediante CORS y prioriza Wikipedia en español. Los extractos y resultados se muestran como contexto auxiliar y enlazan a sus artículos de origen. Texto de Wikipedia bajo CC BY-SA 4.0.</small><br><a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a></div>
     <div class="sourceItem sourceOk"><b>Smithsonian Global Volcanism Program</b> · Volcanoes of the World y erupciones holocenas.<br><small>Uso educativo y no comercial permitido con cita. Cita: Global Volcanism Program, 2026, Volcanoes of the World v5.4.0, Smithsonian Institution, compiled by Venzke, E.</small><br><a href="https://volcano.si.edu/gvp_termsofuse.cfm" target="_blank" rel="noopener">GVP Terms of Use</a> · <a href="https://volcano.si.edu/database/webservices.cfm" target="_blank" rel="noopener">Webservices</a></div>
     <div class="sourceItem sourceOk"><b>USGS Volcano Hazards Program</b> · información adicional y estado operativo de volcanes estadounidenses cuando existe.<br><small>Las fotografías se muestran únicamente cuando el servicio devuelve una imagen utilizable; las imágenes de terceros conservan sus propios derechos.</small><br><a href="https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits" target="_blank" rel="noopener">USGS Copyrights and Credits</a></div>
     <div class="sourceItem sourceReview"><b>Esri World Imagery</b> · fondo satelital del globo 3D.<br><small>ANAMBRO consume el servicio de teselas y mantiene la atribución a Esri y sus proveedores; no redistribuye el mosaico.</small></div>
@@ -2514,6 +2514,7 @@ const ANAMBRO_SOURCES={
  resolve:{short:'RESOLVE / Dinerstein et al. (2017) · CC BY 4.0'},
  macrostrat:{short:'Macrostrat · mapas geológicos mundiales · CC BY 4.0'},
  cliopatria:{short:'Cliopatria · Seshat Global History Databank · CC BY 4.0'},
+ wikipedia:{short:'Wikipedia · contexto histórico · CC BY-SA 4.0'},
  gvp:{short:'Smithsonian GVP · Volcanoes of the World v5.4.0 (2026)'},
  naturalearth:{short:'Made with Natural Earth · Public Domain'},
  wbadm:{short:'World Bank Global Administrative Divisions · ADM1/ADM2'},
@@ -2530,12 +2531,12 @@ function activeSourceKeys(){
  if(document.getElementById('worldClimateCheck')?.checked||document.getElementById('canaryClimateCheck')?.checked||document.getElementById('spainClimateCheck')?.checked)s.add('beck');
  if(document.getElementById('worldBiomesCheck')?.checked)s.add('resolve');
  if(document.getElementById('worldGeologyCheck')?.checked)s.add('macrostrat');
- if(document.getElementById('worldHistoryCheck')?.checked)s.add('cliopatria');
+ if(document.getElementById('worldHistoryCheck')?.checked){s.add('cliopatria');s.add('naturalearth');s.add('wikipedia');}
  if(document.getElementById('worldVolcanoesCheck')?.checked)s.add('gvp');
  if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
  if(document.getElementById('worldAdmin1Check')?.checked||document.getElementById('worldAdmin2Check')?.checked)s.add('wbadm');
  if(document.getElementById('worldToponymsCheck')?.checked){s.add('openfreemap');s.add('osm');}
- if(document.body.classList.contains('globe-mode'))s.add('esri');
+ if(document.body.classList.contains('globe-mode')&&!document.getElementById('worldHistoryCheck')?.checked)s.add('esri');
  return [...s];
 }
 function activeSourcesText(){return activeSourceKeys().map(k=>ANAMBRO_SOURCES[k]?.short).filter(Boolean).join(' · ');}
@@ -4456,7 +4457,7 @@ let activeBase=hybrid;
 hybrid.addTo(map);
 document.querySelectorAll('input[data-base-choice]').forEach(r=>r.addEventListener('change',()=>{
  const value=r.dataset.baseChoice;
- map.removeLayer(activeBase);activeBase=bases[value];activeBase.addTo(map);
+ if(map.hasLayer(activeBase))map.removeLayer(activeBase);activeBase=bases[value];if(!document.getElementById('worldHistoryCheck')?.checked)activeBase.addTo(map);
  document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice===value));
  bringGeologyToFront();
  if(document.getElementById('toponymyCheck')?.checked)toponymy.bringToFront();
@@ -6533,7 +6534,7 @@ setTimeout(updateLegend,100);
 
 
 // v4.0 · Globo 3D cargado únicamente cuando el usuario lo solicita.
-let globeViewer=null,globeLoading=false,globeTerrainProvider=null;
+let globeViewer=null,globeLoading=false,globeTerrainProvider=null,globeSatelliteLayer=null,globeHistoryBaseSource=null;
 function loadCssOnce(href){if(document.querySelector('link[data-globe-css]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href=href;l.dataset.globeCss='1';document.head.appendChild(l);}
 function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=document.querySelector('script[data-globe-js]');if(old){if(window.Cesium)return resolve();old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}const sc=document.createElement('script');sc.src=src;sc.dataset.globeJs='1';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);});}
 
@@ -7838,7 +7839,7 @@ async function ensureGlobe(){
    url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
    credit:'Esri World Imagery',maximumLevel:19
   });
-  globeViewer.imageryLayers.addImageryProvider(sat);
+  globeSatelliteLayer=globeViewer.imageryLayers.addImageryProvider(sat);
   // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
   const gridSoft=Cesium.Color.WHITE.withAlpha(0.42);
   const gridMain=Cesium.Color.fromCssColorString('#ff7043').withAlpha(0.98); // Ecuador, Greenwich y antimeridiano
@@ -8047,6 +8048,168 @@ async function toggleWorldVolcanoesGlobe(on){
  globeViewer.scene.requestRender();
 }
 
+
+// Fondo cartográfico específico para Historia:
+// océanos azul celeste + tierras blancas, sin fronteras modernas.
+let historyLandData=null,historyLandLoading=null,historyBase2DLayer=null,historyOldMapBackground='';
+async function loadHistoryLand(){
+ if(historyLandData)return historyLandData;
+ if(historyLandLoading)return historyLandLoading;
+ historyLandLoading=(async()=>{
+  const urls=[
+   'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_land.geojson',
+   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_land.geojson'
+  ];
+  for(const u of urls){
+   try{const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(r.ok){historyLandData=await r.json();return historyLandData;}}catch(e){}
+  }
+  throw new Error('No se pudo cargar Natural Earth · land');
+ })().finally(()=>historyLandLoading=null);
+ return historyLandLoading;
+}
+async function toggleHistoryBasemap2D(on){
+ if(on){
+  if(map.hasLayer(activeBase))map.removeLayer(activeBase);
+  historyOldMapBackground=historyOldMapBackground||map.getContainer().style.backgroundColor||'';
+  map.getContainer().style.backgroundColor='#bfe3f2';
+  try{
+   const land=await loadHistoryLand();
+   if(!document.getElementById('worldHistoryCheck')?.checked)return;
+   if(!map.getPane('historyBasePane')){
+    const pane=map.createPane('historyBasePane');pane.style.zIndex='210';pane.style.pointerEvents='none';
+   }
+   if(historyBase2DLayer&&map.hasLayer(historyBase2DLayer))map.removeLayer(historyBase2DLayer);
+   historyBase2DLayer=L.geoJSON(land,{pane:'historyBasePane',interactive:false,style:{color:'#ffffff',weight:0,opacity:0,fillColor:'#ffffff',fillOpacity:1}}).addTo(map);
+  }catch(e){console.warn('Fondo histórico 2D:',e);}
+ }else{
+  if(historyBase2DLayer&&map.hasLayer(historyBase2DLayer))map.removeLayer(historyBase2DLayer);
+  historyBase2DLayer=null;
+  map.getContainer().style.backgroundColor=historyOldMapBackground||'';
+  if(activeBase&&!map.hasLayer(activeBase))activeBase.addTo(map);
+ }
+}
+async function toggleHistoryBasemapGlobe(on){
+ if(!globeViewer)return;
+ if(on){
+  if(globeSatelliteLayer)globeSatelliteLayer.show=false;
+  globeViewer.scene.globe.baseColor=Cesium.Color.fromCssColorString('#bfe3f2');
+  try{
+   const land=await loadHistoryLand();
+   if(!document.getElementById('worldHistoryCheck')?.checked)return;
+   if(globeHistoryBaseSource){globeViewer.dataSources.remove(globeHistoryBaseSource,true);globeHistoryBaseSource=null;}
+   const ds=await Cesium.GeoJsonDataSource.load(land,{clampToGround:true,stroke:Cesium.Color.WHITE,strokeWidth:0});
+   for(const ent of ds.entities.values){if(ent.polygon){ent.polygon.material=Cesium.Color.WHITE;ent.polygon.outline=false;}}
+   globeHistoryBaseSource=ds;await globeViewer.dataSources.add(ds);
+   if(globeHistorySource)globeViewer.dataSources.raiseToTop(globeHistorySource);
+  }catch(e){console.warn('Fondo histórico globo:',e);}
+ }else{
+  if(globeHistoryBaseSource){globeViewer.dataSources.remove(globeHistoryBaseSource,true);globeHistoryBaseSource=null;}
+  if(globeSatelliteLayer)globeSatelliteLayer.show=true;
+  globeViewer.scene.globe.baseColor=Cesium.Color.BLACK;
+ }
+ globeViewer.scene.requestRender();
+}
+
+// Contexto histórico Wikipedia. Prioriza Wikipedia en español.
+const historyWikiCache=new Map();
+let historyWikiSeq=0;
+function stripWikiHtml(s){const d=document.createElement('div');d.innerHTML=String(s||'');return (d.textContent||'').replace(/\s+/g,' ').trim();}
+function historyWikiRegime(text,name=''){
+ const t=(String(name)+' '+String(text)).toLowerCase();
+ const rules=[
+  [/\bimperio\b/,'Imperio'],[/\brepública\b/,'República'],[/\breino\b|\bmonarqu[ií]a\b/,'Monarquía / reino'],
+  [/\bsultanato\b/,'Sultanato'],[/\bcalifato\b/,'Califato'],[/\bemirato\b/,'Emirato'],[/\bkanato\b|\bkhanato\b/,'Kanato'],
+  [/\bprincipado\b/,'Principado'],[/\bducado\b/,'Ducado'],[/\bconfederaci[oó]n\b/,'Confederación'],
+  [/\bfederaci[oó]n\b/,'Federación'],[/\bcolonia\b/,'Administración colonial'],[/\bprotectorado\b/,'Protectorado']
+ ];
+ for(const [rx,label] of rules)if(rx.test(t))return label;
+ return '';
+}
+async function wikiApi(params,lang='es'){
+ const url='https://'+lang+'.wikipedia.org/w/api.php?origin=*&'+new URLSearchParams({...params,format:'json',formatversion:'2'});
+ const r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('Wikipedia '+r.status);return r.json();
+}
+async function wikiSearchTitle(query,lang='es'){
+ const j=await wikiApi({action:'query',list:'search',srsearch:query,srlimit:'4',srnamespace:'0'},lang);
+ return j?.query?.search||[];
+}
+async function wikiPageExtract(title,lang='es',chars=18000){
+ const j=await wikiApi({action:'query',prop:'extracts',explaintext:'1',exchars:String(chars),redirects:'1',titles:title},lang);
+ return j?.query?.pages?.[0]||null;
+}
+function historyYearRegex(y){
+ const a=Math.abs(Number(y)||0);
+ if(y<0)return new RegExp('(?:'+a+'\\s*(?:a\\.?\\s*C\\.?|a\\.C\\.|BC|BCE))','i');
+ return new RegExp('(^|[^0-9])'+a+'([^0-9]|$)');
+}
+function contextSentencesForYear(extract,y){
+ const rx=historyYearRegex(y),sent=String(extract||'').split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean),out=[];
+ for(let i=0;i<sent.length;i++){
+  if(rx.test(sent[i])){
+   const group=[sent[Math.max(0,i-1)],sent[i],sent[Math.min(sent.length-1,i+1)]].filter(Boolean).join(' ');
+   if(!out.includes(group))out.push(group);
+   if(out.length>=3)break;
+  }
+ }
+ return out;
+}
+async function historyWikipediaContext(d,year=historyYear){
+ const key=[d?.name||'',d?.wikipedia||'',year].join('|');
+ if(historyWikiCache.has(key))return historyWikiCache.get(key);
+ const p=(async()=>{
+  let title='',page=null,lang='es';
+  const phrase=String(d?.wikipedia||'').replace(/^https?:\/\/[^/]+\/wiki\//i,'').replace(/_/g,' ').trim();
+  let search=await wikiSearchTitle(phrase||d.name,'es').catch(()=>[]);
+  if(search.length)title=search[0].title;
+  if(title)page=await wikiPageExtract(title,'es').catch(()=>null);
+  if(!page?.extract){
+   lang='en';search=await wikiSearchTitle(phrase||d.name,'en').catch(()=>[]);
+   title=search[0]?.title||phrase||d.name;
+   page=title?await wikiPageExtract(title,'en').catch(()=>null):null;
+  }
+  const extract=page?.extract||'',intro=extract.split(/\n+/)[0]?.trim()||'';
+  const regime=historyWikiRegime(intro,d.name);
+  const moments=contextSentencesForYear(extract,year);
+  let related=[];
+  if(!moments.length){
+   related=await wikiSearchTitle('"'+(title||d.name)+'" '+Math.abs(year),lang).catch(()=>[]);
+   related=related.slice(0,4).map(x=>({title:x.title,snippet:stripWikiHtml(x.snippet)}));
+  }
+  const wars=(await wikiSearchTitle('"'+(title||d.name)+'" '+Math.abs(year)+' guerra conflicto batalla',lang).catch(()=>[]))
+    .slice(0,3).map(x=>({title:x.title,snippet:stripWikiHtml(x.snippet)}));
+  const url=title?'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(title.replace(/ /g,'_')):'';
+  return {lang,title,intro,regime,moments,related,wars,url};
+ })();
+ historyWikiCache.set(key,p);
+ if(historyWikiCache.size>180)historyWikiCache.delete(historyWikiCache.keys().next().value);
+ return p;
+}
+function historyWikiContextHtml(c){
+ if(!c)return '<div class="historyCardNote">No se pudo obtener contexto adicional de Wikipedia.</div>';
+ let h='<div style="margin-top:9px;padding-top:8px;border-top:1px solid #d7dde1"><b>📚 Contexto histórico · Wikipedia</b>';
+ if(c.regime)h+='<br><b>Forma política:</b> '+escHtml(c.regime);
+ if(c.intro)h+='<br><span>'+escHtml(c.intro.length>520?c.intro.slice(0,517)+'…':c.intro)+'</span>';
+ if(c.moments?.length){
+  h+='<br><b>Qué sucede en '+escHtml(historyYearText(historyYear))+':</b><ul style="margin:4px 0 2px 18px;padding:0">'+c.moments.map(x=>'<li>'+escHtml(x.length>480?x.slice(0,477)+'…':x)+'</li>').join('')+'</ul>';
+ }else if(c.related?.length){
+  h+='<br><b>Acontecimientos relacionados con '+escHtml(historyYearText(historyYear))+':</b><ul style="margin:4px 0 2px 18px;padding:0">'+c.related.map(x=>'<li><b>'+escHtml(x.title)+':</b> '+escHtml(x.snippet)+'</li>').join('')+'</ul>';
+ }
+ if(c.wars?.length){
+  h+='<br><b>Conflictos / guerras relacionados:</b><ul style="margin:4px 0 2px 18px;padding:0">'+c.wars.map(x=>'<li><b>'+escHtml(x.title)+':</b> '+escHtml(x.snippet)+'</li>').join('')+'</ul>';
+ }
+ if(c.url)h+='<div class="historyCardNote"><a href="'+escHtml(c.url)+'" target="_blank" rel="noopener">Abrir artículo de Wikipedia</a> · contexto auxiliar; conviene contrastar los acontecimientos con historiografía especializada.</div>';
+ return h+'</div>';
+}
+async function enrichHistoryElement(el,d,token){
+ try{
+  const c=await historyWikipediaContext(d,historyYear);
+  if(token!==historyWikiSeq||!document.getElementById('worldHistoryCheck')?.checked)return;
+  const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML=historyWikiContextHtml(c);
+ }catch(e){
+  const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyCardNote">No se pudo consultar Wikipedia en este momento.</div>';
+ }
+}
+
 const CLIOPATRIA_ZIP_URL='https://raw.githubusercontent.com/Seshat-Global-History-Databank/cliopatria/main/cliopatria.geojson.zip';
 let historyWorker=null,historyWorkerUrl=null,historyReady=false,historyRequestSeq=0,historyLoading=false;
 let historyYear=1492,historyCurrentFC=null,historyLayer2D=null,globeHistorySource=null,historyGlobeSeq=0;
@@ -8059,34 +8222,34 @@ function historyHash(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCo
 const HISTORY_PALETTE=['#b85c5c','#c98250','#c4a23f','#8aa84f','#54a47a','#4b9fa3','#4d85b8','#6d73b8','#8b67aa','#a65f87','#b06f5d','#738b5e','#bd7b42','#5d9b8c','#7a82b3','#a06772','#8d8f4e','#5d8dba','#9b6d9e','#7c9a63'];
 function historyColor(n){return HISTORY_PALETTE[historyHash(n)%HISTORY_PALETTE.length];}
 function historyProp(p,...ks){for(const k of ks)if(p&&p[k]!==undefined&&p[k]!==null&&String(p[k]).trim()!=='')return p[k];return '';}
-function historyFeatureData(f){const p=f?.properties||{};return{name:historyProp(p,'__name','Name','name','Polity','polity')||'Entidad política',from:Number(historyProp(p,'__from','FromYear','from_year','from')),to:Number(historyProp(p,'__to','ToYear','to_year','to')),wikidata:historyProp(p,'__wikidata','Wikidata','WikidataID','wikidata'),seshat:historyProp(p,'__seshat','SeshatID','seshat_id'),area:historyProp(p,'__area','Area','area')};}
+function historyFeatureData(f){const p=f?.properties||{};return{name:historyProp(p,'__name','Name','name','Polity','polity')||'Entidad política',from:Number(historyProp(p,'__from','FromYear','from_year','from')),to:Number(historyProp(p,'__to','ToYear','to_year','to')),wikidata:historyProp(p,'__wikidata','Wikidata','WikidataID','wikidata'),wikipedia:historyProp(p,'__wikipedia','Wikipedia','WikipediaPage','wikipedia'),seshat:historyProp(p,'__seshat','SeshatID','seshat_id'),area:historyProp(p,'__area','Area','area')};}
 function historyPeriodText(d){const a=Number.isFinite(d?.from)?historyYearText(d.from):'',b=Number.isFinite(d?.to)?historyYearText(d.to):'';return a&&b?(a===b?a:a+' – '+b):(a||b);}
-function historyCardHtml(d){const per=historyPeriodText(d);let h='<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div><b>Año visualizado:</b> '+escHtml(historyYearText(historyYear));if(per)h+='<br><b>Intervalo de esta geometría:</b> '+escHtml(per);if(d?.area!==''&&d?.area!==null&&d?.area!==undefined)h+='<br><b>Área registrada:</b> '+escHtml(String(d.area))+' km²';if(d?.seshat)h+='<br><b>ID Seshat:</b> '+escHtml(String(d.seshat));if(d?.wikidata)h+='<br><b>Wikidata:</b> '+escHtml(String(d.wikidata));return h+'<div class="historyCardNote">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div></div>';}
+function historyCardHtml(d){const per=historyPeriodText(d);let h='<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div><b>Año visualizado:</b> '+escHtml(historyYearText(historyYear));if(per)h+='<br><b>Intervalo de esta geometría:</b> '+escHtml(per);if(d?.area!==''&&d?.area!==null&&d?.area!==undefined)h+='<br><b>Área registrada:</b> '+escHtml(String(d.area))+' km²';if(d?.seshat)h+='<br><b>ID Seshat:</b> '+escHtml(String(d.seshat));if(d?.wikidata)h+='<br><b>Wikidata:</b> '+escHtml(String(d.wikidata));return h+'<div class="historyWikiSlot"><div class="historyCardNote">Consultando contexto histórico en Wikipedia…</div></div><div class="historyCardNote">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div></div>';}
 function makeHistoryWorker(){
  if(historyWorker)return historyWorker;
  const code=`
   let fs=[],ready=false;
   function p(o,...ks){for(const k of ks)if(o&&o[k]!==undefined&&o[k]!==null&&String(o[k]).trim()!=='')return o[k];return '';}
   async function init(){try{self.postMessage({type:'phase',text:'Descargando Cliopatria…'});importScripts('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');const r=await fetch('https://raw.githubusercontent.com/Seshat-Global-History-Databank/cliopatria/main/cliopatria.geojson.zip',{cache:'force-cache'});if(!r.ok)throw new Error('HTTP '+r.status);const zip=await JSZip.loadAsync(await r.arrayBuffer());self.postMessage({type:'phase',text:'Descomprimiendo cartografía histórica…'});const n=Object.keys(zip.files).find(x=>/\\.geojson$/i.test(x));if(!n)throw new Error('GeoJSON no encontrado');const d=JSON.parse(await zip.file(n).async('string'));fs=(d.features||[]).filter(f=>f&&f.geometry&&String(p(f.properties||{},'Type','type')||'POLITY').toUpperCase()==='POLITY');ready=true;self.postMessage({type:'ready',count:fs.length});}catch(e){self.postMessage({type:'error',message:String(e&&e.message||e)});}}
-  function year(y,seq){if(!ready)return;const out=[];for(const f of fs){const o=f.properties||{},a=Number(p(o,'FromYear','from_year','from')),b=Number(p(o,'ToYear','to_year','to'));if(!Number.isFinite(a)||!Number.isFinite(b)||y<a||y>b)continue;out.push({type:'Feature',geometry:f.geometry,properties:{__name:p(o,'Name','name','Polity','polity')||'Entidad política',__from:a,__to:b,__wikidata:p(o,'Wikidata','WikidataID','wikidata'),__seshat:p(o,'SeshatID','seshat_id'),__area:p(o,'Area','area')}});}self.postMessage({type:'year',seq,year:y,count:out.length,fc:{type:'FeatureCollection',features:out}});}
+  function year(y,seq){if(!ready)return;const out=[];for(const f of fs){const o=f.properties||{},a=Number(p(o,'FromYear','from_year','from')),b=Number(p(o,'ToYear','to_year','to'));if(!Number.isFinite(a)||!Number.isFinite(b)||y<a||y>b)continue;out.push({type:'Feature',geometry:f.geometry,properties:{__name:p(o,'Name','name','Polity','polity')||'Entidad política',__from:a,__to:b,__wikidata:p(o,'Wikidata','WikidataID','wikidata'),__wikipedia:p(o,'Wikipedia','WikipediaPage','wikipedia'),__seshat:p(o,'SeshatID','seshat_id'),__area:p(o,'Area','area')}});}self.postMessage({type:'year',seq,year:y,count:out.length,fc:{type:'FeatureCollection',features:out}});}
   self.onmessage=e=>{const m=e.data||{};if(m.type==='init')init();else if(m.type==='year')year(Number(m.year),m.seq);};
  `;
  historyWorkerUrl=URL.createObjectURL(new Blob([code],{type:'application/javascript'}));historyWorker=new Worker(historyWorkerUrl);
  historyWorker.onmessage=e=>{const m=e.data||{};if(m.type==='phase'){historyLoading=true;historyStatus(m.text);}else if(m.type==='ready'){historyReady=true;historyLoading=false;historyStatus('Cliopatria preparada · '+Number(m.count||0).toLocaleString('es-ES')+' geometrías.');requestHistoryYear(historyYear,true);}else if(m.type==='year'){if(m.seq!==historyRequestSeq)return;historyCurrentFC=m.fc;applyHistory2D(m.fc);if(globeViewer&&document.getElementById('worldHistoryCheck')?.checked)applyHistoryGlobe(m.fc);historyStatus(historyYearText(m.year)+' · '+Number(m.count||0).toLocaleString('es-ES')+' entidades políticas · Cliopatria CC BY 4.0');}else if(m.type==='error'){historyReady=false;historyLoading=false;historyStatus('No se pudo cargar Cliopatria: '+m.message);console.error(m.message);}};
  historyWorker.postMessage({type:'init'});return historyWorker;
 }
-function ensureHistoryLayer2D(){if(historyLayer2D)return historyLayer2D;historyLayer2D=L.geoJSON(null,{style:f=>{const d=historyFeatureData(f);return{color:'#263746',weight:.7,opacity:.9,fillColor:historyColor(d.name),fillOpacity:historyOpacity};},onEachFeature:(f,l)=>{const d=historyFeatureData(f);l.bindPopup(historyCardHtml(d),{maxWidth:390});l.on('click',e=>{L.DomEvent.stopPropagation(e);if(profileMode){addProfilePoint(e.latlng);return;}if(measureMode){addMeasurePoint(e.latlng);return;}l.setPopupContent(historyCardHtml(d));l.openPopup(e.latlng);});}});return historyLayer2D;}
+function ensureHistoryLayer2D(){if(historyLayer2D)return historyLayer2D;historyLayer2D=L.geoJSON(null,{style:f=>{const d=historyFeatureData(f);return{color:'#263746',weight:.7,opacity:.9,fillColor:historyColor(d.name),fillOpacity:historyOpacity};},onEachFeature:(f,l)=>{const d=historyFeatureData(f);l.bindPopup(historyCardHtml(d),{maxWidth:520});l.on('click',e=>{L.DomEvent.stopPropagation(e);if(profileMode){addProfilePoint(e.latlng);return;}if(measureMode){addMeasurePoint(e.latlng);return;}const token=++historyWikiSeq;l.setPopupContent(historyCardHtml(d));l.openPopup(e.latlng);setTimeout(()=>{const el=l.getPopup()?.getElement();if(el)enrichHistoryElement(el,d,token);},0);});}});return historyLayer2D;}
 function applyHistory2D(fc){const l=ensureHistoryLayer2D();l.clearLayers();l.addData(fc||{type:'FeatureCollection',features:[]});if(document.getElementById('worldHistoryCheck')?.checked&&!map.hasLayer(l))l.addTo(map);}
-async function applyHistoryGlobe(fc){if(!globeViewer||!document.getElementById('worldHistoryCheck')?.checked)return;const seq=++historyGlobeSeq;try{const ds=await Cesium.GeoJsonDataSource.load(fc||{type:'FeatureCollection',features:[]},{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#263746').withAlpha(.75),strokeWidth:.8});if(seq!==historyGlobeSeq)return;for(const ent of ds.entities.values){const o={};for(const k of ['__name','__from','__to','__wikidata','__seshat','__area']){const v=ent.properties?.[k]?.getValue?.();if(v!==undefined)o[k]=v;}const d=historyFeatureData({properties:o});if(ent.polygon){ent.polygon.material=Cesium.Color.fromCssColorString(historyColor(d.name)).withAlpha(historyOpacity);ent.polygon.outline=true;ent.polygon.outlineColor=Cesium.Color.fromCssColorString('#263746').withAlpha(.8);}ent.__anambroHistory=true;ent.__anambroHistoryData=d;ent.name=d.name;}if(globeHistorySource)globeViewer.dataSources.remove(globeHistorySource,true);globeHistorySource=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();}catch(e){console.error('Cliopatria globo',e);}}
+async function applyHistoryGlobe(fc){if(!globeViewer||!document.getElementById('worldHistoryCheck')?.checked)return;const seq=++historyGlobeSeq;try{const ds=await Cesium.GeoJsonDataSource.load(fc||{type:'FeatureCollection',features:[]},{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#263746').withAlpha(.75),strokeWidth:.8});if(seq!==historyGlobeSeq)return;for(const ent of ds.entities.values){const o={};for(const k of ['__name','__from','__to','__wikidata','__wikipedia','__seshat','__area']){const v=ent.properties?.[k]?.getValue?.();if(v!==undefined)o[k]=v;}const d=historyFeatureData({properties:o});if(ent.polygon){ent.polygon.material=Cesium.Color.fromCssColorString(historyColor(d.name)).withAlpha(historyOpacity);ent.polygon.outline=true;ent.polygon.outlineColor=Cesium.Color.fromCssColorString('#263746').withAlpha(.8);}ent.__anambroHistory=true;ent.__anambroHistoryData=d;ent.name=d.name;}if(globeHistorySource)globeViewer.dataSources.remove(globeHistorySource,true);globeHistorySource=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();}catch(e){console.error('Cliopatria globo',e);}}
 function toggleHistoryGlobe(on){if(!globeViewer)return;if(!on){historyGlobeSeq++;if(globeHistorySource){globeViewer.dataSources.remove(globeHistorySource,true);globeHistorySource=null;}return;}if(historyCurrentFC)applyHistoryGlobe(historyCurrentFC);}
 function historyCloseButton(){return `<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add('empty')">×</button>`;}
-function showHistoryGlobeEntity(ent,pos){const b=document.getElementById('globeInfo');b.classList.remove('empty');b.innerHTML=historyCloseButton()+historyCardHtml(ent?.__anambroHistoryData||{name:ent?.name||'Entidad política'});requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();});}
+function showHistoryGlobeEntity(ent,pos){const b=document.getElementById('globeInfo');const d=ent?.__anambroHistoryData||{name:ent?.name||'Entidad política'};const token=++historyWikiSeq;b.classList.remove('empty');b.innerHTML=historyCloseButton()+historyCardHtml(d);requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();enrichHistoryElement(b,d,token);});}
 function showHistoryGlobeEmpty(pos){const b=document.getElementById('globeInfo');b.classList.remove('empty');b.innerHTML=historyCloseButton()+'<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(historyYearText(historyYear))+'</div>No hay una entidad política de Cliopatria identificada en este punto para el año seleccionado.<div class="historyCardNote">No se muestran topónimos, países ni divisiones actuales mientras la capa histórica está activa.</div></div>';requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();});}
-function requestHistoryYear(y,now=false){updateHistoryControls(y);if(!document.getElementById('worldHistoryCheck')?.checked)return;if(!historyWorker)makeHistoryWorker();if(!historyReady)return;clearTimeout(historyDebounce);const go=()=>{historyRequestSeq++;historyWorker.postMessage({type:'year',year:historyYear,seq:historyRequestSeq});};if(now)go();else historyDebounce=setTimeout(go,180);}
+function requestHistoryYear(y,now=false){updateHistoryControls(y);historyWikiSeq++;try{map.closePopup();}catch(e){}if(globeViewer){const b=document.getElementById('globeInfo');if(b)b.classList.add('empty');}if(!document.getElementById('worldHistoryCheck')?.checked)return;if(!historyWorker)makeHistoryWorker();if(!historyReady)return;clearTimeout(historyDebounce);const go=()=>{historyRequestSeq++;historyWorker.postMessage({type:'year',year:historyYear,seq:historyRequestSeq});};if(now)go();else historyDebounce=setTimeout(go,180);}
 function setHistoryYear(y,now=false){y=normalizeHistoryYear(y);if(y===0)y=1;requestHistoryYear(y,now);}
 function stepHistoryYear(d){setHistoryYear(historyYear+Number(d||0),true);}
 function toggleHistoryPlay(){const b=document.getElementById('historyPlayBtn');historyPlayRunning=!historyPlayRunning;if(b){b.textContent=historyPlayRunning?'⏸':'▶';b.classList.toggle('active',historyPlayRunning);}if(historyPlayTimer){clearInterval(historyPlayTimer);historyPlayTimer=null;}if(!historyPlayRunning)return;historyPlayTimer=setInterval(()=>{if(historyYear>=2024){toggleHistoryPlay();return;}stepHistoryYear(historyYear<1800?10:5);},650);}
-function setHistoryVisible(on){document.getElementById('historyTimeline')?.classList.toggle('visible',!!on);if(on){ensureHistoryLayer2D().addTo(map);makeHistoryWorker();requestHistoryYear(historyYear,true);if(globeViewer)toggleHistoryGlobe(true);}else{if(historyLayer2D&&map.hasLayer(historyLayer2D))map.removeLayer(historyLayer2D);toggleHistoryGlobe(false);if(historyPlayRunning)toggleHistoryPlay();}renderActiveSources();updateLegend();}
+function setHistoryVisible(on){document.getElementById('historyTimeline')?.classList.toggle('visible',!!on);if(on){toggleHistoryBasemap2D(true);ensureHistoryLayer2D().addTo(map);makeHistoryWorker();requestHistoryYear(historyYear,true);if(globeViewer){toggleHistoryBasemapGlobe(true);toggleHistoryGlobe(true);}}else{if(historyLayer2D&&map.hasLayer(historyLayer2D))map.removeLayer(historyLayer2D);toggleHistoryBasemap2D(false);if(globeViewer){toggleHistoryGlobe(false);toggleHistoryBasemapGlobe(false);}if(historyPlayRunning)toggleHistoryPlay();}renderActiveSources();updateLegend();}
 document.getElementById('worldHistoryCheck')?.addEventListener('change',e=>setHistoryVisible(e.target.checked));
 document.getElementById('historyYearRange')?.addEventListener('input',e=>setHistoryYear(e.target.value,false));
 document.getElementById('historyYearRange')?.addEventListener('change',e=>setHistoryYear(e.target.value,true));
@@ -8100,6 +8263,7 @@ function syncWorldThematicGlobe(){
  toggleWorldBiomesGlobe(!!document.getElementById('worldBiomesCheck')?.checked);
  toggleWorldVolcanoesGlobe(!!document.getElementById('worldVolcanoesCheck')?.checked);
  toggleHistoryGlobe(!!document.getElementById('worldHistoryCheck')?.checked);
+ if(document.getElementById('worldHistoryCheck')?.checked)toggleHistoryBasemapGlobe(true);
 }
 
 async function toggleGlobe(){
