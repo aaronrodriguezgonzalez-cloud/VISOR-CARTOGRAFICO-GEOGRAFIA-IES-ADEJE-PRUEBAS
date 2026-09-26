@@ -3643,6 +3643,8 @@ async function ensureWorldBiomes(){
    onEachFeature:(f,l)=>{
     l.on('click',e=>{
      L.DomEvent.stopPropagation(e);
+     if(profileMode){addProfilePoint(e.latlng);return;}
+     if(measureMode){addMeasurePoint(e.latlng);return;}
      showPoint(e.latlng,'Punto consultado',true);
     });
    }
@@ -5026,7 +5028,7 @@ function startProfile(){
  measureMode=null;profileMode=true;profilePts=[];profileClosed=false;if(profileLayer)map.removeLayer(profileLayer);profileLayer=L.layerGroup().addTo(map);profileLine=null;profileHandles=[];
  document.querySelectorAll('.panel').forEach(p=>{if(p.id!=='profilePanel')p.classList.add('hidden')});document.getElementById('profilePanel').classList.remove('hidden');
  document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';
- status('PERFIL TOPOGRÁFICO · marca tantos puntos como necesites · pulsa «Generar perfil»');
+ status('PERFIL TOPOGRÁFICO · marca tantos puntos como necesites · las capas temáticas activas no bloquean el trazado · pulsa «Generar perfil»');
 }
 function profileHandleIcon(endpoint){return L.divIcon({className:'',html:'<div style="width:'+(endpoint?18:12)+'px;height:'+(endpoint?18:12)+'px;border-radius:50%;background:'+(endpoint?'#fff':'#17324d')+';border:'+(endpoint?'4px solid #17324d':'2px solid #fff')+';box-shadow:0 1px 5px #0008;box-sizing:border-box"></div>',iconSize:[endpoint?18:12,endpoint?18:12],iconAnchor:[endpoint?9:6,endpoint?9:6]});}
 function addProfilePoint(ll){
@@ -5284,11 +5286,67 @@ function worldBiomeProfileTheme(f){
   categoryKey:'worldbiome|'+String(p.eco_id??normalizeThemeCategory(eco))
  };
 }
+function macrostratProfileAgeColor(g){
+ if(!g)return '#c9cdd1';
+ // 1. Color explícito de la propia unidad, si viene en la tesela MVT.
+ let raw=String(g.color||'').trim();
+ if(raw&&!raw.startsWith('#'))raw='#'+raw;
+ if(/^#[0-9a-f]{6}$/i.test(raw))return raw;
+
+ // 2. Color cronostratigráfico según la edad de la unidad.
+ const candidates=[
+  String(g.age||''),String(g.t_int_name||''),String(g.b_int_name||''),
+  macrostratAgeText(g)||''
+ ].filter(Boolean).map(x=>x.toLowerCase());
+
+ for(const row of MACROSTRAT_PERIODS){
+  const en=String(row[0]||'').toLowerCase(),es=String(row[1]||'').toLowerCase(),c=row[2];
+  if(candidates.some(a=>a.includes(en)||a.includes(es)))return c;
+ }
+
+ // 3. Resolver pisos/épocas hacia su gran periodo.
+ const age=(macrostratAgeText(g)||'').toLowerCase();
+ const groups=[
+  [/holoceno|pleistoceno|greenlandiense|northgrippiense|megalayense|chibaniense|calabriense|gelasiense/,'Cuaternario'],
+  [/mioceno|plioceno|aquitaniense|burdigaliense|langhiense|serravalliense|tortoniense|mesiniense|zancliense|piacenziense/,'Neógeno'],
+  [/paleoceno|eoceno|oligoceno|daniense|selandiense|thanetiense|ypresiense|luteciense|bartoniense|priaboniense|rupeliense|chatiense/,'Paleógeno'],
+  [/maastrichtiense|campaniense|santoniense|coniaciense|turoniense|cenomaniense|albiense|aptiense|barremiense|hauteriviense|valanginiense|berriasiense/,'Cretácico'],
+  [/titoniense|kimmeridgiense|oxfordiense|calloviense|bathoniense|bajociense|aaleniense|toarciense|pliensbachiense|sinemuriense|hettangiense/,'Jurásico'],
+  [/rhaetiense|noriense|carniense|ladiniense|anisiense|olenekiense|induense/,'Triásico'],
+  [/pérmico|lopingiense|guadalupiense|cisuraliense/,'Pérmico'],
+  [/carbonífero|pensilvánico|misisípico/,'Carbonífero'],
+  [/devónico/,'Devónico'],[/silúrico/,'Silúrico'],[/ordovícico/,'Ordovícico'],[/cámbrico/,'Cámbrico'],
+  [/neoproterozoico|ediacárico|criogénico|tónico/,'Neoproterozoico'],
+  [/mesoproterozoico/,'Mesoproterozoico'],[/paleoproterozoico/,'Paleoproterozoico'],
+  [/arcaico|neoarcaico|mesoarcaico|paleoarcaico|eoarcaico/,'Arcaico'],[/hádico/,'Hádico']
+ ];
+ for(const [rx,target] of groups){
+  if(rx.test(age)){
+   const row=MACROSTRAT_PERIODS.find(r=>String(r[1]).toLowerCase()===String(target).toLowerCase());
+   if(row)return row[2];
+  }
+ }
+
+ // 4. Edad numérica como último respaldo para no dejar el perfil gris.
+ const a=Number(g.best_t_age),b=Number(g.best_b_age);
+ const ma=Number.isFinite(a)&&Number.isFinite(b)?(a+b)/2:(Number.isFinite(a)?a:(Number.isFinite(b)?b:null));
+ if(ma!==null){
+  const target=ma<2.58?'Cuaternario':ma<23.03?'Neógeno':ma<66?'Paleógeno':ma<145?'Cretácico':
+   ma<201.4?'Jurásico':ma<251.9?'Triásico':ma<298.9?'Pérmico':ma<358.9?'Carbonífero':
+   ma<419.2?'Devónico':ma<443.8?'Silúrico':ma<485.4?'Ordovícico':ma<538.8?'Cámbrico':
+   ma<1000?'Neoproterozoico':ma<1600?'Mesoproterozoico':ma<2500?'Paleoproterozoico':
+   ma<4000?'Arcaico':'Hádico';
+  const row=MACROSTRAT_PERIODS.find(r=>String(r[1]).toLowerCase()===target.toLowerCase());
+  if(row)return row[2];
+ }
+ return '#8f969c';
+}
+
 function worldGeologyProfileTheme(g){
  if(!g)return {label:'Sin dato',detail:'',color:null};
  const label=macrostratDisplayName(g)||'Unidad geológica';
  const age=macrostratAgeText(g)||'';
- const color=macrostratFeatureColor(g)||'#aab0b6';
+ const color=macrostratProfileAgeColor(g);
  const id=g.unit_id??g.map_id??g.source_id??g.strat_name??g.name??label;
  return {
   label,detail:age?(label+' · '+age):label,age,color,officialColor:true,
@@ -5715,7 +5773,12 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
  const segments=[];let seg=[];for(const sm of samples){if(Number.isFinite(sm.z)){seg.push(sm);}else if(seg.length){segments.push(seg);seg=[];}}if(seg.length)segments.push(seg);
  ctx.fillStyle='#e7e1d2';for(const ss of segments){if(ss.length<2)continue;ctx.beginPath();ctx.moveTo(X(ss[0].d),base);for(const sm of ss)ctx.lineTo(X(sm.d),Y(sm.z));ctx.lineTo(X(ss[ss.length-1].d),base);ctx.closePath();ctx.fill();}
  // Piel temática gruesa: altimetría, vegetación o geología según la selección.
- let prev=null;for(const sm of samples){if(sm.z===null){prev=null;continue;}const cur={x:X(sm.d),y:Y(sm.z),z:sm.z,d:sm.d};if(prev){let skin=hypsometricColor((prev.z+cur.z)/2);if(skinMode.startsWith('veg')||skinMode==='geo'){const t=themeAtDistance((prev.d+cur.d)/2,skinMode==='geo'?'geo':skinMode==='veg_potential'?'vegPotential':'vegActual');if(t&&t.label&&t.label!=='Sin dato')skin=t.color||'#c9cdd1';else skin='#c9cdd1';}ctx.strokeStyle=skin;ctx.lineWidth=24;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(cur.x,cur.y);ctx.stroke();}prev=cur;}
+ let prev=null;for(const sm of samples){if(sm.z===null){prev=null;continue;}const cur={x:X(sm.d),y:Y(sm.z),z:sm.z,d:sm.d};if(prev){let skin=hypsometricColor((prev.z+cur.z)/2);if(skinMode.startsWith('veg')||skinMode==='geo'){const t=themeAtDistance((prev.d+cur.d)/2,skinMode==='geo'?'geo':skinMode==='veg_potential'?'vegPotential':'vegActual');if(t&&t.label&&t.label!=='Sin dato')skin=t.color||'#8f969c';else{
+ const before=themeAtDistance(Math.max(0,(prev.d+cur.d)/2-2500),skinMode==='geo'?'geo':skinMode==='veg_potential'?'vegPotential':'vegActual');
+ const after=themeAtDistance(Math.min(total,(prev.d+cur.d)/2+2500),skinMode==='geo'?'geo':skinMode==='veg_potential'?'vegPotential':'vegActual');
+ const neighbor=(before&&before.label!=='Sin dato'?before:after&&after.label!=='Sin dato'?after:null);
+ skin=neighbor?.color||'#c9cdd1';
+}}ctx.strokeStyle=skin;ctx.lineWidth=24;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(cur.x,cur.y);ctx.stroke();}prev=cur;}
  // contorno fino para que la forma del terreno siga siendo nítida
  ctx.strokeStyle='#263238';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.beginPath();let pen=false;for(const sm of samples){if(sm.z===null){pen=false;continue;}const x=X(sm.d),y=Y(sm.z);if(!pen){ctx.moveTo(x,y);pen=true}else ctx.lineTo(x,y);}ctx.stroke();
  // Etiquetas del perfil: inflexiones y topónimos compiten por el mismo espacio.
