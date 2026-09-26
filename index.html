@@ -2516,23 +2516,23 @@ window.addEventListener('orientationchange',()=>setTimeout(applyDynamicWorldMinZ
 
 
 // Fondos equivalentes a los disponibles en Iberpix/IGN
-const raster=L.tileLayer('https://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
-const pnoa=L.tileLayer('https://www.ign.es/wmts/pnoa-ma?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'PNOA · © IGN/CNIG'});
-const street=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
-const labels=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=IGNBaseOrto&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'© IGN/CNIG'});
+const raster=L.tileLayer('https://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'© IGN/CNIG'});
+const pnoa=L.tileLayer('https://www.ign.es/wmts/pnoa-ma?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=OI.OrthoimageCoverage&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'PNOA · © IGN/CNIG'});
+const street=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'© IGN/CNIG'});
+const labels=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=IGNBaseOrto&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'© IGN/CNIG'});
 const hybrid=L.layerGroup([pnoa,labels]);
-const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
-const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
-const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={noWrap:true,z}&TileRow={y}&TileCol={x}',{maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
+const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
+const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
+const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
 
 // Capas temáticas mundiales: se cargan únicamente al activarlas.
-const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{noWrap:true,z}/{y}/{x}',{
+const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
-const canaryClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{noWrap:true,z}/{y}/{x}',{
+const canaryClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[27.0,-18.9],[29.8,-12.7]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
-const spainClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{noWrap:true,z}/{y}/{x}',{
+const spainClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[35.0,-10.8],[44.7,5.2]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
 function climateEnabledAt(lat,lon){
