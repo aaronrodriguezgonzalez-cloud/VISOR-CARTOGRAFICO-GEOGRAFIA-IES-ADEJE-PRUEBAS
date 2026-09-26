@@ -3341,72 +3341,20 @@ function eruptionField(e,...keys){
 const volcanoEnrichmentCache=new Map();
 
 function cqlQuote(s){return "'"+String(s??'').replace(/'/g,"''")+"'";}
-
-let gvpLocalVolcanoesPromise=null;
-let gvpLocalEruptionsPromise=null;
-
-async function loadLocalGvpVolcanoes(){
- if(!gvpLocalVolcanoesPromise){
-  gvpLocalVolcanoesPromise=fetch('./data/gvp_holocene_volcanoes.geojson',{cache:'no-store'})
-   .then(async r=>{
-    if(!r.ok)throw new Error('No se pudo cargar data/gvp_holocene_volcanoes.geojson ('+r.status+')');
-    const g=await r.json();
-    if(g?.type!=='FeatureCollection'||!Array.isArray(g.features))throw new Error('GeoJSON GVP de volcanes no válido');
-    return g.features;
-   });
- }
- return gvpLocalVolcanoesPromise;
-}
-async function loadLocalGvpEruptions(){
- if(!gvpLocalEruptionsPromise){
-  gvpLocalEruptionsPromise=fetch('./data/gvp_holocene_eruptions.geojson',{cache:'no-store'})
-   .then(async r=>{
-    if(!r.ok)throw new Error('No se pudo cargar data/gvp_holocene_eruptions.geojson ('+r.status+')');
-    const g=await r.json();
-    if(g?.type!=='FeatureCollection'||!Array.isArray(g.features))throw new Error('GeoJSON GVP de erupciones no válido');
-    return g.features;
-   });
- }
- return gvpLocalEruptionsPromise;
-}
-function gvpFeatureValue(feature,names){
- const p=feature?.properties||{};
- for(const n of names){
-  if(p[n]!==undefined&&p[n]!==null&&p[n]!=='')return p[n];
- }
- const normalized=Object.fromEntries(Object.entries(p).map(([k,v])=>[k.toLowerCase().replace(/[^a-z0-9]/g,''),v]));
- for(const n of names){
-  const key=String(n).toLowerCase().replace(/[^a-z0-9]/g,'');
-  if(normalized[key]!==undefined&&normalized[key]!==null&&normalized[key]!=='')return normalized[key];
- }
- return null;
-}
-function gvpVolcanoNumberOf(feature){
- return String(gvpFeatureValue(feature,['Volcano_Number','Volcano Number','volcano_number','volcano_n','VolcanoNumber'])??'').trim();
-}
-function gvpVolcanoNameOf(feature){
- return String(gvpFeatureValue(feature,['Volcano_Name','Volcano Name','volcano_name','volcano_nam','VolcanoName'])??'').trim();
-}
-
 async function gvpWfsFeature(typeName,filters,maxFeatures=10){
- const isEruptions=/Eruptions/i.test(typeName);
- const features=isEruptions?await loadLocalGvpEruptions():await loadLocalGvpVolcanoes();
-
- let wantedNumber='',wantedName='';
- for(const filter of (filters||[])){
-  const s=String(filter||'');
-  let m=s.match(/Volcano_Number\s*=\s*'?(\d+)'?/i);
-  if(m)wantedNumber=m[1];
-  m=s.match(/Volcano_Name\s*=\s*'((?:''|[^'])+)'/i);
-  if(m)wantedName=m[1].replace(/''/g,"'");
+ const base='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows';
+ for(const filter of filters.filter(Boolean)){
+  try{
+   const u=base+'?'+new URLSearchParams({
+    service:'WFS',version:'1.0.0',request:'GetFeature',typeName,
+    outputFormat:'application/json',maxFeatures:String(maxFeatures),CQL_FILTER:filter
+   });
+   const r=await fetch(u);if(!r.ok)continue;
+   const g=await r.json();
+   if(Array.isArray(g?.features)&&g.features.length)return g.features;
+  }catch(e){}
  }
-
- const out=features.filter(f=>{
-  if(wantedNumber && gvpVolcanoNumberOf(f)===String(wantedNumber))return true;
-  if(wantedName && gvpVolcanoNameOf(f).toLowerCase()===wantedName.toLowerCase())return true;
-  return false;
- });
- return out.slice(0,maxFeatures);
+ return [];
 }
 async function fetchGvpVolcanoRecord(vnum,name){
  const f=[];
@@ -3420,6 +3368,79 @@ async function fetchGvpEruptions(vnum,name){
  if(vnum)f.push('Volcano_Number='+vnum,'VolcanoNumber='+vnum,'"Volcano Number"='+vnum,'volcano_number='+vnum);
  if(name){const q=cqlQuote(name);f.push('"Volcano Name"='+q,'Volcano_Name='+q,'VolcanoName='+q);}
  return gvpWfsFeature('GVP-VOTW:Smithsonian_VOTW_Holocene_Eruptions',f,1000);
+}
+
+const GVP_MIRROR_BASE='https://rmgir.proyectomesoamerica.org/server/rest/services/Hosted/Volcanes_del_mundo/FeatureServer';
+
+async function fetchGvpMirrorVolcano(v){
+ const filters=[];
+ if(v.number)filters.push('volcano_nu='+encodeURIComponent(v.number));
+ if(v.name)filters.push("volcano_na='"+String(v.name).replace(/'/g,"''")+"'");
+ for(const where of filters){
+  try{
+   const u=GVP_MIRROR_BASE+'/0/query?'+new URLSearchParams({
+    where,outFields:'*',returnGeometry:'true',outSR:'4326',f:'json'
+   });
+   const r=await fetch(u);if(!r.ok)continue;
+   const d=await r.json(),f=d?.features?.[0];
+   if(f){
+    const a=f.attributes||{},g=f.geometry||{};
+    return volcanoDetailsFromPlainProps(a,g.y??v.lat,g.x??v.lon);
+   }
+  }catch(e){}
+ }
+ return null;
+}
+function mirrorEruptionYear(a){
+ const raw=volcanoPropLoose(a,'startdat_1','StartDat_1','StartDateYear','Start Year');
+ const n=validEruptionYear(raw);
+ return n===null?-Infinity:n;
+}
+async function fetchGvpMirrorEruptions(v){
+ const filters=[];
+ if(v.number)filters.push('volcano_nu='+encodeURIComponent(v.number));
+ if(v.name)filters.push("volcano_na='"+String(v.name).replace(/'/g,"''")+"'");
+ for(const where of filters){
+  try{
+   const u=GVP_MIRROR_BASE+'/1/query?'+new URLSearchParams({
+    where,outFields:'*',returnGeometry:'false',f:'json',resultRecordCount:'2000'
+   });
+   const r=await fetch(u);if(!r.ok)continue;
+   const d=await r.json(),arr=(d?.features||[]).map(x=>x.attributes||{});
+   if(arr.length){
+    arr.sort((a,b)=>mirrorEruptionYear(b)-mirrorEruptionYear(a));
+    return arr;
+   }
+  }catch(e){}
+ }
+ return [];
+}
+function mirrorEruptionDetails(a){
+ if(!a)return null;
+ return {
+  number:volcanoPropLoose(a,'eruption_n','Eruption_N','Eruption Number','Eruption_Number'),
+  activityType:volcanoPropLoose(a,'activity_t','Activity_T','Activity Type','Activity_Type'),
+  vei:volcanoPropLoose(a,'explosivit','Explosivit','VEI','ExplosivityIndexMax'),
+  veiQualifier:volcanoPropLoose(a,'explosiv_1','Explosiv_1','ExplosivityIndexModifier'),
+  activityArea:volcanoPropLoose(a,'activityar','ActivityAr','Activity Area','ActivityArea'),
+  activityUnit:volcanoPropLoose(a,'activityun','ActivityUn','Activity Unit','ActivityUnit'),
+  startEvidence:volcanoPropLoose(a,'startevide','StartEvide','Start Evidence','StartEvidenceMethod'),
+  startYearModifier:volcanoPropLoose(a,'startdatey','StartDateY','StartDateYearModifier'),
+  startYear:volcanoPropLoose(a,'startdat_1','StartDat_1','StartDateYear','Start Year'),
+  startYearUncertainty:volcanoPropLoose(a,'startdat_2','StartDat_2','StartDateYearUncertainty'),
+  startDayModifier:volcanoPropLoose(a,'startdated','StartDateD','StartDateDayModifier'),
+  startMonth:volcanoPropLoose(a,'startdatem','StartDateM','StartDateMonth','Start Month'),
+  startDay:volcanoPropLoose(a,'startdat_3','StartDat_3','StartDateDay','Start Day'),
+  startDayUncertainty:volcanoPropLoose(a,'startdat_4','StartDat_4','StartDateDayUncertainty'),
+  endYearModifier:volcanoPropLoose(a,'enddateyea','EndDateYea','EndDateYearModifier'),
+  endYear:volcanoPropLoose(a,'enddatey_1','EndDateY_1','EndDateYear','End Year'),
+  endYearUncertainty:volcanoPropLoose(a,'enddatey_2','EndDateY_2','EndDateYearUncertainty'),
+  endDayModifier:volcanoPropLoose(a,'enddateday','EndDateDay','EndDateDayModifier'),
+  endMonth:volcanoPropLoose(a,'enddatemon','EndDateMon','EndDateMonth','End Month'),
+  endDay:volcanoPropLoose(a,'enddated_1','EndDateD_1','EndDateDay','End Day'),
+  endDayUncertainty:volcanoPropLoose(a,'enddated_2','EndDateD_2','EndDateDayUncertainty'),
+  source:'GVP'
+ };
 }
 
 
@@ -3468,35 +3489,18 @@ async function fetchUsgsVolcano(vnum){
 async function enrichVolcano(v){
  const key=String(v.number||v.name||'').toLowerCase();
  if(volcanoEnrichmentCache.has(key))return volcanoEnrichmentCache.get(key);
-
  const p=(async()=>{
-  const [officialRecord,officialEruptions,usgs,wiki]=await Promise.all([
-   fetchGvpVolcanoRecord(v.number,v.name),
-   fetchGvpEruptions(v.number,v.name),
-   fetchUsgsVolcano(v.number),
-   resolveWikipediaUrl(v.name).catch(()=>wikipediaFallbackUrl(v.name))
+  const mirrorRecord=await fetchGvpMirrorVolcano(v);
+  const effective={...v,...Object.fromEntries(Object.entries(mirrorRecord||{}).filter(([,x])=>x!==null&&x!==undefined&&x!==''))};
+  const [officialEruptions,mirrorEruptions,usgs,wiki]=await Promise.all([
+   fetchGvpEruptions(effective.number,effective.name),
+   fetchGvpMirrorEruptions(effective),
+   fetchUsgsVolcano(effective.number),
+   resolveWikipediaUrl(effective.name).catch(()=>wikipediaFallbackUrl(effective.name))
   ]);
-
-  let officialDetails=null;
-  if(officialRecord){
-   const props=officialRecord.properties||{};
-   const co=officialRecord.geometry?.coordinates||[];
-   officialDetails=volcanoDetailsFromPlainProps(
-    props,
-    Number.isFinite(Number(co[1]))?Number(co[1]):v.lat,
-    Number.isFinite(Number(co[0]))?Number(co[0]):v.lon
-   );
-  }
-
-  const effective={
-   ...v,
-   ...Object.fromEntries(Object.entries(officialDetails||{}).filter(([,x])=>x!==null&&x!==undefined&&x!==''))
-  };
-
-  const eruptionHistory=(officialEruptions||[])
-   .map(gvpOfficialEruptionDetails)
-   .filter(Boolean);
-
+  const officialHistory=(officialEruptions||[]).map(gvpOfficialEruptionDetails).filter(Boolean);
+  const mirrorHistory=(mirrorEruptions||[]).map(mirrorEruptionDetails).filter(Boolean);
+  const eruptionHistory=officialHistory.length?officialHistory:mirrorHistory;
   const datedEruptionHistory=eruptionHistory
    .filter(er=>validEruptionYear(er?.startYear)!==null||validEruptionYear(er?.endYear)!==null)
    .sort((a,b)=>{
@@ -3504,10 +3508,8 @@ async function enrichVolcano(v){
     const by=validEruptionYear(b?.startYear)??validEruptionYear(b?.endYear)??-Infinity;
     return by-ay;
    });
-
   const latest=datedEruptionHistory[0]||eruptionHistory[0]||null;
   const uinfo=usgs.info||{},ust=usgs.status||{};
-
   return {
    wiki,
    recordDetails:effective,
@@ -3534,12 +3536,9 @@ async function enrichVolcano(v){
    edificeHeight:firstDeep(uinfo,/(heightAboveBase|edificeHeight|relief|height_m|heightM)/i),
    summitElev:firstDeep(uinfo,/(summit.*elev|elevation|elev_m|elevM)/i),
    usgsPhoto:extractPhotoUrl(uinfo)||effective.photoUrl||null,
-   usgsUrl:firstDeep(uinfo,/(url|web|link)/i),
-   officialRecordLoaded:!!officialRecord,
-   officialEruptionsLoaded:Array.isArray(officialEruptions)
+   usgsUrl:firstDeep(uinfo,/(url|web|link)/i)
   };
  })();
-
  volcanoEnrichmentCache.set(key,p);
  return p;
 }
@@ -3706,7 +3705,7 @@ function enrichedVolcanoHtml(v,e=null){
   h+=' · <a href="https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcano?vnum='+encodeURIComponent(String(n))+'" target="_blank" rel="noopener">USGS</a>';
  }
  h+=(n?' · ':'')+'<a href="'+escHtml(wiki)+'" target="_blank" rel="noopener">Wikipedia</a></div>';
- h+='<div class="volcanoSourceLine">Datos: Smithsonian Global Volcanism Program, Volcanoes of the World v5.4.0 (2026). El historial eruptivo procede del WFS oficial del Smithsonian GVP y se sirve desde una copia local del repositorio para evitar las restricciones CORS del navegador; ANAMBRO traduce y sintetiza la información al español y añade USGS cuando existe cobertura.</div>';
+ h+='<div class="volcanoSourceLine">Datos: Smithsonian Global Volcanism Program, Volcanoes of the World v5.4.0 (2026). El historial eruptivo se consulta prioritariamente mediante el WFS oficial del Smithsonian GVP; ANAMBRO traduce y sintetiza la información al español y añade USGS cuando existe cobertura.</div>';
  h+='</div>';
  return h;
 }
@@ -3714,26 +3713,26 @@ function volcanoDetailHtml(v,wikiUrl=null){
  return enrichedVolcanoHtml(v,{wiki:wikiUrl||wikipediaFallbackUrl(v.name)});
 }
 
-
 async function fetchSmithsonianVolcanoes(){
- const r=await fetch('./data/gvp_holocene_volcanoes.geojson',{cache:'no-store'});
- if(!r.ok)throw new Error('No existe la copia local GVP de volcanes ('+r.status+')');
- const g=await r.json();
- if(g?.type!=='FeatureCollection'||!Array.isArray(g.features))throw new Error('GeoJSON local GVP de volcanes no válido');
- return g;
+ const url='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW%3ASmithsonian_VOTW_Holocene_Volcanoes&outputFormat=application%2Fjson&maxFeatures=2000';
+ const r=await fetch(url);if(!r.ok)throw new Error('GVP '+r.status);
+ return r.json();
+}
+async function fetchVolcanoFallback(){
+ const base=GVP_MIRROR_BASE+'/0/query';
+ const u=base+'?'+new URLSearchParams({
+  where:'1=1',outFields:'*',returnGeometry:'true',outSR:'4326',f:'geojson'
+ });
+ const r=await fetch(u);if(!r.ok)throw new Error('GVP mirror '+r.status);
+ return r.json();
 }
 async function ensureWorldVolcanoes(){
  if(worldVolcanoesLayer)return worldVolcanoesLayer;
  if(worldVolcanoesLoading)return worldVolcanoesLoading;
  worldVolcanoesLoading=(async()=>{
   let g;
-  try{
-   g=await fetchSmithsonianVolcanoes();
-  }catch(err){
-   console.error('Smithsonian GVP WFS no disponible:',err);
-   status('No se pudo cargar la copia local del Smithsonian GVP. Ejecuta la actualización GVP del repositorio.');
-   throw err;
-  }
+  try{g=await fetchSmithsonianVolcanoes();}
+  catch(err){console.warn('GVP directo no disponible; usando espejo cartográfico.',err);g=await fetchVolcanoFallback();}
   worldVolcanoesData=g;
   worldVolcanoesLayer=L.geoJSON(g,{
    pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:4.2,color:'#4a160e',weight:1.2,fillColor:'#d8432f',fillOpacity:.92}),
@@ -3756,13 +3755,8 @@ async function ensureWorldVolcanoes(){
        },60);
       }
      }catch(err){
-      console.warn('Ficha volcánica oficial no disponible:',err);
-      if(l.isPopupOpen()){
-       l.setPopupContent(
-        enrichedVolcanoHtml(v,null)
-        +'<div class="volcanoSourceLine" style="margin-top:8px"><b>Historial eruptivo:</b> no se ha podido recuperar en este momento desde el servicio oficial Smithsonian GVP.</div>'
-       );
-      }
+      console.warn('Ficha volcánica enriquecida:',err);
+      if(l.isPopupOpen())l.setPopupContent(enrichedVolcanoHtml(v,null));
      }
     });
    }
