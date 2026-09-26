@@ -8140,109 +8140,209 @@ async function wikiPageExtract(title,lang='es',chars=18000){
  const j=await wikiApi({action:'query',prop:'extracts',explaintext:'1',exchars:String(chars),redirects:'1',titles:title},lang);
  return j?.query?.pages?.[0]||null;
 }
-async function wikidataSitelink(qid,lang='es'){
- const q=String(qid||'').trim();if(!/^Q\d+$/i.test(q))return '';
+function cliopatriaWikipediaTitle(d){
+ let s=String(d?.wikipedia||'').trim();
+ if(!s)return '';
+ s=s.replace(/^https?:\/\/[^/]+\/(?:wiki\/)?/i,'').replace(/^\/?wiki\//i,'');
+ try{s=decodeURIComponent(s);}catch(e){}
+ return s.replace(/_/g,' ').replace(/^\/+/,'').trim();
+}
+async function wikiLangLink(title,from='en',to='es'){
+ if(!title)return '';
  try{
-  const r=await fetch('https://www.wikidata.org/w/api.php?origin=*&'+new URLSearchParams({
-   action:'wbgetentities',ids:q,props:'sitelinks',sitefilter:lang+'wiki',format:'json'
-  }),{cache:'force-cache'});
-  if(!r.ok)return '';
-  const j=await r.json();
-  return j?.entities?.[q]?.sitelinks?.[lang+'wiki']?.title||'';
+  const j=await wikiApi({action:'query',prop:'langlinks',lllang:to,lllimit:'1',redirects:'1',titles:title},from);
+  return j?.query?.pages?.[0]?.langlinks?.[0]?.title||'';
  }catch(e){return '';}
 }
-
+async function wikiParsePage(title,lang='es'){
+ if(!title)return null;
+ try{
+  const j=await wikiApi({action:'parse',page:title,prop:'text|displaytitle',redirects:'1'},lang);
+  return j?.parse||null;
+ }catch(e){return null;}
+}
+function normalizeHistoryText(s){
+ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9ñ]+/g,' ').replace(/\s+/g,' ').trim();
+}
 function historyYearRegex(y){
  const a=Math.abs(Number(y)||0);
- if(y<0)return new RegExp('(?:'+a+'\\s*(?:a\\.?\\s*C\\.?|a\\.C\\.|BC|BCE))','i');
+ if(y<0)return new RegExp('(?:^|[^0-9])'+a+'\\s*(?:a\\.?\\s*C\\.?|a\\.C\\.|AC|BC|BCE)(?:[^0-9]|$)','i');
  return new RegExp('(^|[^0-9])'+a+'([^0-9]|$)');
 }
-function contextSentencesForYear(extract,y){
- const rx=historyYearRegex(y),sent=String(extract||'').split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean),out=[];
- for(let i=0;i<sent.length;i++){
-  if(rx.test(sent[i])){
-   const group=[sent[Math.max(0,i-1)],sent[i],sent[Math.min(sent.length-1,i+1)]].filter(Boolean).join(' ');
-   if(!out.includes(group))out.push(group);
-   if(out.length>=3)break;
-  }
+function historySentenceSplit(text){
+ return String(text||'').replace(/\n+/g,' ').split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+}
+function exactEntityYearSentences(extract,year){
+ const rx=historyYearRegex(year),out=[];
+ for(const s of historySentenceSplit(extract)){
+  if(rx.test(s)&&!out.includes(s))out.push(s);
+  if(out.length>=6)break;
  }
  return out;
 }
+const HISTORY_GENERIC_TERMS=new Set([
+ 'empire','imperio','kingdom','reino','republic','republica','state','estado','dynasty','dinastia',
+ 'principality','principado','caliphate','califato','sultanate','sultanato','country','pais',
+ 'roman','romano','romana','spanish','espanol','espanola'
+]);
+function historyContextTerms(d,entityTitleEs,entityTitleEn,yearSentences=[]){
+ const set=new Set();
+ const add=s=>{
+  for(const raw of normalizeHistoryText(s).split(' ')){
+   if(raw.length<4||HISTORY_GENERIC_TERMS.has(raw))continue;
+   set.add(raw);
+  }
+ };
+ add(d?.name);add(entityTitleEs);add(entityTitleEn);
+ // Raíces geográficas obvias que sí ayudan a relacionar páginas anuales.
+ const all=normalizeHistoryText([d?.name,entityTitleEs,entityTitleEn].join(' '));
+ if(/\broman/.test(all)||/\bromano/.test(all)){set.add('roma');set.add('rome');set.add('romano');set.add('roman');}
+ if(/\bspain\b|\bespana\b|\bspanish\b/.test(all)){set.add('espana');set.add('spain');set.add('espanol');set.add('spanish');}
+ for(const s of yearSentences){
+  // Los nombres propios y términos relevantes del propio artículo en ese año
+  // sirven para enlazar el acontecimiento anual con la entidad.
+  const words=String(s).match(/\b[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ-]{3,}\b/g)||[];
+  words.forEach(add);
+ }
+ return [...set];
+}
+function historyEventScore(li,terms,entityTitle=''){
+ const text=normalizeHistoryText(li?.textContent||'');
+ if(!text)return 0;
+ let score=0;
+ const entityNorm=normalizeHistoryText(entityTitle);
+ for(const a of li?.querySelectorAll?.('a[title]')||[]){
+  const t=normalizeHistoryText(a.getAttribute('title')||'');
+  if(entityNorm&&t===entityNorm)score+=20;
+ }
+ for(const term of terms){
+  if(!term)continue;
+  if(new RegExp('(^| )'+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'( |$)').test(text))score+=3;
+ }
+ return score;
+}
+function cleanHistoryEventText(s){
+ return String(s||'').replace(/\[[0-9]+\]/g,'').replace(/\s+/g,' ').trim();
+}
+async function resolveYearPage(year,lang='es'){
+ const a=Math.abs(Number(year)||0);
+ const candidates=year<0
+  ? (lang==='es'?[a+' a. C.',a+' a. C',a+' a.C.']:[a+' BC',a+' BCE'])
+  : [String(a)];
+ for(const t of candidates){
+  const parsed=await wikiParsePage(t,lang);
+  if(parsed?.text)return {title:parsed.title||t,parsed};
+ }
+ const q=year<0
+  ? (lang==='es' ? '"'+a+' a. C."' : '"'+a+' BC"')
+  : '"'+a+'"';
+ const sr=await wikiSearchTitle(q,lang).catch(()=>[]);
+ for(const r of sr){
+  if(!historyYearRegex(year).test(r.title||''))continue;
+  const parsed=await wikiParsePage(r.title,lang);
+  if(parsed?.text)return {title:r.title,parsed};
+ }
+ return null;
+}
+function eventsFromYearPage(parsed,terms,entityTitle,max=8){
+ if(!parsed?.text)return [];
+ const doc=new DOMParser().parseFromString(parsed.text,'text/html');
+ const rows=[];
+ for(const li of doc.querySelectorAll('li')){
+  const txt=cleanHistoryEventText(li.textContent);
+  if(txt.length<25||txt.length>900)continue;
+  const score=historyEventScore(li,terms,entityTitle);
+  if(score<=0)continue;
+  rows.push({text:txt,score});
+ }
+ rows.sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
+ const out=[];
+ for(const r of rows){
+  if(!out.some(x=>normalizeHistoryText(x)===normalizeHistoryText(r.text)))out.push(r.text);
+  if(out.length>=max)break;
+ }
+ return out;
+}
+function historyWikiRegime(text,name=''){
+ const t=(String(name)+' '+String(text)).toLowerCase();
+ const rules=[
+  [/\bprincipado\b|\bprincipate\b/,'Principado'],
+  [/\bimperio\b|\bempire\b/,'Imperio'],
+  [/\brepública\b|\brepublic\b/,'República'],
+  [/\breino\b|\bkingdom\b|\bmonarqu[ií]a\b|\bmonarchy\b/,'Monarquía / reino'],
+  [/\bsultanato\b|\bsultanate\b/,'Sultanato'],[/\bcalifato\b|\bcaliphate\b/,'Califato'],
+  [/\bemirato\b|\bemirate\b/,'Emirato'],[/\bkanato\b|\bkhanate\b/,'Kanato'],
+  [/\bprincipado\b|\bprincipality\b/,'Principado'],[/\bducado\b|\bduchy\b/,'Ducado'],
+  [/\bconfederaci[oó]n\b|\bconfederation\b/,'Confederación'],[/\bfederaci[oó]n\b|\bfederation\b/,'Federación'],
+  [/\bcolonia\b|\bcolony\b/,'Administración colonial'],[/\bprotectorado\b|\bprotectorate\b/,'Protectorado']
+ ];
+ for(const [rx,label] of rules)if(rx.test(t))return label;
+ return '';
+}
 async function historyWikipediaContext(d,year=historyYear){
- const key=[d?.name||'',d?.wikidata||'',d?.wikipedia||'',year].join('|');
+ const key=[d?.name||'',d?.seshat||'',d?.wikipedia||'',year].join('|');
  if(historyWikiCache.has(key))return historyWikiCache.get(key);
 
  const p=(async()=>{
-  let lang='es',title='',page=null;
+  // IDENTIDAD: Cliopatria manda. Su campo WikipediaPage describe la entidad
+  // para ese intervalo temporal. No hacemos una búsqueda libre para decidir
+  // qué entidad es.
+  let entityTitleEn=cliopatriaWikipediaTitle(d);
+  let entityTitleEs='';
+  let lang='es',entityPage=null;
 
-  // 1. Preferir el sitelink exacto de Wikidata si Cliopatria aporta QID.
-  title=await wikidataSitelink(d?.wikidata,'es');
-  if(!title){
-   const phrase=String(d?.wikipedia||'').replace(/^https?:\/\/[^/]+\/wiki\//i,'').replace(/_/g,' ').trim();
-   const search=await wikiSearchTitle(phrase||d.name,'es').catch(()=>[]);
-   title=search[0]?.title||'';
+  if(entityTitleEn){
+   entityTitleEs=await wikiLangLink(entityTitleEn,'en','es');
+   if(entityTitleEs)entityPage=await wikiPageExtract(entityTitleEs,'es',30000).catch(()=>null);
   }
-  if(title)page=await wikiPageExtract(title,'es').catch(()=>null);
 
-  // 2. Fallback inglés solo si no existe artículo útil en español.
-  if(!page?.extract){
+  if(!entityPage?.extract){
    lang='en';
-   title=await wikidataSitelink(d?.wikidata,'en');
-   if(!title){
-    const phrase=String(d?.wikipedia||'').replace(/^https?:\/\/[^/]+\/wiki\//i,'').replace(/_/g,' ').trim();
-    const search=await wikiSearchTitle(phrase||d.name,'en').catch(()=>[]);
-    title=search[0]?.title||phrase||d.name;
+   if(!entityTitleEn){
+    // Fallback únicamente cuando Cliopatria no aporta WikipediaPage.
+    const sr=await wikiSearchTitle('"'+String(d?.name||'')+'"', 'en').catch(()=>[]);
+    entityTitleEn=sr[0]?.title||String(d?.name||'');
    }
-   page=title?await wikiPageExtract(title,'en').catch(()=>null):null;
+   entityPage=await wikiPageExtract(entityTitleEn,'en',30000).catch(()=>null);
   }
 
-  const extract=page?.extract||'';
+  const entityTitle=lang==='es'?(entityTitleEs||entityTitleEn):entityTitleEn;
+  const extract=entityPage?.extract||'';
   const intro=extract.split(/\n+/)[0]?.trim()||'';
-  const regime=historyWikiRegime(intro,d.name);
 
-  // Solo frases que contienen EXACTAMENTE el año seleccionado.
-  const exactMoments=contextSentencesForYear(extract,year);
+  // ACONTECIMIENTOS: primero el artículo de la propia entidad, pero solo
+  // frases que contienen literalmente el año seleccionado.
+  const entityYearMoments=exactEntityYearSentences(extract,year);
 
-  // 3. Buscar una página anual específica de la entidad/país:
-  //    p.ej. "1804 en España". Solo aceptamos resultados cuyo título
-  //    contenga literalmente el año y luego extraemos frases de ese mismo año.
-  let annualTitle='',annualExtract='',annualMoments=[];
-  const yearAbs=Math.abs(Number(year)||0);
-  const annualQueries=[
-   year<0 ? '' : String(yearAbs)+' en '+title,
-   year<0 ? '' : title+' en '+String(yearAbs),
-   year<0 ? '' : String(yearAbs)+' '+title
-  ].filter(Boolean);
+  // Después consultamos la página DEL AÑO (no una búsqueda temática abierta).
+  // Todo lo que salga de aquí pertenece necesariamente al año seleccionado.
+  let yearPage=await resolveYearPage(year,lang);
+  if(!yearPage&&lang!=='en')yearPage=await resolveYearPage(year,'en');
 
-  for(const q of annualQueries){
-   const sr=await wikiSearchTitle(q,lang).catch(()=>[]);
-   const cand=sr.find(x=>new RegExp('(^|\\D)'+yearAbs+'(\\D|$)').test(x.title||''))||null;
-   if(!cand)continue;
-   annualTitle=cand.title;
-   const ap=await wikiPageExtract(annualTitle,lang,24000).catch(()=>null);
-   annualExtract=ap?.extract||'';
-   annualMoments=contextSentencesForYear(annualExtract,year);
-   if(annualMoments.length)break;
-  }
+  const terms=historyContextTerms(d,entityTitleEs,entityTitleEn,entityYearMoments);
+  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,10):[];
 
-  // Combinar y deduplicar; nunca introducir resultados sin el año exacto.
+  // Fusión: las frases del artículo de la entidad tienen prioridad.
   const moments=[];
-  for(const s of [...exactMoments,...annualMoments]){
+  for(const s of [...entityYearMoments,...annualMoments]){
    if(!s)continue;
-   const rx=historyYearRegex(year);
-   if(!rx.test(s))continue;
-   if(!moments.includes(s))moments.push(s);
-   if(moments.length>=6)break;
+   const clean=cleanHistoryEventText(s);
+   if(!moments.some(x=>normalizeHistoryText(x)===normalizeHistoryText(clean)))moments.push(clean);
+   if(moments.length>=8)break;
   }
 
-  // Conflictos: SOLO entre esas mismas frases del año seleccionado.
-  const warRx=/\bguerra\b|\bconflicto\b|\bbatalla\b|\binvasi[oó]n\b|\brebeli[oó]n\b|\bsitio\b|\bwar\b|\bbattle\b|\binvasion\b|\brebellion\b/i;
+  const warRx=/\bguerra\b|\bconflicto\b|\bbatalla\b|\binvasi[oó]n\b|\brebeli[oó]n\b|\bsitio\b|\bwar\b|\bbattle\b|\binvasion\b|\brebellion\b|\bsiege\b/i;
   const wars=moments.filter(s=>warRx.test(s));
 
-  const url=title?'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(title.replace(/ /g,'_')):'';
-  const annualUrl=annualTitle?'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(annualTitle.replace(/ /g,'_')):'';
+  const regime=historyWikiRegime([d?.name,entityTitle,intro].join(' '));
+  const url=entityTitle?'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(entityTitle.replace(/ /g,'_')):'';
+  const yearUrl=yearPage?.title?'https://'+(yearPage.parsed?.lang||lang)+'.wikipedia.org/wiki/'+encodeURIComponent(String(yearPage.title).replace(/ /g,'_')):'';
 
-  return {lang,title,intro,regime,moments,wars,url,annualTitle,annualUrl};
+  return {
+   lang,entityTitle,entityTitleEn,entityTitleEs,intro,regime,moments,wars,url,
+   yearTitle:yearPage?.title||'',yearUrl,
+   identitySource:d?.wikipedia?'Cliopatria → WikipediaPage':'Cliopatria → nombre de entidad'
+  };
  })();
 
  historyWikiCache.set(key,p);
@@ -8250,37 +8350,33 @@ async function historyWikipediaContext(d,year=historyYear){
  return p;
 }
 function historyWikiContextHtml(c){
- if(!c)return '<div class="historyCardNote">No se pudo obtener contexto adicional de Wikipedia.</div>';
- let h='<div style="margin-top:9px;padding-top:8px;border-top:1px solid #d7dde1"><b>📚 Contexto histórico · Wikipedia</b>';
+ if(!c)return '<div class="historyCardNote">No se pudo obtener contexto adicional.</div>';
+ let h='<div style="margin-top:9px;padding-top:8px;border-top:1px solid #d7dde1"><b>📚 Contexto histórico del año</b>';
 
  if(c.regime)h+='<br><b>Forma política:</b> '+escHtml(c.regime);
 
  if(c.intro){
-  h+='<br><span>'+escHtml(c.intro)+'</span>';
+  h+='<br><b>Entidad:</b> '+escHtml(c.intro);
  }
 
  if(c.moments?.length){
-  h+='<br><b>Acontecimientos documentados en '+escHtml(historyYearText(historyYear))+':</b>';
-  h+='<ul style="margin:4px 0 2px 18px;padding:0">'+
-     c.moments.map(x=>'<li>'+escHtml(x)+'</li>').join('')+
-     '</ul>';
+  h+='<br><b>Acontecimientos de '+escHtml(historyYearText(historyYear))+' vinculados con esta entidad:</b>';
+  h+='<ul style="margin:4px 0 2px 18px;padding:0">'+c.moments.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>';
  }else{
-  h+='<br><b>Acontecimientos de '+escHtml(historyYearText(historyYear))+':</b> no se han localizado menciones explícitas a ese año en los artículos consultados.';
+  h+='<br><b>Acontecimientos de '+escHtml(historyYearText(historyYear))+':</b> no se ha encontrado en las fuentes consultadas un acontecimiento de ese año que pueda vincularse con suficiente seguridad a esta entidad.';
  }
 
  if(c.wars?.length){
-  h+='<br><b>Conflictos / guerras mencionados expresamente en '+escHtml(historyYearText(historyYear))+':</b>';
-  h+='<ul style="margin:4px 0 2px 18px;padding:0">'+
-     c.wars.map(x=>'<li>'+escHtml(x)+'</li>').join('')+
-     '</ul>';
+  h+='<br><b>Conflictos / guerras de '+escHtml(historyYearText(historyYear))+' vinculados:</b>';
+  h+='<ul style="margin:4px 0 2px 18px;padding:0">'+c.wars.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>';
  }
 
  h+='<div class="historyCardNote">';
  const links=[];
- if(c.url)links.push('<a href="'+escHtml(c.url)+'" target="_blank" rel="noopener">Artículo principal</a>');
- if(c.annualUrl)links.push('<a href="'+escHtml(c.annualUrl)+'" target="_blank" rel="noopener">Página anual relacionada</a>');
+ if(c.url)links.push('<a href="'+escHtml(c.url)+'" target="_blank" rel="noopener">Entidad en Wikipedia</a>');
+ if(c.yearUrl)links.push('<a href="'+escHtml(c.yearUrl)+'" target="_blank" rel="noopener">Página del año</a>');
  if(links.length)h+=links.join(' · ')+' · ';
- h+='Solo se muestran referencias que contienen explícitamente el año seleccionado; se omiten resultados de otros años.</div>';
+ h+='Arquitectura temporal: Cliopatria fija la identidad; después se consulta el año exacto y solo se conservan acontecimientos vinculables a esa entidad.</div>';
  return h+'</div>';
 }
 async function enrichHistoryElement(el,d,token){
@@ -8307,7 +8403,7 @@ function historyColor(n){return HISTORY_PALETTE[historyHash(n)%HISTORY_PALETTE.l
 function historyProp(p,...ks){for(const k of ks)if(p&&p[k]!==undefined&&p[k]!==null&&String(p[k]).trim()!=='')return p[k];return '';}
 function historyFeatureData(f){const p=f?.properties||{};return{name:historyProp(p,'__name','Name','name','Polity','polity')||'Entidad política',from:Number(historyProp(p,'__from','FromYear','from_year','from')),to:Number(historyProp(p,'__to','ToYear','to_year','to')),wikidata:historyProp(p,'__wikidata','Wikidata','WikidataID','wikidata'),wikipedia:historyProp(p,'__wikipedia','Wikipedia','WikipediaPage','wikipedia'),seshat:historyProp(p,'__seshat','SeshatID','seshat_id'),area:historyProp(p,'__area','Area','area')};}
 function historyPeriodText(d){const a=Number.isFinite(d?.from)?historyYearText(d.from):'',b=Number.isFinite(d?.to)?historyYearText(d.to):'';return a&&b?(a===b?a:a+' – '+b):(a||b);}
-function historyCardHtml(d){const per=historyPeriodText(d);let h='<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div><b>Año visualizado:</b> '+escHtml(historyYearText(historyYear));if(per)h+='<br><b>Intervalo de esta geometría:</b> '+escHtml(per);if(d?.area!==''&&d?.area!==null&&d?.area!==undefined)h+='<br><b>Área registrada:</b> '+escHtml(String(d.area))+' km²';if(d?.seshat)h+='<br><b>ID Seshat:</b> '+escHtml(String(d.seshat));if(d?.wikidata)h+='<br><b>Wikidata:</b> '+escHtml(String(d.wikidata));return h+'<div class="historyWikiSlot"><div class="historyCardNote">Consultando contexto histórico en Wikipedia…</div></div><div class="historyCardNote">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div></div>';}
+function historyCardHtml(d){const per=historyPeriodText(d);let h='<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div><b>Año visualizado:</b> '+escHtml(historyYearText(historyYear));if(per)h+='<br><b>Intervalo de esta geometría:</b> '+escHtml(per);if(d?.area!==''&&d?.area!==null&&d?.area!==undefined)h+='<br><b>Área registrada:</b> '+escHtml(String(d.area))+' km²';if(d?.seshat)h+='<br><b>ID Seshat:</b> '+escHtml(String(d.seshat));if(d?.wikidata)h+='<br><b>Wikidata:</b> '+escHtml(String(d.wikidata));return h+'<div class="historyWikiSlot"><div class="historyCardNote">Identificando la entidad y consultando acontecimientos del año…</div></div><div class="historyCardNote">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div></div>';}
 function makeHistoryWorker(){
  if(historyWorker)return historyWorker;
  const code=`
