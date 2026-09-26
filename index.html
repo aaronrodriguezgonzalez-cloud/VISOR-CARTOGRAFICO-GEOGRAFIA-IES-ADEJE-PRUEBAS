@@ -2488,10 +2488,11 @@ if(map.attributionControl)map.attributionControl.setPrefix(false);
 
 let dynamicWorldMinZoom=0;
 function calculateDynamicWorldMinZoom(){
- // Zoom máximo al que el marco mundial completo sigue cabiendo en el viewport.
- // Restamos una pequeña tolerancia para no cortar las líneas de ±180°.
- const fit=map.getBoundsZoom(WORLD_VIEW_BOUNDS,false,[8,8]);
- return Math.max(0,fit);
+ // El viewport debe quedar ENTERAMENTE dentro del marco mundial.
+ // Con inside=true evitamos que en pantallas panorámicas el mundo quede
+ // "flotando" con grandes márgenes blancos a derecha o abajo.
+ const fill=map.getBoundsZoom(WORLD_VIEW_BOUNDS,true,[0,0]);
+ return Math.max(0,fill);
 }
 function applyDynamicWorldMinZoom(){
  const z=calculateDynamicWorldMinZoom();
@@ -2508,11 +2509,17 @@ function applyDynamicWorldMinZoom(){
 }
 function fitWorldToViewport(){
  applyDynamicWorldMinZoom();
- map.fitBounds(WORLD_VIEW_BOUNDS,{padding:[8,8],animate:false,maxZoom:dynamicWorldMinZoom});
+ map.setView([0,0],dynamicWorldMinZoom,{animate:false});
 }
 setTimeout(applyDynamicWorldMinZoom,0);
-window.addEventListener('resize',()=>setTimeout(applyDynamicWorldMinZoom,80));
-window.addEventListener('orientationchange',()=>setTimeout(applyDynamicWorldMinZoom,180));
+window.addEventListener('resize',()=>setTimeout(()=>{
+ applyDynamicWorldMinZoom();
+ map.invalidateSize({pan:false,animate:false});
+},100));
+window.addEventListener('orientationchange',()=>setTimeout(()=>{
+ applyDynamicWorldMinZoom();
+ map.invalidateSize({pan:false,animate:false});
+},200));
 
 
 // Fondos equivalentes a los disponibles en Iberpix/IGN
@@ -2848,6 +2855,7 @@ function translateEcoregionEs(value,ecoId='',biomeName='',realmName=''){
 }
 function translateScientificTextEs(value){
  let s=String(value??'').trim();if(!s)return s;
+ if(isHttpLike(s))return '';
  const exact={
   'Stratovolcano':'Estratovolcán','Shield volcano':'Volcán en escudo','Shield':'Volcán en escudo',
   'Caldera':'Caldera','Complex volcano':'Complejo volcánico','Complex':'Complejo volcánico',
@@ -2855,15 +2863,22 @@ function translateScientificTextEs(value){
   'Fissure vent':'Fisura eruptiva','Submarine':'Volcán submarino',
   'Subduction zone':'Zona de subducción','Rift zone':'Zona de rift','Intraplate':'Intraplaca',
   'Explosive':'Explosivo','Effusive':'Efusivo','Confirmed Eruption':'Erupción confirmada',
-  'Uncertain Eruption':'Erupción incierta','Historical':'Histórica','Radiocarbon':'Radiocarbono'
+  'Uncertain Eruption':'Erupción incierta','Historical':'Histórica','Radiocarbon':'Radiocarbono',
+  'Dated':'Datada','Holocene':'Holoceno','Basalt':'Basalto','Picro-Basalt':'Picrobasalto',
+  'Andesite':'Andesita','Dacite':'Dacita','Rhyolite':'Riolita','Trachyte':'Traquita',
+  'Phonolite':'Fonolita','Foidite':'Foidita'
  };
  if(exact[s])return exact[s];
  const pairs=[
-  ['subduction','subducción'],['continental crust','corteza continental'],['oceanic crust','corteza oceánica'],
-  ['explosive','explosivo'],['effusive','efusivo'],['eruption','erupción'],['lava flows','coladas de lava'],
-  ['lava flow','colada de lava'],['pyroclastic flows','flujos piroclásticos'],['pyroclastic flow','flujo piroclástico'],
-  ['ash','ceniza'],['crater','cráter'],['summit','cumbre'],['flank','flanco'],['fissure','fisura'],
-  ['unknown','desconocido'],['confirmed','confirmado'],['uncertain','incierto']
+  ['oceanic crust','corteza oceánica'],['continental crust','corteza continental'],
+  ['subduction','subducción'],['rift zone','zona de rift'],['explosive','explosivo'],
+  ['effusive','efusivo'],['eruption','erupción'],['lava flows','coladas de lava'],
+  ['lava flow','colada de lava'],['pyroclastic flows','flujos piroclásticos'],
+  ['pyroclastic flow','flujo piroclástico'],['ash','ceniza'],['crater','cráter'],
+  ['summit','cumbre'],['flank','flanco'],['fissure','fisura'],['unknown','desconocido'],
+  ['confirmed','confirmado'],['uncertain','incierto'],['dated','datada'],
+  ['basalt','basalto'],['picro-basalt','picrobasalto'],['andesite','andesita'],
+  ['dacite','dacita'],['rhyolite','riolita'],['trachyte','traquita'],['phonolite','fonolita']
  ];
  for(const [en,es] of pairs)s=s.replace(new RegExp(en,'ig'),es);
  return s;
@@ -3043,7 +3058,7 @@ function volcanoDetailsFromPlainProps(p={},lat=null,lon=null){
   name:gp('volcano_na','Volcano Name','Volcano_Name','VOLCANONAME','NAME','Name','VolcanoName')||'Volcán',
   number:gp('volcano_nu','Volcano Number','Volcano_Number','NUMBER','VolcanoNumber','VolcanoNumberNew'),
   type:gp('primary_vo','Primary Volcano Type','Primary_Volcano_Type','TYPE','Type','Volcano_Type','Volcano Type'),
-  landform:gp('primary_ph','primary__1','primary__2','Volcano Landform','Volcano_Landform','Landform','LAND_FORM'),
+  landform:gp('Volcano Landform','Volcano_Landform','Landform','LAND_FORM'),
   nature:gp('tectonic_s','Tectonic Setting','Tectonic_Setting','TectonicSetting','TECTONIC','Tectonic'),
   rocks:joinVolcanoValues(
     gp('major_rock','Major Rock 1','Major_Rock_1','Major Rock Type','Major_Rock_Type','MajorRockType'),
@@ -3083,8 +3098,89 @@ const VOLCANO_TRANSLATIONS={
  'Oceanic crust (< 15 km)':'Corteza oceánica (< 15 km)',
  'Explosive':'Explosivo','Effusive':'Efusivo','Explosive / Effusive':'Explosivo / efusivo',
  'Confirmed Eruption':'Erupción confirmada','Uncertain Eruption':'Erupción incierta',
- 'Historical':'Histórica','Radiocarbon':'Radiocarbono'
+ 'Historical':'Histórica','Radiocarbon':'Radiocarbono','Dated':'Datada',
+ 'Eruption Dated':'Erupción datada','Holocene':'Holoceno',
+ 'Basalt':'Basalto','Picro-Basalt':'Picrobasalto','Andesite':'Andesita',
+ 'Basaltic Andesite':'Andesita basáltica','Dacite':'Dacita','Rhyolite':'Riolita',
+ 'Trachyte':'Traquita','Trachybasalt':'Traquibasalto','Phonolite':'Fonolita',
+ 'Tephrite / Basanite':'Tefrita / basanita','Foidite':'Foidita',
+ 'Trachyandesite / Basaltic Trachyandesite':'Traquiandesita / traquiandesita basáltica',
+ 'Phono-tephrite / Tephri-phonolite':'Fonotefrita / tefrifonolita'
 };
+
+const VOLCANO_COUNTRY_ES={
+ 'Spain':'España','Portugal':'Portugal','Italy':'Italia','France':'Francia','Germany':'Alemania',
+ 'Greece':'Grecia','Iceland':'Islandia','United Kingdom':'Reino Unido','Ireland':'Irlanda',
+ 'United States':'Estados Unidos','United States of America':'Estados Unidos','Mexico':'México',
+ 'Japan':'Japón','Indonesia':'Indonesia','Philippines':'Filipinas','New Zealand':'Nueva Zelanda',
+ 'Papua New Guinea':'Papúa Nueva Guinea','Cape Verde':'Cabo Verde','Ecuador':'Ecuador',
+ 'Chile':'Chile','Argentina':'Argentina','Peru':'Perú','Bolivia':'Bolivia','Colombia':'Colombia',
+ 'Costa Rica':'Costa Rica','Guatemala':'Guatemala','Nicaragua':'Nicaragua','El Salvador':'El Salvador',
+ 'Russia':'Rusia','Turkey':'Turquía','Iran':'Irán','Ethiopia':'Etiopía','Kenya':'Kenia',
+ 'Tanzania':'Tanzania','Democratic Republic of the Congo':'República Democrática del Congo'
+};
+function translateVolcanoCountryEs(v){
+ const s=String(v??'').trim();return VOLCANO_COUNTRY_ES[s]||s;
+}
+function translateVolcanoRegionEs(v){
+ let s=String(v??'').trim();if(!s)return s;
+ const pairs=[
+  ['Atlantic Ocean','Océano Atlántico'],['North Atlantic Ocean','Océano Atlántico Norte'],
+  ['South Atlantic Ocean','Océano Atlántico Sur'],['Pacific Ocean','Océano Pacífico'],
+  ['North Pacific Ocean','Océano Pacífico Norte'],['South Pacific Ocean','Océano Pacífico Sur'],
+  ['Indian Ocean','Océano Índico'],['Mediterranean Sea','Mar Mediterráneo'],
+  ['Caribbean Sea','Mar Caribe'],['Red Sea','Mar Rojo'],['East Africa','África oriental'],
+  ['Central Africa','África central'],['West Africa','África occidental'],['North Africa','África septentrional'],
+  ['South America','América del Sur'],['Central America','América Central'],['North America','América del Norte'],
+  ['Southeast Asia','Sudeste Asiático'],['East Asia','Asia oriental'],['Central Asia','Asia central'],
+  ['Southern Europe','Europa meridional'],['Western Europe','Europa occidental'],
+  ['Eastern Europe','Europa oriental'],['Azores','Azores'],['Madeira','Madeira']
+ ];
+ for(const [en,es] of pairs)s=s.replace(new RegExp(en,'ig'),es);
+ return s.replace(/\s*-\s*/g,' · ');
+}
+function isHttpLike(v){return /^https?:\/\//i.test(String(v??'').trim());}
+function containsEnglishProse(v){
+ const s=String(v??'');
+ return /\b(the|this|that|is|are|was|were|with|from|along|about|forms|forming|rises|island|volcano|shield|floor|ocean|length|construction|trending|seen|capital|southeast|flanks?)\b/i.test(s);
+}
+function translateVolcanoEvidenceEs(v){
+ let s=String(v??'').trim();if(!s)return s;
+ const exact={
+  'Dated':'Datada','Eruption Dated':'Erupción datada','Holocene':'Holoceno',
+  'Historical':'Histórica','Radiocarbon':'Radiocarbono','Tephrochronology':'Tefrocronología',
+  'Ar/Ar':'Datación Ar/Ar','K/Ar':'Datación K/Ar'
+ };
+ if(exact[s])return exact[s];
+ return trVolcano(s);
+}
+function spanishGeologicalSummary(raw,vv){
+ const s=String(raw??'').trim();if(!s)return '';
+ // Nunca mostramos el párrafo original inglés.
+ const facts=[];
+ if(/\bemergent top of (?:a )?massive shield volcano\b/i.test(s) || /\bemergent (?:top|summit).*shield volcano\b/i.test(s))
+  facts.push('La isla constituye la parte emergida de un gran volcán en escudo.');
+ let m=s.match(/rises about\s+([\d.,]+)\s*km\s+from the (?:floor|seafloor) of the ([^.]+)/i);
+ if(m)facts.push('El edificio volcánico se eleva aproximadamente '+m[1].replace('.',',')+' km desde el fondo del '+translateVolcanoRegionEs(m[2])+'.');
+ m=s.match(/about\s+([\d.,]+)\s*km\s+in length/i);
+ if(m)facts.push('El edificio o la isla alcanza aproximadamente '+m[1].replace('.',',')+' km de longitud.');
+ if(/\bE-W-trending rift zone\b/i.test(s)||/\beast-west.*rift zone\b/i.test(s))
+  facts.push('Su construcción está relacionada con una zona de rift de orientación este-oeste.');
+ if(/\bN-S-trending rift zone\b/i.test(s)||/\bnorth-south.*rift zone\b/i.test(s))
+  facts.push('Su construcción está relacionada con una zona de rift de orientación norte-sur.');
+ if(/\bNW-SE-trending rift\b/i.test(s))
+  facts.push('Presenta una zona de rift de orientación noroeste-sudeste.');
+ if(/\bNE-SW-trending rift\b/i.test(s))
+  facts.push('Presenta una zona de rift de orientación nordeste-sudoeste.');
+ if(!facts.length){
+  // En vez de dejar inglés residual, sintetizamos solo hechos estructurados comprobables.
+  if(vv?.type)facts.push('La morfología principal registrada es '+trVolcano(vv.type).toLowerCase()+'.');
+  if(vv?.nature)facts.push('El contexto tectónico registrado es '+trVolcano(vv.nature).toLowerCase()+'.');
+  if(vv?.rocks)facts.push('La composición principal registrada incluye '+trVolcano(vv.rocks).toLowerCase()+'.');
+ }
+ return facts.join(' ');
+}
+
 function trVolcano(v){
  const s=String(v??'').trim();if(!s)return s;
  if(VOLCANO_TRANSLATIONS[s])return VOLCANO_TRANSLATIONS[s];
@@ -3324,7 +3420,10 @@ function enrichedVolcanoHtml(v,e=null){
  h+='<div class="volcanoGrid">';
 
  h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Ficha básica</div>';
- h+=vf('País / territorio',vv.country)+vf('Región / subregión',vv.region)+vf('Morfología principal',trVolcano(vv.type))+vf('Forma / rasgos del edificio',trVolcano(vv.landform));
+ h+=vf('País / territorio',translateVolcanoCountryEs(vv.country))
+   +vf('Región / subregión',translateVolcanoRegionEs(vv.region))
+   +vf('Morfología principal',trVolcano(vv.type))
+   +(vv.landform&&!isHttpLike(vv.landform)?vf('Forma / rasgos del edificio',trVolcano(vv.landform)):'');
  if(elev!==null&&elev!==undefined&&elev!=='')h+=vf('Altitud máxima / cumbre',formatMaybeNumber(elev)+' m s. n. m.');
  if(e?.edificeHeight!==null&&e?.edificeHeight!==undefined&&e?.edificeHeight!=='')h+=vf('Altura aproximada del edificio volcánico',formatMaybeNumber(e.edificeHeight)+' m');
  if(coords)h+=vf('Coordenadas',coords.lat+', '+coords.lon+' ('+lat.toFixed(4)+'°, '+lon.toFixed(4)+'°)');
@@ -3335,7 +3434,9 @@ function enrichedVolcanoHtml(v,e=null){
  if(hasGeo){
   h+='<section class="volcanoSection"><div class="volcanoSectionTitle">Geología</div>';
   h+=vf('Contexto tectónico',trVolcano(vv.nature))+vf('Composición / rocas principales',trVolcano(vv.rocks));
-  h+=vf('Caracterización geológica',trVolcano(vv.geological))+vf('Evidencia geológica',trVolcano(vv.geologicEvidence));
+  const geoEs=spanishGeologicalSummary(vv.geological,vv);
+  if(geoEs)h+=vf('Caracterización geológica',geoEs);
+  h+=vf('Evidencia geológica',translateVolcanoEvidenceEs(vv.geologicEvidence));
   h+='</section>';
  }
 
@@ -3346,7 +3447,7 @@ function enrichedVolcanoHtml(v,e=null){
   if(e?.latestEnd!==null&&e?.latestEnd!==undefined&&e?.latestEnd!==''&&Number(e.latestEnd)!==0)h+=vf('Fin del episodio',e.latestEnd);
   h+=vf('Tipo de actividad',trVolcano(e?.eruptionType))+vf('Área / unidad de actividad',trVolcano(e?.eruptionStyle));
   if(e?.vei!==null&&e?.vei!==undefined&&e?.vei!=='')h+=vf('Índice de Explosividad Volcánica (VEI)',e.vei+(e?.veiQualifier?' · '+e.veiQualifier:''));
-  h+=vf('Evidencia del inicio / datación',trVolcano(e?.evidence));
+  h+=vf('Evidencia del inicio / datación',translateVolcanoEvidenceEs(e?.evidence));
   if(e?.gvpEruptions)h+=vf('Episodios eruptivos recuperados',e.gvpEruptions);
   h+='</section>';
  }
@@ -3379,7 +3480,7 @@ function enrichedVolcanoHtml(v,e=null){
   h+=' · <a href="https://volcanoes.usgs.gov/vsc/api/volcanoApi/volcano?vnum='+encodeURIComponent(String(n))+'" target="_blank" rel="noopener">USGS</a>';
  }
  h+=(n?' · ':'')+'<a href="'+escHtml(wiki)+'" target="_blank" rel="noopener">Wikipedia</a></div>';
- h+='<div class="volcanoSourceLine">Datos volcánicos: Smithsonian Global Volcanism Program, Volcanoes of the World v5.4.0 (2026). La ficha combina el registro de volcanes y el de erupciones; USGS se añade cuando existe cobertura.</div>';
+ h+='<div class="volcanoSourceLine">Datos volcánicos (traducidos y sintetizados al español por ANAMBRO): Smithsonian Global Volcanism Program, Volcanoes of the World v5.4.0 (2026). La ficha combina el registro de volcanes y el de erupciones; USGS se añade cuando existe cobertura.</div>';
  h+='</div>';
  return h;
 }
@@ -6782,7 +6883,24 @@ document.getElementById('worldAdmin2Check').addEventListener('change',e=>{
  toggleWorldAdmin2_2D(e.target.checked);
  if(globeViewer)toggleWorldAdmin2Globe(e.target.checked);
 });
+
+function clampWorldAtMinZoom(){
+ if(map.getZoom()>dynamicWorldMinZoom)return;
+ const b=map.getBounds(),wb=WORLD_VIEW_BOUNDS,c=map.getCenter();
+ let lat=c.lat,lng=c.lng;
+ const northOverflow=b.getNorth()-wb.getNorth();
+ const southOverflow=wb.getSouth()-b.getSouth();
+ const eastOverflow=b.getEast()-wb.getEast();
+ const westOverflow=wb.getWest()-b.getWest();
+ if(northOverflow>0)lat-=northOverflow;
+ if(southOverflow>0)lat+=southOverflow;
+ if(eastOverflow>0)lng-=eastOverflow;
+ if(westOverflow>0)lng+=westOverflow;
+ if(Math.abs(lat-c.lat)>.0001||Math.abs(lng-c.lng)>.0001)map.panTo([lat,lng],{animate:false});
+}
+
 map.on('moveend zoomend',scheduleWorldAdmins2D);
+map.on('moveend zoomend',clampWorldAtMinZoom);
 document.getElementById('countriesCheck').addEventListener('change',e=>{
  toggleCountries2D(e.target.checked);
  if(globeViewer)toggleCountriesLayer(e.target.checked);
