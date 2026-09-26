@@ -98,6 +98,26 @@ def clean_spreadsheet_xml(raw):
         '&amp;',
         s
     )
+
+    # El XML que está devolviendo actualmente el Smithsonian llega con
+    # atributos pegados al nombre de la etiqueta, por ejemplo:
+    # <Workbookxmlns="..."xmlns:ss="...">
+    # Insertamos únicamente los espacios sintácticos que faltan.
+    s = re.sub(
+        r'(<[A-Za-z_][A-Za-z0-9_.:-]*)(xmlns(?::[A-Za-z_][A-Za-z0-9_.-]*)?=)',
+        r'\\1 \\2',
+        s
+    )
+    s = re.sub(
+        r'''(["'])(xmlns(?::[A-Za-z_][A-Za-z0-9_.-]*)?=)''',
+        r'\\1 \\2',
+        s
+    )
+    s = re.sub(
+        r'''(["'])(ss:[A-Za-z_][A-Za-z0-9_.-]*=)''',
+        r'\\1 \\2',
+        s
+    )
     return s
 
 def rows_from_xml_spreadsheet(raw):
