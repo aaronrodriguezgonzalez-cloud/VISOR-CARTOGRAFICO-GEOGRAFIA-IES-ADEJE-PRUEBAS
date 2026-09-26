@@ -2530,6 +2530,10 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <label><input id="worldAdmin2Check" type="checkbox"> <b>Divisiones infraestatales de 2.º nivel</b></label>
 <div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank. Se cargan solo para la zona visible y aparecen a partir de una escala regional para evitar saturación.</small></div>
 <label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · vectoriales / IGN en España</label>
+
+<div class="layerThemeTitle secondary">🛰️ Imagen de fondo mundial</div>
+<label><input type="radio" data-base-choice="worldsat" name="baseWorld"> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label>
+<div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D. Puede combinarse con la toponimia física permanente y las capas temáticas.</small></div>
 </details>
 
 <details><summary>🧭 Herramientas cartográficas comunes</summary>
@@ -2607,6 +2611,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
   </details>
 
   <details><summary>🌍 Fuentes mundiales</summary>
+    <div class="sourceItem sourceOk"><b>Esri World Imagery</b> · mosaico mundial de imágenes aéreas y satelitales empleado como fondo tanto en el mapamundi 2D como en el globo 3D.<br><small>La atribución específica de proveedores puede variar según la zona y la escala.</small></div>
     
     <div class="sourceItem sourceOk"><b>World Bank Global Administrative Divisions</b> · límites administrativos mundiales de primer y segundo orden.<br><small>ANAMBRO utiliza ADM1 para regiones/estados/provincias y ADM2 para departamentos/distritos/condados/municipios y equivalentes.</small><br><a href="https://services.arcgis.com/iQ1dY19aHwbSDYIF/arcgis/rest/services/World_Bank_Global_Administrative_Divisions/FeatureServer" target="_blank" rel="noopener">Servicio World Bank GAD</a></div>
 <div class="sourceItem sourceOk"><b>Natural Earth</b> · fronteras y geometrías mundiales auxiliares.<br><small>Datos de dominio público.</small><br><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener">Terms of Use</a></div>
@@ -2882,6 +2887,10 @@ const hybrid=L.layerGroup([pnoa,labels]);
 const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
+const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+ noWrap:true,minZoom:0,maxZoom:19,maxNativeZoom:19,
+ attribution:'Esri World Imagery'
+});
 
 // Capas temáticas mundiales: se cargan únicamente al activarlas.
 const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
@@ -4731,7 +4740,7 @@ document.getElementById('vegetationPotentialCanaryCheck').onchange=e=>{if(e.targ
 document.getElementById('transportOpacity').oninput=e=>transport.setOpacity(+e.target.value);
 document.getElementById('adminOpacity').oninput=e=>[adminCCAA,adminProv,adminMun].forEach(l=>l.setOpacity(+e.target.value));
 
-const bases={raster,pnoa,street,hybrid,lidar,land,historic};
+const bases={raster,pnoa,street,hybrid,lidar,land,historic,worldsat:worldImagery};
 let activeBase=hybrid;
 hybrid.addTo(map);
 document.querySelectorAll('input[data-base-choice]').forEach(r=>r.addEventListener('change',()=>{
@@ -10062,10 +10071,12 @@ function ensurePhysicalLabels3D(){
  if(anambroPhysical3D.length)return;
  for(const x of ANAMBRO_PHYSICAL_LABELS){
   const st=physical3DStyle(x.t),d=physical3DDistance(x);
-  const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(x.lon,x.lat,18000),label:{
+  const e=globeViewer.entities.add({position:Cesium.Cartesian3.fromDegrees(x.lon,x.lat,0),label:{
    text:x.n,font:st.font,fillColor:st.fill,outlineColor:st.outline.withAlpha(.92),outlineWidth:3,style:Cesium.LabelStyle.FILL_AND_OUTLINE,
    showBackground:false,horizontalOrigin:Cesium.HorizontalOrigin.CENTER,verticalOrigin:Cesium.VerticalOrigin.CENTER,
-   disableDepthTestDistance:Number.POSITIVE_INFINITY,distanceDisplayCondition:new Cesium.DistanceDisplayCondition(d[0],d[1]),
+   heightReference:Cesium.HeightReference.CLAMP_TO_GROUND,
+   disableDepthTestDistance:0,
+   distanceDisplayCondition:new Cesium.DistanceDisplayCondition(d[0],d[1]),
    scaleByDistance:new Cesium.NearFarScalar(d[0],1.05,d[1],.72)
   }});
   anambroPhysical3D.push(e);
