@@ -5255,9 +5255,24 @@ function renderProfileLegend(){
  }
  if(!lastProfileAnalysis){box.innerHTML='<span class="profileLegendHint">Analizando '+(mode.startsWith('veg')?(lastProfileWorld?'biomas y ecorregiones':'vegetación'):'geología')+'…</span>';return;}
  if(mode==='geo'){
-  const seen=new Map();for(const x of lastProfileAnalysis.samples){const u=x.geo;if(!u||!u.label||u.label==='Sin dato')continue;seen.set(profileCategoryKey(u),u);}
+  const seen=new Map();
+  for(const x of lastProfileAnalysis.samples){
+   const u=x.geo;if(!u||!u.label||u.label==='Sin dato')continue;
+   const k=lastProfileWorld
+    ? normalizeThemeCategory(u.label)+'|'+String(u.color||'').toLowerCase()
+    : profileCategoryKey(u);
+   if(!seen.has(k))seen.set(k,u);
+  }
   if(!seen.size){box.innerHTML='<span class="profileLegendHint">No hay información temática disponible en este transecto.</span>';return;}
-  box.innerHTML=[...seen.values()].map(u=>'<span class="profileLegendItem"><span class="profileLegendSw" style="background-color:'+escHtml(u.color||'#c9cdd1')+'"></span><span class="profileLegendText">'+escHtml(u.label)+'</span></span>').join('');return;
+
+  const vals=[...seen.values()];
+  box.innerHTML=vals.map(u=>{
+   const age=(lastProfileWorld&&u.age&& !String(u.label).includes(u.age))
+    ? ' <small>· '+escHtml(u.age)+'</small>'
+    : '';
+   return '<span class="profileLegendItem"><span class="profileLegendSw" style="background-color:'+escHtml(u.color||'#c9cdd1')+'"></span><span class="profileLegendText">'+escHtml(u.label)+age+'</span></span>';
+  }).join('');
+  return;
  }
  const key=mode==='veg_potential'?'vegPotential':'vegActual',groups=new Map(),ungrouped=new Map();
  for(const x of lastProfileAnalysis.samples){
@@ -5345,15 +5360,43 @@ function macrostratProfileAgeColor(g){
  return '#8f969c';
 }
 
+function macrostratProfileUnitLabel(g){
+ if(!g)return 'Sin dato';
+ const named=macrostratDisplayName(g)||'';
+ if(named&&named!=='Unidad geológica')return named;
+
+ const lith=String(g.lith||'').trim()?macrostratLithologyEs(g.lith):'';
+ const age=macrostratAgeText(g)||'';
+
+ if(lith&&age){
+  const cap=lith.charAt(0).toUpperCase()+lith.slice(1);
+  return cap+' · '+age;
+ }
+ if(lith)return lith.charAt(0).toUpperCase()+lith.slice(1);
+ if(age)return 'Unidad del '+age;
+
+ const id=g.unit_id??g.map_id??'';
+ return id!==''?'Unidad geológica '+String(id):'Unidad geológica';
+}
 function worldGeologyProfileTheme(g){
  if(!g)return {label:'Sin dato',detail:'',color:null};
- const label=macrostratDisplayName(g)||'Unidad geológica';
+ const label=macrostratProfileUnitLabel(g);
  const age=macrostratAgeText(g)||'';
+ const lith=String(g.lith||'').trim()?macrostratLithologyEs(g.lith):'';
  const color=macrostratProfileAgeColor(g);
  const id=g.unit_id??g.map_id??g.source_id??g.strat_name??g.name??label;
+
+ // Para la leyenda agrupamos por contenido geológico real, no por cada ID
+ // cartográfico de Macrostrat, evitando decenas de "Unidad geológica".
+ const semanticKey=[
+  normalizeThemeCategory(label),
+  normalizeThemeCategory(age),
+  normalizeThemeCategory(lith)
+ ].join('|');
+
  return {
-  label,detail:age?(label+' · '+age):label,age,color,officialColor:true,
-  unit:String(id),categoryKey:'macrogeo|'+normalizeThemeCategory(String(id))
+  label,detail:age?(label+' · '+age):label,age,lith,color,officialColor:true,
+  unit:String(id),categoryKey:'macrogeo|'+semanticKey
  };
 }
 function profileWorldMacrostratZoom(total){
@@ -5939,7 +5982,11 @@ function showProfilePoint(event){
  const position=lastProfilePath?.path?interpolateProfilePoints(lastProfilePath.path,Math.min(1200,Math.max(200,Math.ceil(total/150)))).points.reduce((best,p)=>!best||Math.abs(p.d-distance)<Math.abs(best.d-distance)?p:best,null):null;
  const request=++profilePointRequest;
  const rows=mode==='alt'?[]:
-  mode==='geo'?[['Unidad geológica',u?.label||'Sin dato'],['Edad',u?.age||((u?.detail&&u.detail!==u.label)?u.detail.replace(u.label+' · ',''):'')]]:
+  mode==='geo'?[
+   ['Unidad geológica',u?.label||'Sin dato'],
+   ['Edad',u?.age||((u?.detail&&u.detail!==u.label)?u.detail.replace(u.label+' · ',''):'')],
+   ...(lastProfileWorld&&u?.lith?[['Litología',u.lith]]:[])
+  ]:
   (lastProfileWorld?[
    ['Bioma',u?.formation||''],
    ['Ecorregión',u?.concrete||u?.label||''],
@@ -5953,7 +6000,7 @@ function showProfilePoint(event){
   ]);
  const heading=mode==='alt'?'⛰️ Altimetría':mode==='geo'?'🪨 Geología':(lastProfileWorld?'🌿 Biomas y ecorregiones':'🌿 Vegetación '+(mode==='veg_potential'?'potencial':'actual'));
  const profileCountry=profileCountryAtDistance(distance);
- if(profileCountry)rows.unshift(['País/territorio',profileCountry]);
+ if(profileCountry&&!lastProfileWorld)rows.unshift(['País/territorio',profileCountry]);
  rows.unshift(['Altitud aproximada',nearest?fmtNum(nearest.z,0)+' m':'Sin dato']);
  box.innerHTML='<button type="button" aria-label="Cerrar ficha" style="float:right;margin-left:6px" onclick="this.parentNode.classList.add(\'hidden\')">×</button><b>'+heading+'</b><br>'+rows.filter(row=>row[1]).map(row=>'<b>'+escHtml(row[0])+':</b> '+escHtml(row[1])).join('<br>')+'<br><small>'+fmtDistance(distance)+' desde el inicio</small>';
  const wrap=document.getElementById('profileChartWrap'),w=wrap.clientWidth,h=wrap.clientHeight;
