@@ -5118,7 +5118,7 @@ async function finishProfileFromPoints(profileInputPts){
  const turns=detectProfileTurns(samples,prof.total,zmin,zmax);
  const topo=await profileToponyms(prof,turns);
  let profileLabels=topo.labels,profileTurns=topo.turns;
- if(lastProfileSource==='globe'){
+ if(lastProfileWorld){
   const [worldLabels,nearestLabels,namedTurns,countryBlocks]=await Promise.all([
    profileWorldToponyms(prof),
    profileWorldNearestLabels(prof),
@@ -5513,7 +5513,7 @@ function profileWorldVectorZoom(total){
  return 6;
 }
 async function profileWorldVectorToponyms(prof){
- if(lastProfileSource!=='globe')return [];
+ if(!lastProfileWorld)return [];
  try{
   const z=profileWorldVectorZoom(prof.total),n=2**z;
   const keys=new Map();
@@ -5601,7 +5601,7 @@ async function profileWorldNearestLabels(prof){
  return chosen;
 }
 async function nameWorldProfileTurns(turns){
- if(lastProfileSource!=='globe'||!turns?.length)return turns||[];
+ if(!lastProfileWorld||!turns?.length)return turns||[];
  const ordered=[...turns].sort((a,b)=>(b.prominence||0)-(a.prominence||0));
  const limit=Math.min(7,ordered.length);
  const named=new Map();
@@ -5802,7 +5802,7 @@ function drawProfileFormationBrackets(ctx,X,base,W,p,total,key){
  }
 }
 function drawProfileCountryBrackets(ctx,X,base,W,p,total,vegetationMode){
- if(lastProfileSource!=='globe'||!lastProfileCountries?.length)return;
+ if(!lastProfileWorld||!lastProfileCountries?.length)return;
  ctx.save();ctx.font='800 11px system-ui,sans-serif';ctx.textBaseline='top';ctx.strokeStyle='rgba(26,107,136,.88)';ctx.fillStyle='#1a6b88';ctx.lineWidth=1.4;
  const y=base+(vegetationMode?101:43);
  for(const b of lastProfileCountries){
@@ -5825,7 +5825,7 @@ function drawProfileLarge(samples,total,zmin,zmax,toponyms=[],marked=[]){
        ch=Math.max(mobileProfile?330:400,wrap.clientHeight),
        skinMode=profileThemeMode(),vegetationMode=skinMode.startsWith('veg');
  c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);c.style.width=cw+'px';c.style.height=ch+'px';
- const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,countryMode=lastProfileSource==='globe'&&!!lastProfileCountries?.length,p={l:72,r:28,t:58,b:vegetationMode?(countryMode?154:118):(countryMode?96:64)};ctx.clearRect(0,0,W,H);
+ const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const W=cw,H=ch,countryMode=lastProfileWorld&&!!lastProfileCountries?.length,p={l:72,r:28,t:58,b:vegetationMode?(countryMode?154:118):(countryMode?96:64)};ctx.clearRect(0,0,W,H);
  let lo=Math.min(0,Math.floor((zmin-50)/100)*100),hi=Math.ceil((zmax+80)/100)*100;if(hi<=lo)hi=lo+100;
  const X=d=>p.l+(d/total)*(W-p.l-p.r),Y=z=>p.t+(hi-z)/(hi-lo)*(H-p.t-p.b),base=H-p.b;
  // Fondo neutro: las tintas hipsométricas se reservan para la "piel" del relieve.
@@ -5966,35 +5966,23 @@ function showProfilePoint(event){
   geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><small>Consultando topónimo y unidades administrativas…</small>';
   box.appendChild(geo);
 
-  if(lastProfileSource==='globe'){
-   const inSpain=profileIsSpainLatLng(position.ll);
-   const work=inSpain
-    ?Promise.all([nearestToponymAt(position.ll.lat,position.ll.lng),adminAt(position.ll.lat,position.ll.lng)])
-      .then(([topo,admin])=>({topo,admin,reverse:null}))
-    :reverseWorldAt(position.ll.lat,position.ll.lng)
-      .then(reverse=>({topo:null,admin:null,reverse}));
-
-   work.then(({topo,admin,reverse})=>{
+  if(lastProfileWorld){
+   Promise.all([
+    reverseWorldAt(position.ll.lat,position.ll.lng).catch(()=>null),
+    countryAt(position.ll.lat,position.ll.lng).catch(()=>profileCountry||'')
+   ]).then(([reverse,country])=>{
     if(request!==profilePointRequest||box.classList.contains('hidden'))return;
-    let html='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon);
-
-    if(inSpain){
-     html+='<br><b>Topónimo próximo:</b> '+(topo?escHtml(topo.name)+(Number.isFinite(topo.dist)?' ('+fmtDistance(topo.dist)+')':''):'Sin dato');
-     if(admin?.muni)html+='<br><b>Municipio:</b> '+escHtml(admin.muni);
-     if(admin?.province)html+='<br><b>Provincia:</b> '+escHtml(admin.province);
-     if(admin?.ccaa)html+='<br><b>Comunidad autónoma:</b> '+escHtml(admin.ccaa);
-    }else{
-     const rows=globeTerritorialRows(reverse,null,profileCountry);
-     const placeRow=rows.find(r=>r[0]==='Topónimo / lugar próximo');
-     html+='<br><b>Topónimo próximo:</b> '+escHtml(placeRow?.[1]||'Sin dato');
-     for(const row of rows){
-      if(row===placeRow||row[0]==='País / territorio')continue;
-      html+='<br><b>'+escHtml(row[0])+':</b> '+escHtml(row[1]);
-     }
-    }
-    geo.innerHTML=html;
+    const place=String(reverse?.place||reverse?.display?.split(',')[0]||'').trim();
+    const nation=String(country||profileCountry||reverse?.country||'').trim();
+    geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+
+      '<br><b>Longitud:</b> '+escHtml(c.lon)+
+      '<br><b>Topónimo próximo:</b> '+escHtml(place||'Sin dato')+
+      '<br><b>País / territorio:</b> '+escHtml(nation||'Sin dato');
    }).catch(()=>{
-    if(request===profilePointRequest)geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+'<br><b>Longitud:</b> '+escHtml(c.lon)+'<br><b>Topónimo próximo:</b> Sin dato';
+    if(request===profilePointRequest)geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+
+      '<br><b>Longitud:</b> '+escHtml(c.lon)+
+      '<br><b>Topónimo próximo:</b> Sin dato'+
+      '<br><b>País / territorio:</b> '+escHtml(profileCountry||'Sin dato');
    });
   }else{
    Promise.all([nearestToponymAt(position.ll.lat,position.ll.lng),adminAt(position.ll.lat,position.ll.lng)]).then(([topo,admin])=>{
