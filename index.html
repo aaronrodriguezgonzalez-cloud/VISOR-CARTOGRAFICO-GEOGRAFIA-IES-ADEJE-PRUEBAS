@@ -8198,8 +8198,8 @@ function historyContextTerms(d,entityTitleEs,entityTitleEn,yearSentences=[]){
  const all=normalizeHistoryText([d?.name,entityTitleEs,entityTitleEn].join(' '));
  if(/\broman/.test(all)||/\bromano/.test(all)){set.add('roma');set.add('rome');set.add('romano');set.add('roman');}
  if(/\bspain\b|\bespana\b|\bspanish\b/.test(all)){set.add('espana');set.add('spain');set.add('espanol');set.add('spanish');}
- if(/\bcastile\b|\bcastilla\b/.test(all)){set.add('castilla');set.add('castile');set.add('castellano');set.add('castellana');set.add('espana');set.add('spain');}
- if(/\brome\b|\broman\b|\broma\b|\bromano\b/.test(all)){set.add('roma');set.add('rome');set.add('roman');set.add('romano');}
+ if(/\bcastile\b|\bcastilla\b/.test(all)){set.add('castilla');set.add('castile');set.add('castellano');set.add('castellana');set.add('reyes');set.add('catolicos');set.add('granada');set.add('canarias');set.add('colon');}
+ if(/\brome\b|\broman\b|\broma\b|\bromano\b/.test(all)){set.add('roma');set.add('rome');set.add('roman');set.add('romano');set.add('augusto');set.add('augustus');set.add('octaviano');set.add('octavian');set.add('senado');set.add('senate');}
  for(const s of yearSentences){
   // Los nombres propios y términos relevantes del propio artículo en ese año
   // sirven para enlazar el acontecimiento anual con la entidad.
@@ -8329,43 +8329,35 @@ async function resolveYearPage(year,lang='es'){
  }
  return null;
 }
+function annualHeadingText(el){
+ const h=el?.matches?.('h2,h3,h4')?el:el?.querySelector?.('h2,h3,h4');
+ return (h?.textContent||'').replace(/\[.*?\]/g,'').replace(/\s+/g,' ').trim();
+}
+function annualIsHeadingContainer(el){
+ return !!(el?.matches?.('h2,h3,h4,.mw-heading')||el?.querySelector?.(':scope > h2,:scope > h3,:scope > h4'));
+}
 function annualEventNodes(parsed){
  if(!parsed?.text)return [];
  const doc=new DOMParser().parseFromString(parsed.text,'text/html');
- const badHead=/^(nacimientos|fallecimientos|muertes|births|deaths|referencias|references|enlaces externos|external links|efem[eé]rides|premios|awards)$/i;
- const goodHead=/^(acontecimientos|eventos|events)$/i;
- let active=false,nodes=[];
+ const good=/^(acontecimientos|eventos|events)$/i;
+ const stop=/^(nacimientos|fallecimientos|muertes|births|deaths|referencias|references|enlaces externos|external links|efem[eé]rides|premios|awards|véase también|see also)$/i;
 
- for(const el of doc.body.children){
-  if(/^H[2-4]$/.test(el.tagName)){
-   const h=(el.textContent||'').replace(/\[.*?\]/g,'').trim();
-   if(goodHead.test(h)){active=true;continue;}
-   if(active && badHead.test(h))break;
-   if(active && /^H2$/.test(el.tagName))break;
+ const headings=[...doc.querySelectorAll('h2,h3,h4')];
+ let h=headings.find(x=>good.test(annualHeadingText(x)));
+ if(!h)return [];
+
+ let cursor=(h.parentElement?.classList?.contains('mw-heading')?h.parentElement:h).nextElementSibling;
+ const nodes=[];
+ while(cursor){
+  if(annualIsHeadingContainer(cursor)){
+   const title=annualHeadingText(cursor);
+   if(stop.test(title))break;
+   const hh=cursor.matches?.('h2')?cursor:cursor.querySelector?.(':scope > h2');
+   if(hh)break;
   }
-  if(active){
-   if(el.matches?.('ul,ol'))nodes.push(...el.querySelectorAll(':scope > li'));
-   else nodes.push(...el.querySelectorAll?.('ul > li,ol > li')||[]);
-  }
- }
- if(!nodes.length){
-  const all=[...doc.querySelectorAll('li')];
-  nodes=all.filter(li=>{
-   let p=li;
-   while(p&&p!==doc.body){
-    let prev=p.previousElementSibling;
-    while(prev){
-     if(/^H[2-4]$/.test(prev.tagName)){
-      const h=(prev.textContent||'').replace(/\[.*?\]/g,'').trim();
-      if(badHead.test(h))return false;
-      if(goodHead.test(h))return true;
-     }
-     prev=prev.previousElementSibling;
-    }
-    p=p.parentElement;
-   }
-   return false;
-  });
+  if(cursor.matches?.('ul,ol'))nodes.push(...cursor.querySelectorAll(':scope > li'));
+  else nodes.push(...cursor.querySelectorAll?.('ul > li,ol > li')||[]);
+  cursor=cursor.nextElementSibling;
  }
  return nodes;
 }
@@ -8373,7 +8365,34 @@ function annualEventRejectedText(s){
  const t=normalizeHistoryText(s);
  return /\bwayback machine\b|\barchivo web\b|\bweb archive\b|\bnace\b|\bnacimiento\b|\bfallece\b|\bmuere\b|\bmatematico aleman\b|\bpintor italiano\b|\bpapa italiano\b|\bmilitar frances\b|\bfilosofo\b|\bescritor\b|\bpoeta\b/.test(t);
 }
-function eventsFromYearPage(parsed,terms,entityTitle,max=18,year=historyYear){
+const HISTORY_WEAK_LINKS=new Set([
+ 'francia','france','inglaterra','england','italia','italy','portugal','alemania','germany',
+ 'europa','europe','asia','africa','america','espana','spain','reino unido','united kingdom'
+]);
+function historyEntityLinkSet(parsed){
+ const set=new Set();if(!parsed?.text)return set;
+ const doc=new DOMParser().parseFromString(parsed.text,'text/html');
+ for(const a of doc.querySelectorAll('a[title]')){
+  const t=normalizeHistoryText(a.getAttribute('title')||'');
+  if(!t||t.length<4)continue;
+  set.add(t);
+  if(set.size>=900)break;
+ }
+ return set;
+}
+function historyEventLinkOverlap(li,entityLinks){
+ if(!entityLinks?.size)return {count:0,strong:0,titles:[]};
+ const titles=[];let count=0,strong=0;
+ for(const a of li?.querySelectorAll?.('a[title]')||[]){
+  const t=normalizeHistoryText(a.getAttribute('title')||'');
+  if(!t||!entityLinks.has(t))continue;
+  count++;titles.push(t);
+  if(!HISTORY_WEAK_LINKS.has(t))strong++;
+ }
+ return {count,strong,titles};
+}
+
+function eventsFromYearPage(parsed,terms,entityTitle,entityLinks,max=18,year=historyYear){
  const rows=[];
  for(const li of annualEventNodes(parsed)){
   const clone=li.cloneNode(true);
@@ -8381,23 +8400,28 @@ function eventsFromYearPage(parsed,terms,entityTitle,max=18,year=historyYear){
   const base=cleanHistoryEventText(clone.textContent);
   if(base.length<24||base.length>1100||annualEventRejectedText(base))continue;
 
-  const linkedScore=historyEventScore(li,terms,entityTitle);
+  const overlap=historyEventLinkOverlap(li,entityLinks);
   for(const piece of splitHistoryEventText(base)){
    if(annualEventRejectedText(piece))continue;
-   let pieceScore=historyEventQuality(piece,year,terms);
 
    const ownScore=historyEventScoreText(piece,terms);
    const entityNorm=normalizeHistoryText(entityTitle);
    const pieceNorm=normalizeHistoryText(piece);
-   const directEntity=entityNorm && pieceNorm.includes(entityNorm);
+   const directEntity=!!(entityNorm&&pieceNorm.includes(entityNorm));
+   const quality=historyEventQuality(piece,year,terms);
 
-   if(!directEntity && ownScore<3 && linkedScore<20)continue;
-   if(pieceScore<4)continue;
+   // Relevancia relacional:
+   //  - mención textual de la entidad o de sus términos políticos/territoriales;
+   //  - o enlaces compartidos con el artículo exacto de la entidad
+   //    (Reyes Católicos, Colón, Granada, Canarias, Augusto, Senado, etc.).
+   const relational=directEntity || ownScore>=3 || overlap.strong>=1 || overlap.count>=2;
+   if(!relational||quality<4)continue;
 
-   pieceScore += directEntity?20:Math.min(8,Math.max(0,linkedScore));
-   rows.push({text:piece,score:pieceScore});
+   let score=quality+(directEntity?24:0)+Math.min(18,ownScore*2)+Math.min(18,overlap.strong*7)+Math.min(8,overlap.count*2);
+   rows.push({text:piece,score});
   }
  }
+
  rows.sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
  const out=[];
  for(const r of rows){
@@ -8407,7 +8431,6 @@ function eventsFromYearPage(parsed,terms,entityTitle,max=18,year=historyYear){
  }
  return out;
 }
-
 
 function historyWikiRegime(text,name=''){
  const t=(String(name)+' '+String(text)).toLowerCase();
@@ -8455,6 +8478,8 @@ async function historyWikipediaContext(d,year=historyYear){
   const entityTitle=lang==='es'?(entityTitleEs||entityTitleEn):entityTitleEn;
   const extract=entityPage?.extract||'';
   const intro=extract.split(/\n+/)[0]?.trim()||'';
+  const entityParsed=entityTitle?await wikiParsePage(entityTitle,lang).catch(()=>null):null;
+  const entityLinks=historyEntityLinkSet(entityParsed);
 
   // ACONTECIMIENTOS: primero el artículo de la propia entidad, pero solo
   // frases que contienen literalmente el año seleccionado.
@@ -8467,7 +8492,7 @@ async function historyWikipediaContext(d,year=historyYear){
   if(!yearPage&&lang!=='en')yearPage=await resolveYearPage(year,'en');
 
   const terms=historyContextTerms(d,entityTitleEs,entityTitleEn,entityYearMoments);
-  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,18,year):[];
+  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,entityLinks,18,year):[];
 
   // Fusión estricta: únicamente la propia entidad + la sección EVENTOS
   // de la página del año. No se hacen búsquedas abiertas.
@@ -8603,7 +8628,7 @@ function historyWikiContextHtml(c){
  if(c.url)links.push('<a href="'+escHtml(c.url)+'" target="_blank" rel="noopener">Entidad en Wikipedia</a>');
  if(c.yearUrl)links.push('<a href="'+escHtml(c.yearUrl)+'" target="_blank" rel="noopener">Página del año</a>');
  if(links.length)h+=links.join(' · ')+' · ';
- h+='Arquitectura temporal: Cliopatria fija la identidad; después se consulta exclusivamente la propia entidad y la sección de acontecimientos del año. Se descartan nacimientos, fallecimientos, referencias, archivos web y resultados periféricos.</div>';
+ h+='Arquitectura temporal: Cliopatria fija la identidad; la página anual aporta los acontecimientos y ANAMBRO conserva solo los que se relacionan con la entidad mediante menciones territoriales, actores o enlaces compartidos con su artículo histórico. Se excluyen nacimientos, fallecimientos, referencias y resultados periféricos.</div>';
  return h+'</div>';
 }
 async function enrichHistoryElement(el,d,token){
