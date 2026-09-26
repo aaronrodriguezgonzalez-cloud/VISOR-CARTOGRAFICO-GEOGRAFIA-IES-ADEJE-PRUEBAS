@@ -3240,8 +3240,23 @@ function extractVolcanoMorphologyEs(raw,primaryType=''){
  return out;
 }
 function validEruptionYear(v){
- const n=Number(v);
- return Number.isFinite(n)&&n!==0&&Math.abs(n)<=new Date().getFullYear()+1?n:null;
+ if(v===null||v===undefined||v==='')return null;
+ if(typeof v==='number'){
+  return Number.isFinite(v)&&v!==0&&Math.abs(v)<=new Date().getFullYear()+1?v:null;
+ }
+ let s=String(v).trim();
+ if(!s)return null;
+ // Fechas GVP pueden venir como "1944 CE", "79 AD", "79 BCE", etc.
+ const isBCE=/\b(?:BCE|BC|B\.C\.|a\.?\s*C\.?)\b/i.test(s);
+ const isBP=/\bBP\b/i.test(s);
+ if(isBP)return null; // no convertir años "before present" en calendarios sin fuente explícita
+ const m=s.replace(/,/g,'').match(/-?\d{1,6}/);
+ if(!m)return null;
+ let n=Number(m[0]);
+ if(!Number.isFinite(n)||n===0)return null;
+ if(isBCE)n=-Math.abs(n);
+ if(Math.abs(n)>new Date().getFullYear()+1&&n>0)return null;
+ return n;
 }
 
 function spanishGeologicalSummary(raw,vv){
@@ -3410,12 +3425,12 @@ function mirrorEruptionDetails(a){
   activityArea:volcanoPropLoose(a,'activityar','ActivityAr','Activity Area'),
   activityUnit:volcanoPropLoose(a,'activityun','ActivityUn','Activity Unit'),
   startEvidence:volcanoPropLoose(a,'startevide','StartEvide','Start Evidence'),
-  startYear:volcanoPropLoose(a,'startdatey','StartDateY','Start Year'),
-  startMonth:volcanoPropLoose(a,'startdatem','StartDateM','Start Month'),
-  startDay:volcanoPropLoose(a,'startdated','StartDateD','Start Day'),
-  endYear:volcanoPropLoose(a,'enddateyea','EndDateYea','End Year'),
-  endMonth:volcanoPropLoose(a,'enddatemon','EndDateMon','End Month'),
-  endDay:volcanoPropLoose(a,'enddateday','EndDateDay','End Day')
+  startYear:volcanoPropLoose(a,'startdatey','StartDateY','Start Year','startdat_1','startdat_2'),
+  startMonth:volcanoPropLoose(a,'startdatem','StartDateM','Start Month','startdat_3'),
+  startDay:volcanoPropLoose(a,'startdated','StartDateD','Start Day','startdat_4'),
+  endYear:volcanoPropLoose(a,'enddateyea','EndDateYea','End Year','enddatey_1','enddatey_2'),
+  endMonth:volcanoPropLoose(a,'enddatemon','EndDateMon','End Month','enddated_1'),
+  endDay:volcanoPropLoose(a,'enddateday','EndDateDay','End Day','enddated_2')
  };
 }
 
@@ -3444,15 +3459,22 @@ async function enrichVolcano(v){
    resolveWikipediaUrl(effective.name).catch(()=>wikipediaFallbackUrl(effective.name))
   ]);
   const eruptionHistory=mirrorEruptions.map(mirrorEruptionDetails).filter(Boolean);
-  const latest=eruptionHistory[0]||null;
+  const datedEruptionHistory=eruptionHistory
+   .filter(er=>validEruptionYear(er?.startYear)!==null||validEruptionYear(er?.endYear)!==null)
+   .sort((a,b)=>{
+    const ay=validEruptionYear(a?.startYear)??validEruptionYear(a?.endYear)??-Infinity;
+    const by=validEruptionYear(b?.startYear)??validEruptionYear(b?.endYear)??-Infinity;
+    return by-ay;
+   });
+  const latest=datedEruptionHistory[0]||eruptionHistory[0]||null;
   const uinfo=usgs.info||{},ust=usgs.status||{};
   return {
    wiki,
    recordDetails:effective,
    effectiveNumber:effective.number,
    gvpEruptions:eruptionHistory.length,
-   recentEruptions:eruptionHistory.slice(0,5),
-   eruptionHistory,
+   recentEruptions:datedEruptionHistory.slice(0,5),
+   eruptionHistory:datedEruptionHistory.length?datedEruptionHistory:eruptionHistory,
    latestStart:latest?.startYear??null,
    latestStartMonth:latest?.startMonth??null,
    latestStartDay:latest?.startDay??null,
@@ -3537,7 +3559,7 @@ function eruptionHistoryRow(er,index){
    +'</div>';
 }
 function recentEruptionsHtml(e){
- const arr=(e?.recentEruptions||[]).filter(er=>validEruptionYear(er?.startYear)!==null||validEruptionYear(er?.endYear)!==null);
+ const arr=(e?.recentEruptions||[]);
  if(!arr.length)return '';
  let h='<div class="eruptionRecent"><div class="eruptionSubTitle">Últimas erupciones documentadas</div>';
  h+=arr.map((er,i)=>eruptionHistoryRow(er,i)).join('');
@@ -3545,9 +3567,9 @@ function recentEruptionsHtml(e){
  return h;
 }
 function fullEruptionHistoryHtml(e){
- const arr=(e?.eruptionHistory||[]).filter(er=>validEruptionYear(er?.startYear)!==null||validEruptionYear(er?.endYear)!==null);
+ const arr=(e?.eruptionHistory||[]);
  if(arr.length<=5)return '';
- return '<details class="eruptionHistoryDetails"><summary>Ver historial eruptivo completo ('+arr.length+' episodios)</summary>'
+ return '<details class="eruptionHistoryDetails"><summary>Ver historial eruptivo completo ('+arr.length+' episodios fechados)</summary>'
    +'<div class="eruptionHistoryList">'+arr.map((er,i)=>eruptionHistoryRow(er,i)).join('')+'</div>'
    +'</details>';
 }
