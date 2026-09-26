@@ -5130,6 +5130,7 @@ async function finishProfileFromPoints(profileInputPts){
   lastProfileCountries=countryBlocks;
  }else lastProfileCountries=[];
  updateProfileThemeAvailability();
+ updateProfileTopoNote();
  openProfileModal();lastProfilePath=prof;lastProfileAnalysis=null;lastProfileDraw=[samples,prof.total,zmin,zmax,profileLabels,profileTurns];requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));renderProfileLegend();
  analyzeProfileTerritory(prof).catch(()=>{document.getElementById('profileBandsContent').innerHTML='<span class="profileLegendHint">No se pudo completar el análisis temático del perfil.</span>';});
  status('Perfil topográfico generado · '+fmtDistance(prof.total));
@@ -5217,28 +5218,32 @@ function updateProfileThemeAvailability(){
  const potential=document.getElementById('profileVegPotentialTheme');
  const geo=document.getElementById('profileGeoTheme');
 
- setProfileThemeLabel('profileVegActualTheme',world?'Biomas':'Vegetación actual');
- setProfileThemeLabel('profileVegPotentialTheme','Vegetación potencial');
- setProfileThemeLabel('profileGeoTheme','Geología');
-
+ // En perfiles mundiales SOLO existen: Altimetría · Biomas · Geología.
+ // Vegetación actual/potencial pertenece exclusivamente a España/Canarias.
  if(actual){
   actual.disabled=false;
+  actual.parentElement.style.display='';
   actual.parentElement.style.opacity='';
   actual.parentElement.style.cursor='pointer';
-  actual.parentElement.title=world?'Grandes biomas y ecorregiones · RESOLVE 2017':'';
+  actual.parentElement.title=world?'Grandes biomas y ecorregiones · RESOLVE 2017':'Vegetación actual · España/Canarias';
+  setProfileThemeLabel('profileVegActualTheme',world?'Biomas':'Vegetación actual');
+ }
+ if(potential){
+  if(world&&potential.checked&&alt)alt.checked=true;
+  potential.disabled=world;
+  potential.parentElement.style.display=world?'none':'';
+  potential.parentElement.style.opacity='';
+  potential.parentElement.style.cursor=world?'':'pointer';
+  potential.parentElement.title=world?'':'Vegetación potencial · España/Canarias';
+  setProfileThemeLabel('profileVegPotentialTheme','Vegetación potencial');
  }
  if(geo){
   geo.disabled=false;
+  geo.parentElement.style.display='';
   geo.parentElement.style.opacity='';
   geo.parentElement.style.cursor='pointer';
-  geo.parentElement.title=world?'Geología mundial · Macrostrat':'';
- }
- if(potential){
-  potential.disabled=world;
-  potential.parentElement.style.opacity=world?'.35':'';
-  potential.parentElement.style.cursor=world?'not-allowed':'pointer';
-  potential.parentElement.title=world?'La vegetación potencial MITECO se utiliza en los perfiles de España.':'';
-  if(world&&potential.checked&&alt)alt.checked=true;
+  geo.parentElement.title=world?'Geología mundial · Macrostrat':'Geología · España/Canarias';
+  setProfileThemeLabel('profileGeoTheme','Geología');
  }
 }
 function validProfileFormation(name){
@@ -5289,7 +5294,13 @@ function renderProfileLegend(){
  box.innerHTML=grouped+loose;
 }
 
-function redrawProfileTheme(){updateProfileThemeAvailability();renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
+function updateProfileTopoNote(){
+ const note=document.getElementById('profileTopoNote');if(!note)return;
+ note.textContent=lastProfileWorld
+  ?'Piel seleccionable: altimetría, biomas o geología · Mundo: RESOLVE 2017 + Macrostrat · altimetría DEM mundial Terrarium/AWS'
+  :'Piel seleccionable: altimetría, vegetación actual, vegetación potencial o geología · España/Canarias: MITECO/GRAFCAN + GEODE · altimetría MDT25/IGN';
+}
+function redrawProfileTheme(){updateProfileThemeAvailability();updateProfileTopoNote();renderProfileLegend();if(lastProfileDraw)requestAnimationFrame(()=>drawProfileLarge(...lastProfileDraw));}
 const PROFILE_RESOLVE_QUERY='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/FeatureServer/0/query';
 function worldBiomeProfileTheme(f){
  if(!f)return {label:'Sin dato',formation:'Sin dato',detail:'',color:null};
