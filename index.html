@@ -1833,7 +1833,9 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutResizeHandle.sw{bottom:-7px;left:-7px;cursor:nesw-resize}
 .layoutResizeHint{margin-top:7px;padding:8px 9px;border-radius:7px;background:#edf4ff;border:1px solid #b8cff7;color:#17324d;font-weight:750;line-height:1.3}
 .layoutItem.resizing{cursor:default!important}
-.layoutTitleBox{left:7%;top:3%;width:86%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
+.layoutLogoBox{left:2.5%;top:2.2%;width:5.5%;height:8%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.layoutLogoBox img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none}
+.layoutTitleBox{left:9%;top:3%;width:82%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
 .layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #333;overflow:hidden;background:#d9dde1}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none}
 .layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.95);border:1px solid #555;border-radius:5px;padding:8px;font-size:11px;line-height:1.25}
@@ -1847,7 +1849,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutScaleBar span{flex:1}
 .layoutScaleBar span:first-child{background:#111}
 .layoutScaleBar span:last-child{background:#fff}
-.layoutCredits{position:absolute;left:68%;top:95.5%;width:29%;height:2.5%;font-size:9px;color:#555;text-align:right;overflow:hidden}
+.layoutCredits{position:absolute;left:60%;top:95%;width:37%;height:3%;font-size:11px;font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
  .layoutSidebar{padding:8px}
@@ -1921,6 +1923,40 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
   }
   .welcomeAuthorName{font-size:11.5px}
   .welcomeAuthorContext{font-size:10.5px}
+}
+
+/* Identidad reforzada */
+.brandWide .brandDept{
+  font-size:15px!important;
+  line-height:1.22!important;
+}
+.brandWide .brandDept b{
+  font-size:18px!important;
+  font-weight:900!important;
+  color:#17324d!important;
+}
+.brandWide .brandTeacher{
+  font-size:16px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+}
+.brandWide .brandTeacher .brandAuthorshipPrefix{
+  font-size:12px!important;
+  font-weight:650!important;
+}
+.welcomeAuthorName{
+  font-size:15px!important;
+}
+.welcomeAuthorContext{
+  font-size:12.5px!important;
+}
+@media(max-width:760px){
+ .brandWide .brandDept{font-size:9px!important;line-height:1.08!important}
+ .brandWide .brandDept b{font-size:11px!important}
+ .brandWide .brandTeacher{font-size:10px!important;line-height:1.05!important}
+ .brandWide .brandTeacher .brandAuthorshipPrefix{font-size:8px!important}
+ .welcomeAuthorName{font-size:12px!important}
+ .welcomeAuthorContext{font-size:10.5px!important}
 }
 
 
@@ -2140,13 +2176,17 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="welcomeHead">
       <div>
         <div id="welcomeTitle" class="welcomeTitle">VISOR CARTOGRÁFICO <span class="brandLogoWord">ANAMBRO</span></div>
-        <div class="welcomeSub"><b>ANAMBRO</b> es una plataforma cartográfica abierta para explorar, medir, comparar y comprender el territorio desde distintas escalas. Nace en Canarias y sitúa al Archipiélago en el centro del proyecto, pero permite ampliar el análisis hacia el resto de España —territorio peninsular y Baleares— y hacia el conjunto del planeta mediante un mapamundi 2D y un globo 3D. Reúne cartografía oficial, ortofotografía, información temática, perfiles topográficos y herramientas de consulta en una sola interfaz. Está concebida especialmente para la enseñanza de la <b>Geografía de España</b>, la <b>Geografía e Historia de 1.º a 4.º de ESO</b>, <b>Biología y Geología</b> y otras materias vinculadas al territorio, el paisaje y el medio natural.</div>
+        <div class="welcomeSub"><b>ANAMBRO</b> es una plataforma cartográfica abierta para explorar, medir, comparar y comprender el territorio desde distintas escalas. Nace en Canarias y sitúa al Archipiélago en el centro del proyecto, pero el visor <b>está creciendo de forma continua</b>: amplía progresivamente sus capas, herramientas y ámbitos de análisis hacia el resto de España y hacia el conjunto del planeta mediante un mapamundi 2D y un globo 3D. Reúne cartografía oficial, ortofotografía, información temática, perfiles topográficos, geología, biomas, vulcanismo y ahora también cartografía política histórica con control temporal. Está concebida especialmente para la enseñanza de la <b>Geografía de España</b>, la <b>Geografía e Historia de 1.º a 4.º de ESO</b>, <b>Biología y Geología</b> y, cada vez más, para el trabajo con <b>Historia Universal e Historia del Mundo Contemporáneo</b>, al permitir observar la evolución espacial de entidades políticas y procesos históricos a lo largo del tiempo.</div>
         <div class="welcomeAuthor">
           <div class="welcomeAuthorName">Elaborado por <b>Aarón Rodríguez González</b> <span>(Geógrafo)</span></div>
           <div class="welcomeAuthorContext">Proyecto desarrollado en el marco de su actividad docente en el <b>IES Adeje</b>, desde el Departamento de Geografía e Historia y la coordinación del eje de Patrimonio Natural, Social y Cultural Canario.</div>
         </div>
       </div>
       <button type="button" class="welcomeClose" onclick="toggleWelcome(false)" aria-label="Cerrar bienvenida">×</button>
+    </div>
+    <div class="welcomeCard" style="margin:10px 0 12px;border-left:4px solid #7a5fb4">
+      <h4 style="margin:0 0 5px">🌍 Un visor en expansión</h4>
+      <p style="margin:0">ANAMBRO ya no es solo una herramienta de Geografía: la incorporación de cartografía histórica temporal permite utilizarlo también para <b>Historia Universal</b>, relacionando espacio, fronteras, entidades políticas y acontecimientos en distintos momentos históricos.</p>
     </div>
     <div class="welcomeGrid">
       <section class="welcomeCard featuredCanarias">
@@ -2523,6 +2563,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
       <label>Elemento seleccionado
         <select id="layoutSelected">
           <option value="map">Mapa</option>
+          <option value="logo">Logo ANAMBRO</option>
           <option value="title">Título</option>
           <option value="legend">Leyenda</option>
           <option value="north">Orientación</option>
@@ -2569,6 +2610,9 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 
     <main class="layoutWorkspace">
       <div id="layoutPage" class="layoutPage landscape a4">
+        <div id="layoutLogoBox" class="layoutItem layoutLogoBox" data-layout="logo">
+          <img id="layoutLogoImage" alt="Logo ANAMBRO">
+        </div>
         <div id="layoutTitleBox" class="layoutItem layoutTitleBox" data-layout="title">Mapa elaborado con ANAMBRO</div>
 
         <div id="layoutMapBox" class="layoutItem layoutMapBox" data-layout="map">
@@ -2591,7 +2635,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
         </div>
 
         <div id="layoutSources" class="layoutItem layoutSources" data-layout="sources"></div>
-        <div id="layoutCredits" class="layoutItem layoutCredits" data-layout="credits">ANAMBRO · Aarón Rodríguez González · IES Adeje</div>
+        <div id="layoutCredits" class="layoutItem layoutCredits" data-layout="credits"><b>ANAMBRO</b> · Aarón Rodríguez González (Geógrafo) · IES Adeje</div>
       </div>
     </main>
   </div>
@@ -6261,6 +6305,13 @@ function openLayoutEditor(){
  const title=defaultLayoutTitle();
  document.getElementById('layoutTitleInput').value=title;
  document.getElementById('layoutTitleBox').textContent=title;
+
+ // Reutilizar exactamente el logo incrustado del visor para que también
+ // aparezca en la exportación PDF, sin depender de una URL externa.
+ const sourceLogo=document.querySelector('.brandWide .brandSideLeft img,.brand img');
+ const layoutLogo=document.getElementById('layoutLogoImage');
+ if(sourceLogo&&layoutLogo)layoutLogo.src=sourceLogo.src;
+
  updateLayoutPageFormat();
  ensureLayoutResizeHandles();
  selectLayoutItem('map');
