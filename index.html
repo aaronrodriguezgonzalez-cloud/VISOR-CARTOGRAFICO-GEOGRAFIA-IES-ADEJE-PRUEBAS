@@ -2496,9 +2496,9 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <div class="layerThemeTitle">🏛️ Historia</div>
 <label><input id="worldHistoryCheck" type="checkbox"> <b>Fronteras políticas históricas · Cliopatria</b></label>
 <div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"></div>
-<label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos y decretos · Wikidata</b></label>
+<label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock">
-  <small>Acontecimientos históricos y decretos fechados de Wikidata: todos figuran en la relación del año. Se sitúan en el mapa únicamente cuando consta una ubicación fiable. El cambio de año es inmediato.</small>
+  <small>Todos los registros de Wikidata que combinan una fecha y una georreferenciación entran en la consulta, independientemente de su clase o categoría. Se incluyen fechas de acontecimiento, inicio, fin y cualquier otra propiedad temporal definida en Wikidata. La ubicación puede proceder de coordenadas propias o del lugar asociado. El cambio de año consulta Wikidata y conserva una caché local durante la sesión.</small>
   <small>El listado permite consultar todos los registros de cada año y abre su ficha en Wikidata. Los datos se cargan con el visor; al cambiar de año no se consulta ningún servicio externo.</small>
   <small id="historicalEventsStatus">Capa desactivada.</small>
 </div>
@@ -2590,7 +2590,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="sourceItem sourceOk"><b>OpenStreetMap</b> · referencia cartográfica y geocodificación Nominatim.<br><small>© OpenStreetMap contributors · ODbL. ANAMBRO aplica caché y una cola de consultas para respetar el servicio público.</small><br><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">Copyright / ODbL</a> · <a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener">Nominatim Usage Policy</a></div>
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
-    <div class="sourceItem sourceOk"><b>Acontecimientos históricos y decretos</b> · fechas, ubicaciones y nombres consultados en Wikidata y conservados en un catálogo local. Incluye todos los registros fechados encontrados dentro del intervalo del visor, con ficha original enlazada.<br><a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata · CC0</a></div>
+    <div class="sourceItem sourceOk"><b>Acontecimientos históricos</b> · consulta dinámica de Wikidata por año. ANAMBRO no exige que la entidad pertenezca a una categoría concreta: acepta cualquier registro con una propiedad temporal de Wikidata y una georreferenciación directa o mediante su lugar asociado. El catálogo incorporado se conserva únicamente como respaldo si el servicio público no responde.<br><a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata · CC0</a></div>
     <div class="sourceItem sourceOk"><b>RESOLVE / Dinerstein et al. (2017)</b> · ecorregiones y grandes biomas terrestres.<br><small>CC BY 4.0.</small><br><a href="https://doi.org/10.1093/biosci/bix014" target="_blank" rel="noopener">Dinerstein et al. (2017)</a></div>
     <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div><div class="sourceItem sourceReview"><b>Radio Garden</b> · ciudades y emisoras de radio en directo.<br><small>Integración no oficial. Radio Garden no permite acceso CORS directo a su API JSON desde un sitio estático como GitHub Pages; ANAMBRO usa una instantánea pública del directorio como fallback y solicita el stream de audio al reproducir. Los endpoints pueden cambiar o restringirse sin previo aviso.</small><br><a href="https://radio.garden/" target="_blank" rel="noopener">Radio Garden</a></div><div class="sourceItem sourceOk"><b>Wikipedia / Wikimedia</b> · contexto histórico bajo demanda de las entidades políticas representadas.<br><small>ANAMBRO consulta la API pública de MediaWiki mediante CORS y prioriza Wikipedia en español. Los extractos y resultados se muestran como contexto auxiliar y enlazan a sus artículos de origen. Texto de Wikipedia bajo CC BY-SA 4.0.</small><br><a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a></div><div class="sourceItem sourceOk"><b>Wikidata</b> · acontecimientos históricos geolocalizados y metadatos temporales.<br><small>Datos estructurados publicados bajo CC0. ANAMBRO consulta Wikidata Query Service bajo demanda, filtra los resultados y utiliza el número de sitelinks como una señal cartográfica de relevancia, no como valoración histórica absoluta.</small><br><a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata</a></div>
     <div class="sourceItem sourceOk"><b>Smithsonian Global Volcanism Program</b> · Volcanoes of the World y erupciones holocenas.<br><small>Uso educativo y no comercial permitido con cita. Cita: Global Volcanism Program, 2026, Volcanoes of the World v5.4.0, Smithsonian Institution, compiled by Venzke, E.</small><br><a href="https://volcano.si.edu/gvp_termsofuse.cfm" target="_blank" rel="noopener">GVP Terms of Use</a> · <a href="https://volcano.si.edu/database/webservices.cfm" target="_blank" rel="noopener">Webservices</a></div>
@@ -6791,7 +6791,7 @@ function updateLegend(){
    h+='<div style="margin-bottom:8px"><b>Radio mundial · Radio Garden</b><br><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#19d37e;border:2px solid #083d2c;margin-right:5px;vertical-align:middle"></span>Localidades con emisoras</div>';
  }
  if(document.getElementById('worldHistoricalEventsCheck')?.checked){
-   h+='<div style="margin-bottom:8px"><b>Acontecimientos históricos y decretos · Wikidata</b><br><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #6b3fa0;margin-right:5px;vertical-align:middle"></span>Hechos geolocalizados del año seleccionado</div>';
+   h+='<div style="margin-bottom:8px"><b>Acontecimientos históricos · Wikidata</b><br><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #6b3fa0;margin-right:5px;vertical-align:middle"></span>Hechos geolocalizados del año seleccionado</div>';
  }
  if(document.getElementById('countriesCheck')?.checked){
    h+='<div style="margin-bottom:8px"><b>Fronteras internacionales</b><br><span style="display:inline-block;width:24px;border-top:2px solid #fff;box-shadow:0 0 0 1px #555;vertical-align:middle;margin-right:6px"></span>Frontera estatal</div>';
@@ -9139,7 +9139,7 @@ function historicalEventCardHtml(e){
  const href=e.qid?'https://www.wikidata.org/wiki/'+encodeURIComponent(e.qid):
   e.wiki?'https://en.wikipedia.org/wiki/'+encodeURIComponent(e.wiki):'';
  return '<div class="histEventCard"><div class="histEventTitle">'+c.icon+' '+escHtml(e.label)+'</div>'+
-  '<div class="histEventMeta">'+escHtml(historyYearText(e.year))+(e.approx?' · Fecha aproximada':'')+(e.locationApprox?' · Ubicación aproximada':'')+'</div>'+
+  '<div class="histEventMeta">'+escHtml(historyYearText(e.year))+(e.approx?' · Fecha aproximada':'')+(e.locationApprox?' · Ubicación aproximada':'')+(e.datePropertyLabel?' · Fecha: '+escHtml(e.datePropertyLabel):'')+'</div>'+
   '<span class="histEventBadge">'+escHtml(c.label)+'</span>'+
   (href?'<div class="histEventLinks"><a href="'+escHtml(href)+'" target="_blank" rel="noopener">Consultar fuente ↗</a></div>':'')+
   '</div>';
@@ -9152,12 +9152,12 @@ function renderHistoricalEventsList(){
  const all=historicalEventsCurrent,n=all.length,shown=historicalEventsExpanded?all:all.slice(0,6);
  const rows=shown.map(e=>'<li>'+(Number.isFinite(e.lat)?'📍 ':'◇ ')+
    '<a href="https://www.wikidata.org/wiki/'+encodeURIComponent(e.qid)+'" target="_blank" rel="noopener">'+escHtml(e.label)+'</a>'+
-   (e.category==='decree'?' <small>decreto</small>':'')+'</li>').join('');
- root.innerHTML='<div class="historyEventsListHead">'+n.toLocaleString('es-ES')+' acontecimientos de '+escHtml(historyYearText(historyYear))+
+   (e.datePropertyLabel?' <small>· '+escHtml(e.datePropertyLabel)+'</small>':(e.category==='decree'?' <small>decreto</small>':''))+'</li>').join('');
+ root.innerHTML='<div class="historyEventsListHead">'+n.toLocaleString('es-ES')+' registros de '+escHtml(historyYearText(historyYear))+
   ' · '+all.filter(e=>Number.isFinite(e.lat)).length.toLocaleString('es-ES')+' ubicados</div>'+
   '<ul class="historyEventsListItems'+(historicalEventsExpanded?' expanded':'')+'">'+rows+'</ul>'+
   (n>6?'<button class="historyEventsMore" onclick="historicalEventsExpanded=!historicalEventsExpanded;renderHistoricalEventsList()">'+
-   (historicalEventsExpanded?'Mostrar destacados':'Ver los '+n.toLocaleString('es-ES')+' acontecimientos')+'</button>':'');
+   (historicalEventsExpanded?'Mostrar destacados':'Ver los '+n.toLocaleString('es-ES')+' registros')+'</button>':'');
  root.style.display='block';
 }
 function renderHistoricalEvents2D(){
@@ -9172,7 +9172,7 @@ function renderHistoricalEvents2D(){
   marker.addTo(layer);
  }
  if(!map.hasLayer(layer))layer.addTo(map);
- historicalEventsStatus(historicalEventsCurrent.length+' acontecimientos · '+historyYearText(historyYear)+
+ historicalEventsStatus(historicalEventsCurrent.length+' registros · '+historyYearText(historyYear)+
   (document.body.classList.contains('globe-mode')?' · globo 3D.':' · '+visible.length+' visibles en el mapa.'));
 }
 function scheduleHistoricalEvents2D(){clearTimeout(historicalEventsRenderTimer);historicalEventsRenderTimer=setTimeout(renderHistoricalEvents2D,50);}
@@ -9190,14 +9190,73 @@ function renderHistoricalEventsGlobe(){
  historicalEventsGlobePoints=globeViewer.scene.primitives.add(pc);globeViewer.scene.requestRender();
 }
 function showHistoricalEventGlobe(e,pos){const b=document.getElementById('globeInfo');b.classList.remove('empty','historyWide');b.innerHTML=historyCloseButton()+historicalEventCardHtml(e);requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();});}
-function requestHistoricalEventsYear(year){
- if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+const HISTORICAL_EVENTS_REMOTE_CACHE=new Map();
+let historicalEventsFetchSeq=0;
+function historicalEventYearFromWikidataDate(v){
+ const m=String(v||'').match(/^([+-]?\d+)-/);if(!m)return null;
+ const n=Number(m[1]);return Number.isFinite(n)?n:null;
+}
+function historicalEventPointFromWkt(v){
+ const m=String(v||'').match(/Point\(([-+0-9.eE]+)\s+([-+0-9.eE]+)\)/i);
+ if(!m)return null;const lon=Number(m[1]),lat=Number(m[2]);
+ return Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null;
+}
+function historicalEventsSparql(year){
  const y=Math.trunc(Number(year)||1);
- historicalEventsCurrent=HIST_EVENTS_BY_YEAR.get(y)||[];
- historicalEventsExpanded=false;renderHistoricalEventsList();
- renderHistoricalEvents2D();if(globeViewer)renderHistoricalEventsGlobe();
- updateLegend();renderActiveSources();
- if(!historicalEventsCurrent.length)historicalEventsStatus('Sin acontecimientos registrados en el catálogo para '+historyYearText(y)+'.');
+ // No VALUES de clases ni P31/P279: cualquier entidad puede entrar.
+ // La propiedad temporal también es variable: se descubren todas las propiedades
+ // cuyo datatype en Wikidata es Time y se usa su directClaim correspondiente.
+ return `SELECT DISTINCT ?item ?itemLabel ?date ?dateProperty ?datePropertyLabel ?coord WHERE {
+   ?dateProperty wikibase:propertyType wikibase:Time ; wikibase:directClaim ?datePredicate .
+   ?item ?datePredicate ?date .
+   FILTER(YEAR(?date) = ${y})
+   OPTIONAL { ?item wdt:P625 ?directCoord . }
+   OPTIONAL {
+     VALUES ?placePredicate { wdt:P276 wdt:P20 wdt:P19 wdt:P740 wdt:P159 wdt:P131 }
+     ?item ?placePredicate ?place .
+     ?place wdt:P625 ?placeCoord .
+   }
+   BIND(COALESCE(?directCoord, ?placeCoord) AS ?coord)
+   FILTER(BOUND(?coord))
+   SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,[AUTO_LANGUAGE]". }
+ }`;
+}
+async function fetchHistoricalEventsYearWikidata(year){
+ const y=Math.trunc(Number(year)||1);
+ if(HISTORICAL_EVENTS_REMOTE_CACHE.has(y))return HISTORICAL_EVENTS_REMOTE_CACHE.get(y);
+ const endpoint='https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(historicalEventsSparql(y));
+ const r=await fetch(endpoint,{headers:{Accept:'application/sparql-results+json'},mode:'cors',cache:'no-store'});
+ if(!r.ok)throw new Error('Wikidata HTTP '+r.status);
+ const j=await r.json(),seen=new Set(),out=[];
+ for(const b of j?.results?.bindings||[]){
+   const qid=String(b.item?.value||'').match(/Q\d+$/)?.[0];
+   const p=historicalEventPointFromWkt(b.coord?.value);if(!qid||!p)continue;
+   const date=b.date?.value||'';const prop=String(b.dateProperty?.value||'').match(/P\d+$/)?.[0]||'';
+   const key=qid+'|'+date+'|'+p.lat.toFixed(6)+'|'+p.lon.toFixed(6);if(seen.has(key))continue;seen.add(key);
+   const label=b.itemLabel?.value&&b.itemLabel.value!==b.item?.value?b.itemLabel.value:qid;
+   const dateLabel=b.datePropertyLabel?.value&&b.datePropertyLabel.value!==b.dateProperty?.value?b.datePropertyLabel.value:prop;
+   out.push({qid,year:y,date,label,category:'historical',lat:p.lat,lon:p.lon,dateProperty:prop,datePropertyLabel:dateLabel,importance:1});
+ }
+ out.sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.label).localeCompare(String(b.label),'es'));
+ HISTORICAL_EVENTS_REMOTE_CACHE.set(y,out);return out;
+}
+async function requestHistoricalEventsYear(year){
+ if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+ const y=Math.trunc(Number(year)||1),seq=++historicalEventsFetchSeq;
+ historicalEventsExpanded=false;
+ historicalEventsStatus('Consultando TODO Wikidata para '+historyYearText(y)+'…');
+ try{
+   const remote=await fetchHistoricalEventsYearWikidata(y);if(seq!==historicalEventsFetchSeq)return;
+   historicalEventsCurrent=remote;renderHistoricalEventsList();renderHistoricalEvents2D();if(globeViewer)renderHistoricalEventsGlobe();
+   updateLegend();renderActiveSources();
+   historicalEventsStatus(remote.length.toLocaleString('es-ES')+' registros fechados y georreferenciados · '+historyYearText(y)+' · Wikidata en directo.');
+ }catch(err){
+   if(seq!==historicalEventsFetchSeq)return;
+   console.warn('Wikidata dinámico no disponible; usando catálogo incorporado',err);
+   historicalEventsCurrent=HIST_EVENTS_BY_YEAR.get(y)||[];renderHistoricalEventsList();renderHistoricalEvents2D();if(globeViewer)renderHistoricalEventsGlobe();
+   updateLegend();renderActiveSources();
+   historicalEventsStatus('Wikidata no respondió. Mostrando respaldo local: '+historicalEventsCurrent.length.toLocaleString('es-ES')+' registros · '+historyYearText(y)+'.');
+ }
 }
 function syncHistoricalTimelineVisibility(){
  const borders=!!document.getElementById('worldHistoryCheck')?.checked;
@@ -9207,7 +9266,7 @@ function syncHistoricalTimelineVisibility(){
  const title=document.querySelector('#historyTimeline .historyTitle');
  if(title)title.textContent=borders&&events?'🏛️ Historia mundial · fronteras y acontecimientos':
   borders?'🏛️ Historia mundial · fronteras políticas históricas':
-  '📍 Historia mundial · acontecimientos y decretos';
+  '📍 Historia mundial · acontecimientos históricos';
  if(!on&&historyPlayRunning)toggleHistoryPlay();
 }
 function setHistoricalEventsVisible(on){
