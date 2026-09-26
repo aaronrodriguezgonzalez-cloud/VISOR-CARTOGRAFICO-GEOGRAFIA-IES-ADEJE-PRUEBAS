@@ -2488,7 +2488,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock">
   <small>Hechos históricos geolocalizados y sincronizados con el mismo año del control temporal. ANAMBRO usa coordenadas propias del acontecimiento o, cuando Wikidata no las aporta directamente, las del lugar asociado.</small>
-  <small>ANAMBRO prioriza acontecimientos con mayor presencia enciclopédica y descarta ruido evidente. Al alejar el mapa se muestran solo los más relevantes.</small>
+  <small>ANAMBRO prioriza acontecimientos con mayor presencia enciclopédica y descarta ruido evidente. Al alejar el mapa se muestran solo los más relevantes. Al arrastrar el año, la consulta se lanza al detener el control para evitar saturar Wikidata.</small>
   <small id="historicalEventsStatus">Capa desactivada.</small>
 </div>
 <div class="layerThemeTitle">📻 Radio mundial</div>
@@ -9102,7 +9102,7 @@ document.getElementById('worldHistoryOpacity')?.addEventListener('input',e=>{his
 // ACONTECIMIENTOS HISTÓRICOS · WIKIDATA
 // ================================================================
 const HIST_EVENTS_ENDPOINT='https://query.wikidata.org/sparql';
-let historicalEventsCache=new Map(),historicalEventsLayer2D=null,historicalEventsCurrent=[],historicalEventsReqSeq=0,historicalEventsGlobePoints=null,historicalEventsRenderTimer=null;
+let historicalEventsCache=new Map(),historicalEventsLayer2D=null,historicalEventsCurrent=[],historicalEventsReqSeq=0,historicalEventsGlobePoints=null,historicalEventsRenderTimer=null,historicalEventsDebounce=null;
 
 function historicalEventsStatus(msg){const el=document.getElementById('historicalEventsStatus');if(el)el.textContent=msg;}
 function historicalEventsEnsureLayer(){if(!historicalEventsLayer2D)historicalEventsLayer2D=L.layerGroup();return historicalEventsLayer2D;}
@@ -9225,24 +9225,47 @@ function renderHistoricalEventsGlobe(){
  historicalEventsGlobePoints=globeViewer.scene.primitives.add(pc);globeViewer.scene.requestRender();
 }
 function showHistoricalEventGlobe(e,pos){const b=document.getElementById('globeInfo');b.classList.remove('empty','historyWide');b.innerHTML=historyCloseButton()+historicalEventCardHtml(e);requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();});}
-async function requestHistoricalEventsYear(year,now=false){
+function requestHistoricalEventsYear(year,now=false){
  if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
- const seq=++historicalEventsReqSeq;historicalEventsStatus('Consultando Wikidata para '+historyYearText(year)+'…');
- try{
-  const data=await fetchHistoricalEvents(year);
-  if(seq!==historicalEventsReqSeq||!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
-  historicalEventsCurrent=data;renderHistoricalEvents2D();if(globeViewer)renderHistoricalEventsGlobe();updateLegend();renderActiveSources();
-  if(!data.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados para el año exacto '+historyYearText(year)+'.');
- }catch(e){
-  console.error('Acontecimientos históricos',e);if(seq!==historicalEventsReqSeq)return;
-  historicalEventsCurrent=[];historicalEventsEnsureLayer().clearLayers();clearHistoricalEventsGlobe();historicalEventsStatus('Wikidata no respondió para este año.');
- }
+ clearTimeout(historicalEventsDebounce);
+
+ const run=async()=>{
+  const seq=++historicalEventsReqSeq;
+  historicalEventsStatus('Consultando Wikidata para '+historyYearText(year)+'…');
+  try{
+   const data=await fetchHistoricalEvents(year);
+   if(seq!==historicalEventsReqSeq||!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+   historicalEventsCurrent=data;
+   renderHistoricalEvents2D();
+   if(globeViewer)renderHistoricalEventsGlobe();
+   updateLegend();renderActiveSources();
+   if(!data.length)historicalEventsStatus('0 acontecimientos geolocalizados encontrados para el año exacto '+historyYearText(year)+'.');
+  }catch(e){
+   console.error('Acontecimientos históricos',e);
+   if(seq!==historicalEventsReqSeq)return;
+   historicalEventsCurrent=[];
+   historicalEventsEnsureLayer().clearLayers();
+   clearHistoricalEventsGlobe();
+
+   const msg=String(e?.message||e);
+   if(/429|too many|rate/i.test(msg)){
+    historicalEventsStatus('Wikidata ha limitado temporalmente las consultas. Espera un instante y vuelve a mover el año.');
+   }else{
+    historicalEventsStatus('Wikidata no respondió para '+historyYearText(year)+'.');
+   }
+  }
+ };
+
+ // Mientras se arrastra el deslizador NO bombardeamos Wikidata.
+ // Al soltarlo (change) la llamada es inmediata.
+ if(now)run();
+ else historicalEventsDebounce=setTimeout(run,500);
 }
 function syncHistoricalTimelineVisibility(){const on=!!(document.getElementById('worldHistoryCheck')?.checked||document.getElementById('worldHistoricalEventsCheck')?.checked);document.getElementById('historyTimeline')?.classList.toggle('visible',on);if(!on&&historyPlayRunning)toggleHistoryPlay();}
 function setHistoricalEventsVisible(on){
  const layer=historicalEventsEnsureLayer();syncHistoricalTimelineVisibility();
  if(on)requestHistoricalEventsYear(historyYear,true);
- else{historicalEventsReqSeq++;historicalEventsCurrent=[];if(map.hasLayer(layer))map.removeLayer(layer);clearHistoricalEventsGlobe();historicalEventsStatus('Capa desactivada.');}
+ else{clearTimeout(historicalEventsDebounce);historicalEventsReqSeq++;historicalEventsCurrent=[];if(map.hasLayer(layer))map.removeLayer(layer);clearHistoricalEventsGlobe();historicalEventsStatus('Capa desactivada.');}
  updateLegend();renderActiveSources();
 }
 document.getElementById('worldHistoricalEventsCheck')?.addEventListener('change',e=>setHistoricalEventsVisible(e.target.checked));
