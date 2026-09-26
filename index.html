@@ -2220,6 +2220,13 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <details><summary>🌍 Mundo</summary>
 
 <div class="layerThemeTitle">🪨 Geología y vulcanismo</div>
+<label><input id="worldGeologyCheck" type="checkbox"> <b>Mapa geológico mundial · Macrostrat</b></label>
+<div class="layerSubBlock">
+  <small>Compilación mundial de mapas geológicos · Macrostrat · CC BY 4.0.</small>
+  <small><b>Opacidad</b> <span id="worldGeologyOpacityValue">72 %</span></small>
+  <input id="worldGeologyOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
+  <div id="worldGeologyLegend" class="miniThemeLegend" style="display:none"></div>
+</div>
 <label><input id="worldVolcanoesCheck" type="checkbox"> <b>Volcanes del mundo · Smithsonian GVP</b></label>
 <div class="layerSubBlock"><small>Volcanes holocenos del Global Volcanism Program.</small></div>
 
@@ -2323,6 +2330,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
     <div class="sourceItem sourceOk"><b>RESOLVE / Dinerstein et al. (2017)</b> · ecorregiones y grandes biomas terrestres.<br><small>CC BY 4.0.</small><br><a href="https://doi.org/10.1093/biosci/bix014" target="_blank" rel="noopener">Dinerstein et al. (2017)</a></div>
+    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La capa «carto» integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div>
     <div class="sourceItem sourceOk"><b>Smithsonian Global Volcanism Program</b> · Volcanoes of the World y erupciones holocenas.<br><small>Uso educativo y no comercial permitido con cita. Cita: Global Volcanism Program, 2026, Volcanoes of the World v5.4.0, Smithsonian Institution, compiled by Venzke, E.</small><br><a href="https://volcano.si.edu/gvp_termsofuse.cfm" target="_blank" rel="noopener">GVP Terms of Use</a> · <a href="https://volcano.si.edu/database/webservices.cfm" target="_blank" rel="noopener">Webservices</a></div>
     <div class="sourceItem sourceOk"><b>USGS Volcano Hazards Program</b> · información adicional y estado operativo de volcanes estadounidenses cuando existe.<br><small>Las fotografías se muestran únicamente cuando el servicio devuelve una imagen utilizable; las imágenes de terceros conservan sus propios derechos.</small><br><a href="https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits" target="_blank" rel="noopener">USGS Copyrights and Credits</a></div>
     <div class="sourceItem sourceReview"><b>Esri World Imagery</b> · fondo satelital del globo 3D.<br><small>ANAMBRO consume el servicio de teselas y mantiene la atribución a Esri y sus proveedores; no redistribuye el mosaico.</small></div>
@@ -2487,6 +2495,7 @@ const ANAMBRO_SOURCES={
  miteco:{short:'Origen de los datos: MITECO'},
  beck:{short:'Beck et al. (2018) · Köppen-Geiger · CC BY 4.0'},
  resolve:{short:'RESOLVE / Dinerstein et al. (2017) · CC BY 4.0'},
+ macrostrat:{short:'Macrostrat · mapas geológicos mundiales · CC BY 4.0'},
  gvp:{short:'Smithsonian GVP · Volcanoes of the World v5.4.0 (2026)'},
  naturalearth:{short:'Made with Natural Earth · Public Domain'},
  wbadm:{short:'World Bank Global Administrative Divisions · ADM1/ADM2'},
@@ -2502,6 +2511,7 @@ function activeSourceKeys(){
  if(document.getElementById('mfeCheck')?.checked||document.getElementById('mitecoPotentialCheck')?.checked)s.add('miteco');
  if(document.getElementById('worldClimateCheck')?.checked||document.getElementById('canaryClimateCheck')?.checked||document.getElementById('spainClimateCheck')?.checked)s.add('beck');
  if(document.getElementById('worldBiomesCheck')?.checked)s.add('resolve');
+ if(document.getElementById('worldGeologyCheck')?.checked)s.add('macrostrat');
  if(document.getElementById('worldVolcanoesCheck')?.checked)s.add('gvp');
  if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
  if(document.getElementById('worldAdmin1Check')?.checked||document.getElementById('worldAdmin2Check')?.checked)s.add('wbadm');
@@ -2578,6 +2588,164 @@ const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=
 const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
+const worldGeology=L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{
+ noWrap:true,minZoom:0,maxZoom:16,opacity:.72,crossOrigin:true,
+ attribution:'Geología · Macrostrat · CC BY 4.0'
+});
+
+const MACROSTRAT_ERA_GUIDE=[
+ ['Cenozoico','Paleógeno · Neógeno · Cuaternario'],
+ ['Mesozoico','Triásico · Jurásico · Cretácico'],
+ ['Paleozoico','Cámbrico · Ordovícico · Silúrico · Devónico · Carbonífero · Pérmico'],
+ ['Precámbrico','Arcaico · Proterozoico']
+];
+function renderWorldGeologyLegend(){
+ const el=document.getElementById('worldGeologyLegend');if(!el)return;
+ const on=!!document.getElementById('worldGeologyCheck')?.checked;
+ el.style.display=on?'block':'none';
+ if(!on)return;
+ el.innerHTML='<b>Leyenda · geología mundial</b><br>'+
+  '<span style="display:block;margin:3px 0 5px">Los colores representan la edad geológica de las unidades integradas por Macrostrat. La tonalidad exacta y el detalle cambian según el mapa fuente y la escala.</span>'+
+  MACROSTRAT_ERA_GUIDE.map(([a,b])=>'<div style="margin:2px 0"><b>'+escHtml(a)+':</b> '+escHtml(b)+'</div>').join('')+
+  '<small>Pulsa sobre el mapa para consultar unidad, edad, litología y fuente original.</small>';
+}
+
+const MACROSTRAT_TEXT_ES=[
+ ['Quaternary','Cuaternario'],['Holocene','Holoceno'],['Pleistocene','Pleistoceno'],
+ ['Neogene','Neógeno'],['Pliocene','Plioceno'],['Miocene','Mioceno'],
+ ['Paleogene','Paleógeno'],['Oligocene','Oligoceno'],['Eocene','Eoceno'],['Paleocene','Paleoceno'],
+ ['Cenozoic','Cenozoico'],['Cretaceous','Cretácico'],['Jurassic','Jurásico'],['Triassic','Triásico'],
+ ['Mesozoic','Mesozoico'],['Permian','Pérmico'],['Carboniferous','Carbonífero'],['Devonian','Devónico'],
+ ['Silurian','Silúrico'],['Ordovician','Ordovícico'],['Cambrian','Cámbrico'],['Paleozoic','Paleozoico'],
+ ['Proterozoic','Proterozoico'],['Archean','Arcaico'],['Precambrian','Precámbrico'],
+ ['alluvium','aluvión'],['alluvial','aluvial'],['basalt','basalto'],['andesite','andesita'],
+ ['rhyolite','riolita'],['dacite','dacita'],['trachyte','traquita'],['phonolite','fonolita'],
+ ['granite','granito'],['gabbro','gabro'],['sandstone','arenisca'],['siltstone','limolita'],
+ ['mudstone','lutita'],['shale','lutita'],['limestone','caliza'],['dolomite','dolomía'],
+ ['conglomerate','conglomerado'],['breccia','brecha'],['schist','esquisto'],['gneiss','gneis'],
+ ['marble','mármol'],['quartzite','cuarcita'],['tuff','toba'],['gravel','grava'],['sand','arena'],
+ ['silt','limo'],['clay','arcilla'],['volcanic','volcánico'],['igneous','ígneo'],
+ ['metamorphic','metamórfico'],['sedimentary','sedimentario'],['Formation','Formación'],
+ ['Member','Miembro'],['Group','Grupo'],['deposits','depósitos'],['deposit','depósito']
+];
+function macrostratTextEs(v){
+ let s=String(v??'').trim();if(!s)return '';
+ for(const [en,es] of MACROSTRAT_TEXT_ES){
+  s=s.replace(new RegExp('\\b'+en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','ig'),es);
+ }
+ return s;
+}
+function macrostratLikelyGenericName(v){
+ const s=String(v??'').trim();
+ return /^(alluvium|colluvium|basalt|andesite|rhyolite|dacite|granite|limestone|sandstone|shale|conglomerate|volcanic rocks?|sedimentary rocks?|metamorphic rocks?|igneous rocks?)/i.test(s);
+}
+function macrostratDisplayName(p){
+ const formal=String(p?.strat_name||'').trim();
+ const name=String(p?.name||'').trim();
+ if(formal)return formal; // nombre estratigráfico propio: se conserva
+ if(name)return macrostratLikelyGenericName(name)?macrostratTextEs(name):name;
+ return 'Unidad geológica';
+}
+function macrostratPointInRing(x,y,ring){
+ let inside=false;
+ for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+  const xi=ring[i].x,yi=ring[i].y,xj=ring[j].x,yj=ring[j].y;
+  const hit=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/((yj-yi)||1e-12)+xi);
+  if(hit)inside=!inside;
+ }
+ return inside;
+}
+function macrostratTilePoint(lon,lat,z,extent){
+ const n=2**z;
+ const gx=(lon+180)/360*n;
+ const lr=Math.max(-85.05112878,Math.min(85.05112878,lat))*Math.PI/180;
+ const gy=(1-Math.asinh(Math.tan(lr))/Math.PI)/2*n;
+ return {x:(gx-Math.floor(gx))*extent,y:(gy-Math.floor(gy))*extent};
+}
+const macrostratTileCache=new Map(),macrostratSourceCache=new Map();
+async function macrostratSourceById(sourceId){
+ if(sourceId===null||sourceId===undefined||sourceId==='')return null;
+ const key=String(sourceId);
+ if(macrostratSourceCache.has(key))return macrostratSourceCache.get(key);
+ const p=(async()=>{
+  try{
+   const r=await fetch('https://macrostrat.org/api/v2/defs/sources?source_id='+encodeURIComponent(key));
+   if(!r.ok)return null;
+   const j=await r.json();
+   const a=j?.success?.data||j?.data||j?.records||j;
+   const row=Array.isArray(a)?a[0]:a;
+   if(!row||typeof row!=='object')return null;
+   return {
+    name:row.name||row.source||row.title||row.ref||'',
+    ref:row.ref||row.reference||row.citation||'',
+    url:row.url||row.web_url||row.website||''
+   };
+  }catch(e){return null;}
+ })();
+ macrostratSourceCache.set(key,p);
+ return p;
+}
+async function macrostratGeologyAt(lat,lon,zHint=8){
+ const z=Math.max(2,Math.min(12,Math.round(Number(zHint)||8)));
+ const t=mercatorTileXY(lon,lat,z),key=z+'/'+t.x+'/'+t.y;
+ let prom=macrostratTileCache.get(key);
+ if(!prom){
+  prom=(async()=>{
+   const {VectorTile,Pbf}=await worldVectorLibs();
+   const r=await fetch(`https://tiles.macrostrat.org/carto/${z}/${t.x}/${t.y}.mvt`);
+   if(!r.ok)throw new Error('Macrostrat MVT '+r.status);
+   const tile=new VectorTile(new Pbf(new Uint8Array(await r.arrayBuffer())));
+   return tile.layers?.units||null;
+  })();
+  macrostratTileCache.set(key,prom);
+  if(macrostratTileCache.size>80){
+   const first=macrostratTileCache.keys().next().value;macrostratTileCache.delete(first);
+  }
+ }
+ const layer=await prom;if(!layer)return null;
+ const pt=macrostratTilePoint(lon,lat,z,layer.extent||4096);
+ let match=null;
+ for(let i=0;i<layer.length;i++){
+  const f=layer.feature(i);if(f.type!==3)continue;
+  const rings=f.loadGeometry();let inside=false;
+  for(const ring of rings)if(macrostratPointInRing(pt.x,pt.y,ring))inside=!inside;
+  if(inside)match={...(f.properties||{})}; // la última unidad coincide con el orden de dibujo superior
+ }
+ if(!match)return null;
+ const src=await macrostratSourceById(match.source_id);
+ return {...match,__source:src,__queryZoom:z};
+}
+function macrostratAgeText(g){
+ if(!g)return '';
+ const age=macrostratTextEs(g.age||'');
+ const top=macrostratTextEs(g.t_int_name||''),bottom=macrostratTextEs(g.b_int_name||'');
+ if(age)return age;
+ if(top&&bottom&&top!==bottom)return bottom+' – '+top;
+ return top||bottom||'';
+}
+function macrostratNumericAge(g){
+ const a=Number(g?.best_t_age),b=Number(g?.best_b_age);
+ if(Number.isFinite(a)&&Number.isFinite(b))return fmtNum(Math.min(a,b),1)+'–'+fmtNum(Math.max(a,b),1)+' Ma';
+ if(Number.isFinite(a))return '≤ '+fmtNum(a,1)+' Ma';
+ if(Number.isFinite(b))return '≥ '+fmtNum(b,1)+' Ma';
+ return '';
+}
+function macrostratGeologyHtml(g){
+ if(!document.getElementById('worldGeologyCheck')?.checked)return '';
+ if(!g)return '<hr><b>🪨 Geología mundial · Macrostrat:</b> sin dato cartográfico en este punto';
+ const rows=[];
+ const unit=macrostratDisplayName(g);if(unit)rows.push('<b>Unidad:</b> '+escHtml(unit));
+ const age=macrostratAgeText(g);if(age)rows.push('<b>Edad:</b> '+escHtml(age));
+ const num=macrostratNumericAge(g);if(num)rows.push('<b>Edad numérica aprox.:</b> '+escHtml(num));
+ if(g.lith)rows.push('<b>Litología:</b> '+escHtml(macrostratTextEs(g.lith)));
+ if(g.source_id!==undefined&&g.source_id!==null){
+  const src=g.__source?.name||g.__source?.ref||('fuente cartográfica #'+g.source_id);
+  rows.push('<b>Fuente original:</b> '+escHtml(src));
+ }
+ rows.push('<small>Macrostrat · CC BY 4.0 · compilación multifuente; el detalle depende de la escala y del mapa original.</small>');
+ return '<hr><b>🪨 Geología mundial · Macrostrat</b><br>'+rows.join('<br>');
+}
+
 const canaryClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,bounds:L.latLngBounds([[27.0,-18.9],[29.8,-12.7]]),attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
@@ -4404,16 +4572,16 @@ function adminHtml(a){
  if(document.getElementById('ccaaCheck').checked&&a.ccaa)rows.push('<b>Comunidad autónoma:</b> '+escHtml(a.ccaa));
  return rows.length?'<br>'+rows.join('<br>'):'';
 }
-function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…',geo=null,veg=null,topo=null,adm=null,pending=false,climate=null,biome=null){
+function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud…',geo=null,veg=null,topo=null,adm=null,pending=false,climate=null,biome=null,worldGeo=null){
  const c=coordsDMS(lat,lon),topoHtml=topo?'<br><b>Topónimo próximo:</b> '+escHtml(topo.name)+(Number.isFinite(topo.dist)?' <small>('+fmtDistance(topo.dist)+')</small>':''):'<br><b>Topónimo próximo:</b> '+(pending?'consultando…':'sin dato');
- return '<b>📍 '+title+'</b>'+topoHtml+adminHtml(adm)+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(pending&&geologyEnabledAt(lat,lon)?'<hr><b>🪨 Geología:</b> consultando…':geologyHtml(geo))+(pending&&(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked))?'<hr><b>🌿 Vegetación:</b> consultando…':vegetationHtml(veg))+(pending&&climateEnabledAt(lat,lon)?'<hr><b>🌦️ Clima Köppen-Geiger:</b> consultando…':climateHtml(climate))+(pending&&document.getElementById('worldBiomesCheck')?.checked?'<hr><b>🌿 Bioma terrestre:</b> consultando…':biomeDetailHtml(biome))+'<br><small>IGN/CNIG · CartoCiudad · MDT25/IDEE'+(geologyEnabledAt(lat,lon)?' · IGME-CSIC':'')+(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked)?' · MITECO/GRAFCAN':'')+(climateEnabledAt(lat,lon)?' · Beck et al.':'')+'</small>';
+ return '<b>📍 '+title+'</b>'+topoHtml+adminHtml(adm)+'<br><b>Latitud:</b> '+c.lat+'<br><b>Longitud:</b> '+c.lon+'<br><b>Altitud aprox.:</b> '+altText+(pending&&geologyEnabledAt(lat,lon)?'<hr><b>🪨 Geología:</b> consultando…':geologyHtml(geo))+(pending&&(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked))?'<hr><b>🌿 Vegetación:</b> consultando…':vegetationHtml(veg))+(pending&&document.getElementById('worldGeologyCheck')?.checked?'<hr><b>🪨 Geología mundial · Macrostrat:</b> consultando…':macrostratGeologyHtml(worldGeo))+(pending&&climateEnabledAt(lat,lon)?'<hr><b>🌦️ Clima Köppen-Geiger:</b> consultando…':climateHtml(climate))+(pending&&document.getElementById('worldBiomesCheck')?.checked?'<hr><b>🌿 Bioma terrestre:</b> consultando…':biomeDetailHtml(biome))+'<br><small>IGN/CNIG · CartoCiudad · MDT25/IDEE'+(geologyEnabledAt(lat,lon)?' · IGME-CSIC':'')+(['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked)?' · MITECO/GRAFCAN':'')+(document.getElementById('worldGeologyCheck')?.checked?' · Macrostrat':'')+(climateEnabledAt(lat,lon)?' · Beck et al.':'')+'</small>';
 }
 let coordMarker=null,coordQuerySeq=0;
 async function showPoint(ll,title='Punto consultado',useMarker=true){
  const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng,geoOn=geologyEnabledAt(lat,lon),vegOn=['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked),c=coordsDMS(lat,lon);
- const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null,b:null};
- const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c,state.b));coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
- if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null,null),{maxWidth:430}).openPopup();}
+ const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null,b:null,mg:null};
+ const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c,state.b,state.mg));coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
+ if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null,null,null),{maxWidth:430}).openPopup();}
  status(c.lat+' · '+c.lon+' · consultando altitud…');
  // PRIORIDAD 1: elevación. Se lanza antes que cualquier consulta territorial/temática.
  const pz=elevationAt(lat,lon).then(x=>{state.z=x;state.zDone=true;render();return x;}).catch(()=>{state.zDone=true;render();return null;});
@@ -4425,6 +4593,9 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
   }
   if(document.getElementById('worldBiomesCheck')?.checked){
    worldBiomeAt(lat,lon).then(x=>{state.b=x;render();}).catch(()=>{state.b=null;render();});
+  }
+  if(document.getElementById('worldGeologyCheck')?.checked){
+   macrostratGeologyAt(lat,lon,map.getZoom()).then(x=>{state.mg=x;render();}).catch(()=>{state.mg=null;render();});
   }
   if(profileIsSpainLatLng(ll)){
    nearestToponymAt(lat,lon).then(x=>{state.t=x;render();});
@@ -5491,6 +5662,9 @@ function updateLegend(){
   h+='<div style="margin-bottom:8px"><b>Divisiones infraestatales · 2.º nivel</b><br><span style="display:inline-block;width:24px;border-top:2px solid #74d3ff;vertical-align:middle;margin-right:6px"></span>Departamentos, distritos, condados, municipios y equivalentes</div>';
  }
  // Capas mundiales temáticas
+ if(document.getElementById('worldGeologyCheck')?.checked && map.hasLayer(worldGeology)){
+   h+='<div style="margin-bottom:8px"><b>Geología mundial · Macrostrat</b><br>Compilación multifuente · colores por edad geológica · CC BY 4.0</div>';
+ }
  if(document.getElementById('worldClimateCheck')?.checked && map.hasLayer(worldClimate)){
    h+='<div style="margin-bottom:8px"><b>Climas del mundo · Köppen-Geiger</b><br>'+WORLD_CLIMATE_INFO.map(([n,c])=>'<div><span class="sw" style="background:'+c+'"></span>'+esc(n)+'</div>').join('')+'</div>';
  }
@@ -5624,7 +5798,7 @@ function loadScriptOnce(src){return new Promise((resolve,reject)=>{const old=doc
 
 // Herramientas sobre el globo: medición, perfil editable y consulta territorial mundial.
 let globeClickHandler=null,globeMeasureMode=null,globeMeasurePts=[],globeMeasureEntities=[],globeProfileMode=false,globeProfilePts=[],globeProfileEntities=[],globeProfileHandles=[],globeProfileLine=null,globeDragIndex=-1,countriesData=null,countriesLoading=null,countriesSource=null,countryLabelsSource=null,countryBordersData=null,countryBordersLoading=null,worldToponymsData=null,worldToponymsLoading=null,worldToponymsSource=null,worldToponymsLayer=null,globeSpainToponymsLayer=null,worldTranslitSource=null,
-globeClimateLayer=null,globeBiomesSource=null,globeVolcanoesSource=null,
+globeClimateLayer=null,globeGeologyLayer=null,globeBiomesSource=null,globeVolcanoesSource=null,
 worldMvtGlobal=null,worldMvtRegional=null,worldMvtLocal=null,worldMvtRegionalKey='',worldMvtLocalKey='',
 worldMvtGeneration=0,worldMvtMoveHandlerInstalled=false,worldRasterFallbackLayer=null,
 worldVectorLabelSource=null,worldVectorLabelCollection=null,worldVectorLabelTileCache=new Map(),worldVectorLibsPromise=null,worldVectorLabelGeneration=0,worldVectorLabelRenderKey='',
@@ -6828,13 +7002,14 @@ async function showGlobePoint(ll,screenPos=null){
   '<b>Altitud aprox.:</b> calculando…';
 
  const inSpain=ll.lat>=27&&ll.lat<=44.5&&ll.lng>=-18.5&&ll.lng<=4.8;
- const [country,z,adm,reverse,climate,biome]=await Promise.all([
+ const [country,z,adm,reverse,climate,biome,worldGeo]=await Promise.all([
   countryAt(ll.lat,ll.lng),
   elevationAt(ll.lat,ll.lng),
   inSpain?adminAt(ll.lat,ll.lng):Promise.resolve(null),
   reverseWorldAt(ll.lat,ll.lng),
   document.getElementById('worldClimateCheck')?.checked?worldClimateAt(ll.lat,ll.lng).catch(()=>null):Promise.resolve(null),
-  document.getElementById('worldBiomesCheck')?.checked?worldBiomeAt(ll.lat,ll.lng).catch(()=>null):Promise.resolve(null)
+  document.getElementById('worldBiomesCheck')?.checked?worldBiomeAt(ll.lat,ll.lng).catch(()=>null):Promise.resolve(null),
+  document.getElementById('worldGeologyCheck')?.checked?macrostratGeologyAt(ll.lat,ll.lng,macrostratGlobeQueryZoom()).catch(()=>null):Promise.resolve(null)
  ]);
 
  const territory=globeTerritorialRows(reverse,adm,country);
@@ -6854,6 +7029,7 @@ async function showGlobePoint(ll,screenPos=null){
  if(reverse?.display&&reverse.display!==reverse.place){
   html+='<br><span style="display:block;margin-top:5px;color:#667;font-size:11px"><b>Referencia:</b> '+escHtml(reverse.display)+'</span>';
  }
+ if(document.getElementById('worldGeologyCheck')?.checked)html+=macrostratGeologyHtml(worldGeo);
  if(document.getElementById('worldClimateCheck')?.checked)html+=climateDetailHtml(climate);
  if(document.getElementById('worldBiomesCheck')?.checked)html+=biomeDetailHtml(biome);
 
@@ -6997,6 +7173,36 @@ async function ensureGlobe(){
  finally{globeLoading=false;}
 }
 
+async function toggleWorldGeologyGlobe(on){
+ if(!globeViewer)return;
+ if(on){
+  if(!globeGeologyLayer){
+   const provider=new Cesium.UrlTemplateImageryProvider({
+    url:'https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',
+    maximumLevel:14,
+    credit:'Geología · Macrostrat · CC BY 4.0'
+   });
+   globeGeologyLayer=globeViewer.imageryLayers.addImageryProvider(provider);
+  }
+  globeGeologyLayer.show=true;
+  globeGeologyLayer.alpha=+(document.getElementById('worldGeologyOpacity')?.value||.72);
+  globeViewer.imageryLayers.raiseToTop(globeGeologyLayer);
+ }else if(globeGeologyLayer){
+  globeGeologyLayer.show=false;
+ }
+ globeViewer.scene.requestRender();
+}
+function macrostratGlobeQueryZoom(){
+ const h=globeCameraHeight();
+ if(h>9000000)return 3;
+ if(h>4500000)return 4;
+ if(h>2200000)return 5;
+ if(h>1000000)return 7;
+ if(h>400000)return 8;
+ if(h>150000)return 10;
+ return 11;
+}
+
 async function toggleWorldClimateGlobe(on){
  if(!globeViewer)return;
  if(on){
@@ -7084,6 +7290,7 @@ async function toggleWorldVolcanoesGlobe(on){
 }
 function syncWorldThematicGlobe(){
  if(!globeViewer)return;
+ toggleWorldGeologyGlobe(!!document.getElementById('worldGeologyCheck')?.checked);
  toggleWorldClimateGlobe(!!document.getElementById('worldClimateCheck')?.checked);
  toggleWorldBiomesGlobe(!!document.getElementById('worldBiomesCheck')?.checked);
  toggleWorldVolcanoesGlobe(!!document.getElementById('worldVolcanoesCheck')?.checked);
@@ -7166,6 +7373,26 @@ function bindScopedClimate(checkId,layer,opacityId,valueId,legendId,label){
 }
 bindScopedClimate('canaryClimateCheck',canaryClimate,'canaryClimateOpacity','canaryClimateOpacityValue','canaryClimateLegend','Canarias');
 bindScopedClimate('spainClimateCheck',spainClimate,'spainClimateOpacity','spainClimateOpacityValue','spainClimateLegend','España peninsular y Baleares');
+
+document.getElementById('worldGeologyCheck').addEventListener('change',e=>{
+ if(e.target.checked){
+  worldGeology.addTo(map);
+  renderWorldGeologyLegend();
+  status('Mapa geológico mundial · Macrostrat · pulsa el mapa para consultar la unidad');
+ }else{
+  if(map.hasLayer(worldGeology))map.removeLayer(worldGeology);
+  renderWorldGeologyLegend();
+  status('Mapa geológico mundial desactivado');
+ }
+ if(globeViewer)toggleWorldGeologyGlobe(e.target.checked);
+ setTimeout(updateLegend,0);
+});
+document.getElementById('worldGeologyOpacity').addEventListener('input',e=>{
+ const o=+e.target.value;
+ worldGeology.setOpacity(o);
+ document.getElementById('worldGeologyOpacityValue').textContent=Math.round(o*100)+' %';
+ if(globeGeologyLayer){globeGeologyLayer.alpha=o;globeViewer?.scene.requestRender();}
+});
 
 document.getElementById('worldClimateCheck').addEventListener('change',e=>{
  if(e.target.checked){worldClimate.addTo(map);status('Climas del mundo · Köppen-Geiger · pulsa el mapa para consultar el clima');}
