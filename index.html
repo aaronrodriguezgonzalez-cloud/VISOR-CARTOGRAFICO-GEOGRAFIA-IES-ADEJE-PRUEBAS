@@ -2553,7 +2553,15 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <p>Activa la herramienta y marca <b>tantos puntos como necesites</b>. Puedes crear recorridos rectos, quebrados, sinuosos, semicirculares o circulares. Todos los vértices pueden desplazarse después. Pulsa «Generar perfil» cuando termines.</p>
 <div class="row"><button class="action" onclick="startProfile()">⛰️ Iniciar perfil</button><button class="action" onclick="finishProfile()">Generar perfil</button></div>
 <div class="row" style="margin-top:5px"><button class="action" onclick="undoProfilePoint()">↶ Deshacer punto</button><button class="action" onclick="toggleCloseProfileRoute()">⭘ Cerrar recorrido</button></div>
-<button class="action" style="margin-top:5px;width:100%" onclick="clearProfile()">Borrar</button>
+<button class="action" style="margin-top:5px;width:100%" onclick="clearProfile()">Borrar perfil</button>
+<div style="margin-top:10px;padding-top:9px;border-top:1px solid #d8dde1">
+  <b>Track GPX / KML</b>
+  <small style="display:block;margin:4px 0 7px;color:#52616d">Carga un track desde tu dispositivo. Se dibuja sobre el mapa y puedes usarlo directamente para generar el perfil.</small>
+  <input id="trackFileInput" type="file" accept=".gpx,.kml,application/gpx+xml,application/vnd.google-earth.kml+xml,application/xml,text/xml" style="display:none" onchange="loadTrackFile(this.files&&this.files[0])">
+  <div class="row"><button class="action" onclick="document.getElementById('trackFileInput').click()">📂 Cargar GPX/KML</button><button class="action" id="trackCenterBtn" onclick="centerImportedTrack()" disabled>⌖ Centrar</button></div>
+  <div class="row" style="margin-top:5px"><button class="action" id="trackProfileBtn" onclick="profileImportedTrack()" disabled>⛰️ Perfil del track</button><button class="action" id="trackRemoveBtn" onclick="removeImportedTrack()" disabled>✕ Quitar track</button></div>
+  <small id="trackFileStatus" style="display:block;margin-top:6px;color:#52616d">Ningún track cargado.</small>
+</div>
 <p id="profileResult"><b>Resultado:</b> —</p>
 <div id="profileBox" style="display:none"><div id="profileSummary" style="margin-bottom:5px"></div><canvas id="profileCanvas" width="520" height="220" style="width:100%;height:auto;border:1px solid #bbb;border-radius:6px"></canvas></div>
 </div>
@@ -5293,6 +5301,68 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
 }
 // Perfil topográfico · herramienta independiente
 let profileMode=false,profilePts=[],profileLayer=null,profileLine=null,profileHandles=[],profileClosed=false;
+
+// Tracks importados · GPX / KML. El track permanece independiente del dibujo manual del perfil.
+let importedTrackGroup=null,importedTrackSegments=[],importedTrackProfilePts=[],importedTrackName='';
+function setTrackButtons(enabled){
+ for(const id of ['trackCenterBtn','trackProfileBtn','trackRemoveBtn']){const b=document.getElementById(id);if(b)b.disabled=!enabled;}
+}
+function trackStatus(msg){const el=document.getElementById('trackFileStatus');if(el)el.textContent=msg;}
+function removeImportedTrack(silent=false){
+ if(importedTrackGroup&&map.hasLayer(importedTrackGroup))map.removeLayer(importedTrackGroup);
+ importedTrackGroup=null;importedTrackSegments=[];importedTrackProfilePts=[];importedTrackName='';setTrackButtons(false);trackStatus('Ningún track cargado.');
+ const input=document.getElementById('trackFileInput');if(input)input.value='';
+ if(!silent)status('Track eliminado del mapa');
+}
+function trackPoint(lat,lon,ele){
+ lat=Number(lat);lon=Number(lon);if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+ const ll=L.latLng(lat,lon);if(ele!==undefined&&ele!==null&&ele!==''&&Number.isFinite(Number(ele)))ll.alt=Number(ele);return ll;
+}
+function parseGpxTrack(xml){
+ const segs=[];
+ for(const seg of xml.getElementsByTagName('trkseg')){const pts=[];for(const p of seg.getElementsByTagName('trkpt')){const ll=trackPoint(p.getAttribute('lat'),p.getAttribute('lon'),p.getElementsByTagName('ele')[0]?.textContent);if(ll)pts.push(ll);}if(pts.length>1)segs.push(pts);}
+ if(!segs.length){for(const rte of xml.getElementsByTagName('rte')){const pts=[];for(const p of rte.getElementsByTagName('rtept')){const ll=trackPoint(p.getAttribute('lat'),p.getAttribute('lon'),p.getElementsByTagName('ele')[0]?.textContent);if(ll)pts.push(ll);}if(pts.length>1)segs.push(pts);}}
+ return segs;
+}
+function parseKmlTrack(xml){
+ const segs=[];
+ for(const ls of xml.getElementsByTagName('LineString')){const node=ls.getElementsByTagName('coordinates')[0];if(!node)continue;const pts=[];for(const token of String(node.textContent||'').trim().split(/\s+/)){const a=token.split(',');if(a.length<2)continue;const ll=trackPoint(a[1],a[0],a[2]);if(ll)pts.push(ll);}if(pts.length>1)segs.push(pts);}
+ // Compatibilidad con gx:Track de Google Earth.
+ const gxTracks=[...xml.getElementsByTagNameNS('*','Track')];
+ for(const tr of gxTracks){const pts=[];const coords=[...tr.getElementsByTagNameNS('*','coord')];for(const c of coords){const a=String(c.textContent||'').trim().split(/\s+/);if(a.length<2)continue;const ll=trackPoint(a[1],a[0],a[2]);if(ll)pts.push(ll);}if(pts.length>1)segs.push(pts);}
+ return segs;
+}
+function segmentDistance(pts){let d=0;for(let i=1;i<pts.length;i++)d+=pts[i-1].distanceTo(pts[i]);return d;}
+async function loadTrackFile(file){
+ if(!file)return;
+ try{
+  const text=await file.text();const xml=new DOMParser().parseFromString(text,'application/xml');
+  if(xml.getElementsByTagName('parsererror').length)throw new Error('XML no válido');
+  const name=String(file.name||'track');const ext=name.toLowerCase().split('.').pop();
+  let segs=ext==='gpx'?parseGpxTrack(xml):ext==='kml'?parseKmlTrack(xml):[];
+  if(!segs.length){segs=parseGpxTrack(xml);if(!segs.length)segs=parseKmlTrack(xml);}
+  if(!segs.length)throw new Error('No se encontró ningún track o línea con al menos dos puntos');
+  removeImportedTrack(true);importedTrackSegments=segs;importedTrackName=name;
+  importedTrackProfilePts=segs.slice().sort((a,b)=>segmentDistance(b)-segmentDistance(a))[0].slice();
+  importedTrackGroup=L.featureGroup();
+  segs.forEach((pts,i)=>L.polyline(pts,{color:'#e23b2e',weight:5,opacity:.95,lineCap:'round',lineJoin:'round'}).bindTooltip(name+(segs.length>1?' · tramo '+(i+1):''),{sticky:true}).addTo(importedTrackGroup));
+  importedTrackGroup.addTo(map);setTrackButtons(true);
+  const total=segs.reduce((a,p)=>a+segmentDistance(p),0),npts=segs.reduce((a,p)=>a+p.length,0);
+  trackStatus(name+' · '+segs.length+' tramo'+(segs.length===1?'':'s')+' · '+npts+' puntos · '+fmtDistance(total));
+  centerImportedTrack();status('Track cargado · '+name+' · '+fmtDistance(total));
+ }catch(err){console.error('Track GPX/KML:',err);removeImportedTrack(true);trackStatus('No se pudo cargar el archivo: '+(err?.message||err));alert('No se pudo cargar el track. '+(err?.message||err));}
+}
+function centerImportedTrack(){
+ if(!importedTrackGroup)return;const b=importedTrackGroup.getBounds();if(b&&b.isValid())map.fitBounds(b.pad(.08),{maxZoom:16});
+}
+async function profileImportedTrack(){
+ if(importedTrackProfilePts.length<2){alert('Carga primero un track GPX o KML.');return;}
+ if(document.body.classList.contains('globe-mode')){alert('El perfil del track se genera desde el mapa 2D. Cambia a vista de mapa para continuar.');return;}
+ lastProfileSource='map';lastProfileCountries=[];profileMode=false;
+ document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+fmtDistance(segmentDistance(importedTrackProfilePts))+' · preparando perfil del track…';
+ status('Generando perfil del track · '+importedTrackName);
+ await finishProfileFromPoints(importedTrackProfilePts.slice());
+}
 function startProfile(){
  if(document.body.classList.contains('globe-mode')){startGlobeProfile();return;}
  measureMode=null;profileMode=true;profilePts=[];profileClosed=false;if(profileLayer)map.removeLayer(profileLayer);profileLayer=L.layerGroup().addTo(map);profileLine=null;profileHandles=[];
