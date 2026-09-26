@@ -2179,6 +2179,17 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  .rgStations{max-height:260px}
 }
 
+
+/* Acontecimientos históricos · Wikidata */
+.histEventMarker{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;background:#fff;border:2px solid #6b3fa0;box-shadow:0 1px 6px #0007}
+.histEventCard{font-size:12.5px;line-height:1.38;min-width:280px;max-width:470px}
+.histEventTitle{font:900 17px/1.15 Montserrat,Arial,sans-serif;color:#34204d;margin:0 0 5px}
+.histEventMeta{color:#58636b;margin-bottom:7px}
+.histEventDesc{margin:7px 0}
+.histEventBadge{display:inline-block;padding:3px 7px;border-radius:999px;background:#efe7f7;color:#4a2870;font-weight:800;font-size:10px;margin:0 5px 5px 0}
+.histEventLinks{margin-top:8px;padding-top:7px;border-top:1px solid #ddd;font-size:11px}
+.histEventLinks a{color:#0b5fa5;font-weight:800;text-decoration:none}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -2268,6 +2279,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <li>Medición de distancias y superficies y perfiles topográficos altimétricos de ámbito mundial.</li>
           <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>. En clima y biomas, al pulsar cualquier punto se muestra una <b>ficha territorial completa</b> —topónimo, país, divisiones administrativas, coordenadas, altitud y datos temáticos— tanto en el mapamundi 2D como en el globo 3D. Los volcanes consultan además Smithsonian GVP y, cuando existen, datos USGS.</li>
           <li>Las capas mundiales se cargan únicamente cuando se activan para mantener el visor ligero y rápido.</li>
+          <li><b>Historia Universal:</b> además de las fronteras políticas históricas, ANAMBRO puede superponer <b>acontecimientos históricos geolocalizados</b> procedentes de Wikidata y sincronizados con el mismo control temporal. La jerarquía cartográfica reduce la cantidad de hechos visibles cuando el globo está alejado.</li>
           <li><b>Radio mundial:</b> una capa experimental permite explorar ciudades con emisoras de <b>Radio Garden</b> y escuchar emisiones en directo desde el mapa 2D o el globo 3D. La integración es no oficial y depende de los endpoints internos del servicio.</li>
           <li><b>Composición e impresión cartográfica:</b> ANAMBRO incorpora un editor de maquetación tipo SIG para preparar mapas de Canarias, España o cualquier zona del mundo, con título, leyenda de capas activas, orientación y escala gráfica. Los elementos pueden desplazarse y redimensionarse antes de exportar el resultado directamente a PDF en A4 o A3, vertical u horizontal.</li>
           <li><b>Fuentes y trazabilidad:</b> el botón «ⓘ Fuentes y licencias» de la cabecera documenta procedencia, condiciones de reutilización y atribución. Los PDF incorporan automáticamente las fuentes asociadas a las capas activas.</li>
@@ -2469,6 +2481,12 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 <div class="layerThemeTitle">🏛️ Historia</div>
 <label><input id="worldHistoryCheck" type="checkbox"> <b>Fronteras políticas históricas · Cliopatria</b></label>
 <div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"></div>
+<label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
+<div class="layerSubBlock">
+  <small>Hechos históricos geolocalizados y sincronizados con el mismo año del control temporal.</small>
+  <small>ANAMBRO prioriza acontecimientos con mayor presencia enciclopédica y descarta ruido evidente. Al alejar el mapa se muestran solo los más relevantes.</small>
+  <small id="historicalEventsStatus">Capa desactivada.</small>
+</div>
 <div class="layerThemeTitle">📻 Radio mundial</div>
 <label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label>
 <div class="layerSubBlock">
@@ -2558,7 +2576,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
     <div class="sourceItem sourceOk"><b>RESOLVE / Dinerstein et al. (2017)</b> · ecorregiones y grandes biomas terrestres.<br><small>CC BY 4.0.</small><br><a href="https://doi.org/10.1093/biosci/bix014" target="_blank" rel="noopener">Dinerstein et al. (2017)</a></div>
-    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div><div class="sourceItem sourceReview"><b>Radio Garden</b> · ciudades y emisoras de radio en directo.<br><small>Integración no oficial. Radio Garden no permite acceso CORS directo a su API JSON desde un sitio estático como GitHub Pages; ANAMBRO usa una instantánea pública del directorio como fallback y solicita el stream de audio al reproducir. Los endpoints pueden cambiar o restringirse sin previo aviso.</small><br><a href="https://radio.garden/" target="_blank" rel="noopener">Radio Garden</a></div><div class="sourceItem sourceOk"><b>Wikipedia / Wikimedia</b> · contexto histórico bajo demanda de las entidades políticas representadas.<br><small>ANAMBRO consulta la API pública de MediaWiki mediante CORS y prioriza Wikipedia en español. Los extractos y resultados se muestran como contexto auxiliar y enlazan a sus artículos de origen. Texto de Wikipedia bajo CC BY-SA 4.0.</small><br><a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a></div>
+    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div><div class="sourceItem sourceOk"><b>Cliopatria · Seshat Global History Databank</b> · entidades políticas mundiales, 3400 a. C.–2024.<br><small>CC BY 4.0. Cada geometría se asocia a un intervalo temporal; las fronteras antiguas son reconstrucciones historiográficas y pueden existir incertidumbres de extensión, fecha o denominación.</small><br><a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noopener">Cliopatria</a></div><div class="sourceItem sourceReview"><b>Radio Garden</b> · ciudades y emisoras de radio en directo.<br><small>Integración no oficial. Radio Garden no permite acceso CORS directo a su API JSON desde un sitio estático como GitHub Pages; ANAMBRO usa una instantánea pública del directorio como fallback y solicita el stream de audio al reproducir. Los endpoints pueden cambiar o restringirse sin previo aviso.</small><br><a href="https://radio.garden/" target="_blank" rel="noopener">Radio Garden</a></div><div class="sourceItem sourceOk"><b>Wikipedia / Wikimedia</b> · contexto histórico bajo demanda de las entidades políticas representadas.<br><small>ANAMBRO consulta la API pública de MediaWiki mediante CORS y prioriza Wikipedia en español. Los extractos y resultados se muestran como contexto auxiliar y enlazan a sus artículos de origen. Texto de Wikipedia bajo CC BY-SA 4.0.</small><br><a href="https://www.wikipedia.org/" target="_blank" rel="noopener">Wikipedia</a></div><div class="sourceItem sourceOk"><b>Wikidata</b> · acontecimientos históricos geolocalizados y metadatos temporales.<br><small>Datos estructurados publicados bajo CC0. ANAMBRO consulta Wikidata Query Service bajo demanda, filtra los resultados y utiliza el número de sitelinks como una señal cartográfica de relevancia, no como valoración histórica absoluta.</small><br><a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata</a></div>
     <div class="sourceItem sourceOk"><b>Smithsonian Global Volcanism Program</b> · Volcanoes of the World y erupciones holocenas.<br><small>Uso educativo y no comercial permitido con cita. Cita: Global Volcanism Program, 2026, Volcanoes of the World v5.4.0, Smithsonian Institution, compiled by Venzke, E.</small><br><a href="https://volcano.si.edu/gvp_termsofuse.cfm" target="_blank" rel="noopener">GVP Terms of Use</a> · <a href="https://volcano.si.edu/database/webservices.cfm" target="_blank" rel="noopener">Webservices</a></div>
     <div class="sourceItem sourceOk"><b>USGS Volcano Hazards Program</b> · información adicional y estado operativo de volcanes estadounidenses cuando existe.<br><small>Las fotografías se muestran únicamente cuando el servicio devuelve una imagen utilizable; las imágenes de terceros conservan sus propios derechos.</small><br><a href="https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits" target="_blank" rel="noopener">USGS Copyrights and Credits</a></div>
     <div class="sourceItem sourceReview"><b>Esri World Imagery</b> · fondo satelital del globo 3D.<br><small>ANAMBRO consume el servicio de teselas y mantiene la atribución a Esri y sus proveedores; no redistribuye el mosaico.</small></div>
@@ -2740,7 +2758,8 @@ const ANAMBRO_SOURCES={
  openfreemap:{short:'OpenFreeMap © OpenMapTiles · Data from OpenStreetMap'},
  esri:{short:'Esri World Imagery'},
  terrarium:{short:'AWS/Mapzen Terrarium · elevation data'},
- radiogarden:{short:'Radio Garden · integración no oficial · emisiones en directo'}
+ radiogarden:{short:'Radio Garden · integración no oficial · emisiones en directo'},
+ wikidata:{short:'Wikidata · datos estructurados · CC0'}
 };
 function activeSourceKeys(){
  const s=new Set(['ign']);
@@ -2751,6 +2770,7 @@ function activeSourceKeys(){
  if(document.getElementById('worldBiomesCheck')?.checked)s.add('resolve');
  if(document.getElementById('worldGeologyCheck')?.checked)s.add('macrostrat');
  if(document.getElementById('worldHistoryCheck')?.checked){s.add('cliopatria');s.add('naturalearth');s.add('wikipedia');}
+ if(document.getElementById('worldHistoricalEventsCheck')?.checked)s.add('wikidata');
  if(document.getElementById('worldVolcanoesCheck')?.checked)s.add('gvp');
  if(document.getElementById('worldRadioGardenCheck')?.checked)s.add('radiogarden');
  if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
@@ -6754,6 +6774,9 @@ function updateLegend(){
  if(document.getElementById('worldRadioGardenCheck')?.checked){
    h+='<div style="margin-bottom:8px"><b>Radio mundial · Radio Garden</b><br><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#19d37e;border:2px solid #083d2c;margin-right:5px;vertical-align:middle"></span>Localidades con emisoras</div>';
  }
+ if(document.getElementById('worldHistoricalEventsCheck')?.checked){
+   h+='<div style="margin-bottom:8px"><b>Acontecimientos históricos · Wikidata</b><br><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #6b3fa0;margin-right:5px;vertical-align:middle"></span>Hechos geolocalizados del año seleccionado</div>';
+ }
  if(document.getElementById('countriesCheck')?.checked){
    h+='<div style="margin-bottom:8px"><b>Fronteras internacionales</b><br><span style="display:inline-block;width:24px;border-top:2px solid #fff;box-shadow:0 0 0 1px #555;vertical-align:middle;margin-right:6px"></span>Frontera estatal</div>';
  }
@@ -8155,6 +8178,7 @@ function installGlobeClickTools(){if(globeClickHandler||!globeViewer)return;glob
   if(globeProfileMode){globeProfilePts.push(ll);redrawGlobeProfile();document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+(globeProfilePts.length>1?fmtDistance(measurePerimeter(globeProfilePts,false)):'—');return;}
   if(globeMeasureMode){globeMeasurePts.push(ll);redrawGlobeMeasure();return;}
   const picked=globeViewer.scene.pick(ev.position),ent=Cesium.defined(picked)?picked.id:null;
+  if(ent?.__anambroHistoricalEvent){showHistoricalEventGlobe(ent.event,ev.position);return;}
   if(document.getElementById('worldHistoryCheck')?.checked){if(ent?.__anambroHistory)showHistoryGlobeEntity(ent,ev.position);else showHistoryGlobeEmpty(ev.position);return;}
   if(ent?.__anambroRadioGarden){showRadioGardenGlobePlace(ent.place,ev.position);return;}
   if(ent?.__anambroVolcano){showGlobeVolcanoEntity(ent,ev.position);return;}
@@ -9112,17 +9136,118 @@ function toggleHistoryGlobe(on){if(!globeViewer)return;if(!on){historyGlobeSeq++
 function historyCloseButton(){return `<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add('empty');this.parentElement.classList.remove('historyWide')">×</button>`;}
 function showHistoryGlobeEntity(ent,pos){const b=document.getElementById('globeInfo');const d=ent?.__anambroHistoryData||{name:ent?.name||'Entidad política'};const token=++historyWikiSeq;b.classList.remove('empty');b.classList.add('historyWide');b.innerHTML=historyCloseButton()+historyCardHtml(d);requestAnimationFrame(()=>{enrichHistoryElement(b,d,token);});}
 function showHistoryGlobeEmpty(pos){const b=document.getElementById('globeInfo');b.classList.remove('empty');b.classList.add('historyWide');b.innerHTML=historyCloseButton()+'<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(historyYearText(historyYear))+'</div><div class="historyContext">No hay una entidad política de Cliopatria identificada en este punto para el año seleccionado.</div><div class="historyCardNote historyFoot">No se muestran topónimos, países ni divisiones actuales mientras la capa histórica está activa.</div></div>';}
-function requestHistoryYear(y,now=false){updateHistoryControls(y);historyWikiSeq++;try{map.closePopup();}catch(e){}if(globeViewer){const b=document.getElementById('globeInfo');if(b){b.classList.add('empty');b.classList.remove('historyWide');}}if(!document.getElementById('worldHistoryCheck')?.checked)return;if(!historyWorker)makeHistoryWorker();if(!historyReady)return;clearTimeout(historyDebounce);const go=()=>{historyRequestSeq++;historyWorker.postMessage({type:'year',year:historyYear,seq:historyRequestSeq});};if(now)go();else historyDebounce=setTimeout(go,180);}
+function requestHistoryYear(y,now=false){updateHistoryControls(y);historyWikiSeq++;try{map.closePopup();}catch(e){}if(globeViewer){const b=document.getElementById('globeInfo');if(b){b.classList.add('empty');b.classList.remove('historyWide');}}if(document.getElementById('worldHistoricalEventsCheck')?.checked)requestHistoricalEventsYear(historyYear,now);if(!document.getElementById('worldHistoryCheck')?.checked)return;if(!historyWorker)makeHistoryWorker();if(!historyReady)return;clearTimeout(historyDebounce);const go=()=>{historyRequestSeq++;historyWorker.postMessage({type:'year',year:historyYear,seq:historyRequestSeq});};if(now)go();else historyDebounce=setTimeout(go,180);}
 function setHistoryYear(y,now=false){y=normalizeHistoryYear(y);if(y===0)y=1;requestHistoryYear(y,now);}
 function stepHistoryYear(d){setHistoryYear(historyYear+Number(d||0),true);}
 function toggleHistoryPlay(){const b=document.getElementById('historyPlayBtn');historyPlayRunning=!historyPlayRunning;if(b){b.textContent=historyPlayRunning?'⏸':'▶';b.classList.toggle('active',historyPlayRunning);}if(historyPlayTimer){clearInterval(historyPlayTimer);historyPlayTimer=null;}if(!historyPlayRunning)return;historyPlayTimer=setInterval(()=>{if(historyYear>=2024){toggleHistoryPlay();return;}stepHistoryYear(historyYear<1800?10:5);},650);}
-function setHistoryVisible(on){document.getElementById('historyTimeline')?.classList.toggle('visible',!!on);if(on){toggleHistoryBasemap2D(true);ensureHistoryLayer2D().addTo(map);makeHistoryWorker();requestHistoryYear(historyYear,true);if(globeViewer){toggleHistoryBasemapGlobe(true);toggleHistoryGlobe(true);}}else{if(historyLayer2D&&map.hasLayer(historyLayer2D))map.removeLayer(historyLayer2D);toggleHistoryBasemap2D(false);if(globeViewer){toggleHistoryGlobe(false);toggleHistoryBasemapGlobe(false);}if(historyPlayRunning)toggleHistoryPlay();}renderActiveSources();updateLegend();}
+function setHistoryVisible(on){if(on){toggleHistoryBasemap2D(true);ensureHistoryLayer2D().addTo(map);makeHistoryWorker();requestHistoryYear(historyYear,true);if(globeViewer){toggleHistoryBasemapGlobe(true);toggleHistoryGlobe(true);}}else{if(historyLayer2D&&map.hasLayer(historyLayer2D))map.removeLayer(historyLayer2D);toggleHistoryBasemap2D(false);if(globeViewer){toggleHistoryGlobe(false);toggleHistoryBasemapGlobe(false);}}syncHistoricalTimelineVisibility();renderActiveSources();updateLegend();}
 document.getElementById('worldHistoryCheck')?.addEventListener('change',e=>setHistoryVisible(e.target.checked));
 document.getElementById('historyYearRange')?.addEventListener('input',e=>setHistoryYear(e.target.value,false));
 document.getElementById('historyYearRange')?.addEventListener('change',e=>setHistoryYear(e.target.value,true));
 document.getElementById('historyYearInput')?.addEventListener('change',e=>setHistoryYear(e.target.value,true));
 document.getElementById('worldHistoryOpacity')?.addEventListener('input',e=>{historyOpacity=+e.target.value;document.getElementById('worldHistoryOpacityValue').textContent=Math.round(historyOpacity*100)+' %';if(historyLayer2D)historyLayer2D.setStyle(f=>({color:'#263746',weight:.7,opacity:.9,fillColor:historyColor(historyFeatureData(f).name),fillOpacity:historyOpacity}));if(globeHistorySource&&typeof Cesium!=='undefined'){for(const ent of globeHistorySource.entities.values)if(ent.polygon)ent.polygon.material=Cesium.Color.fromCssColorString(historyColor(ent.__anambroHistoryData?.name||ent.name||'')).withAlpha(historyOpacity);globeViewer.scene.requestRender();}});
 
+
+
+// ================================================================
+// ACONTECIMIENTOS HISTÓRICOS · WIKIDATA
+// ================================================================
+const HIST_EVENTS_ENDPOINT='https://query.wikidata.org/sparql';
+let historicalEventsCache=new Map(),historicalEventsLayer2D=null,historicalEventsCurrent=[],historicalEventsReqSeq=0,historicalEventsGlobePoints=null,historicalEventsRenderTimer=null;
+
+function historicalEventsStatus(msg){const el=document.getElementById('historicalEventsStatus');if(el)el.textContent=msg;}
+function historicalEventsEnsureLayer(){if(!historicalEventsLayer2D)historicalEventsLayer2D=L.layerGroup();return historicalEventsLayer2D;}
+function historicalEventCoord(wkt){const m=String(wkt||'').match(/Point\(\s*([+-]?\d+(?:\.\d+)?)\s+([+-]?\d+(?:\.\d+)?)\s*\)/i);if(!m)return null;const lon=+m[1],lat=+m[2];return Number.isFinite(lat)&&Number.isFinite(lon)?{lat,lon}:null;}
+function historicalEventQid(url){const m=String(url||'').match(/\/(Q\d+)$/);return m?m[1]:'';}
+function historicalEventReject(e){const t=normalizeHistoryText([e.label,e.description,e.type].join(' '));return /\bfootball\b|\bfutbol\b|\bsoccer\b|\btennis\b|\btenis\b|\bbasketball\b|\bbaloncesto\b|\bbaseball\b|\bcricket\b|\bgrand prix\b|\bolympic\b|\bolimpic\b|\bchampionship\b|\bcampeonato\b|\btournament\b|\btorneo\b|\bconcert\b|\bconcierto\b|\bfestival\b|\bfilm festival\b|\baward ceremony\b|\bpremios?\b|\bseason\b|\btemporada\b/.test(t);}
+function historicalEventCategory(e){
+ const t=normalizeHistoryText([e.type,e.label,e.description].join(' '));
+ if(/\bbattle\b|\bbatalla\b|\bsiege\b|\bsitio\b|\bwar\b|\bguerra\b|\bcombat\b|\bconquest\b|\bconquista\b/.test(t))return {label:'Conflicto / batalla',icon:'⚔️'};
+ if(/\brevolution\b|\brevolucion\b|\brebellion\b|\brebelion\b|\buprising\b|\brevolt\b|\binsurrection\b|\binsurreccion\b/.test(t))return {label:'Revolución / rebelión',icon:'✊'};
+ if(/\btreaty\b|\btratado\b|\bagreement\b|\bacuerdo\b|\bpeace\b|\bpaz\b|\bconstitution\b|\bconstitucion\b/.test(t))return {label:'Tratado / acuerdo',icon:'📜'};
+ if(/\bexpedition\b|\bexpedicion\b|\bvoyage\b|\bviaje\b|\bexploration\b|\bexploracion\b|\bdiscovery\b|\bdescubrimiento\b/.test(t))return {label:'Exploración / expedición',icon:'🧭'};
+ if(/\bcoronation\b|\bcoronacion\b|\bindependence\b|\bindependencia\b|\bunification\b|\bunificacion\b|\bcoup\b|\bgolpe\b|\belection\b|\beleccion\b/.test(t))return {label:'Cambio político',icon:'👑'};
+ if(/\beruption\b|\berupcion\b|\bearthquake\b|\bterremoto\b|\btsunami\b|\bflood\b|\binundacion\b|\bdisaster\b|\bdesastre\b/.test(t))return {label:'Catástrofe histórica',icon:'🌋'};
+ if(/\bscience\b|\bciencia\b|\binvention\b|\binvento\b|\bpublication\b|\bpublicacion\b/.test(t))return {label:'Ciencia / cultura',icon:'🔬'};
+ return {label:'Acontecimiento histórico',icon:'●'};
+}
+function historicalEventDateText(v){const m=String(v||'').match(/^(-?\d+)-(\d\d)-(\d\d)/);if(!m)return '';const y=parseInt(m[1],10),mo=+m[2],d=+m[3],months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];const yy=y<0?Math.abs(y)+' a. C.':y;if(mo>=1&&mo<=12&&d>=1)return d+' de '+months[mo-1]+' de '+yy;return String(yy);}
+function historicalEventScore(e){return Math.log2(Math.max(1,e.sitelinks||1))*10+(e.description?2:0);}
+function historicalEventsSPARQL(year){
+ const y=Math.trunc(Number(year)||1);
+ return `SELECT DISTINCT ?event ?eventLabel ?eventDescription ?date ?coord ?typeLabel ?sitelinks WHERE {
+  { ?event wdt:P585 ?date . } UNION { ?event wdt:P580 ?date . }
+  ?event wdt:P625 ?coord ; wdt:P31 ?type ; wikibase:sitelinks ?sitelinks .
+  ?type wdt:P279* wd:Q1190554 .
+  FILTER(YEAR(?date) = ${y})
+  FILTER(?sitelinks >= 3)
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "es,en,mul". }
+ } ORDER BY DESC(?sitelinks) LIMIT 140`;
+}
+async function fetchHistoricalEvents(year){
+ const y=Math.trunc(Number(year)||1);
+ if(historicalEventsCache.has(y))return historicalEventsCache.get(y);
+ const url=HIST_EVENTS_ENDPOINT+'?format=json&query='+encodeURIComponent(historicalEventsSPARQL(y));
+ const r=await fetch(url,{headers:{'Accept':'application/sparql-results+json'},cache:'default'});
+ if(!r.ok)throw new Error('Wikidata Query Service HTTP '+r.status);
+ const j=await r.json(),rows=j?.results?.bindings||[],byId=new Map();
+ for(const b of rows){
+  const coord=historicalEventCoord(b.coord?.value),qid=historicalEventQid(b.event?.value);if(!coord||!qid)continue;
+  const e={qid,label:b.eventLabel?.value||qid,description:b.eventDescription?.value||'',type:b.typeLabel?.value||'',date:b.date?.value||'',lat:coord.lat,lon:coord.lon,sitelinks:Number(b.sitelinks?.value)||0};
+  if(historicalEventReject(e))continue;
+  const prev=byId.get(qid);if(!prev||historicalEventScore(e)>historicalEventScore(prev))byId.set(qid,e);
+ }
+ const out=[...byId.values()].sort((a,b)=>historicalEventScore(b)-historicalEventScore(a)||b.sitelinks-a.sitelinks);
+ historicalEventsCache.set(y,out);if(historicalEventsCache.size>40)historicalEventsCache.delete(historicalEventsCache.keys().next().value);
+ return out;
+}
+function historicalEventsVisible(){const b=map.getBounds(),z=map.getZoom();const arr=(historicalEventsCurrent||[]).filter(e=>b.contains([e.lat,e.lon]));const max=z<=2?24:z<=4?36:z<=6?55:80;return arr.slice(0,max);}
+function historicalEventCardHtml(e){
+ const c=historicalEventCategory(e),wd='https://www.wikidata.org/wiki/'+encodeURIComponent(e.qid);
+ return '<div class="histEventCard"><div class="histEventTitle">'+c.icon+' '+escHtml(e.label)+'</div><div class="histEventMeta">'+escHtml(historicalEventDateText(e.date))+(e.type?' · '+escHtml(e.type):'')+'</div><span class="histEventBadge">'+escHtml(c.label)+'</span>'+(e.description?'<div class="histEventDesc">'+escHtml(e.description)+'</div>':'')+'<div class="histEventLinks"><a href="'+wd+'" target="_blank" rel="noopener">Wikidata · '+escHtml(e.qid)+'</a> · '+e.sitelinks.toLocaleString('es-ES')+' enlaces Wikimedia</div><div class="historyCardNote">Fuente estructurada: Wikidata · CC0. La jerarquía visual automática no equivale a una valoración historiográfica definitiva.</div></div>';
+}
+function renderHistoricalEvents2D(){
+ const layer=historicalEventsEnsureLayer();layer.clearLayers();if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+ const visible=historicalEventsVisible();
+ for(const e of visible){
+  const c=historicalEventCategory(e),icon=L.divIcon({className:'',html:'<div class="histEventMarker">'+c.icon+'</div>',iconSize:[18,18],iconAnchor:[9,9]});
+  const m=L.marker([e.lat,e.lon],{icon,zIndexOffset:700});m.bindTooltip(escHtml(e.label),{direction:'top',opacity:.94});m.bindPopup(historicalEventCardHtml(e),{maxWidth:490,className:'historyEventPopup'});m.addTo(layer);
+ }
+ if(!map.hasLayer(layer))layer.addTo(map);
+ historicalEventsStatus(historicalEventsCurrent.length.toLocaleString('es-ES')+' acontecimientos recuperados · '+visible.length.toLocaleString('es-ES')+' visibles en esta escala.');
+}
+function scheduleHistoricalEvents2D(){clearTimeout(historicalEventsRenderTimer);historicalEventsRenderTimer=setTimeout(renderHistoricalEvents2D,80);}
+function clearHistoricalEventsGlobe(){if(!globeViewer||!historicalEventsGlobePoints)return;try{globeViewer.scene.primitives.remove(historicalEventsGlobePoints);}catch(e){}historicalEventsGlobePoints=null;}
+function renderHistoricalEventsGlobe(){
+ if(!globeViewer)return;clearHistoricalEventsGlobe();if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+ const pc=new Cesium.PointPrimitiveCollection();
+ for(const e of (historicalEventsCurrent||[]).slice(0,90)){
+  pc.add({position:Cesium.Cartesian3.fromDegrees(e.lon,e.lat,13000),pixelSize:Math.max(7,Math.min(13,7+Math.log2(Math.max(1,e.sitelinks))/3)),color:Cesium.Color.fromCssColorString('#8e63b8').withAlpha(.95),outlineColor:Cesium.Color.WHITE.withAlpha(.98),outlineWidth:1.5,id:{__anambroHistoricalEvent:true,event:e}});
+ }
+ historicalEventsGlobePoints=globeViewer.scene.primitives.add(pc);globeViewer.scene.requestRender();
+}
+function showHistoricalEventGlobe(e,pos){const b=document.getElementById('globeInfo');b.classList.remove('empty','historyWide');b.innerHTML=historyCloseButton()+historicalEventCardHtml(e);requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();});}
+async function requestHistoricalEventsYear(year,now=false){
+ if(!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+ const seq=++historicalEventsReqSeq;historicalEventsStatus('Consultando Wikidata para '+historyYearText(year)+'…');
+ try{
+  const data=await fetchHistoricalEvents(year);
+  if(seq!==historicalEventsReqSeq||!document.getElementById('worldHistoricalEventsCheck')?.checked)return;
+  historicalEventsCurrent=data;renderHistoricalEvents2D();if(globeViewer)renderHistoricalEventsGlobe();updateLegend();renderActiveSources();
+ }catch(e){
+  console.error('Acontecimientos históricos',e);if(seq!==historicalEventsReqSeq)return;
+  historicalEventsCurrent=[];historicalEventsEnsureLayer().clearLayers();clearHistoricalEventsGlobe();historicalEventsStatus('Wikidata no respondió para este año.');
+ }
+}
+function syncHistoricalTimelineVisibility(){const on=!!(document.getElementById('worldHistoryCheck')?.checked||document.getElementById('worldHistoricalEventsCheck')?.checked);document.getElementById('historyTimeline')?.classList.toggle('visible',on);if(!on&&historyPlayRunning)toggleHistoryPlay();}
+function setHistoricalEventsVisible(on){
+ const layer=historicalEventsEnsureLayer();syncHistoricalTimelineVisibility();
+ if(on)requestHistoricalEventsYear(historyYear,true);
+ else{historicalEventsReqSeq++;historicalEventsCurrent=[];if(map.hasLayer(layer))map.removeLayer(layer);clearHistoricalEventsGlobe();historicalEventsStatus('Capa desactivada.');}
+ updateLegend();renderActiveSources();
+}
+document.getElementById('worldHistoricalEventsCheck')?.addEventListener('change',e=>setHistoricalEventsVisible(e.target.checked));
+map.on('moveend zoomend',()=>{if(document.getElementById('worldHistoricalEventsCheck')?.checked)scheduleHistoricalEvents2D();});
 
 // ================================================================
 // RADIO MUNDIAL · RADIO GARDEN
@@ -9504,6 +9629,7 @@ function syncWorldThematicGlobe(){
  toggleWorldBiomesGlobe(!!document.getElementById('worldBiomesCheck')?.checked);
  toggleWorldVolcanoesGlobe(!!document.getElementById('worldVolcanoesCheck')?.checked);
  toggleHistoryGlobe(!!document.getElementById('worldHistoryCheck')?.checked);
+ if(document.getElementById('worldHistoricalEventsCheck')?.checked)renderHistoricalEventsGlobe();else clearHistoricalEventsGlobe();
  toggleRadioGardenGlobe(!!document.getElementById('worldRadioGardenCheck')?.checked);
  if(document.getElementById('worldHistoryCheck')?.checked)toggleHistoryBasemapGlobe(true);
 }
