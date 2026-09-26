@@ -262,7 +262,52 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 
 
 /* Análisis territorial del perfil y herramientas avanzadas del globo */
-#profileBands{margin-top:8px;font-size:12px}.profileBandControls{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 7px}.profileBandControls label{font-weight:800;background:#f3f6f8;border:1px solid #c8d0d6;border-radius:999px;padding:5px 10px;cursor:pointer}.profileBandControls input{margin-right:4px}.profileLegend{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;padding:7px 9px;border-top:1px solid #d3d9de}.profileLegendItem{display:flex;align-items:center;gap:6px;max-width:360px}.profileLegendSw{width:24px;height:10px;border-radius:5px;border:1px solid #6673;flex:0 0 auto}.profileLegendText{white-space:normal}.profileLegendHint{color:#5f6972;font-size:11px}.globeInfo{position:fixed;z-index:3500;left:12px;top:120px;width:min(330px,calc(100vw - 24px));max-height:45vh;overflow:auto;background:#fffef5f2;border:1px solid #8b949c;border-radius:10px;box-shadow:0 5px 20px #0007;padding:10px 12px;font-size:13px;display:none;pointer-events:auto}.globeInfo b{color:#17324d}.globeInfoClose{float:right;border:0;background:#17324d;color:#fff;border-radius:5px;cursor:pointer}.globe-mode #globeInfo{display:block}.globe-mode #globeInfo.empty{display:none}@media(max-width:600px){.profileBandRow{grid-template-columns:72px 1fr}.profileBandSeg{font-size:10px}.globeInfo{width:min(300px,calc(100vw - 12px));font-size:11px}}
+#profileBands{margin-top:8px;font-size:12px}.profileBandControls{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 7px}.profileBandControls label{font-weight:800;background:#f3f6f8;border:1px solid #c8d0d6;border-radius:999px;padding:5px 10px;cursor:pointer}.profileBandControls input{margin-right:4px}.profileLegend{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;padding:7px 9px;border-top:1px solid #d3d9de}.profileLegendItem{display:flex;align-items:center;gap:6px;max-width:360px}.profileLegendSw{width:24px;height:10px;border-radius:5px;border:1px solid #6673;flex:0 0 auto}.profileLegendText{white-space:normal}.profileLegendHint{color:#5f6972;font-size:11px}.globeInfo{position:fixed;z-index:3500;left:12px;top:120px;width:min(330px,calc(100vw - 24px));max-height:45vh;overflow:auto;background:#fffef5f2;border:1px solid #8b949c;border-radius:10px;box-shadow:0 5px 20px #0007;padding:10px 12px;font-size:13px;display:none;pointer-events:auto}.globeInfo b{color:#17324d}.globeInfoClose{float:right;border:0;background:#17324d;color:#fff;border-radius:5px;cursor:pointer}.globe-mode #globeInfo{display:block}.globe-mode #globeInfo.empty{display:none}
+.globeInfo.historyWide{
+ left:50%;
+ top:112px;
+ transform:translateX(-50%);
+ width:min(1040px,calc(100vw - 90px));
+ max-height:calc(100vh - 180px);
+ overflow:auto;
+ padding:0;
+ border-radius:16px
+}
+.globeInfo.historyWide .globeInfoClose{
+ position:sticky;
+ top:10px;
+ float:right;
+ margin:10px 10px 0 0;
+ z-index:4;
+ width:34px;
+ height:34px;
+ font-size:20px
+}
+.globeInfo.historyWide .historyCard{
+ display:grid;
+ grid-template-columns:minmax(250px,34%) minmax(0,1fr);
+ gap:0 18px;
+ padding:18px 20px 16px;
+ box-sizing:border-box
+}
+.globeInfo.historyWide .historyCard>.historyCardTitle{grid-column:1/-1}
+.globeInfo.historyWide .historyCard>.historyMeta{grid-column:1;align-self:start;position:sticky;top:0;padding-right:14px}
+.globeInfo.historyWide .historyCard>.historyContext{grid-column:2;min-width:0}
+.globeInfo.historyWide .historyCard>.historyCardNote.historyFoot{grid-column:1/-1}
+@media(max-width:760px){
+ .globeInfo.historyWide{
+  left:6px;
+  top:88px;
+  transform:none;
+  width:calc(100vw - 12px);
+  max-height:calc(100vh - 105px);
+  font-size:11px
+ }
+ .globeInfo.historyWide .historyCard{display:block;padding:14px 15px 12px}
+ .globeInfo.historyWide .historyCard>.historyMeta{position:static;padding-right:0}
+ .globeInfo.historyWide .historyCard>.historyContext{margin-top:10px}
+}
+@media(max-width:600px){.profileBandRow{grid-template-columns:72px 1fr}.profileBandSeg{font-size:10px}.globeInfo:not(.historyWide){width:min(300px,calc(100vw - 12px));font-size:11px}}
 
 /* Identidad general ANAMBRO + bienvenida */
 .brand{display:flex!important;align-items:flex-start!important;gap:14px!important;max-width:min(920px,calc(100vw - 180px))!important;padding:12px 16px!important;border-radius:18px!important;background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(247,250,252,.95))!important;border:1px solid #d6e0ea!important;box-shadow:0 8px 24px rgba(0,0,0,.16)!important}
@@ -1766,8 +1811,28 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutPage.a4.portrait{width:792px;height:1120px}
 .layoutPage.a3.landscape{width:1584px;height:1120px}
 .layoutPage.a3.portrait{width:1120px;height:1584px}
-.layoutItem{position:absolute;box-sizing:border-box;cursor:move;user-select:none}
+.layoutItem{position:absolute;box-sizing:border-box;cursor:move;user-select:none;touch-action:none}
 .layoutItem.selected{outline:2px dashed #2563eb;outline-offset:2px}
+.layoutItem.selected::after{
+ content:'';
+ position:absolute;
+ inset:-4px;
+ border:1px solid rgba(37,99,235,.35);
+ pointer-events:none
+}
+.layoutResizeHandle{display:none;position:absolute;z-index:20;background:#fff;border:2px solid #2563eb;box-sizing:border-box}
+.layoutItem.selected>.layoutResizeHandle{display:block}
+.layoutResizeHandle.n,.layoutResizeHandle.s{left:50%;width:14px;height:8px;margin-left:-7px;cursor:ns-resize}
+.layoutResizeHandle.e,.layoutResizeHandle.w{top:50%;width:8px;height:14px;margin-top:-7px;cursor:ew-resize}
+.layoutResizeHandle.n{top:-7px}.layoutResizeHandle.s{bottom:-7px}
+.layoutResizeHandle.e{right:-7px}.layoutResizeHandle.w{left:-7px}
+.layoutResizeHandle.ne,.layoutResizeHandle.nw,.layoutResizeHandle.se,.layoutResizeHandle.sw{width:11px;height:11px;border-radius:2px}
+.layoutResizeHandle.ne{top:-7px;right:-7px;cursor:nesw-resize}
+.layoutResizeHandle.nw{top:-7px;left:-7px;cursor:nwse-resize}
+.layoutResizeHandle.se{bottom:-7px;right:-7px;cursor:nwse-resize}
+.layoutResizeHandle.sw{bottom:-7px;left:-7px;cursor:nesw-resize}
+.layoutResizeHint{margin-top:7px;padding:8px 9px;border-radius:7px;background:#edf4ff;border:1px solid #b8cff7;color:#17324d;font-weight:750;line-height:1.3}
+.layoutItem.resizing{cursor:default!important}
 .layoutTitleBox{left:7%;top:3%;width:86%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
 .layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #333;overflow:hidden;background:#d9dde1}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none}
@@ -1782,7 +1847,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutScaleBar span{flex:1}
 .layoutScaleBar span:first-child{background:#111}
 .layoutScaleBar span:last-child{background:#fff}
-.layoutCredits{position:absolute;right:2%;bottom:1.5%;font-size:9px;color:#555}
+.layoutCredits{position:absolute;left:68%;top:95.5%;width:29%;height:2.5%;font-size:9px;color:#555;text-align:right;overflow:hidden}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
  .layoutSidebar{padding:8px}
@@ -1882,7 +1947,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .sourceItem:last-child{border-bottom:0}.sourceItem a{color:#0b5fa5;font-weight:750}
 .sourceOk{border-left:3px solid #2f9b73}.sourceReview{border-left:3px solid #e19c2b;background:#fffaf0}
 .sourcesLegalNote{margin-top:9px;padding:8px 10px;border-radius:8px;background:#fff8e7;border:1px solid #ead59c;line-height:1.35}
-.layoutSources{position:absolute;left:33%;right:3%;bottom:1.2%;font-size:8px;line-height:1.18;color:#444;text-align:right;max-height:6.5%;overflow:hidden}
+.layoutSources{position:absolute;left:33%;top:87%;width:64%;height:7%;font-size:8px;line-height:1.18;color:#444;text-align:right;overflow:hidden}
 
 .volcanoPopup .leaflet-popup-content-wrapper{border-radius:14px!important;padding:0!important;background:rgba(255,254,245,.985)!important}
 .volcanoPopup .leaflet-popup-content{width:min(650px,78vw)!important;max-width:min(650px,78vw)!important;max-height:68vh!important;overflow:auto!important;margin:15px 17px!important}
@@ -2462,15 +2527,17 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <option value="legend">Leyenda</option>
           <option value="north">Orientación</option>
           <option value="scale">Escala</option>
+          <option value="sources">Fuentes</option>
+          <option value="credits">Créditos</option>
         </select>
       </label>
 
       <div class="layoutGrid2">
         <label>Ancho
-          <input id="layoutW" type="range" min="10" max="100" value="80">
+          <input id="layoutW" type="range" min="3" max="100" value="80">
         </label>
         <label>Alto
-          <input id="layoutH" type="range" min="5" max="90" value="70">
+          <input id="layoutH" type="range" min="2" max="100" value="70">
         </label>
       </div>
 
@@ -2492,8 +2559,9 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
       </label>
 
       <div class="layoutHelp">
-        <b>Cómo editar:</b> arrastra cualquiera de los elementos sobre la hoja. Selecciónalo para cambiar su ancho, alto y tamaño. En el elemento «Mapa», los controles de encuadre y zoom permiten recortar la vista. La leyenda se genera con las capas activas.
+        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» también puedes modificar encuadre y zoom.
       </div>
+      <div class="layoutResizeHint">↔ Selecciona mapa, leyenda, título, escala, norte, fuentes o créditos y estira sus márgenes directamente.</div>
 
       <button class="action" onclick="refreshLayoutSnapshot()">↻ Actualizar mapa desde la vista actual</button>
       <button class="action" onclick="exportLayoutPDF()">📄 Exportar a PDF</button>
@@ -2522,8 +2590,8 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
           <div class="layoutScaleBar"><span></span><span></span></div>
         </div>
 
-        <div id="layoutSources" class="layoutSources"></div>
-        <div class="layoutCredits">ANAMBRO · Aarón Rodríguez González · IES Adeje</div>
+        <div id="layoutSources" class="layoutItem layoutSources" data-layout="sources"></div>
+        <div id="layoutCredits" class="layoutItem layoutCredits" data-layout="credits">ANAMBRO · Aarón Rodríguez González · IES Adeje</div>
       </div>
     </main>
   </div>
@@ -6140,7 +6208,7 @@ window.addEventListener('resize',()=>{
 // --------------------------------------------------------------
 // Editor de composición cartográfica y exportación PDF
 // --------------------------------------------------------------
-let layoutDrag=null,layoutSnapshotData=null;
+let layoutDrag=null,layoutResize=null,layoutSnapshotData=null;
 
 function defaultLayoutTitle(){
  const b=map.getBounds(),c=map.getCenter();
@@ -6194,6 +6262,7 @@ function openLayoutEditor(){
  document.getElementById('layoutTitleInput').value=title;
  document.getElementById('layoutTitleBox').textContent=title;
  updateLayoutPageFormat();
+ ensureLayoutResizeHandles();
  selectLayoutItem('map');
  setTimeout(refreshLayoutSnapshot,80);
 }
@@ -6207,13 +6276,42 @@ function updateLayoutPageFormat(){
 function layoutEl(key){
  return document.querySelector('[data-layout="'+key+'"]');
 }
+function ensureLayoutResizeHandles(){
+ const dirs=['n','ne','e','se','s','sw','w','nw'];
+ document.querySelectorAll('.layoutItem').forEach(el=>{
+  if(el.querySelector('.layoutResizeHandle'))return;
+  for(const dir of dirs){
+   const h=document.createElement('span');
+   h.className='layoutResizeHandle '+dir;
+   h.dataset.resize=dir;
+   h.setAttribute('aria-hidden','true');
+   h.setAttribute('data-html2canvas-ignore','true');
+   el.appendChild(h);
+  }
+ });
+}
+function syncLayoutControlValues(el){
+ if(!el)return;
+ const page=document.getElementById('layoutPage');
+ const er=el.getBoundingClientRect(),pr=page.getBoundingClientRect();
+ const w=Math.max(1,er.width/pr.width*100),h=Math.max(1,er.height/pr.height*100);
+ const wi=document.getElementById('layoutW'),hi=document.getElementById('layoutH');
+ if(wi)wi.value=Math.max(+wi.min||1,Math.min(+wi.max||100,w));
+ if(hi)hi.value=Math.max(+hi.min||1,Math.min(+hi.max||100,h));
+}
+function clampLayoutBox(x,y,w,h,minW=3,minH=2){
+ w=Math.max(minW,Math.min(100,w));h=Math.max(minH,Math.min(100,h));
+ x=Math.max(0,Math.min(100-minW,x));y=Math.max(0,Math.min(100-minH,y));
+ if(x+w>100)w=100-x;if(y+h>100)h=100-y;
+ return {x,y,w,h};
+}
 function selectLayoutItem(key){
+ ensureLayoutResizeHandles();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
  const el=layoutEl(key);if(!el)return;
  el.classList.add('selected');
  document.getElementById('layoutSelected').value=key;
- document.getElementById('layoutW').value=Math.max(10,Math.min(100,parseFloat(el.style.width)||parseFloat(getComputedStyle(el).width)/document.getElementById('layoutPage').clientWidth*100));
- document.getElementById('layoutH').value=Math.max(5,Math.min(90,parseFloat(el.style.height)||parseFloat(getComputedStyle(el).height)/document.getElementById('layoutPage').clientHeight*100));
+ syncLayoutControlValues(el);
  document.getElementById('layoutSize').value=100;
 }
 function applyLayoutControls(){
@@ -6235,23 +6333,101 @@ function applyLayoutControls(){
  }
 }
 function initLayoutDrag(){
+ ensureLayoutResizeHandles();
+
  document.querySelectorAll('.layoutItem').forEach(el=>{
   el.addEventListener('pointerdown',e=>{
    if(e.button!==0)return;
+   const handle=e.target.closest?.('.layoutResizeHandle');
    selectLayoutItem(el.dataset.layout);
-   const page=document.getElementById('layoutPage'),r=el.getBoundingClientRect(),pr=page.getBoundingClientRect();
+
+   const page=document.getElementById('layoutPage');
+   const pr=page.getBoundingClientRect(),r=el.getBoundingClientRect();
+
+   if(handle){
+    const dir=handle.dataset.resize;
+    layoutDrag=null;
+    layoutResize={
+     el,page,dir,pr,
+     startX:e.clientX,startY:e.clientY,
+     x:(r.left-pr.left)/pr.width*100,
+     y:(r.top-pr.top)/pr.height*100,
+     w:r.width/pr.width*100,
+     h:r.height/pr.height*100
+    };
+    el.classList.add('resizing');
+    handle.setPointerCapture?.(e.pointerId);
+    e.preventDefault();e.stopPropagation();
+    return;
+   }
+
+   layoutResize=null;
    layoutDrag={el,page,dx:e.clientX-r.left,dy:e.clientY-r.top,pr};
-   el.setPointerCapture?.(e.pointerId);e.preventDefault();
+   el.setPointerCapture?.(e.pointerId);
+   e.preventDefault();
   });
  });
+
  window.addEventListener('pointermove',e=>{
-  if(!layoutDrag)return;
-  const {el,pr,dx,dy}=layoutDrag;
-  let x=(e.clientX-pr.left-dx)/pr.width*100,y=(e.clientY-pr.top-dy)/pr.height*100;
-  x=Math.max(0,Math.min(96,x));y=Math.max(0,Math.min(96,y));
-  el.style.left=x+'%';el.style.top=y+'%';
+  if(layoutResize){
+   const s=layoutResize,dx=(e.clientX-s.startX)/s.pr.width*100,dy=(e.clientY-s.startY)/s.pr.height*100;
+   let {x,y,w,h}=s;
+   const d=s.dir;
+
+   if(d.includes('e'))w=s.w+dx;
+   if(d.includes('s'))h=s.h+dy;
+   if(d.includes('w')){x=s.x+dx;w=s.w-dx;}
+   if(d.includes('n')){y=s.y+dy;h=s.h-dy;}
+
+   const minW=s.el.dataset.layout==='north'?3:5;
+   const minH=s.el.dataset.layout==='credits'?1.5:2.5;
+
+   // Mantener el borde opuesto fijo al alcanzar mínimos.
+   if(w<minW){
+    if(d.includes('w'))x=s.x+s.w-minW;
+    w=minW;
+   }
+   if(h<minH){
+    if(d.includes('n'))y=s.y+s.h-minH;
+    h=minH;
+   }
+
+   if(x<0){if(d.includes('w'))w+=x;x=0;}
+   if(y<0){if(d.includes('n'))h+=y;y=0;}
+   if(x+w>100)w=100-x;
+   if(y+h>100)h=100-y;
+
+   s.el.style.left=x+'%';
+   s.el.style.top=y+'%';
+   s.el.style.width=w+'%';
+   s.el.style.height=h+'%';
+   // El usuario ha decidido una altura manual: liberar top/right/bottom heredados.
+   s.el.style.right='auto';
+   s.el.style.bottom='auto';
+   s.el.style.maxHeight='none';
+   syncLayoutControlValues(s.el);
+   e.preventDefault();
+   return;
+  }
+
+  if(layoutDrag){
+   const {el,pr,dx,dy}=layoutDrag;
+   const er=el.getBoundingClientRect();
+   let x=(e.clientX-pr.left-dx)/pr.width*100,y=(e.clientY-pr.top-dy)/pr.height*100;
+   const w=er.width/pr.width*100,h=er.height/pr.height*100;
+   x=Math.max(0,Math.min(100-w,x));
+   y=Math.max(0,Math.min(100-h,y));
+   el.style.left=x+'%';el.style.top=y+'%';
+   el.style.right='auto';el.style.bottom='auto';
+   e.preventDefault();
+  }
  });
- window.addEventListener('pointerup',()=>layoutDrag=null);
+
+ window.addEventListener('pointerup',()=>{
+  if(layoutResize?.el)layoutResize.el.classList.remove('resizing');
+  layoutResize=null;
+  layoutDrag=null;
+ });
 }
 async function exportLayoutPDF(){
  const page=document.getElementById('layoutPage');
@@ -8749,8 +8925,6 @@ function historyWikiContextHtml(c){
    const war=warNorm.has(normalizeHistoryText(x));
    return historyEventHtml(x,war);
   }).join('')+'</div>';
- }else{
-  h+='<br><b>Acontecimientos de '+escHtml(historyYearText(historyYear))+':</b> no se ha encontrado en las fuentes consultadas un acontecimiento de ese año que pueda vincularse con suficiente seguridad a esta entidad.';
  }
 
  h+='<div class="historyCardNote">';
@@ -8824,10 +8998,10 @@ function ensureHistoryLayer2D(){if(historyLayer2D)return historyLayer2D;historyL
 function applyHistory2D(fc){const l=ensureHistoryLayer2D();l.clearLayers();l.addData(fc||{type:'FeatureCollection',features:[]});if(document.getElementById('worldHistoryCheck')?.checked&&!map.hasLayer(l))l.addTo(map);}
 async function applyHistoryGlobe(fc){if(!globeViewer||!document.getElementById('worldHistoryCheck')?.checked)return;const seq=++historyGlobeSeq;try{const ds=await Cesium.GeoJsonDataSource.load(fc||{type:'FeatureCollection',features:[]},{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#263746').withAlpha(.75),strokeWidth:.8});if(seq!==historyGlobeSeq)return;for(const ent of ds.entities.values){const o={};for(const k of ['__name','__from','__to','__wikidata','__wikipedia','__seshat','__area']){const v=ent.properties?.[k]?.getValue?.();if(v!==undefined)o[k]=v;}const d=historyFeatureData({properties:o});if(ent.polygon){ent.polygon.material=Cesium.Color.fromCssColorString(historyColor(d.name)).withAlpha(historyOpacity);ent.polygon.outline=true;ent.polygon.outlineColor=Cesium.Color.fromCssColorString('#263746').withAlpha(.8);}ent.__anambroHistory=true;ent.__anambroHistoryData=d;ent.name=d.name;}if(globeHistorySource)globeViewer.dataSources.remove(globeHistorySource,true);globeHistorySource=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();}catch(e){console.error('Cliopatria globo',e);}}
 function toggleHistoryGlobe(on){if(!globeViewer)return;if(!on){historyGlobeSeq++;if(globeHistorySource){globeViewer.dataSources.remove(globeHistorySource,true);globeHistorySource=null;}return;}if(historyCurrentFC)applyHistoryGlobe(historyCurrentFC);}
-function historyCloseButton(){return `<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add('empty')">×</button>`;}
-function showHistoryGlobeEntity(ent,pos){const b=document.getElementById('globeInfo');const d=ent?.__anambroHistoryData||{name:ent?.name||'Entidad política'};const token=++historyWikiSeq;b.classList.remove('empty');b.innerHTML=historyCloseButton()+historyCardHtml(d);requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();enrichHistoryElement(b,d,token);});}
-function showHistoryGlobeEmpty(pos){const b=document.getElementById('globeInfo');b.classList.remove('empty');b.innerHTML=historyCloseButton()+'<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(historyYearText(historyYear))+'</div>No hay una entidad política de Cliopatria identificada en este punto para el año seleccionado.<div class="historyCardNote">No se muestran topónimos, países ni divisiones actuales mientras la capa histórica está activa.</div></div>';requestAnimationFrame(()=>{if(pos)placeGlobeInfoAtCanvasPoint(pos);else positionGlobeInfo();});}
-function requestHistoryYear(y,now=false){updateHistoryControls(y);historyWikiSeq++;try{map.closePopup();}catch(e){}if(globeViewer){const b=document.getElementById('globeInfo');if(b)b.classList.add('empty');}if(!document.getElementById('worldHistoryCheck')?.checked)return;if(!historyWorker)makeHistoryWorker();if(!historyReady)return;clearTimeout(historyDebounce);const go=()=>{historyRequestSeq++;historyWorker.postMessage({type:'year',year:historyYear,seq:historyRequestSeq});};if(now)go();else historyDebounce=setTimeout(go,180);}
+function historyCloseButton(){return `<button class="globeInfoClose" onclick="globeInfoCartesian=null;this.parentElement.classList.add('empty');this.parentElement.classList.remove('historyWide')">×</button>`;}
+function showHistoryGlobeEntity(ent,pos){const b=document.getElementById('globeInfo');const d=ent?.__anambroHistoryData||{name:ent?.name||'Entidad política'};const token=++historyWikiSeq;b.classList.remove('empty');b.classList.add('historyWide');b.innerHTML=historyCloseButton()+historyCardHtml(d);requestAnimationFrame(()=>{enrichHistoryElement(b,d,token);});}
+function showHistoryGlobeEmpty(pos){const b=document.getElementById('globeInfo');b.classList.remove('empty');b.classList.add('historyWide');b.innerHTML=historyCloseButton()+'<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(historyYearText(historyYear))+'</div><div class="historyContext">No hay una entidad política de Cliopatria identificada en este punto para el año seleccionado.</div><div class="historyCardNote historyFoot">No se muestran topónimos, países ni divisiones actuales mientras la capa histórica está activa.</div></div>';}
+function requestHistoryYear(y,now=false){updateHistoryControls(y);historyWikiSeq++;try{map.closePopup();}catch(e){}if(globeViewer){const b=document.getElementById('globeInfo');if(b){b.classList.add('empty');b.classList.remove('historyWide');}}if(!document.getElementById('worldHistoryCheck')?.checked)return;if(!historyWorker)makeHistoryWorker();if(!historyReady)return;clearTimeout(historyDebounce);const go=()=>{historyRequestSeq++;historyWorker.postMessage({type:'year',year:historyYear,seq:historyRequestSeq});};if(now)go();else historyDebounce=setTimeout(go,180);}
 function setHistoryYear(y,now=false){y=normalizeHistoryYear(y);if(y===0)y=1;requestHistoryYear(y,now);}
 function stepHistoryYear(d){setHistoryYear(historyYear+Number(d||0),true);}
 function toggleHistoryPlay(){const b=document.getElementById('historyPlayBtn');historyPlayRunning=!historyPlayRunning;if(b){b.textContent=historyPlayRunning?'⏸':'▶';b.classList.toggle('active',historyPlayRunning);}if(historyPlayTimer){clearInterval(historyPlayTimer);historyPlayTimer=null;}if(!historyPlayRunning)return;historyPlayTimer=setInterval(()=>{if(historyYear>=2024){toggleHistoryPlay();return;}stepHistoryYear(historyYear<1800?10:5);},650);}
