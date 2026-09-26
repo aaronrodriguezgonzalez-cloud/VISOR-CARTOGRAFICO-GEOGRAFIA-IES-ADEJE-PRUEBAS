@@ -5972,17 +5972,27 @@ function showProfilePoint(event){
     countryAt(position.ll.lat,position.ll.lng).catch(()=>profileCountry||'')
    ]).then(([reverse,country])=>{
     if(request!==profilePointRequest||box.classList.contains('hidden'))return;
-    const place=String(reverse?.place||reverse?.display?.split(',')[0]||'').trim();
-    const nation=String(country||profileCountry||reverse?.country||'').trim();
-    geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+
-      '<br><b>Longitud:</b> '+escHtml(c.lon)+
-      '<br><b>Topónimo próximo:</b> '+escHtml(place||'Sin dato')+
-      '<br><b>País / territorio:</b> '+escHtml(nation||'Sin dato');
+
+    const territory=globeTerritorialRows(reverse,null,country||profileCountry||'');
+    let loc='<hr>';
+    for(const [label,value] of territory){
+     loc+='<b>'+escHtml(label)+':</b> '+escHtml(value)+'<br>';
+    }
+    loc+='<b>Latitud:</b> '+escHtml(c.lat)+
+         '<br><b>Longitud:</b> '+escHtml(c.lon);
+
+    if(reverse?.display&&reverse.display!==reverse.place){
+     loc+='<br><span style="display:block;margin-top:5px;color:#667;font-size:11px"><b>Referencia:</b> '+escHtml(reverse.display)+'</span>';
+    }
+    geo.innerHTML=loc;
    }).catch(()=>{
-    if(request===profilePointRequest)geo.innerHTML='<hr><b>Latitud:</b> '+escHtml(c.lat)+
-      '<br><b>Longitud:</b> '+escHtml(c.lon)+
-      '<br><b>Topónimo próximo:</b> Sin dato'+
-      '<br><b>País / territorio:</b> '+escHtml(profileCountry||'Sin dato');
+    if(request===profilePointRequest){
+     geo.innerHTML='<hr>'+
+      '<b>Topónimo / lugar próximo:</b> Sin dato'+
+      '<br><b>País / territorio:</b> '+escHtml(profileCountry||'Sin dato')+
+      '<br><b>Latitud:</b> '+escHtml(c.lat)+
+      '<br><b>Longitud:</b> '+escHtml(c.lon);
+    }
    });
   }else{
    Promise.all([nearestToponymAt(position.ll.lat,position.ll.lng),adminAt(position.ll.lat,position.ll.lng)]).then(([topo,admin])=>{
