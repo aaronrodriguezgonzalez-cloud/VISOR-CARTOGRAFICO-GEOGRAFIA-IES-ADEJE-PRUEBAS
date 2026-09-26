@@ -3342,15 +3342,13 @@ const volcanoEnrichmentCache=new Map();
 
 function cqlQuote(s){return "'"+String(s??'').replace(/'/g,"''")+"'";}
 async function gvpWfsFeature(typeName,filters,maxFeatures=10){
- const base='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows';
  for(const filter of filters.filter(Boolean)){
   try{
-   const u=base+'?'+new URLSearchParams({
-    service:'WFS',version:'1.0.0',request:'GetFeature',typeName,
-    outputFormat:'application/json',maxFeatures:String(maxFeatures),CQL_FILTER:filter
+   const g=await gvpOfficialGeoJSON({
+    typeName,
+    maxFeatures:String(maxFeatures),
+    CQL_FILTER:filter
    });
-   const r=await fetch(u);if(!r.ok)continue;
-   const g=await r.json();
    if(Array.isArray(g?.features)&&g.features.length)return g.features;
   }catch(e){}
  }
@@ -3662,10 +3660,56 @@ function volcanoDetailHtml(v,wikiUrl=null){
  return enrichedVolcanoHtml(v,{wiki:wikiUrl||wikipediaFallbackUrl(v.name)});
 }
 
+
+let gvpJsonpSeq=0;
+function gvpJsonp(params,timeoutMs=18000){
+ return new Promise((resolve,reject)=>{
+  const cb='__anambroGvpCb'+(++gvpJsonpSeq);
+  const script=document.createElement('script');
+  let done=false;
+  const finish=(err,data)=>{
+   if(done)return;done=true;
+   clearTimeout(timer);
+   try{delete window[cb]}catch(e){window[cb]=undefined}
+   script.remove();
+   err?reject(err):resolve(data);
+  };
+  window[cb]=data=>finish(null,data);
+  const q=new URLSearchParams({
+   service:'WFS',version:'1.0.0',request:'GetFeature',
+   ...params,
+   outputFormat:'text/javascript',
+   format_options:'callback:'+cb
+  });
+  script.src='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?'+q;
+  script.async=true;
+  script.onerror=()=>finish(new Error('No se pudo cargar el WFS Smithsonian mediante JSONP'));
+  const timer=setTimeout(()=>finish(new Error('Tiempo de espera agotado en Smithsonian GVP')),timeoutMs);
+  document.head.appendChild(script);
+ });
+}
+async function gvpOfficialGeoJSON(params){
+ const base='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows';
+ const q=new URLSearchParams({
+  service:'WFS',version:'1.0.0',request:'GetFeature',
+  ...params,outputFormat:'application/json'
+ });
+ try{
+  const r=await fetch(base+'?'+q,{mode:'cors',cache:'no-store'});
+  if(!r.ok)throw new Error('GVP '+r.status);
+  return await r.json();
+ }catch(fetchErr){
+  // El GeoServer del Smithsonian ha dado problemas históricos de CORS en navegadores.
+  // JSONP mantiene la consulta directamente contra la fuente oficial, sin espejos de datos.
+  return await gvpJsonp(params);
+ }
+}
+
 async function fetchSmithsonianVolcanoes(){
- const url='https://webservices.volcano.si.edu/geoserver/GVP-VOTW/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=GVP-VOTW%3ASmithsonian_VOTW_Holocene_Volcanoes&outputFormat=application%2Fjson&maxFeatures=2000';
- const r=await fetch(url);if(!r.ok)throw new Error('GVP '+r.status);
- return r.json();
+ return gvpOfficialGeoJSON({
+  typeName:'GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes',
+  maxFeatures:'2000'
+ });
 }
 async function ensureWorldVolcanoes(){
  if(worldVolcanoesLayer)return worldVolcanoesLayer;
@@ -3676,7 +3720,7 @@ async function ensureWorldVolcanoes(){
    g=await fetchSmithsonianVolcanoes();
   }catch(err){
    console.error('Smithsonian GVP WFS no disponible:',err);
-   status('No se pudo cargar la capa de volcanes desde el Smithsonian GVP');
+   status('No se pudo cargar el WFS oficial del Smithsonian GVP');
    throw err;
   }
   worldVolcanoesData=g;
