@@ -2492,63 +2492,55 @@ body.globe-mode #globeScaleBox{display:block}
 
 <details><summary>🌍 Mundo</summary>
 
-<div class="layerThemeTitle">🪨 Geología y vulcanismo</div>
+<div class="layerThemeTitle">🌋 Geografía física</div>
+<div class="layerSubBlock"><small>Relieve, geología, vulcanismo, clima y grandes biomas terrestres.</small></div>
 <label><input id="worldGeologyCheck" type="checkbox"> <b>Mapa geológico mundial · Macrostrat</b></label>
-<div class="layerSubBlock">
-  <small>Compilación mundial de mapas geológicos · Macrostrat · CC BY 4.0.</small>
-  <small><b>Opacidad</b> <span id="worldGeologyOpacityValue">72 %</span></small>
-  <input id="worldGeologyOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-  <div id="worldGeologyLegend" class="miniThemeLegend" style="display:none"></div>
-</div>
+<div class="layerSubBlock"><small>Compilación mundial de mapas geológicos · Macrostrat · CC BY 4.0.</small><small><b>Opacidad</b> <span id="worldGeologyOpacityValue">72 %</span></small><input id="worldGeologyOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="worldGeologyLegend" class="miniThemeLegend" style="display:none"></div></div>
 <label><input id="worldVolcanoesCheck" type="checkbox"> <b>Volcanes del mundo · Smithsonian GVP</b></label>
 <div class="layerSubBlock"><small>Volcanes holocenos del Global Volcanism Program.</small></div>
-
-<div class="layerThemeTitle">🌦️ Clima</div>
 <label><input id="worldClimateCheck" type="checkbox"> <b>Climas del mundo · Köppen-Geiger</b></label>
-<div class="layerSubBlock">
-  <small>Beck et al.</small>
-  <small><b>Opacidad</b> <span id="worldClimateOpacityValue">72 %</span></small>
-  <input id="worldClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-  <div id="worldClimateLegend" class="miniThemeLegend" style="display:none"></div>
-</div>
-
-<div class="layerThemeTitle">🌿 Vegetación / biomas</div>
+<div class="layerSubBlock"><small>Beck et al.</small><small><b>Opacidad</b> <span id="worldClimateOpacityValue">72 %</span></small><input id="worldClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="worldClimateLegend" class="miniThemeLegend" style="display:none"></div></div>
 <label><input id="worldBiomesCheck" type="checkbox"> <b>Grandes biomas terrestres · RESOLVE 2017</b></label>
-<div class="layerSubBlock">
-  <small>Ecorregiones y biomas mundiales · Dinerstein et al. (2017).</small>
-  <small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small>
-  <input id="worldBiomesOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%">
-  <div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div>
+<div class="layerSubBlock"><small>Ecorregiones y biomas mundiales · Dinerstein et al. (2017).</small><small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small><input id="worldBiomesOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"><div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div></div>
+
+<div class="layerThemeTitle">👥 Geografía humana</div>
+<label><input id="worldHumanCheck" type="checkbox"> <b>Atlas mundial de Geografía humana</b></label>
+<div id="worldHumanControls" class="layerSubBlock" style="display:none">
+ <small>Banco Mundial · World Development Indicators; IDH · PNUD.</small>
+ <label style="padding-top:6px"><b>Indicador</b></label>
+ <select id="worldHumanIndicator" style="width:100%;padding:7px;border:1px solid #aaa;border-radius:6px">
+  <optgroup label="Demografía">
+   <option value="SP.POP.TOTL">Población total</option><option value="EN.POP.DNST">Densidad de población</option><option value="SP.POP.GROW">Crecimiento demográfico anual</option><option value="SP.URB.TOTL.IN.ZS">Población urbana</option><option value="SP.DYN.LE00.IN">Esperanza de vida</option><option value="SP.DYN.TFRT.IN">Fecundidad</option><option value="SP.DYN.CDRT.IN">Mortalidad bruta</option><option value="SM.POP.NETM">Migración neta</option>
+  </optgroup>
+  <optgroup label="Economía">
+   <option value="NY.GDP.MKTP.CD">PIB total</option><option value="NY.GDP.PCAP.CD">PIB per cápita</option><option value="NV.AGR.TOTL.ZS">Agricultura · % del PIB</option><option value="NV.IND.TOTL.ZS">Industria · % del PIB</option><option value="NV.SRV.TOTL.ZS">Servicios · % del PIB</option><option value="SL.UEM.TOTL.ZS">Desempleo</option>
+  </optgroup>
+  <optgroup label="Desarrollo y condiciones de vida">
+   <option value="UNDP_HDI">Índice de Desarrollo Humano (IDH)</option><option value="EG.ELC.ACCS.ZS">Acceso a electricidad</option><option value="IT.NET.USER.ZS">Uso de Internet</option><option value="SH.H2O.BASW.ZS">Acceso al menos básico a agua potable</option>
+  </optgroup>
+  <optgroup label="Medio ambiente y sociedad"><option value="EN.ATM.CO2E.PC">Emisiones de CO₂ per cápita</option></optgroup>
+ </select>
+ <label style="padding-top:7px"><b>Año: <span id="worldHumanYearValue">2023</span></b></label>
+ <input id="worldHumanYear" type="range" min="1960" max="2025" value="2023" step="1" style="width:100%">
+ <div class="row" style="margin-top:5px"><button id="worldHumanLatestBtn" class="action" type="button">Último dato disponible</button><button id="worldHumanReloadBtn" class="action" type="button">Actualizar</button></div>
+ <small id="worldHumanStatus" style="display:block;margin-top:6px">Activa la capa para representar el indicador.</small>
+ <div id="worldHumanLegend" style="margin-top:7px;font-size:10.5px;line-height:1.35"></div>
 </div>
 
 <div class="layerThemeTitle">🏛️ Historia</div>
 <label><input id="worldHistoryCheck" type="checkbox"> <b>Fronteras políticas históricas · Cliopatria</b></label>
 <div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"></div>
 <label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
-<div class="layerSubBlock">
-  <small>Acontecimientos históricos fechados de Wikidata: hechos, nacimientos, muertes, publicaciones, inicios y finales, exploraciones y otros registros geolocalizables. El catálogo local aparece inmediatamente y se enriquece con datos adicionales conservados en caché.</small>
-  <small>El listado permite consultar los registros del año y abrir su ficha en Wikidata. Los datos incorporados al visor aparecen de inmediato; los enriquecidos se conservan en la caché local del navegador para reutilizarlos sin repetir consultas.</small>
-  <small id="historicalEventsStatus">Capa desactivada.</small>
-</div>
-<div class="layerThemeTitle">📻 Radio mundial</div>
-<label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label>
-<div class="layerSubBlock">
-  <small>Ciudades y emisoras de todo el mundo. Pulsa un punto y después ▶ para escuchar la emisión.</small>
-  <small><b>Integración no oficial:</b> en GitHub Pages se usa una instantánea pública del directorio para evitar el bloqueo CORS de la API JSON de Radio Garden; la reproducción intenta el stream en directo.</small>
-  <small id="radioGardenLayerStatus">Capa desactivada.</small>
-</div>
-<div class="layerThemeTitle secondary">🧭 Territorio mundial</div>
+<div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div>
+
+<div class="layerThemeTitle">🧭 Territorio, cartografía y servicios</div>
 <label><input id="countriesCheck" type="checkbox"> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox"> Nombres de países</label>
-<label><input id="worldAdmin1Check" type="checkbox"> <b>Divisiones infraestatales de 1.er nivel</b></label>
-<div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank. Se cargan solo para la zona visible.</small></div>
-<label><input id="worldAdmin2Check" type="checkbox"> <b>Divisiones infraestatales de 2.º nivel</b></label>
-<div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank. Se cargan solo para la zona visible y aparecen a partir de una escala regional para evitar saturación.</small></div>
+<label><input id="worldAdmin1Check" type="checkbox"> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
+<label><input id="worldAdmin2Check" type="checkbox"> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
 <label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · vectoriales / IGN en España</label>
-
-<div class="layerThemeTitle secondary">🛰️ Imagen de fondo mundial</div>
-<label><input type="radio" data-base-choice="worldsat" name="baseWorld"> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label>
-<div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D. Puede combinarse con la toponimia física permanente y las capas temáticas.</small></div>
+<label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div>
+<div class="layerThemeTitle secondary">🛰️ Imagen de fondo mundial</div><label><input type="radio" data-base-choice="worldsat" name="baseWorld"> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div>
 </details>
 
 <details><summary>🧭 Herramientas cartográficas comunes</summary>
@@ -2628,7 +2620,9 @@ body.globe-mode #globeScaleBox{display:block}
   <details><summary>🌍 Fuentes mundiales</summary>
     <div class="sourceItem sourceOk"><b>Esri World Imagery</b> · mosaico mundial de imágenes aéreas y satelitales empleado como fondo tanto en el mapamundi 2D como en el globo 3D.<br><small>La atribución específica de proveedores puede variar según la zona y la escala.</small></div>
     
-    <div class="sourceItem sourceOk"><b>World Bank Global Administrative Divisions</b> · límites administrativos mundiales de primer y segundo orden.<br><small>ANAMBRO utiliza ADM1 para regiones/estados/provincias y ADM2 para departamentos/distritos/condados/municipios y equivalentes.</small><br><a href="https://services.arcgis.com/iQ1dY19aHwbSDYIF/arcgis/rest/services/World_Bank_Global_Administrative_Divisions/FeatureServer" target="_blank" rel="noopener">Servicio World Bank GAD</a></div>
+    <div class="sourceItem sourceOk"><b>Banco Mundial · World Development Indicators</b> · población, demografía, urbanización, PIB, estructura sectorial, empleo, salud, migraciones, emisiones y acceso a servicios.<br><small>Datos internacionales comparables; la disponibilidad temporal varía por indicador y país. Licencia de datos WDI: CC BY 4.0.</small><br><a href="https://data.worldbank.org/indicator" target="_blank" rel="noopener">World Development Indicators</a></div>
+<div class="sourceItem sourceOk"><b>PNUD · Human Development Reports</b> · Índice de Desarrollo Humano (IDH), serie temporal 1990–2023.<br><small>Human Development Report 2025.</small><br><a href="https://hdr.undp.org/data-center" target="_blank" rel="noopener">Human Development Data Center</a></div>
+<div class="sourceItem sourceOk"><b>World Bank Global Administrative Divisions</b> · límites administrativos mundiales de primer y segundo orden.<br><small>ANAMBRO utiliza ADM1 para regiones/estados/provincias y ADM2 para departamentos/distritos/condados/municipios y equivalentes.</small><br><a href="https://services.arcgis.com/iQ1dY19aHwbSDYIF/arcgis/rest/services/World_Bank_Global_Administrative_Divisions/FeatureServer" target="_blank" rel="noopener">Servicio World Bank GAD</a></div>
 <div class="sourceItem sourceOk"><b>Natural Earth</b> · fronteras y geometrías mundiales auxiliares.<br><small>Datos de dominio público.</small><br><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener">Terms of Use</a></div>
     <div class="sourceItem sourceOk"><b>OpenStreetMap</b> · referencia cartográfica y geocodificación Nominatim.<br><small>© OpenStreetMap contributors · ODbL. ANAMBRO aplica caché y una cola de consultas para respetar el servicio público.</small><br><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">Copyright / ODbL</a> · <a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener">Nominatim Usage Policy</a></div>
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
@@ -2813,6 +2807,8 @@ const ANAMBRO_SOURCES={
  gvp:{short:'Smithsonian GVP · Volcanoes of the World v5.4.0 (2026)'},
  naturalearth:{short:'Made with Natural Earth · Public Domain'},
  wbadm:{short:'World Bank Global Administrative Divisions · ADM1/ADM2'},
+ worldbank:{short:'Banco Mundial · World Development Indicators · CC BY 4.0'},
+ undp:{short:'PNUD · Human Development Reports · IDH'},
  osm:{short:'© OpenStreetMap contributors · ODbL'},
  openfreemap:{short:'OpenFreeMap © OpenMapTiles · Data from OpenStreetMap'},
  esri:{short:'Esri World Imagery'},
@@ -2835,6 +2831,7 @@ function activeSourceKeys(){
  if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
  if(document.getElementById('worldAdmin1Check')?.checked||document.getElementById('worldAdmin2Check')?.checked)s.add('wbadm');
  if(document.getElementById('worldToponymsCheck')?.checked){s.add('openfreemap');s.add('osm');}
+ if(document.getElementById('worldHumanCheck')?.checked){s.add('worldbank');if(document.getElementById('worldHumanIndicator')?.value==='UNDP_HDI')s.add('undp');}
  if(document.body.classList.contains('globe-mode')&&!document.getElementById('worldHistoryCheck')?.checked)s.add('esri');
  return [...s];
 }
@@ -10215,4 +10212,45 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
  };
 })();
 </script>\n
+
+<script id="anambro-human-geography">
+const WORLD_HUMAN_INDICATORS={
+ 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial'},
+ 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial'},
+ 'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial'},
+ 'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial'},
+ 'NY.GDP.MKTP.CD':{name:'PIB total',unit:'US$ corrientes',dec:0,source:'Banco Mundial',compact:true},
+ 'NY.GDP.PCAP.CD':{name:'PIB per cápita',unit:'US$ corrientes por habitante',dec:0,source:'Banco Mundial'},
+ 'NV.AGR.TOTL.ZS':{name:'Agricultura, silvicultura y pesca',unit:'% del PIB',dec:1,source:'Banco Mundial'},
+ 'NV.IND.TOTL.ZS':{name:'Industria',unit:'% del PIB',dec:1,source:'Banco Mundial'},
+ 'NV.SRV.TOTL.ZS':{name:'Servicios',unit:'% del PIB',dec:1,source:'Banco Mundial'},
+ 'SL.UEM.TOTL.ZS':{name:'Desempleo',unit:'% de la población activa',dec:1,source:'Banco Mundial'},
+ 'SP.DYN.LE00.IN':{name:'Esperanza de vida al nacer',unit:'años',dec:1,source:'Banco Mundial'},
+ 'SP.DYN.TFRT.IN':{name:'Fecundidad',unit:'hijos por mujer',dec:2,source:'Banco Mundial'},
+ 'SP.DYN.CDRT.IN':{name:'Mortalidad bruta',unit:'por 1.000 habitantes',dec:1,source:'Banco Mundial'},
+ 'SM.POP.NETM':{name:'Migración neta',unit:'personas',dec:0,source:'Banco Mundial',signed:true},
+ 'UNDP_HDI':{name:'Índice de Desarrollo Humano (IDH)',unit:'índice 0–1',dec:3,source:'PNUD',minYear:1990,maxYear:2023},
+ 'EN.ATM.CO2E.PC':{name:'Emisiones de CO₂ per cápita',unit:'t por habitante',dec:2,source:'Banco Mundial'},
+ 'EG.ELC.ACCS.ZS':{name:'Acceso a electricidad',unit:'% de la población',dec:1,source:'Banco Mundial'},
+ 'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial'},
+ 'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial'}
+};
+let worldHuman2DLayer=null,worldHuman3DSource=null,worldHumanValues=new Map(),worldHumanRequest=0,worldHumanHDICache=null;
+function humanCountryCode(p){for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){const v=String(p?.[k]||'').toUpperCase();if(v&&v!=='-99')return v;}return '';}
+function humanFmt(v,meta){if(v==null||!Number.isFinite(Number(v)))return 'Sin datos';v=Number(v);if(meta.compact&&Math.abs(v)>=1e9)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:2,notation:'compact'}).format(v)+' '+meta.unit;return new Intl.NumberFormat('es-ES',{minimumFractionDigits:meta.dec||0,maximumFractionDigits:meta.dec||0}).format(v)+' '+meta.unit;}
+function humanBreaks(vals){const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return [];const q=p=>a[Math.min(a.length-1,Math.max(0,Math.round((a.length-1)*p)))];return [q(.2),q(.4),q(.6),q(.8)];}
+const HUMAN_COLORS=['#f1eef6','#bdc9e1','#74a9cf','#2b8cbe','#045a8d'];
+function humanColor(v,br){if(!Number.isFinite(v))return '#b8b8b8';let i=0;while(i<br.length&&v>br[i])i++;return HUMAN_COLORS[Math.min(i,HUMAN_COLORS.length-1)];}
+function humanLegendHTML(meta,year,br){let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';let lo='mín.';for(let i=0;i<5;i++){let label;if(i===0)label='≤ '+humanFmt(br[0],meta);else if(i===4)label='> '+humanFmt(br[3],meta);else label=humanFmt(br[i-1],meta)+' – '+humanFmt(br[i],meta);h+='<div><span class="sw" style="background:'+HUMAN_COLORS[i]+'"></span>'+label+'</div>';}return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';}
+async function loadHumanWB(ind,year){const u='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400&date='+year;const r=await fetch(u);if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json();const m=new Map();for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),v=Number(row?.value);if(c.length===3&&Number.isFinite(v))m.set(c,v);}return m;}
+function parseCSVLine(line){const out=[];let x='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){x+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(x);x='';}else x+=c;}out.push(x);return out;}
+async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;const u='https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv';const r=await fetch(u);if(!r.ok)throw new Error('PNUD '+r.status);const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]);const iso=head.findIndex(x=>/iso3/i.test(x)),ind=head.findIndex(x=>/^indicator$/i.test(x)||/index code/i.test(x));const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>5)data.push(row);}worldHumanHDICache={head,iso,ind,data};return worldHumanHDICache;}
+async function loadHumanHDI(year){const c=await loadHDICSV(),m=new Map();let yi=c.head.indexOf(String(year));if(yi<0)yi=c.head.findIndex(x=>x.trim()===String(year));for(const row of c.data){const code=String(row[c.iso]||'').toUpperCase();const indicator=String(row[c.ind]||'').toLowerCase();if(code.length!==3||!(indicator==='hdi'||indicator.includes('human development index')))continue;const v=Number(row[yi]);if(Number.isFinite(v))m.set(code,v);}return m;}
+async function renderHuman2D(data,meta,year,br){const geo=await loadCountries();if(worldHuman2DLayer)map.removeLayer(worldHuman2DLayer);worldHuman2DLayer=L.geoJSON(geo,{pane:'overlayPane',style:f=>{const v=data.get(humanCountryCode(f.properties||{}));return {color:'#565656',weight:.55,opacity:.75,fillColor:humanColor(v,br),fillOpacity:.76};},onEachFeature:(f,l)=>{const p=f.properties||{},v=data.get(humanCountryCode(p));l.bindPopup('<div style="min-width:220px"><b>'+escHtml(countryName(p))+'</b><br>'+escHtml(meta.name)+': <b>'+escHtml(humanFmt(v,meta))+'</b><br>Año: '+year+'<br><small>Fuente: '+escHtml(meta.source)+'</small></div>');}}).addTo(map);}
+async function renderHuman3D(data,meta,year,br){if(!globeViewer)return;const geo=await loadCountries();if(worldHuman3DSource){globeViewer.dataSources.remove(worldHuman3DSource,true);worldHuman3DSource=null;}const ds=await Cesium.GeoJsonDataSource.load(geo,{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#555').withAlpha(.7),strokeWidth:1});for(const e of ds.entities.values){if(!e.polygon)continue;const p=e.properties;let code='';for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){try{const v=p?.[k]?.getValue?.();if(v&&v!=='-99'){code=String(v).toUpperCase();break;}}catch(_){}}const v=data.get(code),col=Cesium.Color.fromCssColorString(humanColor(v,br)).withAlpha(.76);e.polygon.material=col;e.polygon.outline=true;e.polygon.outlineColor=Cesium.Color.fromCssColorString('#555').withAlpha(.65);}worldHuman3DSource=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();}
+async function updateWorldHuman(){if(!document.getElementById('worldHumanCheck')?.checked)return;const seq=++worldHumanRequest,ind=document.getElementById('worldHumanIndicator').value,meta=WORLD_HUMAN_INDICATORS[ind],year=+document.getElementById('worldHumanYear').value,statusEl=document.getElementById('worldHumanStatus');statusEl.textContent='Cargando '+meta.name+' · '+year+'…';try{const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);if(seq!==worldHumanRequest)return;worldHumanValues=data;const br=humanBreaks([...data.values()]);if(!br.length)throw new Error('No hay datos para '+year);await renderHuman2D(data,meta,year,br);if(globeViewer)await renderHuman3D(data,meta,year,br);document.getElementById('worldHumanLegend').innerHTML=humanLegendHTML(meta,year,br);statusEl.textContent=data.size+' países/territorios con dato · '+meta.source;setTimeout(updateLegend,0);}catch(e){console.error(e);statusEl.textContent='No se pudieron cargar datos para '+year+'. Prueba otro año.';}}
+function clearWorldHuman(){if(worldHuman2DLayer){map.removeLayer(worldHuman2DLayer);worldHuman2DLayer=null;}if(globeViewer&&worldHuman3DSource){globeViewer.dataSources.remove(worldHuman3DSource,true);worldHuman3DSource=null;globeViewer.scene.requestRender();}document.getElementById('worldHumanLegend').innerHTML='';document.getElementById('worldHumanStatus').textContent='Capa desactivada.';}
+(function(){const ck=document.getElementById('worldHumanCheck'),controls=document.getElementById('worldHumanControls'),sel=document.getElementById('worldHumanIndicator'),yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');if(!ck)return;ck.addEventListener('change',()=>{controls.style.display=ck.checked?'block':'none';if(ck.checked)updateWorldHuman();else clearWorldHuman();});yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',()=>{if(ck.checked)updateWorldHuman();});sel.addEventListener('change',()=>{const m=WORLD_HUMAN_INDICATORS[sel.value];if(m?.minYear)yr.min=m.minYear;else yr.min=1960;if(m?.maxYear&&+yr.value>m.maxYear){yr.value=m.maxYear;yv.textContent=yr.value;}else yr.max=m?.maxYear||2025;if(ck.checked)updateWorldHuman();});document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{const m=WORLD_HUMAN_INDICATORS[sel.value];yr.value=m?.maxYear||2025;yv.textContent=yr.value;if(ck.checked)updateWorldHuman();};})();
+</script>
+
 </body></html>
