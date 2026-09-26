@@ -1,0 +1,42 @@
+name: Actualizar datos Smithsonian GVP
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  update-gvp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Descargar volcanes y erupciones desde Smithsonian GVP
+        run: python scripts/update_gvp.py
+
+      - name: Comprobar cambios
+        id: changes
+        run: |
+          if git diff --quiet -- data/gvp_holocene_volcanoes.geojson data/gvp_holocene_eruptions.geojson; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Guardar actualización en el repositorio
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gvp_holocene_volcanoes.geojson data/gvp_holocene_eruptions.geojson
+          git commit -m "Actualizar datos Smithsonian GVP"
+          git push
