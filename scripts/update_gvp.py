@@ -72,8 +72,51 @@ def parse_number(v):
         n = -n
     return n
 
+def clean_spreadsheet_xml(raw):
+    # El XML Excel que genera actualmente el Smithsonian puede contener
+    # caracteres de control o ampersands sin escapar. Excel los tolera,
+    # pero ElementTree no. Normalizamos SOLO la sintaxis XML; no alteramos datos.
+    enc = "utf-8"
+    head = raw[:300].decode("ascii", "ignore")
+    m = re.search(r'encoding=["\\\']([^"\\\']+)', head, flags=re.I)
+    if m:
+        enc = m.group(1)
+    try:
+        s = raw.decode(enc, "replace")
+    except LookupError:
+        s = raw.decode("utf-8", "replace")
+
+    # Eliminar caracteres prohibidos por XML 1.0, conservando tab/CR/LF.
+    s = "".join(
+        ch for ch in s
+        if ch in "\\t\\n\\r" or ord(ch) >= 0x20
+    )
+
+    # Escapar solo ampersands "sueltos"; conservar entidades XML válidas.
+    s = re.sub(
+        r'&(?!amp;|lt;|gt;|quot;|apos;|#\\d+;|#x[0-9A-Fa-f]+;)',
+        '&amp;',
+        s
+    )
+    return s
+
 def rows_from_xml_spreadsheet(raw):
-    root = ET.fromstring(raw)
+    cleaned = clean_spreadsheet_xml(raw)
+    try:
+        root = ET.fromstring(cleaned)
+    except ET.ParseError as e:
+        line, col = getattr(e, "position", (None, None))
+        snippet = ""
+        if line is not None:
+            lines = cleaned.splitlines()
+            if 1 <= line <= len(lines):
+                a = max(0, col - 160)
+                b = min(len(lines[line-1]), col + 160)
+                snippet = lines[line-1][a:b]
+        raise RuntimeError(
+            f"No se pudo interpretar el XML Excel oficial del Smithsonian "
+            f"(línea {line}, columna {col}). Fragmento: {snippet!r}"
+        ) from e
     ns = {"ss": "urn:schemas-microsoft-com:office:spreadsheet"}
     rows = []
     for row in root.findall(".//ss:Row", ns):
@@ -251,6 +294,12 @@ def eruption_geojson(rows):
 
 print("Descargando listado oficial de volcanes holocenos…", flush=True)
 volcano_raw = fetch_bytes(VOLCANO_DOWNLOAD, 120)
+probe = volcano_raw[:500].lstrip().lower()
+if probe.startswith(b"<!doctype html") or probe.startswith(b"<html"):
+    raise RuntimeError(
+        "El Smithsonian devolvió HTML en lugar del archivo Excel de volcanes. "
+        "No se guardará ningún dato incompleto."
+    )
 volcano_rows = rows_from_xlsx(volcano_raw) if volcano_raw[:2] == b"PK" else rows_from_xml_spreadsheet(volcano_raw)
 volcano_data = volcano_geojson(volcano_rows)
 
