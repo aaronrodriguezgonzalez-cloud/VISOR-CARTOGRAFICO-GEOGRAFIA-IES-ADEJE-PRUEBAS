@@ -8329,25 +8329,72 @@ async function resolveYearPage(year,lang='es'){
  }
  return null;
 }
-function eventsFromYearPage(parsed,terms,entityTitle,max=18,year=historyYear){
+function annualEventNodes(parsed){
  if(!parsed?.text)return [];
  const doc=new DOMParser().parseFromString(parsed.text,'text/html');
+ const badHead=/^(nacimientos|fallecimientos|muertes|births|deaths|referencias|references|enlaces externos|external links|efem[eé]rides|premios|awards)$/i;
+ const goodHead=/^(acontecimientos|eventos|events)$/i;
+ let active=false,nodes=[];
+
+ for(const el of doc.body.children){
+  if(/^H[2-4]$/.test(el.tagName)){
+   const h=(el.textContent||'').replace(/\[.*?\]/g,'').trim();
+   if(goodHead.test(h)){active=true;continue;}
+   if(active && badHead.test(h))break;
+   if(active && /^H2$/.test(el.tagName))break;
+  }
+  if(active){
+   if(el.matches?.('ul,ol'))nodes.push(...el.querySelectorAll(':scope > li'));
+   else nodes.push(...el.querySelectorAll?.('ul > li,ol > li')||[]);
+  }
+ }
+ if(!nodes.length){
+  const all=[...doc.querySelectorAll('li')];
+  nodes=all.filter(li=>{
+   let p=li;
+   while(p&&p!==doc.body){
+    let prev=p.previousElementSibling;
+    while(prev){
+     if(/^H[2-4]$/.test(prev.tagName)){
+      const h=(prev.textContent||'').replace(/\[.*?\]/g,'').trim();
+      if(badHead.test(h))return false;
+      if(goodHead.test(h))return true;
+     }
+     prev=prev.previousElementSibling;
+    }
+    p=p.parentElement;
+   }
+   return false;
+  });
+ }
+ return nodes;
+}
+function annualEventRejectedText(s){
+ const t=normalizeHistoryText(s);
+ return /\bwayback machine\b|\barchivo web\b|\bweb archive\b|\bnace\b|\bnacimiento\b|\bfallece\b|\bmuere\b|\bmatematico aleman\b|\bpintor italiano\b|\bpapa italiano\b|\bmilitar frances\b|\bfilosofo\b|\bescritor\b|\bpoeta\b/.test(t);
+}
+function eventsFromYearPage(parsed,terms,entityTitle,max=18,year=historyYear){
  const rows=[];
- for(const li of doc.querySelectorAll('li')){
+ for(const li of annualEventNodes(parsed)){
   const clone=li.cloneNode(true);
   clone.querySelectorAll('ul,ol,figure,figcaption,table,.thumb,.thumbinner,.thumbcaption,.gallery,.gallerybox,.mw-file-element,.infobox,sup.reference').forEach(n=>n.remove());
   const base=cleanHistoryEventText(clone.textContent);
-  if(base.length<24||base.length>1100)continue;
+  if(base.length<24||base.length>1100||annualEventRejectedText(base))continue;
 
   const linkedScore=historyEventScore(li,terms,entityTitle);
   for(const piece of splitHistoryEventText(base)){
-   // Cada fragmento tiene que justificar su propia relevancia.
-   // Ya no hereda automáticamente la puntuación del <li> completo.
+   if(annualEventRejectedText(piece))continue;
    let pieceScore=historyEventQuality(piece,year,terms);
+
+   const ownScore=historyEventScoreText(piece,terms);
+   const entityNorm=normalizeHistoryText(entityTitle);
+   const pieceNorm=normalizeHistoryText(piece);
+   const directEntity=entityNorm && pieceNorm.includes(entityNorm);
+
+   if(!directEntity && ownScore<3 && linkedScore<20)continue;
    if(pieceScore<4)continue;
 
-   // La coincidencia por enlaces del <li> solo actúa como refuerzo.
-   pieceScore+=Math.min(12,Math.max(0,linkedScore));
+   pieceScore += directEntity?20:Math.min(8,Math.max(0,linkedScore));
    rows.push({text:piece,score:pieceScore});
   }
  }
@@ -8360,45 +8407,8 @@ function eventsFromYearPage(parsed,terms,entityTitle,max=18,year=historyYear){
  }
  return out;
 }
-async function entityYearSearchMoments(entityTitleEs,entityTitleEn,d,year,lang='es',terms=[]){
- const name=entityTitleEs||entityTitleEn||d?.name||'';
- if(!name)return [];
- const y=year<0?(Math.abs(year)+' a. C.'):String(year);
- const queries=['"'+name+'" "'+y+'"',y+' '+name];
- const rows=[],seenTitles=new Set();
 
- for(const q of queries){
-  const sr=await wikiSearchTitle(q,lang).catch(()=>[]);
-  for(const hit of sr.slice(0,12)){
-   if(seenTitles.has(hit.title))continue;seenTitles.add(hit.title);
 
-   // El resultado de búsqueda debe tener alguna relación lexical con la entidad.
-   const hitNorm=normalizeHistoryText((hit.title||'')+' '+stripWikiHtml(hit.snippet||''));
-   const hitRelevant=terms.some(t=>t&&new RegExp('(^| )'+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'( |$)').test(hitNorm));
-   if(!hitRelevant)continue;
-
-   const page=await wikiPageExtract(hit.title,lang,22000).catch(()=>null);
-   if(!page?.extract)continue;
-
-   for(const s of exactEntityYearSentences(page.extract,year)){
-    for(const piece of splitHistoryEventText(s)){
-     const clean=cleanHistoryEventText(piece);
-     const qScore=historyEventQuality(clean,year,terms);
-     if(qScore<7)continue;
-     rows.push({text:clean,score:qScore+2});
-    }
-   }
-  }
- }
-
- rows.sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
- const out=[];
- for(const r of rows){
-  if(!out.some(x=>normalizeHistoryText(x)===normalizeHistoryText(r.text)))out.push(r.text);
-  if(out.length>=12)break;
- }
- return out;
-}
 function historyWikiRegime(text,name=''){
  const t=(String(name)+' '+String(text)).toLowerCase();
  const rules=[
@@ -8458,16 +8468,15 @@ async function historyWikipediaContext(d,year=historyYear){
 
   const terms=historyContextTerms(d,entityTitleEs,entityTitleEn,entityYearMoments);
   const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,18,year):[];
-  const searchMoments=await entityYearSearchMoments(entityTitleEs,entityTitleEn,d,year,lang,terms).catch(()=>[]);
 
-  // Fusión: primero la propia entidad, después la página anual y finalmente
-  // búsquedas entidad+año. Cada acontecimiento queda como entrada separada.
+  // Fusión estricta: únicamente la propia entidad + la sección EVENTOS
+  // de la página del año. No se hacen búsquedas abiertas.
   const moments=[];
-  for(const s of [...entityYearMoments,...annualMoments,...searchMoments]){
+  for(const s of [...entityYearMoments,...annualMoments]){
    if(!s)continue;
    for(const piece of splitHistoryEventText(s)){
     const clean=cleanHistoryEventText(piece);
-    if(!clean||historyEventQuality(clean,year,terms)<4)continue;
+    if(!clean||historyEventQuality(clean,year,terms)<4||annualEventRejectedText(clean))continue;
     if(!moments.some(x=>normalizeHistoryText(x)===normalizeHistoryText(clean)))moments.push(clean);
     if(moments.length>=18)break;
    }
@@ -8594,7 +8603,7 @@ function historyWikiContextHtml(c){
  if(c.url)links.push('<a href="'+escHtml(c.url)+'" target="_blank" rel="noopener">Entidad en Wikipedia</a>');
  if(c.yearUrl)links.push('<a href="'+escHtml(c.yearUrl)+'" target="_blank" rel="noopener">Página del año</a>');
  if(links.length)h+=links.join(' · ')+' · ';
- h+='Arquitectura temporal: Cliopatria fija la identidad; después se consulta el año exacto y solo se conservan acontecimientos vinculables a esa entidad.</div>';
+ h+='Arquitectura temporal: Cliopatria fija la identidad; después se consulta exclusivamente la propia entidad y la sección de acontecimientos del año. Se descartan nacimientos, fallecimientos, referencias, archivos web y resultados periféricos.</div>';
  return h+'</div>';
 }
 async function enrichHistoryElement(el,d,token){
