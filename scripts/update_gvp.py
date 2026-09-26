@@ -121,36 +121,56 @@ def clean_spreadsheet_xml(raw):
     return s
 
 def rows_from_xml_spreadsheet(raw):
-    cleaned = clean_spreadsheet_xml(raw)
+    """
+    Parser tolerante del SpreadsheetML del Smithsonian.
+
+    El fichero oficial no siempre es XML bien formado: aparecen, por ejemplo,
+    '< 15 km' sin escapar dentro de celdas. En vez de intentar reparar todo el
+    documento para un parser XML estricto, extraemos únicamente la estructura
+    simple Row/Cell/Data que necesitamos.
+    """
+    enc = "utf-8"
+    head = raw[:300].decode("ascii", "ignore")
+    m = re.search(r'encoding=["\']([^"\']+)', head, flags=re.I)
+    if m:
+        enc = m.group(1)
     try:
-        root = ET.fromstring(cleaned)
-    except ET.ParseError as e:
-        line, col = getattr(e, "position", (None, None))
-        snippet = ""
-        if line is not None:
-            lines = cleaned.splitlines()
-            if 1 <= line <= len(lines):
-                a = max(0, col - 160)
-                b = min(len(lines[line-1]), col + 160)
-                snippet = lines[line-1][a:b]
-        raise RuntimeError(
-            f"No se pudo interpretar el XML Excel oficial del Smithsonian "
-            f"(línea {line}, columna {col}). Fragmento: {snippet!r}"
-        ) from e
-    ns = {"ss": "urn:schemas-microsoft-com:office:spreadsheet"}
+        s = raw.decode(enc, "replace")
+    except LookupError:
+        s = raw.decode("utf-8", "replace")
+
+    # Quitar controles ilegales manteniendo tabulador, CR y LF.
+    s = "".join(ch for ch in s if ch in "\t\n\r" or ord(ch) >= 0x20)
+
+    row_blocks = re.findall(r'<Row\b[^>]*>(.*?)</Row>', s, flags=re.I | re.S)
+    if not row_blocks:
+        raise RuntimeError("No se encontraron filas <Row> en el Excel XML oficial.")
+
     rows = []
-    for row in root.findall(".//ss:Row", ns):
+    for rb in row_blocks:
         vals = []
-        for cell in row.findall("ss:Cell", ns):
-            idx = cell.attrib.get("{urn:schemas-microsoft-com:office:spreadsheet}Index")
-            if idx:
-                while len(vals) < int(idx) - 1:
+        cell_blocks = re.findall(r'<Cell\b([^>]*)>(.*?)</Cell>', rb, flags=re.I | re.S)
+        for attrs, cb in cell_blocks:
+            idxm = re.search(r'\b(?:ss:)?Index\s*=\s*["\'](\d+)["\']', attrs, flags=re.I)
+            if idxm:
+                while len(vals) < int(idxm.group(1)) - 1:
                     vals.append(None)
-            data = cell.find("ss:Data", ns)
-            vals.append(data.text if data is not None else None)
-        rows.append(vals)
+
+            dm = re.search(r'<Data\b[^>]*>(.*?)</Data>', cb, flags=re.I | re.S)
+            if dm:
+                value = dm.group(1)
+                # Quitar etiquetas internas eventuales y decodificar entidades.
+                value = re.sub(r'<[^>]+>', '', value)
+                value = unescape(value).strip()
+                vals.append(value if value else None)
+            else:
+                vals.append(None)
+        if vals:
+            rows.append(vals)
+
     if not rows:
-        raise RuntimeError("El Excel XML de volcanes no contiene filas.")
+        raise RuntimeError("El Excel XML de volcanes no contiene filas utilizables.")
+
     headers = [str(x or "").strip() for x in rows[0]]
     out = []
     for row in rows[1:]:
@@ -158,6 +178,12 @@ def rows_from_xml_spreadsheet(raw):
         d = {headers[i]: clean(row[i]) for i in range(len(headers)) if headers[i]}
         if any(v is not None for v in d.values()):
             out.append(d)
+
+    if len(out) < 500:
+        raise RuntimeError(
+            f"Solo se pudieron interpretar {len(out)} filas de volcanes; "
+            "se aborta para no publicar datos incompletos."
+        )
     return out
 
 def xlsx_shared_strings(z):
