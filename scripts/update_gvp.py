@@ -105,17 +105,17 @@ def clean_spreadsheet_xml(raw):
     # Insertamos únicamente los espacios sintácticos que faltan.
     s = re.sub(
         r'(<[A-Za-z_][A-Za-z0-9_.:-]*)(xmlns(?::[A-Za-z_][A-Za-z0-9_.-]*)?=)',
-        r'\\1 \\2',
+        r'\1 \2',
         s
     )
     s = re.sub(
         r'''(["'])(xmlns(?::[A-Za-z_][A-Za-z0-9_.-]*)?=)''',
-        r'\\1 \\2',
+        r'\1 \2',
         s
     )
     s = re.sub(
         r'''(["'])(ss:[A-Za-z_][A-Za-z0-9_.-]*=)''',
-        r'\\1 \\2',
+        r'\1 \2',
         s
     )
     return s
