@@ -1984,9 +1984,58 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .historyTimeline{position:fixed;z-index:3200;left:50%;bottom:18px;transform:translateX(-50%);width:min(840px,calc(100vw - 34px));background:rgba(255,254,247,.97);border:1px solid #657786;border-radius:14px;box-shadow:0 8px 28px #0006;padding:10px 12px;color:#17324d;display:none;backdrop-filter:blur(5px)}
 .historyTimeline.visible{display:block}.historyHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.historyTitle{font-weight:900;flex:1;min-width:220px}.historyYearBig{font:900 18px/1 Montserrat,Arial,sans-serif;background:#17324d;color:#fff;border-radius:999px;padding:6px 10px;white-space:nowrap}
 .historyControls{display:grid;grid-template-columns:auto auto auto 1fr 92px;gap:7px;align-items:center}.historyControls button{border:1px solid #8394a2;background:#fff;color:#17324d;border-radius:8px;padding:5px 8px;font-weight:900;cursor:pointer}.historyControls button.active{background:#17324d;color:#fff}.historyControls input[type=range]{width:100%;min-width:120px}.historyControls input[type=number]{width:88px;padding:5px;border:1px solid #98a6b1;border-radius:7px;font-weight:800}.historyStatus{display:block;margin-top:5px;color:#596773;font-size:10.5px;line-height:1.25}.historyCard{font-size:13px;line-height:1.35;min-width:235px}.historyCardTitle{font:900 16px/1.1 Montserrat,Arial,sans-serif;color:#17324d;margin-bottom:6px}.historyCardNote{margin-top:7px;padding-top:6px;border-top:1px solid #d7dde1;color:#667;font-size:10.5px}
-.historyPopup .leaflet-popup-content-wrapper{max-height:calc(100vh - 190px);overflow:auto}
-.historyPopup .leaflet-popup-content{margin:14px 16px!important;max-height:calc(100vh - 230px);overflow:auto}
-.leaflet-popup.historyPopup{margin-top:88px!important}
+.historyPopup .leaflet-popup-content-wrapper{
+ max-height:calc(100vh - 150px);overflow:hidden;
+ border-radius:16px
+}
+.historyPopup .leaflet-popup-content{
+ margin:0!important;max-height:calc(100vh - 170px);overflow:auto;
+ width:min(980px,calc(100vw - 90px))!important
+}
+.leaflet-popup.historyPopup{
+ margin-top:116px!important;
+ max-width:none!important
+}
+.historyCard{
+ display:grid;
+ grid-template-columns:minmax(250px,34%) minmax(0,1fr);
+ gap:0 18px;
+ padding:18px 20px 16px;
+ box-sizing:border-box;
+ min-width:0
+}
+.historyCard>.historyCardTitle{
+ grid-column:1/-1;
+ margin-bottom:12px
+}
+.historyCard>.historyMeta{
+ grid-column:1;
+ align-self:start;
+ position:sticky;
+ top:0;
+ padding-right:14px
+}
+.historyCard>.historyContext{
+ grid-column:2;
+ min-width:0
+}
+.historyCard>.historyCardNote.historyFoot{
+ grid-column:1/-1;
+ margin-top:12px
+}
+@media(max-width:760px){
+ .historyPopup .leaflet-popup-content{
+  width:min(94vw,560px)!important;
+  max-height:calc(100vh - 120px)
+ }
+ .leaflet-popup.historyPopup{margin-top:92px!important}
+ .historyCard{
+  display:block;
+  padding:14px 15px 12px
+ }
+ .historyCard>.historyMeta{position:static;padding-right:0}
+ .historyCard>.historyContext{margin-top:10px}
+}
 @media(max-width:700px){.historyTimeline{bottom:8px;width:calc(100vw - 16px);padding:8px}.historyControls{grid-template-columns:auto auto auto 1fr}.historyControls input[type=number]{grid-column:1/-1;width:100%;box-sizing:border-box}.historyYearBig{font-size:15px}.historyTitle{min-width:160px;font-size:12px}}
 </style>
 </head><body>
@@ -8258,7 +8307,13 @@ function historyLooksDescriptive(s,year){
 function historyEventQuality(s,year,terms=[]){
  const clean=cleanHistoryEventText(s);
  if(clean.length<24||clean.length>850)return -999;
- if(isLikelyMediaCaption(clean)||historyLooksDescriptive(clean,year))return -999;
+ if(isLikelyMediaCaption(clean)||historyLooksDescriptive(clean,year)||annualEventRejectedText(clean))return -999;
+
+ const norm=normalizeHistoryText(clean),termSet=new Set(terms||[]);
+ if((termSet.has('castilla')||termSet.has('castile')) &&
+    /\bbarcelona\b|\baragon\b/.test(norm) &&
+    !/\bcastilla\b|\bcastile\b|\breyes catolicos\b|\bcorona de castilla\b/.test(norm))return -999;
+
  let score=0;
  if(historyStartsWithDate(clean))score+=7;
  if(historyHasEventVerb(clean))score+=5;
@@ -8363,7 +8418,10 @@ function annualEventNodes(parsed){
 }
 function annualEventRejectedText(s){
  const t=normalizeHistoryText(s);
- return /\bwayback machine\b|\barchivo web\b|\bweb archive\b|\bnace\b|\bnacimiento\b|\bfallece\b|\bmuere\b|\bmatematico aleman\b|\bpintor italiano\b|\bpapa italiano\b|\bmilitar frances\b|\bfilosofo\b|\bescritor\b|\bpoeta\b/.test(t);
+ if(/\bwayback machine\b|\barchivo web\b|\bweb archive\b|\bnace\b|\bnacimiento\b|\bfallece\b|\bmuere\b|\bmatematico aleman\b|\bpintor italiano\b|\bpapa italiano\b|\bmilitar frances\b|\bfilosofo\b|\bescritor\b|\bpoeta\b/.test(t))return true;
+ if(/\bnueva granada\b|\bnew granada\b/.test(t))return true;
+ if(/\bcolombia\b/.test(t)&&/\bgranada\b/.test(t))return true;
+ return false;
 }
 const HISTORY_WEAK_LINKS=new Set([
  'francia','france','inglaterra','england','italia','italy','portugal','alemania','germany',
@@ -8392,7 +8450,7 @@ function historyEventLinkOverlap(li,entityLinks){
  return {count,strong,titles};
 }
 
-function eventsFromYearPage(parsed,terms,entityTitle,entityLinks,max=18,year=historyYear){
+function eventsFromYearPage(parsed,terms,entityTitle,entityLinks,max=8,year=historyYear){
  const rows=[];
  for(const li of annualEventNodes(parsed)){
   const clone=li.cloneNode(true);
@@ -8414,10 +8472,10 @@ function eventsFromYearPage(parsed,terms,entityTitle,entityLinks,max=18,year=his
    //  - mención textual de la entidad o de sus términos políticos/territoriales;
    //  - o enlaces compartidos con el artículo exacto de la entidad
    //    (Reyes Católicos, Colón, Granada, Canarias, Augusto, Senado, etc.).
-   const relational=directEntity || ownScore>=3 || overlap.strong>=1 || overlap.count>=2;
+   const relational=directEntity || ownScore>=3 || overlap.strong>=2 || overlap.count>=3;
    if(!relational||quality<4)continue;
 
-   let score=quality+(directEntity?24:0)+Math.min(18,ownScore*2)+Math.min(18,overlap.strong*7)+Math.min(8,overlap.count*2);
+   let score=quality+(directEntity?24:0)+Math.min(18,ownScore*2)+Math.min(18,overlap.strong*6)+Math.min(8,overlap.count*2);
    rows.push({text:piece,score});
   }
  }
@@ -8492,7 +8550,7 @@ async function historyWikipediaContext(d,year=historyYear){
   if(!yearPage&&lang!=='en')yearPage=await resolveYearPage(year,'en');
 
   const terms=historyContextTerms(d,entityTitleEs,entityTitleEn,entityYearMoments);
-  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,entityLinks,18,year):[];
+  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,entityLinks,8,year):[];
 
   // Fusión estricta: únicamente la propia entidad + la sección EVENTOS
   // de la página del año. No se hacen búsquedas abiertas.
@@ -8503,20 +8561,21 @@ async function historyWikipediaContext(d,year=historyYear){
     const clean=cleanHistoryEventText(piece);
     if(!clean||historyEventQuality(clean,year,terms)<4||annualEventRejectedText(clean))continue;
     if(!moments.some(x=>normalizeHistoryText(x)===normalizeHistoryText(clean)))moments.push(clean);
-    if(moments.length>=18)break;
+    if(moments.length>=12)break;
    }
-   if(moments.length>=18)break;
+   if(moments.length>=12)break;
   }
 
+  const cleanMoments=dedupeHistoryMoments(moments,5).filter(s=>!annualEventRejectedText(s)).slice(0,5);
   const warRx=/\bguerra\b|\bconflicto\b|\bbatalla\b|\binvasi[oó]n\b|\brebeli[oó]n\b|\bsitio\b|\bwar\b|\bbattle\b|\binvasion\b|\brebellion\b|\bsiege\b/i;
-  const wars=moments.filter(s=>warRx.test(s));
+  const wars=cleanMoments.filter(s=>warRx.test(s));
 
   const regime=historyWikiRegime([d?.name,entityTitle,intro].join(' '));
   const url=entityTitle?'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(entityTitle.replace(/ /g,'_')):'';
   const yearUrl=yearPage?.title?'https://'+(yearPage.parsed?.lang||lang)+'.wikipedia.org/wiki/'+encodeURIComponent(String(yearPage.title).replace(/ /g,'_')):'';
 
   return {
-   lang,entityTitle,entityTitleEn,entityTitleEs,displayName:(entityTitleEs||entityTitle||d?.name||'Entidad política'),intro,regime,moments,wars,url,
+   lang,entityTitle,entityTitleEn,entityTitleEs,displayName:(entityTitleEs||entityTitle||d?.name||'Entidad política'),intro,regime,moments:cleanMoments,wars,url,
    yearTitle:yearPage?.title||'',yearUrl,
    identitySource:d?.wikipedia?'Cliopatria → WikipediaPage':'Cliopatria → nombre de entidad'
   };
@@ -8525,6 +8584,71 @@ async function historyWikipediaContext(d,year=historyYear){
  historyWikiCache.set(key,p);
  if(historyWikiCache.size>180)historyWikiCache.delete(historyWikiCache.keys().next().value);
  return p;
+}
+
+function historyEventSemanticKey(s){
+ const t=normalizeHistoryText(s);
+ if(/\\bgranada\\b/.test(t)&&(/\\bnazari\\b|\\breyes catolicos\\b|\\bconquista\\b|\\btoma\\b/.test(t)))return 'granada-1492';
+ if(/\\bedicto de granada\\b/.test(t)||(/\\bexpuls/.test(t)&&/\\bjud/.test(t)))return 'edicto-expulsion-judios';
+ if(/\\bcapitulaciones de santa fe\\b/.test(t))return 'capitulaciones-santa-fe';
+ if(/\\bguanahani\\b|\\bsan salvador\\b/.test(t)&&/\\bcolon\\b/.test(t))return 'guanahani';
+ if(/\\bpalos de la frontera\\b/.test(t)&&/\\bcolon\\b/.test(t))return 'salida-palos';
+ if(/\\bla gomera\\b/.test(t)&&/\\bcolon\\b/.test(t))return 'salida-gomera';
+ if(/\\bla espanola\\b/.test(t)&&/\\bcolon\\b/.test(t))return 'llegada-hispaniola';
+ if(/\\bcuba\\b|\\bbariay\\b/.test(t)&&/\\bcolon\\b/.test(t))return 'llegada-cuba';
+ if(/\\bla palma\\b/.test(t)&&/\\bconquista\\b/.test(t))return 'conquista-la-palma';
+ if(/\\bnebrija\\b|\\bgramatica castellana\\b/.test(t))return 'nebrija-gramatica';
+ return normalizeHistoryText(s).slice(0,180);
+}
+function historyMomentPriority(s){
+ const t=normalizeHistoryText(s);
+ let score=0;
+ if(historyStartsWithDate(s))score+=8;
+ if(historyHasEventVerb(s))score+=6;
+ if(/\bgranada\b/.test(t)&&(/\breyes catolicos\b|\bnazari\b|\bconquista\b|\btoma\b/.test(t)))score+=12;
+ if(/\bedicto de granada\b|\bexpulsion de los judios\b/.test(t))score+=12;
+ if(/\bcapitulaciones de santa fe\b/.test(t))score+=11;
+ if(/\bguanahani\b|\bsan salvador\b/.test(t)&&/\bcolon\b/.test(t))score+=11;
+ if(/\bpalos de la frontera\b/.test(t)&&/\bcolon\b/.test(t))score+=9;
+ if(/\bla gomera\b/.test(t)&&/\bcolon\b/.test(t))score+=7;
+ if(/\bcuba\b|\bbariay\b/.test(t)&&/\bcolon\b/.test(t))score+=7;
+ if(/\bla espanola\b/.test(t)&&/\bcolon\b/.test(t))score+=7;
+ if(/\bla palma\b/.test(t)&&/\bconquista\b/.test(t))score+=8;
+ if(/\bnebrija\b|\bgramatica castellana\b/.test(t))score+=8;
+ // Penalizar descripciones largas o excesivamente enciclopédicas.
+ score-=Math.max(0,(s.length-260)/80);
+ return score;
+}
+function dedupeHistoryMoments(items,max=5){
+ const byKey=new Map();
+ for(const s of items||[]){
+  const clean=cleanHistoryEventText(s);
+  if(!clean||annualEventRejectedText(clean))continue;
+  const k=historyEventSemanticKey(clean);
+  const score=historyMomentPriority(clean);
+  const prev=byKey.get(k);
+  if(!prev||score>prev.score||(score===prev.score&&clean.length<prev.text.length)){
+   byKey.set(k,{text:clean,score});
+  }
+ }
+ // Segunda deduplicación por similitud textual para evitar variantes del mismo hecho.
+ const ranked=[...byKey.values()].sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
+ const out=[];
+ for(const r of ranked){
+  const n=normalizeHistoryText(r.text);
+  const tokens=new Set(n.split(' ').filter(x=>x.length>3));
+  let duplicate=false;
+  for(const prev of out){
+   const pn=normalizeHistoryText(prev);
+   const pt=new Set(pn.split(' ').filter(x=>x.length>3));
+   let inter=0;for(const tok of tokens)if(pt.has(tok))inter++;
+   const denom=Math.max(1,Math.min(tokens.size,pt.size));
+   if(inter/denom>=0.68){duplicate=true;break;}
+  }
+  if(!duplicate)out.push(r.text);
+  if(out.length>=max)break;
+ }
+ return out;
 }
 
 function historyEventHeadline(s){
@@ -8548,6 +8672,12 @@ function historyEventHeadline(s){
   return 'Salida de la expedición de Cristóbal Colón desde Palos';
  if(/\bguanahani\b|\bsan salvador\b/.test(t)&&/\bcolon\b/.test(t))
   return 'Llegada de Cristóbal Colón a Guanahaní';
+ if(/\bla gomera\b/.test(t)&&/\bcolon\b/.test(t)&&(/\bzarpa\b|\bparte\b|\bsale\b/.test(t)))
+  return 'Salida de Cristóbal Colón desde La Gomera';
+ if(/\bcuba\b|\bbariay\b/.test(t)&&/\bcolon\b/.test(t))
+  return 'Llegada de Cristóbal Colón a Cuba';
+ if(/\bla espanola\b/.test(t)&&/\bcolon\b/.test(t))
+  return 'Llegada de Cristóbal Colón a La Española';
  if(/\bcoron/.test(t)&&/\brey\b|\breina\b|\bemperador\b|\bemperatriz\b/.test(t))
   return 'Coronación';
  if(/\bproclam/.test(t))
@@ -8628,7 +8758,7 @@ function historyWikiContextHtml(c){
  if(c.url)links.push('<a href="'+escHtml(c.url)+'" target="_blank" rel="noopener">Entidad en Wikipedia</a>');
  if(c.yearUrl)links.push('<a href="'+escHtml(c.yearUrl)+'" target="_blank" rel="noopener">Página del año</a>');
  if(links.length)h+=links.join(' · ')+' · ';
- h+='Arquitectura temporal: Cliopatria fija la identidad; la página anual aporta los acontecimientos y ANAMBRO conserva solo los que se relacionan con la entidad mediante menciones territoriales, actores o enlaces compartidos con su artículo histórico. Se excluyen nacimientos, fallecimientos, referencias y resultados periféricos.</div>';
+ h+='Arquitectura temporal: Cliopatria fija la identidad; la página anual aporta los acontecimientos y ANAMBRO conserva como máximo cinco hechos relevantes por entidad y año, deduplicados semánticamente. Se excluyen nacimientos, fallecimientos, referencias y resultados periféricos.</div>';
  return h+'</div>';
 }
 async function enrichHistoryElement(el,d,token){
@@ -8657,7 +8787,26 @@ function historyColor(n){return HISTORY_PALETTE[historyHash(n)%HISTORY_PALETTE.l
 function historyProp(p,...ks){for(const k of ks)if(p&&p[k]!==undefined&&p[k]!==null&&String(p[k]).trim()!=='')return p[k];return '';}
 function historyFeatureData(f){const p=f?.properties||{};return{name:historyProp(p,'__name','Name','name','Polity','polity')||'Entidad política',from:Number(historyProp(p,'__from','FromYear','from_year','from')),to:Number(historyProp(p,'__to','ToYear','to_year','to')),wikidata:historyProp(p,'__wikidata','Wikidata','WikidataID','wikidata'),wikipedia:historyProp(p,'__wikipedia','Wikipedia','WikipediaPage','wikipedia'),seshat:historyProp(p,'__seshat','SeshatID','seshat_id'),area:historyProp(p,'__area','Area','area')};}
 function historyPeriodText(d){const a=Number.isFinite(d?.from)?historyYearText(d.from):'',b=Number.isFinite(d?.to)?historyYearText(d.to):'';return a&&b?(a===b?a:a+' – '+b):(a||b);}
-function historyCardHtml(d){const per=historyPeriodText(d);let h='<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div><b>Año visualizado:</b> '+escHtml(historyYearText(historyYear));if(per)h+='<br><b>Intervalo de esta geometría:</b> '+escHtml(per);if(d?.area!==''&&d?.area!==null&&d?.area!==undefined){const ar=Number(d.area);h+='<br><b>Área registrada:</b> '+escHtml(Number.isFinite(ar)?Math.round(ar).toLocaleString('es-ES'):String(d.area))+' km²';}if(d?.seshat)h+='<br><b>ID Seshat:</b> '+escHtml(String(d.seshat));if(d?.wikidata)h+='<br><b>Wikidata:</b> '+escHtml(String(d.wikidata));return h+'<div class="historyWikiSlot"><div class="historyCardNote">Identificando la entidad y consultando acontecimientos del año…</div></div><div class="historyCardNote">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div></div>';}
+function historyCardHtml(d){
+ const per=historyPeriodText(d);
+ let meta='<div class="historyMeta">';
+ meta+='<b>Año visualizado:</b> '+escHtml(historyYearText(historyYear));
+ if(per)meta+='<br><b>Intervalo de esta geometría:</b> '+escHtml(per);
+ if(d?.area!==''&&d?.area!==null&&d?.area!==undefined){
+  const ar=Number(d.area);
+  meta+='<br><b>Área registrada:</b> '+escHtml(Number.isFinite(ar)?Math.round(ar).toLocaleString('es-ES'):String(d.area))+' km²';
+ }
+ if(d?.seshat)meta+='<br><b>ID Seshat:</b> '+escHtml(String(d.seshat));
+ if(d?.wikidata)meta+='<br><b>Wikidata:</b> '+escHtml(String(d.wikidata));
+ meta+='</div>';
+
+ return '<div class="historyCard">'+
+  '<div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div>'+
+  meta+
+  '<div class="historyContext"><div class="historyWikiSlot"><div class="historyCardNote">Identificando la entidad y consultando acontecimientos del año…</div></div></div>'+
+  '<div class="historyCardNote historyFoot">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div>'+
+  '</div>';
+}
 function makeHistoryWorker(){
  if(historyWorker)return historyWorker;
  const code=`
