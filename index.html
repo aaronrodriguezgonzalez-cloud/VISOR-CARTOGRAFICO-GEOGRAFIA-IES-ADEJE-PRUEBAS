@@ -5093,6 +5093,9 @@ async function finishProfileFromPoints(profileInputPts){
  if(profilePts.length<2){alert('Marca al menos dos puntos para generar el perfil.');return;}profileMode=false;redrawProfileLine();
  const prof=interpolateProfilePoints(profilePts,100);prof.path=profilePts.slice();
  lastProfileWorld=lastProfileSource==='globe'||profilePts.some(ll=>!profileIsSpainLatLng(ll));
+ lastProfileMacrostratZoom=lastProfileSource==='globe'
+   ? macrostratGlobeQueryZoom()
+   : Math.max(2,Math.min(12,Math.round(map.getZoom())));
  const result=document.getElementById('profileResult');result.innerHTML='<b>Resultado:</b> '+fmtDistance(prof.total)+' · calculando altitudes…';
  // Calcula las cotas en paralelo con concurrencia limitada. Las consultas que caen
  // en una misma tesela nacional comparten la promesa de nationalDemTileCache, de modo
@@ -5133,7 +5136,7 @@ async function finishProfileFromPoints(profileInputPts){
 
  }finally{profilePts=oldPts;}
 }
-let lastProfileAnalysis=null,lastProfileDraw=null,lastProfilePath=null,lastProfileSource='map',lastProfileCountries=[],lastProfileWorld=false;
+let lastProfileAnalysis=null,lastProfileDraw=null,lastProfilePath=null,lastProfileSource='map',lastProfileCountries=[],lastProfileWorld=false,lastProfileMacrostratZoom=8;
 function profileVegetationKind(){return document.querySelector('input[name="profileTheme"]:checked')?.value==='veg_potential'?'potential':'actual';}
 function themeColor(txt){let h=0;for(const c of String(txt))h=(h*33+c.charCodeAt(0))%360;return 'hsl('+h+' 48% 68%)';}
 function cleanThemeText(txt){return cleanGrafcanValue(txt);}
@@ -5354,12 +5357,22 @@ function worldGeologyProfileTheme(g){
  };
 }
 function profileWorldMacrostratZoom(total){
- if(total<100000)return 10;
- if(total<350000)return 9;
- if(total<900000)return 8;
- if(total<2200000)return 7;
- if(total<5000000)return 6;
- return 5;
+ return Math.max(2,Math.min(12,Math.round(lastProfileMacrostratZoom||8)));
+}
+async function macrostratGeologyAtProfile(lat,lon,zHint){
+ const z0=Math.max(2,Math.min(12,Math.round(Number(zHint)||8)));
+ // Primero exactamente el zoom con el que funciona la consulta puntual.
+ // Si una generalización concreta no contiene el punto, probamos niveles vecinos.
+ const candidates=[z0,z0+1,z0-1,10,11,9,8,7,6]
+   .map(z=>Math.max(2,Math.min(12,z)))
+   .filter((z,i,a)=>a.indexOf(z)===i);
+ for(const z of candidates){
+  try{
+   const g=await macrostratGeologyAt(lat,lon,z);
+   if(g)return g;
+  }catch(e){}
+ }
+ return null;
 }
 function profileChunkBBoxes(points,pad=.18){
  if(!points.length)return [];
@@ -5417,7 +5430,7 @@ async function analyzeWorldProfileThemes(prof,seq){
    const bf=profileWorldBiomeAtFeatures(biomeFeatures,p.ll.lat,p.ll.lng);
    const biome=worldBiomeProfileTheme(bf);
    let geo={label:'Sin dato',detail:'',color:null};
-   try{geo=worldGeologyProfileTheme(await macrostratGeologyAt(p.ll.lat,p.ll.lng,mz));}catch(e){}
+   try{geo=worldGeologyProfileTheme(await macrostratGeologyAtProfile(p.ll.lat,p.ll.lng,mz));}catch(e){}
    arr[i]={d:p.d,vegActual:biome,vegPotential:{label:'Sin dato',detail:''},geo};
   }
  }));
@@ -5726,14 +5739,68 @@ function profileFormationBlocks(key,total){
  if(cur)blocks.push(cur);return blocks.filter(b=>b.end>b.start);
 }
 function drawProfileFormationBrackets(ctx,X,base,W,p,total,key){
- const blocks=profileFormationBlocks(key,total);if(!blocks.length)return;ctx.font='700 11px system-ui,sans-serif';ctx.textBaseline='top';ctx.fillStyle='#17324d';ctx.strokeStyle='rgba(23,50,77,.78)';ctx.lineWidth=1.2;
+ const blocks=profileFormationBlocks(key,total);if(!blocks.length)return;
+ ctx.font='700 11px system-ui,sans-serif';
+ ctx.textBaseline='top';
+ ctx.fillStyle='#17324d';
+ ctx.strokeStyle='rgba(23,50,77,.78)';
+ ctx.lineWidth=1.2;
+
+ // Tres filas como máximo. Si una etiqueta no cabe sin solaparse,
+ // se conserva el corchete pero se omite el texto: la leyenda inferior
+ // sigue identificando el color y evita convertir el perfil en una maraña.
  const occupied=[[],[],[]];
- for(const b of blocks){const x1=X(b.start),x2=X(b.end),text=b.formation,tw=ctx.measureText(text).width;let row=0;
-  for(;row<occupied.length;row++){const l=Math.max(p.l,(x1+x2-tw)/2-4),r=Math.min(W-p.r,(x1+x2+tw)/2+4);if(!occupied[row].some(o=>!(r<o.l||l>o.r))){occupied[row].push({l,r});break;}}
-  row=Math.min(row,occupied.length-1);const y=base+31+row*20;ctx.beginPath();ctx.moveTo(x1,y+5);ctx.lineTo(x1,y+14);ctx.lineTo(x2,y+14);ctx.lineTo(x2,y+5);ctx.stroke();ctx.textAlign='center';ctx.fillText(text,Math.max(p.l+tw/2,Math.min((x1+x2)/2,W-p.r-tw/2)),y);
+ const gap=8;
+
+ for(const b of blocks){
+  const x1=X(b.start),x2=X(b.end);
+  if(x2-x1<1.5)continue;
+
+  // El corchete de la unidad siempre se conserva.
+  const bracketY=base+45;
+  ctx.beginPath();
+  ctx.moveTo(x1,bracketY);
+  ctx.lineTo(x1,bracketY+8);
+  ctx.lineTo(x2,bracketY+8);
+  ctx.lineTo(x2,bracketY);
+  ctx.stroke();
+
+  const text=String(b.formation||'').trim();
+  if(!text)continue;
+
+  const tw=ctx.measureText(text).width;
+  const segmentWidth=Math.max(0,x2-x1);
+
+  // Un rótulo muchísimo más ancho que su propio tramo no aporta claridad.
+  // Se muestra en la leyenda, no sobre el eje.
+  if(segmentWidth < Math.min(54,tw*.72))continue;
+
+  const cx=(x1+x2)/2;
+  let chosen=-1,labelL=0,labelR=0;
+
+  for(let row=0;row<occupied.length;row++){
+   const l=Math.max(p.l,cx-tw/2);
+   const r=Math.min(W-p.r,cx+tw/2);
+   const collides=occupied[row].some(o=>!(r+gap<o.l||l-gap>o.r));
+   if(!collides){
+    chosen=row;labelL=l;labelR=r;
+    occupied[row].push({l,r});
+    break;
+   }
+  }
+
+  // Si las tres filas están ocupadas, no forzamos el rótulo.
+  if(chosen<0)continue;
+
+  const y=base+18+chosen*16;
+  ctx.textAlign='center';
+  ctx.fillText(
+   text,
+   Math.max(p.l+tw/2,Math.min(cx,W-p.r-tw/2)),
+   y
+  );
  }
 }
-
 function drawProfileCountryBrackets(ctx,X,base,W,p,total,vegetationMode){
  if(lastProfileSource!=='globe'||!lastProfileCountries?.length)return;
  ctx.save();ctx.font='800 11px system-ui,sans-serif';ctx.textBaseline='top';ctx.strokeStyle='rgba(26,107,136,.88)';ctx.fillStyle='#1a6b88';ctx.lineWidth=1.4;
@@ -5742,7 +5809,10 @@ function drawProfileCountryBrackets(ctx,X,base,W,p,total,vegetationMode){
   const x1=X(b.start),x2=X(b.end);if(x2-x1<2)continue;
   ctx.beginPath();ctx.moveTo(x1,y+4);ctx.lineTo(x1,y+13);ctx.lineTo(x2,y+13);ctx.lineTo(x2,y+4);ctx.stroke();
   const tw=ctx.measureText(b.name).width,mid=(x1+x2)/2;
-  ctx.textAlign='center';ctx.fillText(b.name,Math.max(p.l+tw/2,Math.min(mid,W-p.r-tw/2)),y-10);
+  if((x2-x1)>=Math.min(42,tw*.72)){
+   ctx.textAlign='center';
+   ctx.fillText(b.name,Math.max(p.l+tw/2,Math.min(mid,W-p.r-tw/2)),y-10);
+  }
  }
  ctx.restore();
 }
@@ -6097,7 +6167,7 @@ window.addEventListener('resize',()=>{
  if(globeViewer)configureGlobeMobileQuality();
 });
 
-function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;lastProfileSource='map';lastProfileCountries=[];lastProfileWorld=false;const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];profileClosed=false;if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
+function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfileDraw=null;lastProfileSource='map';lastProfileCountries=[];lastProfileWorld=false;lastProfileMacrostratZoom=8;const pb=document.getElementById('profileBandsContent');if(pb)pb.innerHTML='';if(globeProfileEntities.length)clearGlobeProfile();closeProfileModal();profileMode=false;profilePts=[];profileClosed=false;if(profileLayer)map.removeLayer(profileLayer);profileLayer=null;profileLine=null;profileHandles=[];document.getElementById('profileResult').innerHTML='<b>Resultado:</b> —';document.getElementById('profileBox').style.display='none';status('Perfil borrado');}
 
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfileModal();});
