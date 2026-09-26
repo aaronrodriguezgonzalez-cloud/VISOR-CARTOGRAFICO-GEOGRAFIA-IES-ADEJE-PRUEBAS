@@ -8198,6 +8198,8 @@ function historyContextTerms(d,entityTitleEs,entityTitleEn,yearSentences=[]){
  const all=normalizeHistoryText([d?.name,entityTitleEs,entityTitleEn].join(' '));
  if(/\broman/.test(all)||/\bromano/.test(all)){set.add('roma');set.add('rome');set.add('romano');set.add('roman');}
  if(/\bspain\b|\bespana\b|\bspanish\b/.test(all)){set.add('espana');set.add('spain');set.add('espanol');set.add('spanish');}
+ if(/\bcastile\b|\bcastilla\b/.test(all)){set.add('castilla');set.add('castile');set.add('castellano');set.add('castellana');set.add('espana');set.add('spain');}
+ if(/\brome\b|\broman\b|\broma\b|\bromano\b/.test(all)){set.add('roma');set.add('rome');set.add('roman');set.add('romano');}
  for(const s of yearSentences){
   // Los nombres propios y términos relevantes del propio artículo en ese año
   // sirven para enlazar el acontecimiento anual con la entidad.
@@ -8222,7 +8224,53 @@ function historyEventScore(li,terms,entityTitle=''){
  return score;
 }
 function cleanHistoryEventText(s){
- return String(s||'').replace(/\[[0-9]+\]/g,'').replace(/\s+/g,' ').trim();
+ return String(s||'')
+  .replace(/\[[0-9]+\]/g,'')
+  .replace(/\s+/g,' ')
+  .replace(/\s+([,.;:])/g,'$1')
+  .trim();
+}
+function isLikelyMediaCaption(s){
+ const t=normalizeHistoryText(s);
+ if(!t)return true;
+ // "Pintura" aquí significa literalmente una pintura/obra visual usada como
+ // pie de imagen en Wikipedia; no debe convertirse en acontecimiento histórico.
+ const media=/\bpintura\b|\bcuadro\b|\bretrato\b|\bgrabado\b|\bmedalla\b|\bfotografia\b|\bimagen\b|\bminiatura\b|\bilustracion\b|\bpainting\b|\bportrait\b|\bengraving\b|\bphotograph\b|\bmedal\b/;
+ const caption=/\bobra de\b|\bmuseo\b|\bcoleccion\b|\bexposicion\b|\bgaleria\b|\bcommons\b|\barchivo\b|\b186[0-9]\b|\b18[0-9]{2}\b|\b19[0-9]{2}\b|\b20[0-9]{2}\b/;
+ return media.test(t)&&caption.test(t);
+}
+function splitHistoryEventText(txt){
+ let s=cleanHistoryEventText(txt);
+ if(!s)return [];
+ const months='enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|january|february|march|april|may|june|july|august|september|october|november|december';
+ const dateRx=new RegExp('(?=\\b(?:[1-9]|[12][0-9]|3[01])\\s+de\\s+(?:'+months+')\\b|\\b(?:'+months+')\\s+(?:[1-9]|[12][0-9]|3[01])\\b)','ig');
+ let parts=s.split(dateRx).map(x=>cleanHistoryEventText(x)).filter(Boolean);
+ if(parts.length===1){
+  const sent=historySentenceSplit(s).filter(x=>x.length>=24);
+  if(sent.length>1)parts=sent;
+ }
+ return parts.filter(x=>x.length>=24&&!isLikelyMediaCaption(x));
+}
+function historyEventScoreText(text,terms){
+ const norm=normalizeHistoryText(text);if(!norm)return 0;
+ let score=0;
+ for(const term of terms){
+  if(!term)continue;
+  if(new RegExp('(^| )'+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'( |$)').test(norm))score+=3;
+ }
+ return score;
+}
+function historyEventScore(li,terms,entityTitle=''){
+ const clone=li?.cloneNode?.(true);if(!clone)return 0;
+ clone.querySelectorAll?.('ul,ol,figure,figcaption,table,.thumb,.thumbinner,.thumbcaption,.gallery,.gallerybox,.mw-file-element,.infobox,sup.reference').forEach(n=>n.remove());
+ const text=normalizeHistoryText(clone.textContent||'');if(!text)return 0;
+ let score=historyEventScoreText(text,terms);
+ const entityNorm=normalizeHistoryText(entityTitle);
+ for(const a of clone.querySelectorAll?.('a[title]')||[]){
+  const t=normalizeHistoryText(a.getAttribute('title')||'');
+  if(entityNorm&&t===entityNorm)score+=20;
+ }
+ return score;
 }
 async function resolveYearPage(year,lang='es'){
  const a=Math.abs(Number(year)||0);
@@ -8231,7 +8279,7 @@ async function resolveYearPage(year,lang='es'){
   : [String(a)];
  for(const t of candidates){
   const parsed=await wikiParsePage(t,lang);
-  if(parsed?.text)return {title:parsed.title||t,parsed};
+  if(parsed?.text)return {title:parsed.title||t,parsed,lang};
  }
  const q=year<0
   ? (lang==='es' ? '"'+a+' a. C."' : '"'+a+' BC"')
@@ -8240,26 +8288,57 @@ async function resolveYearPage(year,lang='es'){
  for(const r of sr){
   if(!historyYearRegex(year).test(r.title||''))continue;
   const parsed=await wikiParsePage(r.title,lang);
-  if(parsed?.text)return {title:r.title,parsed};
+  if(parsed?.text)return {title:r.title,parsed,lang};
  }
  return null;
 }
-function eventsFromYearPage(parsed,terms,entityTitle,max=8){
+function eventsFromYearPage(parsed,terms,entityTitle,max=14){
  if(!parsed?.text)return [];
  const doc=new DOMParser().parseFromString(parsed.text,'text/html');
  const rows=[];
  for(const li of doc.querySelectorAll('li')){
-  const txt=cleanHistoryEventText(li.textContent);
-  if(txt.length<25||txt.length>900)continue;
-  const score=historyEventScore(li,terms,entityTitle);
-  if(score<=0)continue;
-  rows.push({text:txt,score});
+  const clone=li.cloneNode(true);
+  clone.querySelectorAll('ul,ol,figure,figcaption,table,.thumb,.thumbinner,.thumbcaption,.gallery,.gallerybox,.mw-file-element,.infobox,sup.reference').forEach(n=>n.remove());
+  const base=cleanHistoryEventText(clone.textContent);
+  if(base.length<24||base.length>1100)continue;
+  const liScore=historyEventScore(li,terms,entityTitle);
+  if(liScore<=0)continue;
+  for(const piece of splitHistoryEventText(base)){
+   const pieceScore=liScore+historyEventScoreText(piece,terms);
+   if(pieceScore<=0||isLikelyMediaCaption(piece))continue;
+   rows.push({text:piece,score:pieceScore});
+  }
  }
  rows.sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
  const out=[];
  for(const r of rows){
-  if(!out.some(x=>normalizeHistoryText(x)===normalizeHistoryText(r.text)))out.push(r.text);
+  const n=normalizeHistoryText(r.text);
+  if(!out.some(x=>normalizeHistoryText(x)===n))out.push(r.text);
   if(out.length>=max)break;
+ }
+ return out;
+}
+async function entityYearSearchMoments(entityTitleEs,entityTitleEn,d,year,lang='es'){
+ const name=entityTitleEs||entityTitleEn||d?.name||'';
+ if(!name)return [];
+ const y=year<0?(Math.abs(year)+' a. C.'):String(year);
+ const queries=['"'+name+'" "'+y+'"',y+' '+name];
+ const out=[],seenTitles=new Set();
+ for(const q of queries){
+  const sr=await wikiSearchTitle(q,lang).catch(()=>[]);
+  for(const hit of sr.slice(0,8)){
+   if(seenTitles.has(hit.title))continue;seenTitles.add(hit.title);
+   const page=await wikiPageExtract(hit.title,lang,16000).catch(()=>null);
+   if(!page?.extract)continue;
+   for(const s of exactEntityYearSentences(page.extract,year)){
+    for(const piece of splitHistoryEventText(s)){
+     const clean=cleanHistoryEventText(piece);
+     if(clean.length<24||isLikelyMediaCaption(clean))continue;
+     if(!out.some(x=>normalizeHistoryText(x)===normalizeHistoryText(clean)))out.push(clean);
+     if(out.length>=10)return out;
+    }
+   }
+  }
  }
  return out;
 }
@@ -8320,15 +8399,21 @@ async function historyWikipediaContext(d,year=historyYear){
   if(!yearPage&&lang!=='en')yearPage=await resolveYearPage(year,'en');
 
   const terms=historyContextTerms(d,entityTitleEs,entityTitleEn,entityYearMoments);
-  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,10):[];
+  const annualMoments=yearPage?eventsFromYearPage(yearPage.parsed,terms,entityTitle,14):[];
+  const searchMoments=await entityYearSearchMoments(entityTitleEs,entityTitleEn,d,year,lang).catch(()=>[]);
 
-  // Fusión: las frases del artículo de la entidad tienen prioridad.
+  // Fusión: primero la propia entidad, después la página anual y finalmente
+  // búsquedas entidad+año. Cada acontecimiento queda como entrada separada.
   const moments=[];
-  for(const s of [...entityYearMoments,...annualMoments]){
+  for(const s of [...entityYearMoments,...annualMoments,...searchMoments]){
    if(!s)continue;
-   const clean=cleanHistoryEventText(s);
-   if(!moments.some(x=>normalizeHistoryText(x)===normalizeHistoryText(clean)))moments.push(clean);
-   if(moments.length>=8)break;
+   for(const piece of splitHistoryEventText(s)){
+    const clean=cleanHistoryEventText(piece);
+    if(!clean||isLikelyMediaCaption(clean))continue;
+    if(!moments.some(x=>normalizeHistoryText(x)===normalizeHistoryText(clean)))moments.push(clean);
+    if(moments.length>=14)break;
+   }
+   if(moments.length>=14)break;
   }
 
   const warRx=/\bguerra\b|\bconflicto\b|\bbatalla\b|\binvasi[oó]n\b|\brebeli[oó]n\b|\bsitio\b|\bwar\b|\bbattle\b|\binvasion\b|\brebellion\b|\bsiege\b/i;
@@ -8339,7 +8424,7 @@ async function historyWikipediaContext(d,year=historyYear){
   const yearUrl=yearPage?.title?'https://'+(yearPage.parsed?.lang||lang)+'.wikipedia.org/wiki/'+encodeURIComponent(String(yearPage.title).replace(/ /g,'_')):'';
 
   return {
-   lang,entityTitle,entityTitleEn,entityTitleEs,intro,regime,moments,wars,url,
+   lang,entityTitle,entityTitleEn,entityTitleEs,displayName:(entityTitleEs||entityTitle||d?.name||'Entidad política'),intro,regime,moments,wars,url,
    yearTitle:yearPage?.title||'',yearUrl,
    identitySource:d?.wikipedia?'Cliopatria → WikipediaPage':'Cliopatria → nombre de entidad'
   };
@@ -8361,14 +8446,14 @@ function historyWikiContextHtml(c){
 
  if(c.moments?.length){
   h+='<br><b>Acontecimientos de '+escHtml(historyYearText(historyYear))+' vinculados con esta entidad:</b>';
-  h+='<ul style="margin:4px 0 2px 18px;padding:0">'+c.moments.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>';
+  h+='<div style="margin-top:5px">'+c.moments.map(x=>'<div style="padding:7px 0;border-bottom:1px solid #dfe4e7">• '+escHtml(x)+'</div>').join('')+'</div>';
  }else{
   h+='<br><b>Acontecimientos de '+escHtml(historyYearText(historyYear))+':</b> no se ha encontrado en las fuentes consultadas un acontecimiento de ese año que pueda vincularse con suficiente seguridad a esta entidad.';
  }
 
  if(c.wars?.length){
   h+='<br><b>Conflictos / guerras de '+escHtml(historyYearText(historyYear))+' vinculados:</b>';
-  h+='<ul style="margin:4px 0 2px 18px;padding:0">'+c.wars.map(x=>'<li>'+escHtml(x)+'</li>').join('')+'</ul>';
+  h+='<div style="margin-top:5px">'+c.wars.map(x=>'<div style="padding:7px 0;border-bottom:1px solid #dfe4e7">• '+escHtml(x)+'</div>').join('')+'</div>';
  }
 
  h+='<div class="historyCardNote">';
@@ -8383,6 +8468,8 @@ async function enrichHistoryElement(el,d,token){
  try{
   const c=await historyWikipediaContext(d,historyYear);
   if(token!==historyWikiSeq||!document.getElementById('worldHistoryCheck')?.checked)return;
+  const title=el?.querySelector?.('.historyCardTitle');
+  if(title&&c?.displayName)title.textContent='🏛️ '+c.displayName;
   const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML=historyWikiContextHtml(c);
  }catch(e){
   const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyCardNote">No se pudo consultar Wikipedia en este momento.</div>';
