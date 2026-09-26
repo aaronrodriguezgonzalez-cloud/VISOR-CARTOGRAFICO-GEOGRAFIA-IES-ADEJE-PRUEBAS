@@ -1976,6 +1976,12 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  .eruptionHistoryList{max-height:210px}
 }
 
+
+.macrostratLegendGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 10px;margin-top:5px}
+.macrostratLegendItem{display:flex;align-items:center;gap:6px;min-width:0}
+.macrostratLegendSw{width:18px;height:12px;border:1px solid #667;border-radius:2px;flex:0 0 auto}
+@media(max-width:700px){.macrostratLegendGrid{grid-template-columns:1fr}}
+
 </style>
 </head><body>
 <div id="map"></div>
@@ -2330,7 +2336,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
     <div class="sourceItem sourceOk"><b>RESOLVE / Dinerstein et al. (2017)</b> · ecorregiones y grandes biomas terrestres.<br><small>CC BY 4.0.</small><br><a href="https://doi.org/10.1093/biosci/bix014" target="_blank" rel="noopener">Dinerstein et al. (2017)</a></div>
-    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La capa «carto» integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div>
+    <div class="sourceItem sourceOk"><b>Macrostrat</b> · compilación mundial de cartografía geológica.<br><small>Teselas y datos geológicos bajo CC BY 4.0. ANAMBRO cita Macrostrat y conserva el identificador de la fuente cartográfica original cuando está disponible. La visualización cartográfica integra mapas de escalas y procedencias distintas, por lo que no debe interpretarse como un único mapa homogéneo a una escala fija.</small><br><a href="https://macrostrat.org/" target="_blank" rel="noopener">Macrostrat</a> · <a href="https://tiles.macrostrat.org/" target="_blank" rel="noopener">Tiles / términos de uso</a></div>
     <div class="sourceItem sourceOk"><b>Smithsonian Global Volcanism Program</b> · Volcanoes of the World y erupciones holocenas.<br><small>Uso educativo y no comercial permitido con cita. Cita: Global Volcanism Program, 2026, Volcanoes of the World v5.4.0, Smithsonian Institution, compiled by Venzke, E.</small><br><a href="https://volcano.si.edu/gvp_termsofuse.cfm" target="_blank" rel="noopener">GVP Terms of Use</a> · <a href="https://volcano.si.edu/database/webservices.cfm" target="_blank" rel="noopener">Webservices</a></div>
     <div class="sourceItem sourceOk"><b>USGS Volcano Hazards Program</b> · información adicional y estado operativo de volcanes estadounidenses cuando existe.<br><small>Las fotografías se muestran únicamente cuando el servicio devuelve una imagen utilizable; las imágenes de terceros conservan sus propios derechos.</small><br><a href="https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits" target="_blank" rel="noopener">USGS Copyrights and Credits</a></div>
     <div class="sourceItem sourceReview"><b>Esri World Imagery</b> · fondo satelital del globo 3D.<br><small>ANAMBRO consume el servicio de teselas y mantiene la atribución a Esri y sus proveedores; no redistribuye el mosaico.</small></div>
@@ -2588,26 +2594,89 @@ const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=
 const worldClimate=L.tileLayer('https://tiles.arcgis.com/tiles/bFQCiZqoe0LrqfWM/arcgis/rest/services/Climas_del_mundo/MapServer/tile/{z}/{y}/{x}',{noWrap:true,
  minZoom:0,maxZoom:13,maxNativeZoom:8,opacity:.72,attribution:'Köppen-Geiger · Beck et al. (2018)'
 });
-const worldGeology=L.tileLayer('https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',{
- noWrap:true,minZoom:0,maxZoom:16,opacity:.72,crossOrigin:true,
- attribution:'Geología · Macrostrat · CC BY 4.0'
+const MacrostratGeologyLayer=L.GridLayer.extend({
+ options:{tileSize:256,opacity:.72,attribution:'Geología · Macrostrat · CC BY 4.0',noWrap:true},
+ createTile(coords,done){
+  const tile=document.createElement('canvas'),size=this.getTileSize();
+  tile.width=size.x;tile.height=size.y;
+  const ctx=tile.getContext('2d');
+  const urls=[
+   `https://tiles.macrostrat.org/carto-slim/${coords.z}/${coords.x}/${coords.y}.png`,
+   `https://tiles.macrostrat.org/carto/${coords.z}/${coords.x}/${coords.y}.png`
+  ];
+  const loadImage=(url)=>new Promise((resolve,reject)=>{
+   const im=new Image();im.crossOrigin='anonymous';
+   im.onload=()=>resolve(im);im.onerror=reject;im.src=url;
+  });
+  const drawParent=async(level=1)=>{
+   if(coords.z-level<0||level>3)throw new Error('Sin tesela Macrostrat');
+   const factor=2**level,pz=coords.z-level,px=Math.floor(coords.x/factor),py=Math.floor(coords.y/factor);
+   const ox=coords.x%factor,oy=coords.y%factor;
+   const parentUrls=[
+    `https://tiles.macrostrat.org/carto-slim/${pz}/${px}/${py}.png`,
+    `https://tiles.macrostrat.org/carto/${pz}/${px}/${py}.png`
+   ];
+   let im=null;
+   for(const u of parentUrls){try{im=await loadImage(u);break}catch(e){}}
+   if(!im)return drawParent(level+1);
+   const sw=im.width/factor,sh=im.height/factor;
+   ctx.clearRect(0,0,size.x,size.y);
+   ctx.drawImage(im,ox*sw,oy*sh,sw,sh,0,0,size.x,size.y);
+   tile.classList.add('macrostrat-parent-fallback');
+   return tile;
+  };
+  (async()=>{
+   for(const u of urls){
+    try{
+     const im=await loadImage(u);
+     ctx.clearRect(0,0,size.x,size.y);
+     ctx.drawImage(im,0,0,size.x,size.y);
+     done(null,tile);return;
+    }catch(e){}
+   }
+   try{await drawParent(1);done(null,tile);}
+   catch(e){done(e,tile);}
+  })();
+  return tile;
+ }
 });
+const worldGeology=new MacrostratGeologyLayer({minZoom:0,maxZoom:16,opacity:.72});
 
-const MACROSTRAT_ERA_GUIDE=[
- ['Cenozoico','Paleógeno · Neógeno · Cuaternario'],
- ['Mesozoico','Triásico · Jurásico · Cretácico'],
- ['Paleozoico','Cámbrico · Ordovícico · Silúrico · Devónico · Carbonífero · Pérmico'],
- ['Precámbrico','Arcaico · Proterozoico']
+
+const MACROSTRAT_PERIODS=[
+ ['Cuaternario','#F9F97F'],['Neógeno','#FFE619'],['Paleógeno','#FD9A52'],
+ ['Cretácico','#7FC64E'],['Jurásico','#34B2C9'],['Triásico','#812B92'],
+ ['Pérmico','#F04028'],['Carbonífero','#67A599'],['Devónico','#CB8C37'],
+ ['Silúrico','#B3E1B6'],['Ordovícico','#009270'],['Cámbrico','#7FA056'],
+ ['Proterozoico','#F15A9B'],['Arcaico','#F0047F'],['Hádico','#AE027E']
 ];
-function renderWorldGeologyLegend(){
+let macrostratLegendColorsLoaded=false;
+async function loadMacrostratLegendColors(){
+ if(macrostratLegendColorsLoaded)return;
+ macrostratLegendColorsLoaded=true;
+ try{
+  const r=await fetch('https://macrostrat.org/api/v2/defs/intervals?timescale_id=3');
+  if(!r.ok)return;
+  const j=await r.json(),arr=j?.success?.data||j?.data||j;
+  if(!Array.isArray(arr))return;
+  const by=new Map(arr.map(x=>[macrostratTextEs(x.name||x.int_name||x.interval_name||''),x.color||x.colour||'']));
+  for(const row of MACROSTRAT_PERIODS){
+   const c=by.get(row[0]);if(c)row[1]=String(c).startsWith('#')?String(c):'#'+String(c);
+  }
+ }catch(e){}
+}
+async function renderWorldGeologyLegend(){
  const el=document.getElementById('worldGeologyLegend');if(!el)return;
  const on=!!document.getElementById('worldGeologyCheck')?.checked;
  el.style.display=on?'block':'none';
  if(!on)return;
- el.innerHTML='<b>Leyenda · geología mundial</b><br>'+
-  '<span style="display:block;margin:3px 0 5px">Los colores representan la edad geológica de las unidades integradas por Macrostrat. La tonalidad exacta y el detalle cambian según el mapa fuente y la escala.</span>'+
-  MACROSTRAT_ERA_GUIDE.map(([a,b])=>'<div style="margin:2px 0"><b>'+escHtml(a)+':</b> '+escHtml(b)+'</div>').join('')+
-  '<small>Pulsa sobre el mapa para consultar unidad, edad, litología y fuente original.</small>';
+ await loadMacrostratLegendColors();
+ el.innerHTML='<b>Leyenda · edad geológica</b><br>'+
+  '<span style="display:block;margin:3px 0 6px">Colores de referencia por grandes intervalos. El tono exacto de cada polígono procede del intervalo asignado por Macrostrat y puede variar dentro de un mismo periodo.</span>'+
+  '<div class="macrostratLegendGrid">'+MACROSTRAT_PERIODS.map(([n,c])=>
+   '<div class="macrostratLegendItem"><span class="macrostratLegendSw" style="background:'+c+'"></span><span>'+escHtml(n)+'</span></div>'
+  ).join('')+'</div>'+
+  '<small style="display:block;margin-top:6px">La compilación integra mapas de escalas y procedencias diferentes. Pulsa el mapa para consultar la unidad concreta.</small>';
 }
 
 const MACROSTRAT_TEXT_ES=[
@@ -2617,24 +2686,45 @@ const MACROSTRAT_TEXT_ES=[
  ['Cenozoic','Cenozoico'],['Cretaceous','Cretácico'],['Jurassic','Jurásico'],['Triassic','Triásico'],
  ['Mesozoic','Mesozoico'],['Permian','Pérmico'],['Carboniferous','Carbonífero'],['Devonian','Devónico'],
  ['Silurian','Silúrico'],['Ordovician','Ordovícico'],['Cambrian','Cámbrico'],['Paleozoic','Paleozoico'],
- ['Proterozoic','Proterozoico'],['Archean','Arcaico'],['Precambrian','Precámbrico'],
- ['alluvium','aluvión'],['alluvial','aluvial'],['basalt','basalto'],['andesite','andesita'],
- ['rhyolite','riolita'],['dacite','dacita'],['trachyte','traquita'],['phonolite','fonolita'],
- ['granite','granito'],['gabbro','gabro'],['sandstone','arenisca'],['siltstone','limolita'],
- ['mudstone','lutita'],['shale','lutita'],['limestone','caliza'],['dolomite','dolomía'],
+ ['Proterozoic','Proterozoico'],['Archean','Arcaico'],['Archaean','Arcaico'],['Hadean','Hádico'],
+ ['Precambrian','Precámbrico'],['Recent','Reciente'],
+ ['Early','Inferior'],['Lower','Inferior'],['Middle','Medio'],['Late','Superior'],['Upper','Superior'],
+ ['undivided','sin diferenciar'],['undifferentiated','sin diferenciar'],['unconsolidated','no consolidado'],
+ ['alluvium','aluvión'],['alluvial','aluvial'],['colluvium','coluvión'],['colluvial','coluvial'],
+ ['basalt','basalto'],['basaltic','basáltico'],['andesite','andesita'],['andesitic','andesítico'],
+ ['rhyolite','riolita'],['rhyolitic','riolítico'],['dacite','dacita'],['dacitic','dacítico'],
+ ['trachyte','traquita'],['phonolite','fonolita'],['granite','granito'],['granitic','granítico'],
+ ['granodiorite','granodiorita'],['diorite','diorita'],['gabbro','gabro'],['peridotite','peridotita'],
+ ['sandstone','arenisca'],['siltstone','limolita'],['mudstone','lutita'],['shale','lutita'],
+ ['limestone','caliza'],['dolostone','dolomía'],['dolomite','dolomía'],['marl','marga'],
  ['conglomerate','conglomerado'],['breccia','brecha'],['schist','esquisto'],['gneiss','gneis'],
- ['marble','mármol'],['quartzite','cuarcita'],['tuff','toba'],['gravel','grava'],['sand','arena'],
- ['silt','limo'],['clay','arcilla'],['volcanic','volcánico'],['igneous','ígneo'],
- ['metamorphic','metamórfico'],['sedimentary','sedimentario'],['Formation','Formación'],
- ['Member','Miembro'],['Group','Grupo'],['deposits','depósitos'],['deposit','depósito']
+ ['marble','mármol'],['quartzite','cuarcita'],['slate','pizarra'],['tuff','toba'],['ignimbrite','ignimbrita'],
+ ['gravel','grava'],['sand','arena'],['silt','limo'],['clay','arcilla'],['peat','turba'],
+ ['volcaniclastic','volcaniclástico'],['volcanic','volcánico'],['plutonic','plutónico'],
+ ['igneous','ígneo'],['metamorphic','metamórfico'],['sedimentary','sedimentario'],
+ ['felsic','félsico'],['mafic','máfico'],['ultramafic','ultramáfico'],['carbonate','carbonatado'],
+ ['siliciclastic','siliciclástico'],['evaporite','evaporítico'],['marine','marino'],
+ ['fluvial','fluvial'],['lacustrine','lacustre'],['glacial','glaciar'],['aeolian','eólico'],
+ ['Formation','Formación'],['Member','Miembro'],['Group','Grupo'],['Complex','Complejo'],
+ ['Suite','Suite'],['Terrane','Terreno'],['deposits','depósitos'],['deposit','depósito'],
+ ['rocks','rocas'],['rock','roca'],['lava','lava'],['flows','coladas'],['flow','colada'],
+ ['intrusive','intrusivo'],['extrusive','extrusivo'],['metasedimentary','metasedimentario'],
+ ['metavolcanic','metavolcánico'],['unknown','desconocido'],['mixed','mixto']
 ];
 function macrostratTextEs(v){
  let s=String(v??'').trim();if(!s)return '';
+ // construcciones geológicas frecuentes
+ s=s.replace(/\b([A-Za-zÁÉÍÓÚáéíóúÑñ0-9.'’ -]+?)\s+Formation\b/gi,(m,a)=>'Formación '+a.trim())
+    .replace(/\b([A-Za-zÁÉÍÓÚáéíóúÑñ0-9.'’ -]+?)\s+Group\b/gi,(m,a)=>'Grupo '+a.trim())
+    .replace(/\b([A-Za-zÁÉÍÓÚáéíóúÑñ0-9.'’ -]+?)\s+Member\b/gi,(m,a)=>'Miembro '+a.trim());
  for(const [en,es] of MACROSTRAT_TEXT_ES){
   s=s.replace(new RegExp('\\b'+en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','ig'),es);
  }
+ s=s.replace(/\s+/g,' ').replace(/\s+,/g,',').trim();
  return s;
 }
+function macrostratValueEs(v){return macrostratTextEs(v);}
+
 function macrostratLikelyGenericName(v){
  const s=String(v??'').trim();
  return /^(alluvium|colluvium|basalt|andesite|rhyolite|dacite|granite|limestone|sandstone|shale|conglomerate|volcanic rocks?|sedimentary rocks?|metamorphic rocks?|igneous rocks?)/i.test(s);
@@ -2642,8 +2732,8 @@ function macrostratLikelyGenericName(v){
 function macrostratDisplayName(p){
  const formal=String(p?.strat_name||'').trim();
  const name=String(p?.name||'').trim();
- if(formal)return formal; // nombre estratigráfico propio: se conserva
- if(name)return macrostratLikelyGenericName(name)?macrostratTextEs(name):name;
+ if(formal)return macrostratValueEs(formal);
+ if(name)return macrostratValueEs(name);
  return 'Unidad geológica';
 }
 function macrostratPointInRing(x,y,ring){
@@ -2737,7 +2827,11 @@ function macrostratGeologyHtml(g){
  const unit=macrostratDisplayName(g);if(unit)rows.push('<b>Unidad:</b> '+escHtml(unit));
  const age=macrostratAgeText(g);if(age)rows.push('<b>Edad:</b> '+escHtml(age));
  const num=macrostratNumericAge(g);if(num)rows.push('<b>Edad numérica aprox.:</b> '+escHtml(num));
- if(g.lith)rows.push('<b>Litología:</b> '+escHtml(macrostratTextEs(g.lith)));
+ if(g.lith)rows.push('<b>Litología:</b> '+escHtml(macrostratValueEs(g.lith)));
+ const desc=macrostratValueEs(g.descrip||'');
+ if(desc && !/\b(?:and|with|interbedded|locally|mostly|mainly|minor|massive|thin|thick|beds?|contains?|consists?|poorly|well)\b/i.test(desc)){
+  rows.push('<b>Descripción:</b> '+escHtml(desc));
+ }
  if(g.source_id!==undefined&&g.source_id!==null){
   const src=g.__source?.name||g.__source?.ref||('fuente cartográfica #'+g.source_id);
   rows.push('<b>Fuente original:</b> '+escHtml(src));
@@ -7178,8 +7272,11 @@ async function toggleWorldGeologyGlobe(on){
  if(on){
   if(!globeGeologyLayer){
    const provider=new Cesium.UrlTemplateImageryProvider({
-    url:'https://tiles.macrostrat.org/carto/{z}/{x}/{y}.png',
-    maximumLevel:14,
+    url:'https://tiles.macrostrat.org/carto-slim/{z}/{x}/{y}.png',
+    tilingScheme:new Cesium.WebMercatorTilingScheme(),
+    minimumLevel:0,
+    maximumLevel:10,
+    enablePickFeatures:false,
     credit:'Geología · Macrostrat · CC BY 4.0'
    });
    globeGeologyLayer=globeViewer.imageryLayers.addImageryProvider(provider);
