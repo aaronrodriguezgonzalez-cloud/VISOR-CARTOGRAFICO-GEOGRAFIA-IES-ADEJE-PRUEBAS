@@ -14023,17 +14023,37 @@ function hdPointInRing(lon,lat,ring){let inside=false;for(let i=0,j=ring.length-
 function hdPointInGeometry(lon,lat,g){if(!g||!Array.isArray(g.coordinates))return false;if(g.type==='Polygon')return g.coordinates.length&&hdPointInRing(lon,lat,g.coordinates[0])&&!g.coordinates.slice(1).some(r=>hdPointInRing(lon,lat,r));if(g.type==='MultiPolygon')return g.coordinates.some(p=>p.length&&hdPointInRing(lon,lat,p[0])&&!p.slice(1).some(r=>hdPointInRing(lon,lat,r)));return false;}
 function hdEventTerms(d,c){return historyContextTerms(d,c?.entityTitleEs||'',c?.entityTitleEn||'',[]);}
 async function hdEvents(d,c,year){
- let all=[];try{if(year>0)await histEnrichFetchYear(year,{quiet:true});all=histEnrichMergeYear(year)||[];}catch(e){all=(HIST_EVENTS_BY_YEAR?.get?.(year)||[]);}
+ // Selección ligera: usa primero el catálogo histórico ya cargado en ANAMBRO.
+ // Evita búsquedas enciclopédicas amplias y penaliza batallas aisladas.
+ let all=[];
+ try{all=(typeof histEnrichMergeYear==='function' ? (histEnrichMergeYear(year)||[]) : [])}catch(e){}
+ if(!all.length){try{all=(HIST_EVENTS_BY_YEAR?.get?.(year)||[])}catch(e){all=[]}}
  const terms=hdEventTerms(d,c),rows=[];
- for(const e of all){const label=String(e.label||'').trim();if(!label)continue;let score=(e.importance||1)*3+(e.sitelinks?Math.min(12,Math.log10(Math.max(1,e.sitelinks))*3):0);const inside=Number.isFinite(e.lon)&&Number.isFinite(e.lat)&&hdPointInGeometry(e.lon,e.lat,d?.geometry);if(inside)score+=80;score+=historyEventScoreText(label,terms)*4;if(e.category==='historical')score+=10;if(e.category==='inception'||e.category==='dissolution')score+=7;if(e.category==='birth'||e.category==='death')score-=7;if(!inside&&score<14)continue;rows.push({text:label,score,source:'Wikidata'});}
- rows.sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
- let out=[];for(const r of rows){if(!out.some(x=>normalizeHistoryText(x.text)===normalizeHistoryText(r.text)))out.push(r);if(out.length>=10)break;}
- // Si Wikidata no devuelve suficientes hechos localizados, complementar con la página anual,
- // pero manteniendo una selección estrictamente relacionada con la entidad histórica.
- if(out.length<5){
-  try{const yp=await resolveYearPage(year,'es');if(yp?.parsed){let entParsed=null,links=new Set();if(c?.entityTitleEs){entParsed=await wikiParsePage(c.entityTitleEs,'es');links=historyEntityLinkSet(entParsed);}const more=eventsFromYearPage(yp.parsed,terms,c?.entityTitleEs||c?.displayName||d?.name,links,10,year);for(const s of more){if(!out.some(x=>normalizeHistoryText(x.text)===normalizeHistoryText(s)))out.push({text:s,score:5,source:'Wikipedia anual'});if(out.length>=10)break;}}}catch(e){}
+ const battleRx=/\b(batalla|battle|combate|sitio|siege|escaramuza|skirmish)\b/i;
+ const majorRx=/\b(revoluci[oó]n|revolution|independencia|independence|tratado|treaty|constituci[oó]n|constitution|coronaci[oó]n|coronation|abolici[oó]n|abolition|anexi[oó]n|annex|conquista|conquest|golpe|coup|reforma|reform|fundaci[oó]n|foundation|proclamaci[oó]n|proclamation|sucesi[oó]n|succession|guerra civil|civil war|invasio?n|invasion)\b/i;
+ for(const e of all){
+  const label=String(e.label||'').trim();if(!label)continue;
+  const inside=Number.isFinite(e.lon)&&Number.isFinite(e.lat)&&hdPointInGeometry(e.lon,e.lat,d?.geometry);
+  let score=(e.importance||1)*4+(e.sitelinks?Math.min(15,Math.log10(Math.max(1,e.sitelinks))*3):0);
+  if(inside)score+=45;
+  score+=historyEventScoreText(label,terms)*5;
+  if(majorRx.test(label))score+=18;
+  if(e.category==='historical')score+=12;
+  if(e.category==='inception'||e.category==='dissolution')score+=10;
+  if(e.category==='birth'||e.category==='death')score-=15;
+  if(battleRx.test(label))score-=22;
+  if(!inside&&score<20)continue;
+  rows.push({text:label,score,source:'Wikidata',isBattle:battleRx.test(label)});
  }
- return out.slice(0,10);
+ rows.sort((a,b)=>b.score-a.score||a.text.length-b.text.length);
+ const out=[];let battles=0;
+ for(const r of rows){
+  if(r.isBattle&&battles>=1)continue;
+  if(out.some(x=>normalizeHistoryText(x.text)===normalizeHistoryText(r.text)))continue;
+  out.push(r);if(r.isBattle)battles++;
+  if(out.length>=5)break;
+ }
+ return out;
 }
 function hdFmtYearIso(v){const m=String(v||'').match(/^([+-]?\d{1,6})-/);return m?historyYearText(Number(m[1])):'';}
 function hdList(vals){return vals?.length?vals.join(', '):'Sin dato temporal fiable';}
@@ -14061,40 +14081,37 @@ const hdOldHistoryFeatureData=historyFeatureData;
 historyFeatureData=function(f){const d=hdOldHistoryFeatureData(f);d.rawName=d.name;d.geometry=f?.geometry||null;const p=f?.properties||{};if(p.__name_popup_es||p.__name_es)d.name=String(p.__name_popup_es||p.__name_es);return d;};
 
 async function hdDossier(d,c,year){
- const key=[c?.qid||'',d?.seshat||d?.name||'',year].join('|');if(hdDossierCache.has(key))return hdDossierCache.get(key);
+ const key=['simple',c?.qid||'',d?.seshat||d?.name||'',year].join('|');if(hdDossierCache.has(key))return hdDossierCache.get(key);
  const job=(async()=>{
   const ent=c?.entity||(c?.qid?await hdEntity(c.qid):null),historicalEntity=Number.isFinite(d?.to)&&d.to<1950;
   const allowUntimed=historicalEntity;
-  const govIds=ent?hdClaimQids(ent,'P122',year,allowUntimed):[],capIds=ent?hdClaimQids(ent,'P36',year,allowUntimed):[],partIds=ent?hdClaimQids(ent,'P361',year,allowUntimed):[];
-  let headIds=ent?hdClaimQids(ent,'P35',year,false):[],govHeadIds=ent?hdClaimQids(ent,'P6',year,false):[];
-  const ids=[...govIds,...capIds,...partIds,...headIds,...govHeadIds],labs=await hdLabels(ids),lm=new Map(labs.map(x=>[x.qid,x.label]));
-  let rulers=headIds.map(q=>({name:lm.get(q)||q,office:'Jefe de Estado / soberano'}));if(!rulers.length&&c?.qid)rulers=await hdOfficeholders(c.qid,year);
-  const wars=c?.qid?await hdWars(c.qid,year):[];
-  const pop=ent?hdNearestQuantity(ent,'P1082',year):null;
-  const events=await hdEvents(d,c,year);
-  return {government:govIds.map(q=>lm.get(q)||q),capital:capIds.map(q=>lm.get(q)||q),partOf:partIds.map(q=>lm.get(q)||q),rulers,headsGov:govHeadIds.map(q=>lm.get(q)||q),wars,population:pop,events};
+  const govIds=ent?hdClaimQids(ent,'P122',year,allowUntimed):[];
+  const capIds=ent?hdClaimQids(ent,'P36',year,allowUntimed):[];
+  const headIds=ent?hdClaimQids(ent,'P35',year,false):[];
+  const labs=await hdLabels([...govIds,...capIds,...headIds]),lm=new Map(labs.map(x=>[x.qid,x.label]));
+  let rulers=headIds.map(q=>({name:lm.get(q)||q,office:'Jefe de Estado / soberano'}));
+  // Una sola consulta adicional si falta el gobernante, ejecutada en paralelo con los hechos locales.
+  const [fallbackRulers,events]=await Promise.all([
+   (!rulers.length&&c?.qid)?hdOfficeholders(c.qid,year):Promise.resolve([]),
+   hdEvents(d,c,year)
+  ]);
+  if(!rulers.length)rulers=fallbackRulers;
+  return {government:govIds.map(q=>lm.get(q)||q),capital:capIds.map(q=>lm.get(q)||q),rulers,events};
  })();hdDossierCache.set(key,job);return job;
 }
 function hdDossierHtml(d,c,x,year){
  let inferredRegime=c?.regime||'';
- if(!inferredRegime){const rt=(x.rulers||[]).map(r=>r.office+' '+r.name).join(' ').toLowerCase();if(/\b(king|queen|rey|reina|monarch|monarca)\b/.test(rt))inferredRegime='Monarquía';else if(/\b(emperor|empress|emperador|emperatriz)\b/.test(rt))inferredRegime='Imperio';else if(/\b(sultan|sult[aá]n)\b/.test(rt))inferredRegime='Sultanato';else if(/\b(caliph|califa)\b/.test(rt))inferredRegime='Califato';else if(/\b(president|presidente)\b/.test(rt))inferredRegime='República / presidencia';}
+ if(!inferredRegime){const rt=(x.rulers||[]).map(r=>r.office+' '+r.name).join(' ').toLowerCase();if(/\b(king|queen|rey|reina|monarch|monarca)\b/.test(rt))inferredRegime='Monarquía';else if(/\b(emperor|empress|emperador|emperatriz)\b/.test(rt))inferredRegime='Imperio';else if(/\b(sultan|sult[aá]n)\b/.test(rt))inferredRegime='Sultanato';else if(/\b(caliph|califa)\b/.test(rt))inferredRegime='Califato';else if(/\b(president|presidente)\b/.test(rt))inferredRegime='República';}
  const regime=hdList(x.government.length?x.government:(inferredRegime?[inferredRegime]:[]));
  const ruler=x.rulers?.length?x.rulers.map(r=>r.name+(r.office&&r.office!=='Jefe de Estado / soberano'?' · '+r.office:'')).join('; '):'Sin dato temporal fiable';
- let power=[];if(d?.area!==''&&d?.area!==undefined&&d?.area!==null){const a=Number(d.area);if(Number.isFinite(a))power.push('Extensión cartografiada: '+Math.round(a).toLocaleString('es-ES')+' km²');}
- if(x.population)power.push('Población documentada: '+Math.round(x.population.value).toLocaleString('es-ES')+(x.population.year!==null?' ('+historyYearText(x.population.year)+')':''));
- if(x.partOf?.length)power.push('Integración/dependencia registrada: '+x.partOf.join(', '));
- if(x.wars?.length)power.push(x.wars.length+' conflicto'+(x.wars.length===1?'':'s')+' activo'+(x.wars.length===1?'':'s')+' documentado'+(x.wars.length===1?'':'s')+' en '+historyYearText(year));
- if(!power.length)power.push('Sin indicadores estructurados suficientes para caracterizar su posición internacional en este año.');
- let h='<div class="historyDossier"><b>🧭 Ficha histórica · '+escHtml(historyYearText(year))+'</b><div class="historyDossierGrid">';
- h+='<div class="historyDossierBox"><b>🏛️ Régimen / forma política</b><br>'+escHtml(regime)+'</div>';
- h+='<div class="historyDossierBox"><b>👑 Jefe de Estado / soberano</b><br>'+escHtml(ruler)+'</div>';
- h+='<div class="historyDossierBox"><b>🏙️ Capital</b><br>'+escHtml(hdList(x.capital))+'</div>';
- h+='<div class="historyDossierBox"><b>🌍 Situación internacional / poder</b><ul class="historyDossierList">'+power.map(v=>'<li>'+escHtml(v)+'</li>').join('')+'</ul></div>';
- h+='<div class="historyDossierBox historyDossierWide"><b>⚔️ Guerras y conflictos activos</b>';
- if(x.wars?.length)h+='<ul class="historyDossierList">'+x.wars.slice(0,10).map(w=>'<li>'+escHtml(w.name)+(hdFmtYearIso(w.start)||hdFmtYearIso(w.end)?' <span style="color:#667">('+escHtml([hdFmtYearIso(w.start),hdFmtYearIso(w.end)].filter(Boolean).join(' – '))+')</span>':'')+'</li>').join('')+'</ul>';else h+='<br>No se han localizado conflictos activos con fecha compatible en Wikidata.';h+='</div>';
- h+='<div class="historyDossierBox historyDossierWide"><b>📅 Acontecimientos relevantes del año</b><div class="historyDossierEvents">';
- if(x.events?.length)h+=x.events.map(e=>'<div class="historyDossierEvent"><div class="historyDossierEventTitle">'+escHtml(historyEventHeadline(e.text))+'</div><div>'+escHtml(e.text)+'</div><div style="font-size:9.5px;color:#71808a">'+escHtml(e.source)+'</div></div>').join('');else h+='No se han localizado acontecimientos suficientemente vinculados a esta entidad para '+escHtml(historyYearText(year))+'.';
- h+='</div></div></div><div class="historyDossierSource">'+escHtml(hdSourceNote(c))+' Los apartados temporales solo se muestran cuando el dato puede asociarse razonablemente al año seleccionado; se evitan deliberadamente cargos o instituciones actuales.</div></div>';
+ let h='<div class="historyDossier"><b>🧭 '+escHtml(historyYearText(year))+'</b><div class="historyDossierGrid">';
+ h+='<div class="historyDossierBox"><b>🏛️ Régimen</b><br>'+escHtml(regime)+'</div>';
+ h+='<div class="historyDossierBox"><b>👑 Gobernante</b><br>'+escHtml(ruler)+'</div>';
+ h+='<div class="historyDossierBox historyDossierWide"><b>🏙️ Capital</b><br>'+escHtml(hdList(x.capital))+'</div>';
+ h+='<div class="historyDossierBox historyDossierWide"><b>📅 Acontecimientos destacados de '+escHtml(historyYearText(year))+'</b><div class="historyDossierEvents">';
+ if(x.events?.length)h+=x.events.map(e=>'<div class="historyDossierEvent"><div>'+escHtml(e.text)+'</div></div>').join('');
+ else h+='No se han localizado acontecimientos de suficiente relevancia vinculados a esta entidad en ese año.';
+ h+='</div></div></div><div class="historyDossierSource">Cliopatria/Seshat fija la entidad y su geometría histórica; Wikidata aporta los datos estructurados disponibles para el año seleccionado.</div></div>';
  return h;
 }
 
@@ -14104,7 +14121,7 @@ enrichHistoryElement=async function(el,d,token){
  try{
   const c=await historyWikipediaContext(d,y);if(token!==historyWikiSeq||historyYear!==y||!document.getElementById('worldHistoryCheck')?.checked)return;
   const title=el?.querySelector?.('.historyCardTitle');if(title&&c?.displayName)title.textContent='🏛️ '+c.displayName;
-  const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyDossierLoading">Consultando régimen, gobernantes, conflictos y acontecimientos de '+escHtml(historyYearText(y))+'…</div>';
+  const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyDossierLoading">Consultando régimen, gobernante, capital y acontecimientos de '+escHtml(historyYearText(y))+'…</div>';
   const x=await hdDossier(d,c,y);if(token!==historyWikiSeq||historyYear!==y||!document.getElementById('worldHistoryCheck')?.checked)return;
   if(target)target.innerHTML=hdDossierHtml(d,c,x,y);
  }catch(e){console.warn('Ficha histórica',e);const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyCardNote">No se pudo completar la ficha histórica. Se mantiene la identidad y geometría de Cliopatria.</div>';}
