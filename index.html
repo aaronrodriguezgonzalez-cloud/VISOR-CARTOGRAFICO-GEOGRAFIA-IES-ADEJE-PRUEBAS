@@ -7315,7 +7315,39 @@ function profilePeakType(p){
 }
 
 function profileIsSpainLatLng(ll){
- return !!ll&&ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
+ if(!ll)return false;
+ const lat=+ll.lat,lon=+ll.lng;
+ const inPoly=(poly)=>{
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+   const xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];
+   const hit=((yi>lat)!=(yj>lat))&&(lon<(xj-xi)*(lat-yi)/((yj-yi)||1e-12)+xi);
+   if(hit)inside=!inside;
+  }
+  return inside;
+ };
+ // Península: máscara aproximada del territorio español; evita el antiguo rectángulo que incluía Portugal/Marruecos/Atlántico.
+ const mainland=[[-9.35,43.10],[-8.95,43.65],[-7.10,43.78],[-5.20,43.62],[-3.00,43.48],[-1.55,43.35],[-1.25,42.85],[0.55,42.70],[2.15,42.45],[3.20,42.15],[3.25,41.70],[2.55,41.10],[1.15,40.65],[0.20,39.55],[-0.05,38.65],[-0.60,37.45],[-1.75,36.75],[-3.10,36.55],[-4.55,36.00],[-5.65,36.00],[-6.35,36.65],[-7.00,37.15],[-7.45,37.25],[-7.55,38.00],[-7.35,39.00],[-7.05,40.00],[-6.95,41.05],[-6.55,41.90],[-7.25,42.20],[-8.30,42.05],[-9.25,42.55]];
+ if(inPoly(mainland))return true;
+ // Baleares.
+ if(lat>=39.15&&lat<=40.10&&lon>=2.15&&lon<=4.45)return true;
+ if(lat>=38.55&&lat<=39.25&&lon>=1.05&&lon<=1.75)return true;
+ // Canarias, por islas/pequeños grupos para que nunca reaparezca un gran rectángulo de cobertura.
+ const canaryBoxes=[
+  [28.00,28.88,-17.98,-17.65], // El Hierro
+  [28.00,28.90,-17.45,-16.95], // La Gomera
+  [28.35,28.95,-18.05,-17.65], // La Palma
+  [27.95,28.65,-16.95,-16.05], // Tenerife
+  [27.65,28.30,-15.90,-15.25], // Gran Canaria
+  [28.00,28.85,-14.65,-13.75], // Fuerteventura
+  [28.75,29.35,-13.95,-13.35], // Lanzarote
+  [29.05,29.50,-13.70,-13.20]  // La Graciosa / islotes
+ ];
+ if(canaryBoxes.some(b=>lat>=b[0]&&lat<=b[1]&&lon>=b[2]&&lon<=b[3]))return true;
+ // Ceuta y Melilla: áreas mínimas, sin arrastrar el norte de Marruecos a PNOA.
+ if(lat>=35.84&&lat<=35.94&&lon>=-5.38&&lon<=-5.25)return true;
+ if(lat>=35.24&&lat<=35.34&&lon>=-2.99&&lon<=-2.91)return true;
+ return false;
 }
 function profileWorldVectorZoom(total){
  if(total<80000)return 12;
@@ -12024,6 +12056,24 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   try{return typeof profileIsSpainLatLng==='function' && profileIsSpainLatLng(map.getCenter());}
   catch(e){return false;}
  }
+ const __transparentTile='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+ function __tileCenterLatLng(coords){
+  try{
+   const ts=256;
+   return map.unproject(L.point((coords.x+.5)*ts,(coords.y+.5)*ts),coords.z);
+  }catch(e){return null;}
+ }
+ function __maskIgnLayerToSpain(layer){
+  if(!layer||layer.__anambroSpainMasked||typeof layer.getTileUrl!=='function')return;
+  const original=layer.getTileUrl.bind(layer);
+  layer.getTileUrl=function(coords){
+   const ll=__tileCenterLatLng(coords);
+   return ll&&profileIsSpainLatLng(ll)?original(coords):__transparentTile;
+  };
+  layer.__anambroSpainMasked=true;
+ }
+ // Evita que las teselas IGN/PNOA formen rectángulos de baja resolución sobre Portugal, Marruecos o el Atlántico.
+ [pnoa,labels,raster,street,lidar,land,historic].forEach(layer=>{__maskIgnLayerToSpain(layer);try{layer.redraw();}catch(e){}});
  function syncWorldImagery2D(){
   if(typeof map==='undefined'||typeof worldImagery==='undefined'||typeof activeBase==='undefined')return;
   if(document.body.classList.contains('globe-mode'))return;
@@ -12034,17 +12084,12 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
    map.getContainer().style.background='linear-gradient(180deg,#78b7df 0%,#68a2d4 52%,#4e91c7 100%)';
    return;
   }
-  const inSpain=isSpainView2D();
-  // Fuera de España las bases IGN/PNOA no son un fondo mundial: se usa exactamente Esri World Imagery, igual que en el globo.
-  if(!inSpain && activeBase!==worldImagery){
-   if(map.hasLayer(activeBase))map.removeLayer(activeBase);
-   if(!map.hasLayer(worldImagery))worldImagery.addTo(map);
-  }else if(inSpain && activeBase!==worldImagery){
-   if(map.hasLayer(worldImagery))map.removeLayer(worldImagery);
-   if(!map.hasLayer(activeBase))activeBase.addTo(map);
-  }else if(activeBase===worldImagery && !map.hasLayer(worldImagery)){
-   worldImagery.addTo(map);
-  }
+  map.getContainer().style.background='';
+  // Esri World Imagery queda SIEMPRE como base mundial, exactamente igual que en el globo.
+  // Las capas IGN/PNOA, cuando se eligen, se superponen únicamente sobre territorio español mediante la máscara anterior.
+  if(!map.hasLayer(worldImagery))worldImagery.addTo(map);
+  try{worldImagery.bringToBack();}catch(e){}
+  if(activeBase!==worldImagery&&!map.hasLayer(activeBase))activeBase.addTo(map);
  }
  function globePickAt(x,y){
   if(!globeViewer||!window.Cesium)return null;
