@@ -11222,7 +11222,7 @@ function historyCardHtml(d){
  return '<div class="historyCard">'+
   '<div class="historyCardTitle">🏛️ '+escHtml(d?.name||'Entidad política')+'</div>'+
   meta+
-  '<div class="historyContext"><div class="historyWikiSlot"><div class="historyCardNote">Identificando la entidad y consultando acontecimientos del año…</div></div></div>'+
+  '<div class="historyContext"><div class="historyWikiSlot"><div class="historyCardNote">Identificando la entidad y preparando la ficha histórica…</div></div></div>'+
   '<div class="historyCardNote historyFoot">Cliopatria · Seshat Global History Databank · CC BY 4.0. Aquí solo se muestra información histórica; no se añaden topónimos, países ni divisiones actuales.</div>'+
   '</div>';
 }
@@ -14059,69 +14059,110 @@ function hdFmtYearIso(v){const m=String(v||'').match(/^([+-]?\d{1,6})-/);return 
 function hdList(vals){return vals?.length?vals.join(', '):'Sin dato temporal fiable';}
 function hdSourceNote(c){const bits=['Cliopatria/Seshat para identidad, geometría e intervalo histórico','Wikidata para datos estructurados y conflictos'];if(c?.entityTitleEs||c?.entityTitleEn)bits.push('Wikipedia para traducción/identificación y apoyo contextual');return bits.join(' · ')+'.';}
 
-// Resolver seguro de identidad: nunca hace búsquedas genéricas que puedan saltar a otra entidad moderna.
+// Resolver seguro de identidad: Cliopatria fija la entidad; Wikipedia solo aporta el nombre español y contexto de ESA entidad.
 historyWikipediaContext=async function(d,year=historyYear){
- const key=['safe',d?.name||'',d?.seshat||'',d?.wikidata||'',d?.wikipedia||''].join('|');
+ const key=['fast-safe',d?.name||'',d?.seshat||'',d?.wikidata||'',d?.wikipedia||''].join('|');
  if(historyWikiCache.has(key))return historyWikiCache.get(key);
  const job=(async()=>{
-  let qid=hdQid(d?.wikidata),entityTitleEn=cliopatriaWikipediaTitle(d),entityTitleEs='',ent=null;
-  if(entityTitleEn){entityTitleEs=await wikiLangLink(entityTitleEn,'en','es');if(!qid)qid=await hdTitleQid(entityTitleEn,'en');}
+  let qid=hdQid(d?.wikidata),entityTitleEn=cliopatriaWikipediaTitle(d),entityTitleEs='',ent=null,page=null,lang='es';
+  if(entityTitleEn){
+   entityTitleEs=await wikiLangLink(entityTitleEn,'en','es').catch(()=> '');
+   if(!qid)qid=await hdTitleQid(entityTitleEn,'en');
+  }
   if(qid)ent=await hdEntity(qid);
   if(!entityTitleEs)entityTitleEs=ent?.sitelinks?.eswiki?.title||'';
   if(!entityTitleEn)entityTitleEn=ent?.sitelinks?.enwiki?.title||'';
-  const displayName=ent?.labels?.es?.value||entityTitleEs||ent?.labels?.en?.value||entityTitleEn||String(d?.name||'Entidad política');
-  const regimeFallback=historyWikiRegime('',displayName+' '+String(d?.name||''));
-  return {qid,entity:ent,lang:entityTitleEs?'es':'en',entityTitle:entityTitleEs||entityTitleEn,entityTitleEn,entityTitleEs,displayName,intro:'',regime:regimeFallback,url:entityTitleEs?'https://es.wikipedia.org/wiki/'+encodeURIComponent(entityTitleEs.replace(/ /g,'_')):(entityTitleEn?'https://en.wikipedia.org/wiki/'+encodeURIComponent(entityTitleEn.replace(/ /g,'_')):''),identitySource:'Cliopatria → identidad histórica'};
+  const title=entityTitleEs||entityTitleEn||'';
+  if(title){
+   lang=entityTitleEs?'es':'en';
+   page=await wikiPageExtract(title,lang,36000).catch(()=>null);
+  }
+  const extract=String(page?.extract||'').trim();
+  const intro=extract.split(/\n+/).find(x=>x.trim())?.trim()||'';
+  const displayName=entityTitleEs||ent?.labels?.es?.value||entityTitleEn||ent?.labels?.en?.value||String(d?.name||'Entidad política');
+  const regimeFallback=historyWikiRegime([displayName,d?.name,intro].join(' '));
+  return {qid,entity:ent,lang,entityTitle:title,entityTitleEn,entityTitleEs,displayName,intro,extract,regime:regimeFallback,
+   url:title?'https://'+lang+'.wikipedia.org/wiki/'+encodeURIComponent(title.replace(/ /g,'_')):'',identitySource:'Cliopatria → identidad histórica'};
  })();
  historyWikiCache.set(key,job);return job;
 };
+
+function hdContextForYear(c,year){
+ const raw=String(c?.extract||c?.intro||'').replace(/\s+/g,' ').trim();
+ if(!raw)return 'Sin contexto enciclopédico disponible para esta entidad.';
+ const sentences=(raw.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).map(x=>x.trim()).filter(x=>x.length>35&&x.length<700);
+ const y=String(Math.abs(Math.trunc(year)));
+ const hits=[];
+ for(let i=0;i<sentences.length;i++){
+  const t=sentences[i];
+  const hasYear=new RegExp('(?:^|\\D)'+y+'(?:\\D|$)').test(t);
+  if(hasYear){
+   if(i>0)hits.push(sentences[i-1]);
+   hits.push(t);
+   if(i+1<sentences.length)hits.push(sentences[i+1]);
+  }
+ }
+ const uniq=[];
+ for(const x of hits){if(!uniq.includes(x))uniq.push(x);if(uniq.length>=3)break;}
+ if(uniq.length)return uniq.join(' ');
+ // Si la página no menciona expresamente ese año, usamos solo la introducción de la entidad, sin inventar contexto anual.
+ return String(c?.intro||sentences[0]||raw.slice(0,700)).trim();
+}
 
 // Conservar la geometría exacta del polígono en los datos de la ficha para filtrar acontecimientos.
 const hdOldHistoryFeatureData=historyFeatureData;
 historyFeatureData=function(f){const d=hdOldHistoryFeatureData(f);d.rawName=d.name;d.geometry=f?.geometry||null;const p=f?.properties||{};if(p.__name_popup_es||p.__name_es)d.name=String(p.__name_popup_es||p.__name_es);return d;};
 
 async function hdDossier(d,c,year){
- const key=['simple',c?.qid||'',d?.seshat||d?.name||'',year].join('|');if(hdDossierCache.has(key))return hdDossierCache.get(key);
+ const key=['fast4',c?.qid||'',d?.seshat||d?.name||'',year].join('|');if(hdDossierCache.has(key))return hdDossierCache.get(key);
  const job=(async()=>{
-  const ent=c?.entity||(c?.qid?await hdEntity(c.qid):null),historicalEntity=Number.isFinite(d?.to)&&d.to<1950;
-  const allowUntimed=historicalEntity;
-  const govIds=ent?hdClaimQids(ent,'P122',year,allowUntimed):[];
-  const capIds=ent?hdClaimQids(ent,'P36',year,allowUntimed):[];
-  const headIds=ent?hdClaimQids(ent,'P35',year,false):[];
+  const ent=c?.entity||(c?.qid?await hdEntity(c.qid):null);
+  if(!ent)return {government:[],capital:[],rulers:[],context:hdContextForYear(c,year)};
+
+  // Régimen y capital: aceptamos declaraciones sin fecha solo porque el ítem YA es la entidad histórica de Cliopatria,
+  // nunca un Estado moderno sustituto. Si hay declaraciones fechadas, se usa solo la vigente en el año.
+  function qidsForHistoricalItem(prop){
+   const sts=ent?.claims?.[prop]||[],timed=sts.filter(hdStatementIsTimed);
+   const src=timed.length?timed.filter(st=>hdStatementActive(st,year,false)):sts;
+   const out=[];for(const st of src){const q=hdQid(st?.mainsnak?.datavalue?.value?.id||'');if(q&&!out.includes(q))out.push(q);}return out;
+  }
+  const govIds=qidsForHistoricalItem('P122');
+  const capIds=qidsForHistoricalItem('P36');
+  let headIds=qidsForHistoricalItem('P35');
+  // P6 solo como último recurso para repúblicas/entidades donde Wikidata modela al gobernante como jefe de gobierno.
+  let rulerRole='Jefe de Estado / soberano';
+  if(!headIds.length){headIds=qidsForHistoricalItem('P6');rulerRole='Jefe de gobierno';}
+
   const labs=await hdLabels([...govIds,...capIds,...headIds]),lm=new Map(labs.map(x=>[x.qid,x.label]));
-  let rulers=headIds.map(q=>({name:lm.get(q)||q,office:'Jefe de Estado / soberano'}));
-  // Una sola consulta adicional si falta el gobernante, ejecutada en paralelo con los hechos locales.
-  const [fallbackRulers,events]=await Promise.all([
-   (!rulers.length&&c?.qid)?hdOfficeholders(c.qid,year):Promise.resolve([]),
-   hdEvents(d,c,year)
-  ]);
-  if(!rulers.length)rulers=fallbackRulers;
-  return {government:govIds.map(q=>lm.get(q)||q),capital:capIds.map(q=>lm.get(q)||q),rulers,events};
+  return {
+   government:govIds.map(q=>lm.get(q)||q),
+   capital:capIds.map(q=>lm.get(q)||q),
+   rulers:headIds.map(q=>({name:lm.get(q)||q,office:rulerRole})),
+   context:hdContextForYear(c,year)
+  };
  })();hdDossierCache.set(key,job);return job;
 }
 function hdDossierHtml(d,c,x,year){
- let inferredRegime=c?.regime||'';
- if(!inferredRegime){const rt=(x.rulers||[]).map(r=>r.office+' '+r.name).join(' ').toLowerCase();if(/\b(king|queen|rey|reina|monarch|monarca)\b/.test(rt))inferredRegime='Monarquía';else if(/\b(emperor|empress|emperador|emperatriz)\b/.test(rt))inferredRegime='Imperio';else if(/\b(sultan|sult[aá]n)\b/.test(rt))inferredRegime='Sultanato';else if(/\b(caliph|califa)\b/.test(rt))inferredRegime='Califato';else if(/\b(president|presidente)\b/.test(rt))inferredRegime='República';}
- const regime=hdList(x.government.length?x.government:(inferredRegime?[inferredRegime]:[]));
- const ruler=x.rulers?.length?x.rulers.map(r=>r.name+(r.office&&r.office!=='Jefe de Estado / soberano'?' · '+r.office:'')).join('; '):'Sin dato temporal fiable';
+ const regime=hdList(x.government?.length?x.government:(c?.regime?[c.regime]:[]));
+ const ruler=x.rulers?.length?x.rulers.map(r=>r.name+(r.office==='Jefe de gobierno'?' · jefe de gobierno':'')).join('; '):'Sin dato temporal fiable';
+ const capital=hdList(x.capital||[]);
+ const context=String(x.context||'').trim()||'Sin contexto enciclopédico disponible.';
  let h='<div class="historyDossier"><b>🧭 '+escHtml(historyYearText(year))+'</b><div class="historyDossierGrid">';
  h+='<div class="historyDossierBox"><b>🏛️ Régimen</b><br>'+escHtml(regime)+'</div>';
  h+='<div class="historyDossierBox"><b>👑 Gobernante</b><br>'+escHtml(ruler)+'</div>';
- h+='<div class="historyDossierBox historyDossierWide"><b>🏙️ Capital</b><br>'+escHtml(hdList(x.capital))+'</div>';
- h+='<div class="historyDossierBox historyDossierWide"><b>📅 Acontecimientos destacados de '+escHtml(historyYearText(year))+'</b><div class="historyDossierEvents">';
- if(x.events?.length)h+=x.events.map(e=>'<div class="historyDossierEvent"><div>'+escHtml(e.text)+'</div></div>').join('');
- else h+='No se han localizado acontecimientos de suficiente relevancia vinculados a esta entidad en ese año.';
- h+='</div></div></div><div class="historyDossierSource">Cliopatria/Seshat fija la entidad y su geometría histórica; Wikidata aporta los datos estructurados disponibles para el año seleccionado.</div></div>';
+ h+='<div class="historyDossierBox historyDossierWide"><b>🏙️ Capital</b><br>'+escHtml(capital)+'</div>';
+ h+='<div class="historyDossierBox historyDossierWide"><b>📖 ¿Qué está pasando aquí en '+escHtml(historyYearText(year))+'?</b><div style="margin-top:5px;line-height:1.42">'+escHtml(context)+'</div></div>';
+ h+='</div><div class="historyDossierSource">Cliopatria/Seshat fija la entidad y su geometría histórica. Wikidata aporta régimen, gobernante y capital cuando están documentados; Wikipedia en español aporta el contexto de la misma entidad.</div></div>';
  return h;
 }
 
-historyWikiContextHtml=function(c){return '<div class="historyDossierLoading">Consultando Wikidata para el año seleccionado…</div>';};
+historyWikiContextHtml=function(c){return '<div class="historyDossierLoading">Consultando la ficha histórica…</div>';};
 enrichHistoryElement=async function(el,d,token){
  const y=historyYear;
  try{
   const c=await historyWikipediaContext(d,y);if(token!==historyWikiSeq||historyYear!==y||!document.getElementById('worldHistoryCheck')?.checked)return;
   const title=el?.querySelector?.('.historyCardTitle');if(title&&c?.displayName)title.textContent='🏛️ '+c.displayName;
-  const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyDossierLoading">Consultando régimen, gobernante, capital y acontecimientos de '+escHtml(historyYearText(y))+'…</div>';
+  const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyDossierLoading">Consultando régimen, gobernante, capital y contexto de '+escHtml(historyYearText(y))+'…</div>';
   const x=await hdDossier(d,c,y);if(token!==historyWikiSeq||historyYear!==y||!document.getElementById('worldHistoryCheck')?.checked)return;
   if(target)target.innerHTML=hdDossierHtml(d,c,x,y);
  }catch(e){console.warn('Ficha histórica',e);const target=el?.querySelector?.('.historyWikiSlot');if(target)target.innerHTML='<div class="historyCardNote">No se pudo completar la ficha histórica. Se mantiene la identidad y geometría de Cliopatria.</div>';}
