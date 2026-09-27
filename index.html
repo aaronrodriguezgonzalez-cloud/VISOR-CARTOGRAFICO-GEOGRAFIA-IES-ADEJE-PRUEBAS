@@ -1863,13 +1863,21 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutNorthBox{left:91%;top:17%;width:5%;height:9%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#111;z-index:12}
 .layoutNorthN{font:900 25px Montserrat,sans-serif;letter-spacing:.06em}
 .layoutNorthArrowSvg{width:34px;height:54px;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.16))}
-.layoutScaleBox{left:4.8%;top:91.5%;width:30%;height:5.5%;font:700 11.5px/1.2 Montserrat,Arial,sans-serif;color:#1f2f40;z-index:12}
-.layoutScaleTextLabel{margin-bottom:5px}
-.layoutScaleBar{display:block;width:100%;height:12px;border:1px solid #111;background:#fff;border-radius:2px;overflow:hidden}
-#layoutScaleBarInner{display:flex;height:100%;width:60%;min-width:36px}
-#layoutScaleBarInner span{flex:1}
+.layoutScaleBox{left:4.8%;top:91.5%;width:30%;height:6.5%;font:700 11.5px/1.2 Montserrat,Arial,sans-serif;color:#1f2f40;z-index:12}
+.layoutScaleTextLabel{margin-bottom:4px}
+.layoutScaleBar{display:block;width:100%;height:10px;border:none;background:transparent;border-radius:0;overflow:visible}
+#layoutScaleBarInner{display:flex;height:100%;width:60%;min-width:80px;border-bottom:1px solid #111}
+#layoutScaleBarInner span{flex:1;box-sizing:border-box;border-top:1px solid #111;border-left:1px solid #111}
+#layoutScaleBarInner span:last-child{border-right:1px solid #111}
 #layoutScaleBarInner span:nth-child(odd){background:#111}
 #layoutScaleBarInner span:nth-child(even){background:#fff}
+.layoutScaleTicks{position:relative;height:16px;margin-top:2px;width:60%;min-width:80px;font:600 9.5px/1 Montserrat,Arial,sans-serif;color:#1f2f40;white-space:nowrap}
+.layoutScaleTicks span{position:absolute;top:0;transform:translateX(-50%)}
+.layoutScaleTicks span:nth-child(1){left:0;transform:none}
+.layoutScaleTicks span:nth-child(2){left:25%}
+.layoutScaleTicks span:nth-child(3){left:50%}
+.layoutScaleTicks span:nth-child(4){left:75%}
+.layoutScaleTicks span:nth-child(5){left:100%;transform:translateX(-100%)}
 .layoutCredits{position:absolute;left:58%;top:96%;width:39%;height:2.5%;font-size:11px;font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden;z-index:12}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
@@ -3682,6 +3690,7 @@ body.globe-mode #globeScaleBox{display:block}
         <div id="layoutScaleBox" class="layoutItem layoutScaleBox" data-layout="scale">
           <div id="layoutScaleText" class="layoutScaleTextLabel">Escala gráfica</div>
           <div class="layoutScaleBar"><div id="layoutScaleBarInner"><span></span><span></span><span></span><span></span></div></div>
+          <div id="layoutScaleTicks" class="layoutScaleTicks"><span>0</span><span></span><span></span><span></span><span></span></div>
         </div>
 
         <div id="layoutSources" class="layoutItem layoutSources" data-layout="sources"></div>
@@ -7388,6 +7397,17 @@ window.addEventListener('resize',()=>{
 let layoutDrag=null,layoutResize=null,layoutSnapshotData=null;
 
 function defaultLayoutTitle(){
+ try{
+  const active=(typeof activeHumanIndicators==='function')?activeHumanIndicators():[];
+  if(active.length){
+   const year=+document.getElementById('worldHumanYear')?.value;
+   if(active.length===1&&typeof WORLD_HUMAN_INDICATORS!=='undefined'){
+    const meta=WORLD_HUMAN_INDICATORS[active[0]];
+    if(meta?.name)return meta.name+' en el mundo'+(Number.isFinite(year)?', '+year:'');
+   }
+   return 'Geografía humana en el mundo'+(Number.isFinite(year)?', '+year:'');
+  }
+ }catch(e){}
  const b=map.getBounds(),c=map.getCenter();
  if(c.lat>27&&c.lat<30.5&&c.lng>-19&&c.lng<-13)return 'Mapa de Canarias';
  if(c.lat>35&&c.lat<44.5&&c.lng>-10&&c.lng<5)return 'Mapa de España';
@@ -7431,7 +7451,7 @@ function layoutMapDisplayMetrics(){
  return {boxW,boxH,imgW,imgH,ratio:fit*extra,displayW:imgW*fit*extra,displayH:imgH*fit*extra};
 }
 function updateLayoutScaleBox(){
- const textEl=document.getElementById('layoutScaleText'),barInner=document.getElementById('layoutScaleBarInner');
+ const textEl=document.getElementById('layoutScaleText'),barInner=document.getElementById('layoutScaleBarInner'),ticks=document.getElementById('layoutScaleTicks');
  if(!textEl||!barInner)return;
  const m=layoutMapDisplayMetrics();
  if(!m){textEl.textContent='Escala gráfica';return;}
@@ -7442,20 +7462,30 @@ function updateLayoutScaleBox(){
   kmPerPx=layoutSnapshotMeta?.kmPerImagePxAtCenter?layoutSnapshotMeta.kmPerImagePxAtCenter/m.ratio:null;
  }
  if(!Number.isFinite(kmPerPx)||kmPerPx<=0){
-  textEl.textContent='Escala gráfica';barInner.style.width='120px';return;
+  textEl.textContent='Escala gráfica';barInner.style.width='120px';if(ticks)ticks.style.width='120px';return;
  }
- // Mismo principio que una barra de escala cartográfica interactiva:
- // buscamos una distancia redonda que ocupe aproximadamente 120–180 px.
- const targetPx=Math.max(105,Math.min(180,m.boxW*0.16));
- const rawKm=kmPerPx*targetPx;
- const distanceKm=niceScaleDistance(rawKm);
- const widthPx=Math.max(55,Math.min(m.boxW*0.42,distanceKm/kmPerPx));
+ // Distancia total de la barra. Se recalcula con el zoom y el tamaño efectivo de la captura.
+ const targetPx=Math.max(120,Math.min(220,m.boxW*0.22));
+ const rawTotalKm=kmPerPx*targetPx;
+ const totalKm=niceScaleDistance(rawTotalKm);
+ const widthPx=Math.max(80,Math.min(m.boxW*0.46,totalKm/kmPerPx));
+ const segmentKm=totalKm/4;
  barInner.style.width=widthPx+'px';
- let label;
- if(distanceKm>=1) label=new Intl.NumberFormat('es-ES',{maximumFractionDigits:distanceKm<10?1:0}).format(distanceKm)+' km';
- else label=new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(distanceKm*1000)+' m';
- textEl.textContent='Escala gráfica · '+label;
+ if(ticks)ticks.style.width=widthPx+'px';
+ const fmtKm=v=>{
+  if(v>=1000)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(v)+' km';
+  if(v>=10)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(v)+' km';
+  if(v>=1)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(v)+' km';
+  return new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(v*1000)+' m';
+ };
+ textEl.textContent='Escala gráfica · '+fmtKm(segmentKm)+' por tramo';
+ if(ticks){
+  const spans=ticks.querySelectorAll('span');
+  const vals=[0,segmentKm,segmentKm*2,segmentKm*3,totalKm];
+  spans.forEach((s,i)=>{s.textContent=i===0?'0':fmtKm(vals[i]);});
+ }
 }
+
 function bringLayoutItemToFront(el){
  if(!el)return;
  layoutZCounter+=1;
@@ -8822,6 +8852,12 @@ function syncGlobeToponymLayers(){
 }
 async function toggleWorldToponyms(on){
  if(!globeViewer)return;
+ if(on&&typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+  if(worldVectorLabelCollection)worldVectorLabelCollection.show=false;
+  if(globeSpainToponymsLayer)globeSpainToponymsLayer.show=false;
+  globeViewer.scene.requestRender();
+  return;
+ }
  if(on){
   try{
    if(!globeSpainToponymsLayer){
@@ -8856,6 +8892,11 @@ async function toggleWorldToponyms(on){
 
 async function toggleCountryLabels(on){
  if(!globeViewer)return;
+ if(on&&typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+  if(countryLabelsSource){globeViewer.dataSources.remove(countryLabelsSource,true);countryLabelsSource=null;}
+  globeViewer.scene.requestRender();
+  return;
+ }
  if(on){
   status('Cargando nombres de países…');
   try{
@@ -9135,6 +9176,10 @@ async function toggleCountries2D(on){
 }
 
 async function toggleCountryLabels2D(on){
+ if(on&&typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+  if(countryLabels2DLayer){map.removeLayer(countryLabels2DLayer);countryLabels2DLayer=null;}
+  return;
+ }
  if(on){
   try{
    const data=await loadCountries();
@@ -9212,6 +9257,12 @@ function world2DLabelFontClass(p){
 async function updateWorldToponyms2D(force=false){
  if(!document.getElementById('worldToponymsCheck')?.checked)return;
  if(document.body.classList.contains('globe-mode'))return;
+ if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+  worldToponyms2DGeneration++;
+  if(worldToponyms2DLayer){map.removeLayer(worldToponyms2DLayer);worldToponyms2DLayer=null;}
+  if(worldToponyms2DSpain&&map.hasLayer(worldToponyms2DSpain))map.removeLayer(worldToponyms2DSpain);
+  return;
+ }
  const generation=++worldToponyms2DGeneration;
  const center=map.getCenter(),spain=profileIsSpainLatLng(center);
 
@@ -11433,7 +11484,7 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
 <script id="anambro-human-geography">
 const WORLD_HUMAN_INDICATORS={
  'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral',breakProfile:'population'},
- 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial',sense:'neutral',zeroBase:true,breakProfile:'density'},
+ 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial',sense:'neutral',zeroBase:true,breakProfile:'density',fixedCuts:[25,50,100,250]},
  'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial',sense:'neutral',breakProfile:'growth'},
  'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100],breakProfile:'percent'},
  'NY.GDP.MKTP.CD':{name:'PIB total',unit:'US$ corrientes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral',zeroBase:true,breakProfile:'money-total'},
@@ -11550,6 +11601,12 @@ function humanBreaks(vals,meta){
  const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);
  if(!a.length)return [];
  const raw=[humanQuantile(a,.2),humanQuantile(a,.4),humanQuantile(a,.6),humanQuantile(a,.8)];
+ // Cuando una variable tiene un esquema cartográfico ya validado a partir de sus quintiles,
+ // se conserva ese esquema cerrado. En densidad: <25, 25–50, 50–100, 100–250, >250.
+ if(Array.isArray(meta?.fixedCuts)&&meta.fixedCuts.length===4){
+  const cuts=meta.fixedCuts.map(Number);
+  return [a[0],cuts[0],cuts[1],cuts[2],cuts[3],a[a.length-1]];
+ }
  let cuts=humanChooseCuts(raw,humanCandidates(meta,a,raw),a);
  if(!cuts){
   const step=humanNiceStep(Math.max((a[a.length-1]-a[0])/8,1e-9));
