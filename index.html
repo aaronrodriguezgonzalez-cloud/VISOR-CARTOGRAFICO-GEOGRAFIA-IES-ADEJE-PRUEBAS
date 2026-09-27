@@ -464,6 +464,11 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .toolbar{
   top:102px!important;
 }
+
+/* Maquetación limpia: ningún elemento exportable lleva marco ni sombra. */
+.layoutPage .layoutItem{border:none!important;box-shadow:none!important}
+.layoutPage .layoutInstituteBox,.layoutPage .layoutLegendBox,.layoutPage .layoutTitleBox{border-radius:0!important;box-shadow:none!important}
+
 @media(max-width:900px){
   .brand{
     width:calc(100vw - 90px)!important;
@@ -1837,35 +1842,35 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutResizeHandle.sw{bottom:-7px;left:-7px;cursor:nesw-resize}
 .layoutResizeHint{margin-top:7px;padding:8px 9px;border-radius:7px;background:#edf4ff;border:1px solid #b8cff7;color:#17324d;font-weight:750;line-height:1.3}
 .layoutItem.resizing{cursor:default!important}
-.layoutLogoBox{left:2.5%;top:2.2%;width:13.5%;height:8%;display:flex;align-items:center;justify-content:flex-start;overflow:visible}
+.layoutLogoBox{left:84.5%;top:2.1%;width:12.5%;height:6.5%;display:flex;align-items:center;justify-content:flex-end;overflow:visible;z-index:12}
 .layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
-.layoutInstituteBox{left:2.8%;top:10.8%;width:30%;height:9.6%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(2px);box-shadow:none;border:1px solid rgba(28,56,84,.18)}
+.layoutInstituteBox{left:2.7%;top:1.7%;width:35%;height:7%;display:flex;align-items:center;gap:10px;padding:4px 6px;border:none;border-radius:0;background:transparent;backdrop-filter:none;box-shadow:none;z-index:12}
 .layoutInstituteLogo{width:58px;height:58px;object-fit:contain;flex:0 0 58px}
 .layoutInstituteText{font:700 11px/1.18 Montserrat,Arial,sans-serif;color:#23405d}
 .layoutInstituteText b{font-size:16px;color:#17324d}
 .layoutInstituteMeta{display:block;margin-top:1px;font-size:11px;color:#4a6279;font-weight:700}
 .layoutInstituteExplain{display:block;margin-top:3px;font-size:10.4px;color:#245a6c;font-weight:700}
-.layoutTitleBox{left:17%;top:3%;width:74%;height:7%;padding:4px 12px;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:rgba(255,255,255,.78);backdrop-filter:blur(1.4px);border-radius:16px}
-.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:none;border-radius:0;overflow:hidden;background:#d9dde1;box-shadow:none}
+.layoutTitleBox{left:37%;top:1.8%;width:47%;height:7%;padding:2px 8px;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:transparent;backdrop-filter:none;border:none;border-radius:0;z-index:12}
+.layoutMapBox{left:2.5%;top:10%;width:95%;height:80%;border:none;border-radius:0;overflow:hidden;background:#fff;box-shadow:none;z-index:1}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none;background:#fff;position:absolute;left:0;top:0;transform-origin:50% 50%}
 .layoutMapBox.handMode{cursor:grab}
 .layoutMapBox.handMode.dragging{cursor:grabbing}
-.layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.97);border:1px solid #c9d3dc;border-radius:14px;padding:11px 12px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:none}
+.layoutLegendBox{left:4.7%;top:63%;width:18%;height:auto;max-height:24%;overflow:hidden;background:rgba(255,255,255,.90);border:none;border-radius:0;padding:7px 8px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:none;z-index:12}
 .layoutLegendTitle{display:block;margin-bottom:4px;font-size:15px;font-weight:800;color:#17324d}
 .layoutLegendBox small{display:block;color:#556777;font-weight:600}
 .layoutLegendBox .sw{display:inline-block;width:14px;height:10px;border:1px solid rgba(0,0,0,.18);border-radius:2px;margin-right:6px;vertical-align:middle}
 .layoutLegendBox #layoutLegendContent>div>div{margin:3px 0}
-.layoutNorthBox{left:83%;top:71%;width:8%;height:11%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#111}
+.layoutNorthBox{left:91%;top:17%;width:5%;height:9%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#111;z-index:12}
 .layoutNorthN{font:900 25px Montserrat,sans-serif;letter-spacing:.06em}
 .layoutNorthArrowSvg{width:34px;height:54px;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.16))}
-.layoutScaleBox{left:7%;top:87%;width:24%;height:7%;font:700 11.5px/1.2 Montserrat,Arial,sans-serif;color:#1f2f40}
+.layoutScaleBox{left:4.8%;top:91.5%;width:30%;height:5.5%;font:700 11.5px/1.2 Montserrat,Arial,sans-serif;color:#1f2f40;z-index:12}
 .layoutScaleTextLabel{margin-bottom:5px}
 .layoutScaleBar{display:block;width:100%;height:12px;border:1px solid #111;background:#fff;border-radius:2px;overflow:hidden}
 #layoutScaleBarInner{display:flex;height:100%;width:60%;min-width:36px}
 #layoutScaleBarInner span{flex:1}
 #layoutScaleBarInner span:nth-child(odd){background:#111}
 #layoutScaleBarInner span:nth-child(even){background:#fff}
-.layoutCredits{position:absolute;left:60%;top:95%;width:37%;height:3%;font-size:11px;font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden}
+.layoutCredits{position:absolute;left:58%;top:96%;width:39%;height:2.5%;font-size:11px;font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden;z-index:12}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
  .layoutSidebar{padding:8px}
@@ -1999,7 +2004,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .sourceItem:last-child{border-bottom:0}.sourceItem a{color:#0b5fa5;font-weight:750}
 .sourceOk{border-left:3px solid #2f9b73}.sourceReview{border-left:3px solid #e19c2b;background:#fffaf0}
 .sourcesLegalNote{margin-top:9px;padding:8px 10px;border-radius:8px;background:#fff8e7;border:1px solid #ead59c;line-height:1.35}
-.layoutSources{position:absolute;left:33%;top:87%;width:64%;height:7%;font-size:8px;line-height:1.18;color:#444;text-align:right;overflow:hidden}
+.layoutSources{position:absolute;left:61%;top:92%;width:36%;height:3.2%;font-size:8px;line-height:1.18;color:#444;text-align:right;overflow:hidden;z-index:12}
 
 .volcanoPopup .leaflet-popup-content-wrapper{border-radius:14px!important;padding:0!important;background:rgba(255,254,245,.985)!important}
 .volcanoPopup .leaflet-popup-content{width:min(650px,78vw)!important;max-width:min(650px,78vw)!important;max-height:68vh!important;overflow:auto!important;margin:15px 17px!important}
@@ -3626,7 +3631,7 @@ body.globe-mode #globeScaleBox{display:block}
       </div>
 
       <label>Zoom de la captura
-        <input id="layoutCropZoom" type="range" min="100" max="300" value="100">
+        <input id="layoutCropZoom" type="range" min="50" max="400" value="100" step="1">
       </label>
 
       <div class="layoutHelp">
@@ -7437,15 +7442,18 @@ function updateLayoutScaleBox(){
   kmPerPx=layoutSnapshotMeta?.kmPerImagePxAtCenter?layoutSnapshotMeta.kmPerImagePxAtCenter/m.ratio:null;
  }
  if(!Number.isFinite(kmPerPx)||kmPerPx<=0){
-  textEl.textContent='Escala gráfica';
-  barInner.style.width='60%';
-  return;
+  textEl.textContent='Escala gráfica';barInner.style.width='120px';return;
  }
- const targetPx=Math.min(Math.max(110,m.boxW*0.38),m.boxW*0.82);
- const distanceKm=niceScaleDistance(kmPerPx*targetPx);
- const widthPx=Math.max(36,Math.min(m.boxW*0.92,distanceKm/kmPerPx));
+ // Mismo principio que una barra de escala cartográfica interactiva:
+ // buscamos una distancia redonda que ocupe aproximadamente 120–180 px.
+ const targetPx=Math.max(105,Math.min(180,m.boxW*0.16));
+ const rawKm=kmPerPx*targetPx;
+ const distanceKm=niceScaleDistance(rawKm);
+ const widthPx=Math.max(55,Math.min(m.boxW*0.42,distanceKm/kmPerPx));
  barInner.style.width=widthPx+'px';
- const label=distanceKm>=1 ? new Intl.NumberFormat('es-ES',{maximumFractionDigits:distanceKm<10?1:0}).format(distanceKm)+' km' : new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(distanceKm*1000)+' m';
+ let label;
+ if(distanceKm>=1) label=new Intl.NumberFormat('es-ES',{maximumFractionDigits:distanceKm<10?1:0}).format(distanceKm)+' km';
+ else label=new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(distanceKm*1000)+' m';
  textEl.textContent='Escala gráfica · '+label;
 }
 function bringLayoutItemToFront(el){
@@ -7653,7 +7661,7 @@ function openLayoutEditor(){
 
  // El logotipo ANAMBRO forma parte del propio diseño de la página exportable.
  syncLayoutInstituteBox();
- document.querySelectorAll('.layoutItem').forEach((el,i)=>{el.style.zIndex=String(5+i);});
+ document.querySelectorAll('.layoutItem').forEach(el=>{el.style.zIndex=el.dataset.layout==='map'?'1':'12';});
  layoutZCounter=20;
  updateLayoutPageFormat();
  ensureLayoutResizeHandles();
@@ -7703,7 +7711,6 @@ function selectLayoutItem(key){
  ensureLayoutResizeHandles();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
  const el=layoutEl(key);if(!el)return;
- bringLayoutItemToFront(el);
  el.classList.add('selected');
  document.getElementById('layoutSelected').value=key;
  syncLayoutControlValues(el);
@@ -7715,7 +7722,7 @@ function applyLayoutControls(){
  el.style.width=w+'%';el.style.height=h+'%';
  if(key==='map'){
   const img=document.getElementById('layoutMapImage');
-  const cropZoom=Math.max(1,(+document.getElementById('layoutCropZoom').value||100)/100);
+  const cropZoom=Math.max(.5,(+document.getElementById('layoutCropZoom').value||100)/100);
   const panX=+document.getElementById('layoutPanX').value||50;
   const panY=+document.getElementById('layoutPanY').value||50;
   const effectiveZoom=cropZoom*s;
@@ -7742,7 +7749,6 @@ function initLayoutDrag(){
    if(e.button!==0)return;
    const handle=e.target.closest?.('.layoutResizeHandle');
    selectLayoutItem(el.dataset.layout);
-   bringLayoutItemToFront(el);
 
    const page=document.getElementById('layoutPage');
    const pr=page.getBoundingClientRect(),r=el.getBoundingClientRect();
@@ -7858,6 +7864,7 @@ function initLayoutDrag(){
   layoutResize=null;
   layoutDrag=null;
   layoutMapPanDrag=null;
+  updateLayoutScaleBox();
  });
 }
 async function exportLayoutPDF(){
@@ -11425,28 +11432,28 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
 
 <script id="anambro-human-geography">
 const WORLD_HUMAN_INDICATORS={
- 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral'},
- 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial',sense:'neutral',zeroBase:true},
- 'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial',sense:'neutral'},
- 'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
- 'NY.GDP.MKTP.CD':{name:'PIB total',unit:'US$ corrientes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral',zeroBase:true},
- 'NY.GDP.PCAP.CD':{name:'PIB per cápita',unit:'US$ corrientes por habitante',dec:0,source:'Banco Mundial',sense:'positive',zeroBase:true},
- 'NV.AGR.TOTL.ZS':{name:'Agricultura, silvicultura y pesca',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
- 'NV.IND.TOTL.ZS':{name:'Industria',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
- 'NV.SRV.TOTL.ZS':{name:'Servicios',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
- 'SL.UEM.TOTL.ZS':{name:'Desempleo',unit:'% de la población activa',dec:1,source:'Banco Mundial',sense:'negative',zeroBase:true},
- 'SP.DYN.LE00.IN':{name:'Esperanza de vida al nacer',unit:'años',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]},
- 'SP.DYN.TFRT.IN':{name:'Fecundidad',unit:'hijos por mujer',dec:2,source:'Banco Mundial',sense:'neutral',domain:[0,10]},
- 'SP.DYN.CDRT.IN':{name:'Mortalidad bruta',unit:'por 1.000 habitantes',dec:1,source:'Banco Mundial',sense:'negative',zeroBase:true},
- 'SM.POP.NETM':{name:'Migración neta',unit:'personas',dec:0,source:'Banco Mundial',signed:true,sense:'neutral'},
- 'UNDP_HDI':{name:'Índice de Desarrollo Humano (IDH)',unit:'índice 0–1',dec:3,source:'PNUD',minYear:1990,maxYear:2023,sense:'positive',domain:[0,1]},
- 'EN.ATM.CO2E.PC':{name:'Emisiones de CO₂ per cápita',unit:'t por habitante',dec:2,source:'Banco Mundial',sense:'negative',zeroBase:true},
- 'EG.ELC.ACCS.ZS':{name:'Acceso a electricidad',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]},
- 'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]},
- 'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]}
+ 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral',breakProfile:'population'},
+ 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial',sense:'neutral',zeroBase:true,breakProfile:'density'},
+ 'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial',sense:'neutral',breakProfile:'growth'},
+ 'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100],breakProfile:'percent'},
+ 'NY.GDP.MKTP.CD':{name:'PIB total',unit:'US$ corrientes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral',zeroBase:true,breakProfile:'money-total'},
+ 'NY.GDP.PCAP.CD':{name:'PIB per cápita',unit:'US$ corrientes por habitante',dec:0,source:'Banco Mundial',sense:'positive',zeroBase:true,breakProfile:'money-pc'},
+ 'NV.AGR.TOTL.ZS':{name:'Agricultura, silvicultura y pesca',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100],breakProfile:'percent-sector'},
+ 'NV.IND.TOTL.ZS':{name:'Industria',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100],breakProfile:'percent-sector'},
+ 'NV.SRV.TOTL.ZS':{name:'Servicios',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100],breakProfile:'percent-sector'},
+ 'SL.UEM.TOTL.ZS':{name:'Desempleo',unit:'% de la población activa',dec:1,source:'Banco Mundial',sense:'negative',zeroBase:true,breakProfile:'unemployment'},
+ 'SP.DYN.LE00.IN':{name:'Esperanza de vida al nacer',unit:'años',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100],breakProfile:'life-expectancy'},
+ 'SP.DYN.TFRT.IN':{name:'Fecundidad',unit:'hijos por mujer',dec:2,source:'Banco Mundial',sense:'neutral',domain:[0,10],breakProfile:'fertility'},
+ 'SP.DYN.CDRT.IN':{name:'Mortalidad bruta',unit:'por 1.000 habitantes',dec:1,source:'Banco Mundial',sense:'negative',zeroBase:true,breakProfile:'mortality'},
+ 'SM.POP.NETM':{name:'Migración neta',unit:'personas',dec:0,source:'Banco Mundial',signed:true,sense:'neutral',breakProfile:'signed-count'},
+ 'UNDP_HDI':{name:'Índice de Desarrollo Humano (IDH)',unit:'índice 0–1',dec:3,source:'PNUD',minYear:1990,maxYear:2023,sense:'positive',domain:[0,1],breakProfile:'hdi'},
+ 'EN.ATM.CO2E.PC':{name:'Emisiones de CO₂ per cápita',unit:'t por habitante',dec:2,source:'Banco Mundial',sense:'negative',zeroBase:true,breakProfile:'co2'},
+ 'EG.ELC.ACCS.ZS':{name:'Acceso a electricidad',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100],breakProfile:'access-percent'},
+ 'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100],breakProfile:'internet-percent'},
+ 'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100],breakProfile:'access-percent'}
 };
 const HUMAN_PALETTES={
- positive:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000'],
+ positive:['#7f0000','#d94831','#f28c28','#ffd34d','#fff2b2'],
  negative:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000'],
  neutral:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000']
 };
@@ -11463,43 +11470,101 @@ function humanNiceStep(raw){
  const m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;
  return m*p;
 }
-function humanRoundNice(raw){
- if(!Number.isFinite(raw)||raw===0)return 0;
- const sign=raw<0?-1:1,v=Math.abs(raw),p=10**Math.floor(Math.log10(v));
- const cand=[1,2,2.5,5,10].map(m=>m*p);
- let best=cand[0],d=Math.abs(v-best);
- for(const c of cand){const dd=Math.abs(v-c);if(dd<d){best=c;d=dd;}}
- return sign*best;
+function humanQuantile(a,p){
+ if(!a.length)return NaN;
+ if(a.length===1)return a[0];
+ const pos=(a.length-1)*p,lo=Math.floor(pos),hi=Math.ceil(pos),t=pos-lo;
+ return a[lo]+(a[hi]-a[lo])*t;
 }
-function humanCeilNice(raw){
- if(!Number.isFinite(raw)||raw<=0)return 0;
- const p=10**Math.floor(Math.log10(raw));
- for(const mult of [1,2,2.5,5,10]){const c=mult*p;if(c>=raw)return c;}
- return 10*p;
+function humanSeries125(min,max){
+ if(!Number.isFinite(min)||!Number.isFinite(max)||min===max)return [];
+ const out=[];
+ const lo=Math.floor(Math.log10(Math.max(Math.min(Math.abs(min||1),Math.abs(max||1)),1e-12)))-1;
+ const hi=Math.ceil(Math.log10(Math.max(Math.abs(min),Math.abs(max),1e-12)))+1;
+ for(let e=lo;e<=hi;e++)for(const m of [1,2,2.5,5])out.push(m*10**e);
+ return out.filter(v=>v>0);
+}
+function humanSignedSeries125(maxAbs){
+ const pos=humanSeries125(Math.max(maxAbs/1e5,1),Math.max(maxAbs,1));
+ const vals=[...pos.map(v=>-v),0,...pos].sort((a,b)=>a-b);
+ return [...new Set(vals)];
+}
+function humanCandidates(meta,a,raw){
+ const p=meta?.breakProfile||'';
+ const max=a[a.length-1],min=a[0],maxAbs=Math.max(Math.abs(min),Math.abs(max));
+ const fixed={
+  density:[5,10,25,50,75,100,150,200,250,500,1000,2500,5000,10000,25000],
+  growth:[-10,-7.5,-5,-3,-2,-1,0,1,2,3,5,7.5,10],
+  percent:[10,20,25,30,40,50,60,70,75,80,90,95],
+  'percent-sector':[5,10,15,20,25,30,35,40,50,60,70,80],
+  unemployment:[2.5,5,7.5,10,12.5,15,20,25,30,40],
+  'life-expectancy':[40,45,50,55,60,65,70,75,80,85,90],
+  fertility:[1,1.25,1.5,1.75,2,2.1,2.5,3,3.5,4,5,6,7],
+  mortality:[2.5,5,7.5,10,12.5,15,20,25,30],
+  hdi:[0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95],
+  co2:[0.5,1,2,2.5,5,7.5,10,15,20,25,30,40],
+  'access-percent':[25,50,75,80,85,90,95,98,99,100],
+  'internet-percent':[10,20,25,40,50,60,75,80,90,95,100],
+  'money-pc':[500,1000,2500,5000,7500,10000,15000,25000,40000,50000,75000,100000,150000]
+ };
+ if(fixed[p])return fixed[p].filter(v=>v>min&&v<max);
+ if(p==='population'||p==='money-total')return humanSeries125(Math.max(1,min),max).filter(v=>v>min&&v<max);
+ if(p==='signed-count')return humanSignedSeries125(maxAbs).filter(v=>v>min&&v<max);
+ const step=humanNiceStep(Math.max((raw[3]-raw[0])/4,(max-min)/8,1e-9));
+ const lo=Math.floor(min/step)-2,hi=Math.ceil(max/step)+2,c=[];
+ for(let i=lo;i<=hi;i++)c.push(i*step);
+ return c.filter(v=>v>min&&v<max);
+}
+function humanCutCost(candidate,target,scale){
+ const s=Math.max(Math.abs(scale)||0,1e-9);
+ return Math.abs(candidate-target)/s;
+}
+function humanChooseCuts(raw,candidates,a){
+ candidates=[...new Set((candidates||[]).filter(Number.isFinite))].sort((x,y)=>x-y);
+ if(candidates.length<4)return null;
+ const range=Math.max(a[a.length-1]-a[0],1e-9);
+ // Dynamic programming: choose four increasing, readable candidate cuts that stay as close
+ // as possible to the four raw quintile boundaries.
+ const n=candidates.length,k=4,INF=1e99;
+ const dp=Array.from({length:k},()=>Array(n).fill(INF));
+ const prev=Array.from({length:k},()=>Array(n).fill(-1));
+ for(let j=0;j<n;j++)dp[0][j]=humanCutCost(candidates[j],raw[0],range);
+ for(let i=1;i<k;i++){
+  for(let j=i;j<n;j++){
+   const here=humanCutCost(candidates[j],raw[i],range);
+   for(let m=i-1;m<j;m++){
+    const gap=candidates[j]-candidates[m];
+    const minUsefulGap=range*0.015;
+    const crowdPenalty=gap<minUsefulGap?(minUsefulGap-gap)/range*4:0;
+    const score=dp[i-1][m]+here+crowdPenalty;
+    if(score<dp[i][j]){dp[i][j]=score;prev[i][j]=m;}
+   }
+  }
+ }
+ let j=0;for(let x=1;x<n;x++)if(dp[3][x]<dp[3][j])j=x;
+ if(!Number.isFinite(dp[3][j])||dp[3][j]>=INF)return null;
+ const cuts=Array(4);for(let i=3;i>=0;i--){cuts[i]=candidates[j];j=prev[i][j];}
+ return cuts;
 }
 function humanBreaks(vals,meta){
  const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);
  if(!a.length)return [];
- const q=p=>{
-  if(a.length===1)return a[0];
-  const pos=(a.length-1)*p,lo=Math.floor(pos),hi=Math.ceil(pos),t=pos-lo;
-  return a[lo]+(a[hi]-a[lo])*t;
- };
- const raw=[q(.2),q(.4),q(.6),q(.8)];
- const nice=[];
- let prev=-Infinity;
- for(const r of raw){
-   let b=humanRoundNice(r);
-   if(!(b>prev)) b=humanCeilNice(prev+(Math.abs(prev)||1)*0.02);
-   nice.push(b); prev=b;
+ const raw=[humanQuantile(a,.2),humanQuantile(a,.4),humanQuantile(a,.6),humanQuantile(a,.8)];
+ let cuts=humanChooseCuts(raw,humanCandidates(meta,a,raw),a);
+ if(!cuts){
+  const step=humanNiceStep(Math.max((a[a.length-1]-a[0])/8,1e-9));
+  cuts=raw.map(v=>Math.round(v/step)*step);
+  for(let i=1;i<cuts.length;i++)if(!(cuts[i]>cuts[i-1]))cuts[i]=cuts[i-1]+step;
  }
- return [a[0],nice[0],nice[1],nice[2],nice[3],a[a.length-1]];
+ return [a[0],cuts[0],cuts[1],cuts[2],cuts[3],a[a.length-1]];
 }
 function humanPalette(meta){return HUMAN_PALETTES[meta?.sense]||HUMAN_PALETTES.neutral;}
 function humanClassIndex(v,br){
  if(!Number.isFinite(v)||!Array.isArray(br)||br.length<6)return -1;
- if(v<br[0])return 0;
- for(let i=0;i<5;i++)if(v<=br[i+1]||i===4)return i;
+ if(v<br[1])return 0;
+ if(v<br[2])return 1;
+ if(v<br[3])return 2;
+ if(v<br[4])return 3;
  return 4;
 }
 function humanColor(v,br,meta){const i=humanClassIndex(v,br);return i<0?'#b0b0b0':humanPalette(meta)[i];}
@@ -11512,7 +11577,7 @@ function humanLegendNumber(v,meta){
 function humanLegendHTML(meta,year,br){
  if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';
  const colors=humanPalette(meta);
- let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · quintiles ajustados a intervalos coherentes · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
+ let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · quintiles como base · cortes cartográficos redondeados · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
  for(let i=0;i<5;i++){
   let label='';
   if(i===0) label='Menos de '+humanLegendNumber(br[1],meta);
