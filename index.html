@@ -1886,6 +1886,25 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
  .layoutPage{transform-origin:top center;transform:scale(.55);margin-bottom:-42%}
 }
 
+/* Tipografía editable de la composición: cambia solo la letra, no el marco. */
+.layoutTypographyControls{margin:8px 0;padding:8px;border:1px solid #d5dce1;border-radius:8px;background:#f7f9fb}
+.layoutTypographyControls label{padding:0}
+.layoutTypographyControls small{display:block;margin-top:5px;color:#5b6873;line-height:1.25}
+.layoutTypographyControls.isDisabled{opacity:.5}
+.layoutItem{--layoutFontScale:1;--layoutFontFamily:"Montserrat",Arial,sans-serif}
+.layoutInstituteText{font-family:var(--layoutFontFamily)!important;font-size:calc(13.2px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutInstituteText b{font-size:calc(20px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutInstituteMeta{font-size:calc(13px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutInstituteExplain{font-size:calc(12.6px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutTitleBox{font-family:var(--layoutFontFamily)!important;font-size:calc(37px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutLegendBox{font-family:var(--layoutFontFamily)!important;font-size:calc(14px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutLegendTitle{font-size:calc(18px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutNorthN{font-family:var(--layoutFontFamily)!important;font-size:calc(31px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutScaleBox{font-family:var(--layoutFontFamily)!important;font-size:calc(13.6px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutScaleTicks{font-family:var(--layoutFontFamily)!important;font-size:calc(10.8px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutSources{font-family:var(--layoutFontFamily)!important;font-size:calc(9.6px * var(--pageScale) * var(--layoutFontScale))!important}
+.layoutCredits{font-family:var(--layoutFontFamily)!important;font-size:calc(13px * var(--pageScale) * var(--layoutFontScale))!important}
+
 
 /* Autoría ANAMBRO · visible y equilibrada en escritorio y móvil */
 .brandAuthorshipPrefix{font-weight:600;color:#536b7b}
@@ -3749,7 +3768,7 @@ body.globe-mode #globeScaleBox{display:block}
   <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SL.UEM.TOTL.ZS" type="checkbox"> Desempleo</label>
  </details>
  <details><summary>Desarrollo y condiciones de vida</summary>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="UNDP_HDI" type="checkbox"> Índice de Desarrollo Humano (IDH)</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="UNDP_HDI" type="checkbox"> Índice de Desarrollo Humano (IDH) · PNUD (hasta 2023)</label>
   <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.ELC.ACCS.ZS" type="checkbox"> Acceso a electricidad</label>
   <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="IT.NET.USER.ZS" type="checkbox"> Uso de Internet</label>
   <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SH.H2O.BASW.ZS" type="checkbox"> Acceso al menos básico a agua potable</label>
@@ -3932,6 +3951,25 @@ body.globe-mode #globeScaleBox{display:block}
           <option value="credits">Créditos</option>
         </select>
       </label>
+
+      <div id="layoutTypographyControls" class="layoutTypographyControls">
+        <div class="layoutGrid2">
+          <label>Fuente
+            <select id="layoutFontFamily">
+              <option value="montserrat">Montserrat</option>
+              <option value="system">Sistema</option>
+              <option value="arial">Arial</option>
+              <option value="verdana">Verdana</option>
+              <option value="georgia">Georgia</option>
+              <option value="times">Times New Roman</option>
+            </select>
+          </label>
+          <label>Tamaño de letra <b id="layoutFontScaleValue">100 %</b>
+            <input id="layoutFontScale" type="range" min="45" max="220" value="100" step="5">
+          </label>
+        </div>
+        <small id="layoutTypographyHint">Selecciona un elemento de texto para cambiar su tipografía sin alterar el tamaño de su recuadro.</small>
+      </div>
 
       <div class="layoutGrid2">
         <label>Ancho
@@ -7744,9 +7782,10 @@ function defaultLayoutTitle(){
  try{
   const active=(typeof activeHumanIndicators==='function')?activeHumanIndicators():[];
   if(active.length){
-   const year=+document.getElementById('worldHumanYear')?.value;
+   const requestedYear=+document.getElementById('worldHumanYear')?.value;
    if(active.length===1&&typeof WORLD_HUMAN_INDICATORS!=='undefined'){
-    const meta=WORLD_HUMAN_INDICATORS[active[0]];
+    const meta=WORLD_HUMAN_INDICATORS[active[0]],st=(typeof humanState==='function'?humanState(active[0]):null);
+    const year=(st?.year)||((active[0]==='UNDP_HDI'&&Number.isFinite(meta?.maxYear))?Math.min(requestedYear,meta.maxYear):requestedYear);
     if(meta?.name)return meta.name+' en el mundo'+(Number.isFinite(year)?', '+year:'');
    }
    return 'Geografía humana en el mundo'+(Number.isFinite(year)?', '+year:'');
@@ -7924,9 +7963,10 @@ function walkGeoCoords(coords,cb){
 async function renderThematicWorldLayoutSnapshot(){
  const active=(typeof activeHumanIndicators==='function'?activeHumanIndicators():[]);
  if(!active.length)throw new Error('No hay capa temática mundial activa');
- const ind=active[0],meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),year=+document.getElementById('worldHumanYear').value;
+ const ind=active[0],meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),requestedYear=+document.getElementById('worldHumanYear').value;
+ const year=(ind==='UNDP_HDI'&&Number.isFinite(meta?.maxYear))?Math.min(requestedYear,meta.maxYear):requestedYear;
  if(!st?.data?.size||st.year!==year||!(st.breaks||[]).length)await updateHumanIndicator(ind);
- const data=(st.data&&st.year===year)?st.data:humanState(ind).data;
+ const data=humanState(ind).data;
  const br=(humanState(ind).breaks||[]);
  const geo=await loadCountries();
  const width=2400,height=1350,pad=40;
@@ -8117,6 +8157,43 @@ function clampLayoutBox(x,y,w,h,minW=3,minH=2){
  if(x+w>100)w=100-x;if(y+h>100)h=100-y;
  return {x,y,w,h};
 }
+const LAYOUT_TEXT_KEYS=new Set(['institute','title','legend','north','scale','sources','credits']);
+const LAYOUT_FONT_FAMILIES={
+ montserrat:'"Montserrat",Arial,sans-serif',
+ system:'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+ arial:'Arial,Helvetica,sans-serif',
+ verdana:'Verdana,Geneva,sans-serif',
+ georgia:'Georgia,"Times New Roman",serif',
+ times:'"Times New Roman",Times,serif'
+};
+function syncLayoutTypographyControls(el){
+ const key=el?.dataset?.layout||'';
+ const enabled=LAYOUT_TEXT_KEYS.has(key);
+ const wrap=document.getElementById('layoutTypographyControls');
+ const fam=document.getElementById('layoutFontFamily');
+ const size=document.getElementById('layoutFontScale');
+ const val=document.getElementById('layoutFontScaleValue');
+ const hint=document.getElementById('layoutTypographyHint');
+ if(wrap)wrap.classList.toggle('isDisabled',!enabled);
+ if(fam)fam.disabled=!enabled;if(size)size.disabled=!enabled;
+ if(!enabled){if(hint)hint.textContent=key==='map'?'La tipografía no se aplica a la imagen del mapa.':'El logotipo ANAMBRO conserva su tipografía propia.';return;}
+ const pct=Math.round((parseFloat(el.dataset.layoutFontScale)||1)*100);
+ if(size)size.value=String(Math.max(+size.min||45,Math.min(+size.max||220,pct)));
+ if(val)val.textContent=(size?.value||pct)+' %';
+ if(fam)fam.value=el.dataset.layoutFontFamilyKey||'montserrat';
+ if(hint)hint.textContent='La fuente y el tamaño se aplican al elemento seleccionado sin cambiar su recuadro.';
+}
+function applyLayoutTypographyControls(){
+ const key=document.getElementById('layoutSelected')?.value||'';
+ const el=layoutEl(key);if(!el||!LAYOUT_TEXT_KEYS.has(key))return;
+ const famKey=document.getElementById('layoutFontFamily')?.value||'montserrat';
+ const pct=Math.max(45,Math.min(220,+document.getElementById('layoutFontScale')?.value||100));
+ el.dataset.layoutFontScale=String(pct/100);
+ el.dataset.layoutFontFamilyKey=famKey;
+ el.style.setProperty('--layoutFontScale',String(pct/100));
+ el.style.setProperty('--layoutFontFamily',LAYOUT_FONT_FAMILIES[famKey]||LAYOUT_FONT_FAMILIES.montserrat);
+ const v=document.getElementById('layoutFontScaleValue');if(v)v.textContent=pct+' %';
+}
 function selectLayoutItem(key){
  ensureLayoutResizeHandles();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
@@ -8124,6 +8201,7 @@ function selectLayoutItem(key){
  el.classList.add('selected');
  document.getElementById('layoutSelected').value=key;
  syncLayoutControlValues(el);
+ syncLayoutTypographyControls(el);
  document.getElementById('layoutSize').value=100;
 }
 function applyLayoutControls(){
@@ -8302,6 +8380,8 @@ async function exportLayoutPDF(){
 document.addEventListener('DOMContentLoaded',()=>{
  initLayoutDrag();
  ['layoutW','layoutH','layoutSize','layoutPanX','layoutPanY','layoutCropZoom'].forEach(id=>document.getElementById(id)?.addEventListener('input',applyLayoutControls));
+ document.getElementById('layoutFontScale')?.addEventListener('input',applyLayoutTypographyControls);
+ document.getElementById('layoutFontFamily')?.addEventListener('change',applyLayoutTypographyControls);
  document.getElementById('layoutSelected')?.addEventListener('change',e=>selectLayoutItem(e.target.value));
  document.getElementById('layoutPaper')?.addEventListener('change',updateLayoutPageFormat);
  document.getElementById('layoutOrientation')?.addEventListener('change',updateLayoutPageFormat);
@@ -8451,8 +8531,8 @@ function updateLegend(){
  if(humanActive){
   const humanYear=+document.getElementById('worldHumanYear').value;
   c.innerHTML=humanActiveList.map(ind=>{
-   const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind);
-   return '<div style="margin-bottom:8px">'+humanLegendHTML(meta,humanYear,st.breaks||[])+'</div>';
+   const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),actualYear=st.year||humanYear;
+   return '<div style="margin-bottom:8px">'+humanLegendHTML(meta,actualYear,st.breaks||[])+'</div>';
   }).join('');
   return;
  }
@@ -11899,7 +11979,7 @@ const HUMAN_PALETTES={
  neutral:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000']
 };
 const worldHumanLayers=new Map();
-let worldHumanRequest=0,worldHumanHDICache=null,worldHumanISO2to3=null;
+let worldHumanRequest=0,worldHumanHDICache=null,worldHumanISO2to3=null,worldHumanHDISourceMode='undp';
 function activeHumanIndicators(){return [...document.querySelectorAll('.worldHumanLayerCheck:checked')].map(x=>x.dataset.humanIndicator).filter(Boolean);}
 function humanCountryCode(p){for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){const v=String(p?.[k]||'').toUpperCase();if(v&&v!=='-99')return v;}return '';}
 function humanCountryCode2(p){for(const k of ['ISO_A2','WB_A2','POSTAL']){const v=String(p?.[k]||'').toUpperCase();if(v&&v!=='-99'&&v.length===2)return v;}return '';}
@@ -12036,8 +12116,49 @@ function humanLegendHTML(meta,year,br){
 }
 async function loadHumanWB(ind,year){const u='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400&date='+year;const r=await fetch(u);if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json();const m=new Map();for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),raw=row?.value;if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(c.length===3&&Number.isFinite(v))m.set(c,v);}return m;}
 function parseCSVLine(line){const out=[];let x='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){x+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(x);x='';}else x+=c;}out.push(x);return out;}
-async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;const u='https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv';const r=await fetch(u);if(!r.ok)throw new Error('PNUD '+r.status);const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]).map(x=>String(x||'').trim());const iso=head.findIndex(x=>/^iso3$/i.test(x)||/^iso3_code$/i.test(x));const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>5)data.push(row);}worldHumanHDICache={head,iso,data};return worldHumanHDICache;}
-async function loadHumanHDI(year){const c=await loadHDICSV(),m=new Map();const candidates=['hdi_'+year,'HDI_'+year,String(year)];let yi=-1;for(const key of candidates){yi=c.head.findIndex(x=>String(x).toLowerCase()===String(key).toLowerCase());if(yi>=0)break;}if(c.iso<0||yi<0)return m;for(const row of c.data){const code=String(row[c.iso]||'').trim().toUpperCase();if(code.length!==3)continue;const raw=row[yi];if(raw===null||raw===undefined||String(raw).trim()===''||String(raw).trim().toLowerCase()==='n/a')continue;const v=Number(String(raw).replace(',','.'));if(Number.isFinite(v))m.set(code,v);}return m;}
+async function loadHDICSV(){
+ if(worldHumanHDICache)return worldHumanHDICache;
+ const sources=[
+  {kind:'undp',url:'https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv'},
+  {kind:'owid',url:'https://ourworldindata.org/grapher/human-development-index.csv?v=1&csvType=full&useColumnShortNames=false'}
+ ];
+ let lastErr=null;
+ for(const src of sources){
+  try{
+   const r=await fetch(src.url,{mode:'cors',cache:'default'});if(!r.ok)throw new Error((src.kind==='undp'?'PNUD':'OWID')+' '+r.status);
+   const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]).map(x=>String(x||'').trim());
+   const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>=3)data.push(row);}
+   if(src.kind==='undp'){
+    const iso=head.findIndex(x=>/^iso3$/i.test(x)||/^iso3_code$/i.test(x));
+    if(iso<0)throw new Error('PNUD: no se encontró la columna ISO3');
+    worldHumanHDICache={kind:'wide',head,iso,data};worldHumanHDISourceMode='undp';return worldHumanHDICache;
+   }
+   const code=head.findIndex(x=>/^code$/i.test(x));
+   const year=head.findIndex(x=>/^year$/i.test(x));
+   let value=head.findIndex(x=>/human development index|^hdi$/i.test(x));
+   if(value<0)value=head.findIndex((x,i)=>i!==code&&i!==year&&!/^entity$/i.test(x));
+   if(code<0||year<0||value<0)throw new Error('OWID: formato HDI no reconocido');
+   worldHumanHDICache={kind:'long',head,code,year,value,data};worldHumanHDISourceMode='owid';return worldHumanHDICache;
+  }catch(e){lastErr=e;console.warn('ANAMBRO · IDH: fuente alternativa',src.kind,e);}
+ }
+ throw lastErr||new Error('No se pudo cargar el IDH');
+}
+async function loadHumanHDI(year){
+ const c=await loadHDICSV(),m=new Map();
+ if(c.kind==='long'){
+  for(const row of c.data){
+   if(Number(row[c.year])!==Number(year))continue;
+   const code=String(row[c.code]||'').trim().toUpperCase(),v=Number(String(row[c.value]||'').replace(',','.'));
+   if(code.length===3&&Number.isFinite(v))m.set(code,v);
+  }
+  return m;
+ }
+ const candidates=['hdi_'+year,'HDI_'+year,String(year)];let yi=-1;
+ for(const key of candidates){yi=c.head.findIndex(x=>String(x).toLowerCase()===String(key).toLowerCase());if(yi>=0)break;}
+ if(c.iso<0||yi<0)return m;
+ for(const row of c.data){const code=String(row[c.iso]||'').trim().toUpperCase();if(code.length!==3)continue;const raw=row[yi];if(raw===null||raw===undefined||String(raw).trim()===''||String(raw).trim().toLowerCase()==='n/a')continue;const v=Number(String(raw).replace(',','.'));if(Number.isFinite(v))m.set(code,v);}
+ return m;
+}
 function humanState(ind){if(!worldHumanLayers.has(ind))worldHumanLayers.set(ind,{data:new Map(),layer2D:null,source3D:null,year:null,breaks:[]});return worldHumanLayers.get(ind);}
 let humanOldMapBackground='';
 let humanAutoHiddenCountryLabels2D=false,humanAutoHiddenWorldToponyms2D=false,humanAutoHiddenCountryLabelsGlobe=false,humanAutoHiddenWorldToponymsGlobe=false;
@@ -12081,11 +12202,11 @@ function syncHumanThematicBasemap(){
 }
 function humanCountryLabel(p){return (typeof countryName==='function'?countryName(p||{}):(p?.NAME_ES||p?.ADMIN||p?.NAME_LONG||p?.NAME_EN||p?.NAME||'País / territorio'));}
 function humanThematicInfoHTML(country,iso3){
- const active=activeHumanIndicators(),year=+document.getElementById('worldHumanYear').value;
- let h='<b>👥 '+escHtml(country||'País / territorio')+'</b><br><b>Año:</b> '+year;
+ const active=activeHumanIndicators(),requestedYear=+document.getElementById('worldHumanYear').value;
+ let h='<b>👥 '+escHtml(country||'País / territorio')+'</b><br><b>Año seleccionado:</b> '+requestedYear;
  for(const ind of active){
-  const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.year===year?st.data.get(iso3):undefined;
-  h+='<br><b>'+escHtml(meta.name)+':</b> '+escHtml(humanFmt(v,meta));
+  const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.data.get(iso3),actualYear=st.year||requestedYear;
+  h+='<br><b>'+escHtml(meta.name)+(actualYear!==requestedYear?' ('+actualYear+')':'')+':</b> '+escHtml(humanFmt(v,meta));
  }
  return h;
 }
@@ -12120,14 +12241,31 @@ async function renderHuman3D(ind,data,meta,year,br){
  }
  st.source3D=ds;await globeViewer.dataSources.add(ds);syncHumanThematicBasemap();globeViewer.scene.requestRender();
 }
-async function updateHumanIndicator(ind){const meta=WORLD_HUMAN_INDICATORS[ind];if(!meta)return;const cb=document.querySelector('.worldHumanLayerCheck[data-human-indicator="'+CSS.escape(ind)+'"]');if(!cb?.checked){clearHumanIndicator(ind);return;}const year=+document.getElementById('worldHumanYear').value,st=humanState(ind);document.getElementById('worldHumanStatus').textContent='Cargando '+meta.name+' · '+year+'…';const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);st.data=data;st.year=year;st.breaks=humanBreaks([...data.values()],meta);if(!st.breaks.length){clearHumanIndicator(ind);st.data=data;st.year=year;return;}await renderHuman2D(ind,data,meta,year,st.breaks);if(globeViewer)await renderHuman3D(ind,data,meta,year,st.breaks);}
+async function updateHumanIndicator(ind){
+ const meta=WORLD_HUMAN_INDICATORS[ind];if(!meta)return;
+ const cb=document.querySelector('.worldHumanLayerCheck[data-human-indicator="'+CSS.escape(ind)+'"]');if(!cb?.checked){clearHumanIndicator(ind);return;}
+ const requestedYear=+document.getElementById('worldHumanYear').value;
+ const year=(ind==='UNDP_HDI'&&Number.isFinite(meta.maxYear))?Math.min(requestedYear,meta.maxYear):requestedYear;
+ const st=humanState(ind),status=document.getElementById('worldHumanStatus');
+ const yearNote=(year!==requestedYear)?' · '+year+' (último disponible)':' · '+year;
+ status.textContent='Cargando '+meta.name+yearNote+'…';
+ const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);
+ st.data=data;st.year=year;st.requestedYear=requestedYear;st.breaks=humanBreaks([...data.values()],meta);
+ if(!st.breaks.length){clearHumanIndicator(ind);st.data=data;st.year=year;st.requestedYear=requestedYear;throw new Error(meta.name+': sin datos para '+year);}
+ await renderHuman2D(ind,data,meta,year,st.breaks);if(globeViewer)await renderHuman3D(ind,data,meta,year,st.breaks);
+}
 function refreshHumanLegend(){const year=+document.getElementById('worldHumanYear').value,active=activeHumanIndicators(),el=document.getElementById('worldHumanLegend');syncHumanThematicBasemap();
  const dyn=document.getElementById('dynamicLegend'),btn=document.getElementById('legendToggle');
  if(active.length&&dyn){dyn.classList.remove('hidden');if(btn){btn.innerHTML='<span>✕</span> Ocultar leyenda';btn.setAttribute('aria-expanded','true');}}
-if(!active.length){el.innerHTML='';document.getElementById('worldHumanStatus').textContent='Activa una o varias variables.';setTimeout(updateLegend,0);return;}el.innerHTML=active.map(ind=>{const st=humanState(ind),meta=WORLD_HUMAN_INDICATORS[ind];return '<div style="margin:6px 0 10px;padding-top:5px;border-top:1px solid #ddd">'+humanLegendHTML(meta,year,st.breaks||[])+'</div>';}).join('');document.getElementById('worldHumanStatus').textContent=active.length+' capa'+(active.length===1?'':'s')+' de Geografía humana activa'+(active.length===1?'':'s')+' · '+year;setTimeout(updateLegend,0);}
+ if(!active.length){el.innerHTML='';document.getElementById('worldHumanStatus').textContent='Activa una o varias variables.';setTimeout(updateLegend,0);return;}
+ el.innerHTML=active.map(ind=>{const st=humanState(ind),meta=WORLD_HUMAN_INDICATORS[ind],actualYear=st.year||year;return '<div style="margin:6px 0 10px;padding-top:5px;border-top:1px solid #ddd">'+humanLegendHTML(meta,actualYear,st.breaks||[])+'</div>';}).join('');
+ const fallbacks=active.map(ind=>{const st=humanState(ind);return st.year&&st.year!==year?WORLD_HUMAN_INDICATORS[ind].name+' '+st.year:null;}).filter(Boolean);
+ document.getElementById('worldHumanStatus').textContent=active.length+' capa'+(active.length===1?'':'s')+' de Geografía humana activa'+(active.length===1?'':'s')+' · año seleccionado '+year+(fallbacks.length?' · último disponible: '+fallbacks.join(', '):'');
+ setTimeout(updateLegend,0);
+}
 async function updateWorldHuman(){const seq=++worldHumanRequest,active=activeHumanIndicators();for(const ind of [...worldHumanLayers.keys()])if(!active.includes(ind))clearHumanIndicator(ind);if(!active.length){refreshHumanLegend();return;}try{for(const ind of active){if(seq!==worldHumanRequest)return;await updateHumanIndicator(ind);}if(seq!==worldHumanRequest)return;refreshHumanLegend();}catch(e){console.error(e);document.getElementById('worldHumanStatus').textContent='No se pudieron cargar una o varias capas para este año.';refreshHumanLegend();}}
 function clearWorldHuman(){for(const ind of [...worldHumanLayers.keys()])clearHumanIndicator(ind);document.querySelectorAll('.worldHumanLayerCheck').forEach(x=>x.checked=false);refreshHumanLegend();}
-function humanPointHtmlByISO3(iso3){const active=activeHumanIndicators();if(!active.length)return '';const year=+document.getElementById('worldHumanYear').value;let h='<hr><b>👥 Geografía humana · '+year+'</b>';for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.year===year?st.data.get(iso3):undefined;h+='<br><b>'+escHtml(meta.name)+':</b> '+escHtml(humanFmt(v,meta));}return h;}
+function humanPointHtmlByISO3(iso3){const active=activeHumanIndicators();if(!active.length)return '';const year=+document.getElementById('worldHumanYear').value;let h='<hr><b>👥 Geografía humana · año seleccionado '+year+'</b>';for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),actualYear=st.year||year,v=st.data.get(iso3);h+='<br><b>'+escHtml(meta.name)+(actualYear!==year?' ('+actualYear+')':'')+':</b> '+escHtml(humanFmt(v,meta));}return h;}
 async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(iso2);return humanPointHtmlByISO3(iso3);}
 (function(){const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');document.querySelectorAll('.worldHumanLayerCheck').forEach(cb=>cb.addEventListener('change',async()=>{if(cb.checked)await updateHumanIndicator(cb.dataset.humanIndicator);else clearHumanIndicator(cb.dataset.humanIndicator);refreshHumanLegend();}));yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',updateWorldHuman);document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{yr.value=2025;yv.textContent='2025';updateWorldHuman();};})();
 </script>
