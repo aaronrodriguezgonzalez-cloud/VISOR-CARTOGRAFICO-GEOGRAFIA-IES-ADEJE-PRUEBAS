@@ -4272,7 +4272,7 @@ const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&requ
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
 const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
- noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
+ noWrap:true,minZoom:0,maxZoom:18,maxNativeZoom:18,
  attribution:'Esri World Imagery'
 });
 
@@ -10280,7 +10280,7 @@ async function ensureGlobe(){
   // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
   const sat=new Cesium.UrlTemplateImageryProvider({
    url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-   credit:'Esri World Imagery',maximumLevel:19
+   credit:'Esri World Imagery',maximumLevel:18
   });
   globeSatelliteLayer=globeViewer.imageryLayers.addImageryProvider(sat);
   // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
@@ -12839,4 +12839,79 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 }
 </style>
 
+
+<script id="anambro-native-imagery-zoom-stop">
+/*
+  No solicitar niveles inexistentes de Esri World Imagery.
+  Nivel 18 = último nivel global fiable usado por ANAMBRO.
+  2D: el mapa no puede superar z18 cuando World Imagery es el fondo elegido.
+  3D: Cesium usa maximumLevel 18 y se fija una distancia mínima de cámara
+      equivalente a ese nivel, evitando el overzoom y las teselas grises.
+*/
+(function(){
+ const WORLD_IMAGERY_LAST_Z=18;
+ function worldImageryIsChosen(){
+  try{return typeof activeBase!=='undefined' && activeBase===worldImagery;}catch(e){return false;}
+ }
+ function syncMapNativeZoomStop(){
+  if(typeof map==='undefined')return;
+  const cap=worldImageryIsChosen()?WORLD_IMAGERY_LAST_Z:19;
+  if(map.getMaxZoom()!==cap)map.setMaxZoom(cap);
+  if(map.getZoom()>cap)map.setZoom(cap,{animate:false});
+ }
+ function globeNativeMinHeight(){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return 250;
+  let lat=0;
+  try{
+   const c=(typeof globeCenterLatLng==='function'&&globeCenterLatLng())||null;
+   if(c&&Number.isFinite(c.lat))lat=c.lat;
+   else lat=Cesium.Math.toDegrees(globeViewer.camera.positionCartographic.latitude||0);
+  }catch(e){}
+  const cos=Math.max(.05,Math.cos(lat*Math.PI/180));
+  const mpp=156543.03392804097*cos/Math.pow(2,WORLD_IMAGERY_LAST_Z);
+  const rect=globeViewer.scene.canvas.getBoundingClientRect();
+  const hpx=Math.max(320,rect.height||720);
+  const vfov=globeViewer.camera.frustum.fovy||Cesium.Math.toRadians(60);
+  // Un pequeño margen impide cruzar por redondeo al nivel siguiente.
+  return Math.max(120,(mpp*hpx)/(2*Math.tan(vfov/2))*1.04);
+ }
+ function syncGlobeNativeZoomStop(){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
+  const ctl=globeViewer.scene.screenSpaceCameraController;
+  const minH=globeNativeMinHeight();
+  ctl.minimumZoomDistance=minH;
+  try{
+   const h=Cesium.Cartographic.fromCartesian(globeViewer.camera.positionWC).height||Infinity;
+   if(h<minH*.995){
+    const pos=globeViewer.camera.positionCartographic;
+    globeViewer.camera.setView({
+     destination:Cesium.Cartesian3.fromRadians(pos.longitude,pos.latitude,minH),
+     orientation:{heading:globeViewer.camera.heading,pitch:globeViewer.camera.pitch,roll:globeViewer.camera.roll}
+    });
+   }
+  }catch(e){}
+ }
+ // Mantener el límite 2D sincronizado al cambiar el fondo.
+ document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>setTimeout(syncMapNativeZoomStop,0)));
+ map.on('zoomend',syncMapNativeZoomStop);
+ syncMapNativeZoomStop();
+
+ // Se envuelve toggleGlobe al final de toda la cadena existente.
+ const __toggleGlobeNativeStop=toggleGlobe;
+ toggleGlobe=async function(){
+  await __toggleGlobeNativeStop();
+  if(document.body.classList.contains('globe-mode')&&globeViewer){
+   syncGlobeNativeZoomStop();
+   if(!globeViewer.__anambroNativeZoomStop){
+    globeViewer.camera.moveEnd.addEventListener(syncGlobeNativeZoomStop);
+    globeViewer.__anambroNativeZoomStop=true;
+   }
+  }else syncMapNativeZoomStop();
+ };
+ window.addEventListener('resize',()=>setTimeout(()=>{
+  syncMapNativeZoomStop();
+  if(document.body.classList.contains('globe-mode'))syncGlobeNativeZoomStop();
+ },120));
+})();
+</script>
 </body></html>
