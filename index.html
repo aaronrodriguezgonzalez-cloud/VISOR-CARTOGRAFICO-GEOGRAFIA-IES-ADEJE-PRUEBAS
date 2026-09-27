@@ -8170,7 +8170,15 @@ function globeCameraCenterLatLng(){
 function isSpainGlobeView(){
  const ll=globeCameraCenterLatLng();
  if(!ll)return false;
- return ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
+ // Solo tratamos como España las zonas realmente cubiertas por las capas IGN:
+ // Canarias o España peninsular/Baleares. El rectángulo anterior incluía Marruecos,
+ // Sáhara Occidental y Atlántico, ocultando allí la toponimia vectorial mundial.
+ try{
+  return (typeof isCanaryLatLng==='function'&&isCanaryLatLng(ll))||
+         (typeof isPeninsularBalearicLatLng==='function'&&isPeninsularBalearicLatLng(ll));
+ }catch(e){
+  return false;
+ }
 }
 
 
@@ -8402,7 +8410,7 @@ function worldLabelPriority(item){
 function worldLabelScreenPoint(item){
  try{
   return globeViewer.scene.cartesianToCanvasCoordinates(
-   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
+   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,18000),
    new Cesium.Cartesian2()
   );
  }catch(e){return null;}
@@ -8503,7 +8511,7 @@ async function updateWorldVectorToponyms(force=false){
   for(const item of selected){
    const p=item.p,name=vectorPlaceDisplayProps(p);
    worldVectorLabelCollection.add({
-    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
+    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,18000),
     text:name,
     font:vectorPlaceFontProps(p,band.name),
     fillColor:pale,
@@ -8514,7 +8522,7 @@ async function updateWorldVectorToponyms(force=false){
     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
     verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
     pixelOffset:new Cesium.Cartesian2(0,-4),
-    disableDepthTestDistance:0
+    disableDepthTestDistance:Number.POSITIVE_INFINITY
    });
   }
   worldVectorLabelRenderKey=renderKey;
@@ -8935,7 +8943,7 @@ async function updateWorldToponyms2D(force=false){
  if(!document.getElementById('worldToponymsCheck')?.checked)return;
  if(document.body.classList.contains('globe-mode'))return;
  const generation=++worldToponyms2DGeneration;
- const center=map.getCenter(),spain=profileIsSpainLatLng(center);
+ const center=map.getCenter(),spain=((typeof isCanaryLatLng==='function'&&isCanaryLatLng(center))||(typeof isPeninsularBalearicLatLng==='function'&&isPeninsularBalearicLatLng(center)));
 
  if(spain){
   if(worldToponyms2DLayer){map.removeLayer(worldToponyms2DLayer);worldToponyms2DLayer=null;}
@@ -11302,6 +11310,28 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
  window.addEventListener('orientationchange',()=>setTimeout(syncHeaderClearance,120));
  document.addEventListener('DOMContentLoaded',()=>{syncHeaderClearance();setTimeout(syncHeaderClearance,80);});
  if(document.readyState!=='loading'){syncHeaderClearance();setTimeout(syncHeaderClearance,80);}
+})();
+</script>
+
+<script id="anambro-world-toponyms-2d-regression-fix">
+(function(){
+ function refreshWorldToponyms2D(){
+  try{
+   if(document.body.classList.contains('globe-mode'))return;
+   if(!document.getElementById('worldToponymsCheck')?.checked)return;
+   if(typeof updateWorldToponyms2D==='function')updateWorldToponyms2D(true);
+  }catch(e){console.warn('Refresco de toponimia mundial 2D:',e);}
+ }
+ map.on('moveend zoomend',()=>{
+  clearTimeout(window.__anambroToponymsRefreshTimer);
+  window.__anambroToponymsRefreshTimer=setTimeout(refreshWorldToponyms2D,120);
+ });
+ const __toponymToggleGlobe=toggleGlobe;
+ toggleGlobe=async function(){
+  const leaving=document.body.classList.contains('globe-mode');
+  await __toponymToggleGlobe();
+  if(leaving&&!document.body.classList.contains('globe-mode'))setTimeout(refreshWorldToponyms2D,160);
+ };
 })();
 </script>
 </body></html>
