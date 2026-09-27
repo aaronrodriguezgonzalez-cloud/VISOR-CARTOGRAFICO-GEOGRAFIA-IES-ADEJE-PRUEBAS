@@ -4216,12 +4216,10 @@ function openSourcesPanel(){closePanels();renderActiveSources();document.getElem
 
 const WORLD_VIEW_BOUNDS=L.latLngBounds([[-84.8,-180],[84.8,180]]);
 const map=L.map('map',{
- zoomControl:true,
+ zoomControl:false,
  minZoom:0,
  worldCopyJump:false,
- preferCanvas:true,
- maxBounds:WORLD_VIEW_BOUNDS,
- maxBoundsViscosity:1.0
+ preferCanvas:true
 }).setView([28.30,-16.55],9);
 L.control.scale({metric:true,imperial:false,position:'bottomleft'}).addTo(map);
 if(map.attributionControl)map.attributionControl.setPrefix(false);
@@ -4238,14 +4236,14 @@ function applyDynamicWorldMinZoom(){
  const z=calculateDynamicWorldMinZoom();
  dynamicWorldMinZoom=z;
  map.setMinZoom(z);
- map.setMaxBounds(WORLD_VIEW_BOUNDS);
+ // No usar maxBounds en el nivel mundial: cuando el mapamundi completo cabe
+ // dentro del viewport, Leaflet no puede mantener simultáneamente todo el
+ // viewport dentro de WORLD_VIEW_BOUNDS y puede entrar en correcciones de
+ // centro repetidas al alcanzar el zoom mínimo. Limitamos únicamente el
+ // CENTRO, que conserva la navegación sin bloquear el zoom-out.
+ map.setMaxBounds(null);
  if(map.getZoom()<z)map.setZoom(z,{animate:false});
- // Si el viewport cambia de proporción, recentramos solo cuando el mapa
- // intenta quedar fuera del marco mundial.
- const c=map.getCenter();
- const lat=Math.max(-84.8,Math.min(84.8,c.lat));
- const lng=Math.max(-180,Math.min(180,c.lng));
- if(Math.abs(lat-c.lat)>.0001||Math.abs(lng-c.lng)>.0001)map.panTo([lat,lng],{animate:false});
+ clampWorldCenter();
 }
 function fitWorldToViewport(){
  applyDynamicWorldMinZoom();
@@ -8261,7 +8259,7 @@ async function refreshLayoutWorldSnapshot(){
   fitLayoutMapImage();
  }finally{
   map.setMinZoom(prevMin);
-  map.setMaxBounds(prevMaxBounds||WORLD_VIEW_BOUNDS);
+  map.setMaxBounds(prevMaxBounds||null);
   map.setView(prevCenter,Math.max(prevMin,prevZoom),{animate:false});
   map.invalidateSize({animate:false});
   if(btn){btn.disabled=false;btn.textContent='🌍 Capturar mapamundi completo';}
@@ -11832,19 +11830,29 @@ document.getElementById('worldAdmin2Check').addEventListener('change',e=>{
  if(globeViewer)toggleWorldAdmin2Globe(e.target.checked);
 });
 
+let __clampingWorldCenter=false;
+function clampWorldCenter(){
+ if(__clampingWorldCenter)return;
+ const c=map.getCenter();
+ const lat=Math.max(-84.8,Math.min(84.8,c.lat));
+ const lng=Math.max(-180,Math.min(180,c.lng));
+ if(Math.abs(lat-c.lat)<=.0001&&Math.abs(lng-c.lng)<=.0001)return;
+ __clampingWorldCenter=true;
+ map.panTo([lat,lng],{animate:false});
+ // Liberar el guard después del moveend generado por panTo.
+ setTimeout(()=>{__clampingWorldCenter=false;},0);
+}
 function clampWorldAtMinZoom(){
- if(map.getZoom()>dynamicWorldMinZoom)return;
- const b=map.getBounds(),wb=WORLD_VIEW_BOUNDS,c=map.getCenter();
- let lat=c.lat,lng=c.lng;
- const northOverflow=b.getNorth()-wb.getNorth();
- const southOverflow=wb.getSouth()-b.getSouth();
- const eastOverflow=b.getEast()-wb.getEast();
- const westOverflow=wb.getWest()-b.getWest();
- if(northOverflow>0)lat-=northOverflow;
- if(southOverflow>0)lat+=southOverflow;
- if(eastOverflow>0)lng-=eastOverflow;
- if(westOverflow>0)lng+=westOverflow;
- if(Math.abs(lat-c.lat)>.0001||Math.abs(lng-c.lng)>.0001)map.panTo([lat,lng],{animate:false});
+ // En el zoom mundial NO intentamos encajar los bordes del viewport dentro
+ // de los límites geográficos: el viewport puede ser mayor que el mundo.
+ // En el último zoom-out centramos una sola vez el mapamundi en [0,0].
+ if(map.getZoom()>dynamicWorldMinZoom+.0001)return;
+ if(__clampingWorldCenter)return;
+ const c=map.getCenter();
+ if(Math.abs(c.lat)<=.0001&&Math.abs(c.lng)<=.0001)return;
+ __clampingWorldCenter=true;
+ map.panTo([0,0],{animate:false});
+ setTimeout(()=>{__clampingWorldCenter=false;},0);
 }
 
 map.on('moveend zoomend',scheduleWorldAdmins2D);
@@ -13036,4 +13044,141 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
  },120));
 })();
 </script>
+
+
+<style id="anambro-unified-zoom-slider-style">
+/* Control único de zoom para mapa 2D y globo 3D. */
+#anambroZoomSliderControl{
+  position:fixed;z-index:1650;left:10px;bottom:112px;
+  width:38px;height:166px;box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:7px 5px;background:rgba(255,255,255,.95);border:1px solid rgba(23,50,77,.22);
+  border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.22);color:#17324d;
+  user-select:none;-webkit-user-select:none;touch-action:none;
+}
+#anambroZoomSliderControl .zoomGlyph{font:900 16px/1 system-ui,-apple-system,sans-serif;color:#17324d;pointer-events:none}
+#anambroZoomSlider{
+  -webkit-appearance:slider-vertical;appearance:auto;
+  writing-mode:vertical-lr;direction:rtl;
+  width:24px;height:118px;margin:0;padding:0;cursor:pointer;accent-color:#17324d;
+  touch-action:none;
+}
+#anambroZoomSliderControl .zoomModeHint{
+  position:absolute;left:43px;top:50%;transform:translateY(-50%);
+  display:none;white-space:nowrap;padding:4px 7px;border-radius:6px;
+  background:rgba(23,50,77,.92);color:white;font-size:9px;font-weight:800;pointer-events:none;
+}
+#anambroZoomSliderControl:hover .zoomModeHint{display:block}
+body.globe-mode #anambroZoomSliderControl{background:rgba(255,255,255,.93)}
+@media(max-width:760px){
+  #anambroZoomSliderControl{left:7px;bottom:102px;width:34px;height:144px;padding:6px 4px;border-radius:10px}
+  #anambroZoomSlider{height:98px;width:22px}
+  #anambroZoomSliderControl .zoomGlyph{font-size:14px}
+  #anambroZoomSliderControl .zoomModeHint{display:none!important}
+}
+@media(max-width:430px){
+  #anambroZoomSliderControl{left:6px;bottom:96px;width:32px;height:134px}
+  #anambroZoomSlider{height:90px;width:20px}
+}
+</style>
+<div id="anambroZoomSliderControl" role="group" aria-label="Control de zoom">
+  <span class="zoomGlyph" aria-hidden="true">＋</span>
+  <input id="anambroZoomSlider" type="range" min="0" max="100" step="1" value="50" aria-label="Zoom: arriba acerca y abajo aleja">
+  <span class="zoomGlyph" aria-hidden="true">−</span>
+  <span id="anambroZoomModeHint" class="zoomModeHint">Zoom</span>
+</div>
+<script id="anambro-unified-zoom-slider-script">
+(function(){
+ const ctl=document.getElementById('anambroZoomSliderControl');
+ const slider=document.getElementById('anambroZoomSlider');
+ const hint=document.getElementById('anambroZoomModeHint');
+ if(!ctl||!slider)return;
+ let internal=false;
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+ const lerp=(a,b,t)=>a+(b-a)*t;
+ function isGlobe(){return document.body.classList.contains('globe-mode')&&typeof globeViewer!=='undefined'&&!!globeViewer;}
+ function mapRange(){
+   const lo=(typeof map!=='undefined'&&Number.isFinite(map.getMinZoom()))?map.getMinZoom():0;
+   const hi=(typeof map!=='undefined'&&Number.isFinite(map.getMaxZoom()))?map.getMaxZoom():19;
+   return {lo,hi:Math.max(lo+.001,hi)};
+ }
+ function globeHeightBounds(){
+   if(typeof globeViewer==='undefined'||!globeViewer)return {near:100,far:30000000};
+   const s=globeViewer.scene.screenSpaceCameraController;
+   const near=Math.max(1,Number(s.minimumZoomDistance)||35);
+   const far=Math.max(near*1.01,Math.min(50000000,Number(s.maximumZoomDistance)||30000000));
+   return {near,far};
+ }
+ function sliderFromMap(){
+   const r=mapRange(),z=map.getZoom();
+   return 100*clamp((z-r.lo)/(r.hi-r.lo),0,1);
+ }
+ function sliderFromGlobe(){
+   const b=globeHeightBounds();
+   let h=b.far;
+   try{h=Math.max(b.near,Math.min(b.far,globeViewer.camera.positionCartographic.height||b.far));}catch(e){}
+   // Escala logarítmica: el recorrido del deslizador se percibe uniforme desde mundo completo hasta detalle local.
+   const t=Math.log(b.far/h)/Math.log(b.far/b.near);
+   return 100*clamp(t,0,1);
+ }
+ function updateSlider(){
+   if(internal)return;
+   internal=true;
+   try{
+     const globe=isGlobe();
+     slider.value=String(Math.round(globe?sliderFromGlobe():sliderFromMap()));
+     if(hint)hint.textContent=globe?'Zoom · Globo 3D':'Zoom · Mapa 2D';
+     slider.setAttribute('aria-valuetext',globe?'Zoom del globo':'Zoom del mapa');
+   }finally{internal=false;}
+ }
+ function setMapFromSlider(v){
+   const r=mapRange();
+   const target=lerp(r.lo,r.hi,v/100);
+   // Leaflet trabaja aquí por niveles enteros: el deslizador salta al nivel válido más próximo.
+   map.setZoom(Math.round(target),{animate:false});
+ }
+ function setGlobeFromSlider(v){
+   if(typeof globeViewer==='undefined'||!globeViewer)return;
+   const b=globeHeightBounds(),t=clamp(v/100,0,1);
+   const target=b.far*Math.pow(b.near/b.far,t);
+   try{
+     const current=Math.max(1,globeViewer.camera.positionCartographic.height||b.far);
+     const delta=current-target;
+     if(Math.abs(delta)<1)return;
+     if(delta>0)globeViewer.camera.zoomIn(delta);
+     else globeViewer.camera.zoomOut(-delta);
+     globeViewer.scene.requestRender();
+   }catch(e){}
+ }
+ slider.addEventListener('input',()=>{
+   if(internal)return;
+   internal=true;
+   try{
+     const v=clamp(+slider.value||0,0,100);
+     if(isGlobe())setGlobeFromSlider(v);else if(typeof map!=='undefined')setMapFromSlider(v);
+   }finally{internal=false;}
+ });
+ slider.addEventListener('change',()=>setTimeout(updateSlider,0));
+ if(typeof map!=='undefined')map.on('zoomend zoomlevelschange',updateSlider);
+ // También sincroniza cuando cambia el máximo permitido por el proveedor efectivo.
+ if(typeof map!=='undefined')map.on('moveend',()=>setTimeout(updateSlider,0));
+ const oldToggle=typeof toggleGlobe==='function'?toggleGlobe:null;
+ if(oldToggle){
+   toggleGlobe=async function(){
+     const r=await oldToggle.apply(this,arguments);
+     setTimeout(()=>{
+       if(isGlobe()&&!globeViewer.__anambroZoomSliderHook){
+         globeViewer.camera.moveEnd.addEventListener(updateSlider);
+         globeViewer.__anambroZoomSliderHook=true;
+       }
+       updateSlider();
+     },0);
+     return r;
+   };
+ }
+ window.addEventListener('resize',()=>setTimeout(updateSlider,100));
+ setTimeout(updateSlider,0);
+})();
+</script>
+
 </body></html>
