@@ -3098,19 +3098,6 @@ body.globe-mode #globeScaleBox{display:block}
   html body .leaflet-top.leaflet-left{top:118px!important}
 }
 </style>
-
-<style id="anambro-header-tool-clearance-fix">
-/* Escritorio: herramientas y paneles nunca pueden quedar debajo de la cabecera. */
-@media (min-width:761px){
-  :root{--anambro-header-bottom:92px}
-  .toolbar{top:calc(var(--anambro-header-bottom) + 8px)!important}
-  .panel{
-    top:calc(var(--anambro-header-bottom) + 8px)!important;
-    max-height:calc(100vh - var(--anambro-header-bottom) - 16px)!important
-  }
-  .leaflet-top.leaflet-left{top:var(--anambro-header-bottom)!important}
-}
-</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -3438,15 +3425,12 @@ body.globe-mode #globeScaleBox{display:block}
 <label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div>
 
-<div class="layerThemeTitle">🗺️ Toponimia</div>
-<label><input id="worldToponymsCheck" type="checkbox"> <b>Toponimia mundial vectorial</b></label>
-<div class="layerSubBlock"><small>OpenFreeMap / OpenMapTiles fuera de España · IGN/NGBE en España y Canarias.</small><small>Disponible tanto en el mapa 2D como en el globo 3D; el nivel de detalle aumenta al acercarse.</small></div>
-
 <div class="layerThemeTitle">🧭 Territorio, cartografía y servicios</div>
 <label><input id="countriesCheck" type="checkbox"> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox"> Nombres de países</label>
 <label><input id="worldAdmin1Check" type="checkbox"> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
 <label><input id="worldAdmin2Check" type="checkbox"> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
+<label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · vectoriales / IGN en España</label>
 <label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div>
 <div class="layerThemeTitle secondary">🛰️ Imagen de fondo mundial</div><label><input type="radio" data-base-choice="worldsat" name="baseWorld"> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div>
 </details>
@@ -3808,8 +3792,7 @@ const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&requ
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
 const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
- noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:19,
- updateWhenZooming:true,updateWhenIdle:false,keepBuffer:4,
+ noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
  attribution:'Esri World Imagery'
 });
 
@@ -7600,6 +7583,8 @@ function initLayoutDrag(){
 }
 async function exportLayoutPDF(){
  const page=document.getElementById('layoutPage');
+ const exportLegend=document.getElementById('layoutLegendContent');
+ if(exportLegend)exportLegend.innerHTML=activeLegendHTML();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Generando PDF…';}
  try{
@@ -8173,15 +8158,7 @@ function globeCameraCenterLatLng(){
 function isSpainGlobeView(){
  const ll=globeCameraCenterLatLng();
  if(!ll)return false;
- // Solo tratamos como España las zonas realmente cubiertas por las capas IGN:
- // Canarias o España peninsular/Baleares. El rectángulo anterior incluía Marruecos,
- // Sáhara Occidental y Atlántico, ocultando allí la toponimia vectorial mundial.
- try{
-  return (typeof isCanaryLatLng==='function'&&isCanaryLatLng(ll))||
-         (typeof isPeninsularBalearicLatLng==='function'&&isPeninsularBalearicLatLng(ll));
- }catch(e){
-  return false;
- }
+ return ll.lat>=27&&ll.lat<=44.7&&ll.lng>=-18.8&&ll.lng<=5.0;
 }
 
 
@@ -8413,7 +8390,7 @@ function worldLabelPriority(item){
 function worldLabelScreenPoint(item){
  try{
   return globeViewer.scene.cartesianToCanvasCoordinates(
-   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,30),
+   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
    new Cesium.Cartesian2()
   );
  }catch(e){return null;}
@@ -8477,8 +8454,7 @@ async function updateWorldVectorToponyms(force=false){
   worldVectorLabelCollection.show=true;
 
   const tileKeys=worldVisibleTileKeys(band.z,1,band.name==='local-detail'?30:26);
-  const heightBucket=Math.floor(globeCameraHeight()/5000);
-  const renderKey=band.name+'|'+band.z+'|h'+heightBucket+'|'+tileKeys.map(t=>t.z+'/'+t.x+'/'+t.y).sort().join(',');
+  const renderKey=band.name+'|'+band.z+'|'+tileKeys.map(t=>t.z+'/'+t.x+'/'+t.y).sort().join(',');
   if(!force&&renderKey===worldVectorLabelRenderKey){
    globeViewer.scene.requestRender();
    return;
@@ -8515,7 +8491,7 @@ async function updateWorldVectorToponyms(force=false){
   for(const item of selected){
    const p=item.p,name=vectorPlaceDisplayProps(p);
    worldVectorLabelCollection.add({
-    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,30),
+    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,7000),
     text:name,
     font:vectorPlaceFontProps(p,band.name),
     fillColor:pale,
@@ -8526,7 +8502,7 @@ async function updateWorldVectorToponyms(force=false){
     horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
     verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
     pixelOffset:new Cesium.Cartesian2(0,-4),
-    disableDepthTestDistance:Number.POSITIVE_INFINITY
+    disableDepthTestDistance:0
    });
   }
   worldVectorLabelRenderKey=renderKey;
@@ -8947,7 +8923,7 @@ async function updateWorldToponyms2D(force=false){
  if(!document.getElementById('worldToponymsCheck')?.checked)return;
  if(document.body.classList.contains('globe-mode'))return;
  const generation=++worldToponyms2DGeneration;
- const center=map.getCenter(),spain=((typeof isCanaryLatLng==='function'&&isCanaryLatLng(center))||(typeof isPeninsularBalearicLatLng==='function'&&isPeninsularBalearicLatLng(center)));
+ const center=map.getCenter(),spain=profileIsSpainLatLng(center);
 
  if(spain){
   if(worldToponyms2DLayer){map.removeLayer(worldToponyms2DLayer);worldToponyms2DLayer=null;}
@@ -11049,12 +11025,8 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
 // Sincronización 2D/3D: misma imagen mundial, misma escala práctica y escala gráfica + numérica en el globo.
 (function(){
  function isSpainView2D(){
-  try{
-   const c=map.getCenter();
-   const inCanarias=(typeof isCanaryLatLng==='function')&&isCanaryLatLng(c);
-   const inPenBal=(typeof isPeninsularBalearicLatLng==='function')&&isPeninsularBalearicLatLng(c);
-   return !!(inCanarias||inPenBal);
-  }catch(e){return false;}
+  try{return typeof profileIsSpainLatLng==='function' && profileIsSpainLatLng(map.getCenter());}
+  catch(e){return false;}
  }
  function syncWorldImagery2D(){
   if(typeof map==='undefined'||typeof worldImagery==='undefined'||typeof activeBase==='undefined')return;
@@ -11071,7 +11043,6 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   if(!inSpain && activeBase!==worldImagery){
    if(map.hasLayer(activeBase))map.removeLayer(activeBase);
    if(!map.hasLayer(worldImagery))worldImagery.addTo(map);
-   if(typeof worldImagery.redraw==='function')worldImagery.redraw();
   }else if(inSpain && activeBase!==worldImagery){
    if(map.hasLayer(worldImagery))map.removeLayer(worldImagery);
    if(!map.hasLayer(activeBase))activeBase.addTo(map);
@@ -11129,17 +11100,6 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   const cos=Math.max(.05,Math.cos((lat||0)*Math.PI/180));
   return Math.max(0,Math.min(23,Math.log2(156543.03392804097*cos/mpp)));
  }
- function refreshWorldImageryTiles2D(){
-  if(typeof worldImagery==='undefined'||typeof map==='undefined')return;
-  if(document.body.classList.contains('globe-mode'))return;
-  if(!map.hasLayer(worldImagery))return;
-  // Recreate the tile level after the map has been hidden by the 3D globe.
-  // Leaflet can otherwise keep the previous low-resolution tile pyramid and scale it.
-  map.removeLayer(worldImagery);
-  worldImagery.addTo(map);
-  try{worldImagery.bringToBack();}catch(e){}
-  worldImagery.redraw();
- }
  function cameraHeightForLeafletView(){
   if(!globeViewer||!window.Cesium)return null;
   const c=map.getCenter(),z=map.getZoom();
@@ -11170,19 +11130,11 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
    }
    updateGlobeScale();
   }else if(!document.body.classList.contains('globe-mode')){
-   // El mapa vuelve a estar visible: recalcular primero su tamaño y después su escala.
-   map.invalidateSize({pan:false,animate:false});
    if(gCenter&&gMpp){
     const z=leafletZoomForMpp(gMpp,gCenter.lat);
     map.setView([gCenter.lat,gCenter.lng],z,{animate:false});
    }
-   // Forzar que Esri World Imagery solicite las teselas del nivel actual, no una
-   // pirámide antigua ampliada tras haber estado oculto bajo el globo 3D.
-   setTimeout(()=>{
-    map.invalidateSize({pan:false,animate:false});
-    syncWorldImagery2D();
-    refreshWorldImageryTiles2D();
-   },60);
+   setTimeout(()=>{syncWorldImagery2D();map.invalidateSize();},0);
   }
  };
 })();
@@ -11190,27 +11142,31 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
 
 <script id="anambro-human-geography">
 const WORLD_HUMAN_INDICATORS={
- 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial'},
- 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial'},
- 'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial'},
- 'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial'},
- 'NY.GDP.MKTP.CD':{name:'PIB total',unit:'US$ corrientes',dec:0,source:'Banco Mundial',compact:true},
- 'NY.GDP.PCAP.CD':{name:'PIB per cápita',unit:'US$ corrientes por habitante',dec:0,source:'Banco Mundial'},
- 'NV.AGR.TOTL.ZS':{name:'Agricultura, silvicultura y pesca',unit:'% del PIB',dec:1,source:'Banco Mundial'},
- 'NV.IND.TOTL.ZS':{name:'Industria',unit:'% del PIB',dec:1,source:'Banco Mundial'},
- 'NV.SRV.TOTL.ZS':{name:'Servicios',unit:'% del PIB',dec:1,source:'Banco Mundial'},
- 'SL.UEM.TOTL.ZS':{name:'Desempleo',unit:'% de la población activa',dec:1,source:'Banco Mundial'},
- 'SP.DYN.LE00.IN':{name:'Esperanza de vida al nacer',unit:'años',dec:1,source:'Banco Mundial'},
- 'SP.DYN.TFRT.IN':{name:'Fecundidad',unit:'hijos por mujer',dec:2,source:'Banco Mundial'},
- 'SP.DYN.CDRT.IN':{name:'Mortalidad bruta',unit:'por 1.000 habitantes',dec:1,source:'Banco Mundial'},
- 'SM.POP.NETM':{name:'Migración neta',unit:'personas',dec:0,source:'Banco Mundial',signed:true},
- 'UNDP_HDI':{name:'Índice de Desarrollo Humano (IDH)',unit:'índice 0–1',dec:3,source:'PNUD',minYear:1990,maxYear:2023},
- 'EN.ATM.CO2E.PC':{name:'Emisiones de CO₂ per cápita',unit:'t por habitante',dec:2,source:'Banco Mundial'},
- 'EG.ELC.ACCS.ZS':{name:'Acceso a electricidad',unit:'% de la población',dec:1,source:'Banco Mundial'},
- 'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial'},
- 'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial'}
+ 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial',sense:'neutral',zeroBase:true},
+ 'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial',sense:'neutral',zeroBase:true},
+ 'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial',sense:'neutral'},
+ 'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
+ 'NY.GDP.MKTP.CD':{name:'PIB total',unit:'US$ corrientes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral',zeroBase:true},
+ 'NY.GDP.PCAP.CD':{name:'PIB per cápita',unit:'US$ corrientes por habitante',dec:0,source:'Banco Mundial',sense:'positive',zeroBase:true},
+ 'NV.AGR.TOTL.ZS':{name:'Agricultura, silvicultura y pesca',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
+ 'NV.IND.TOTL.ZS':{name:'Industria',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
+ 'NV.SRV.TOTL.ZS':{name:'Servicios',unit:'% del PIB',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
+ 'SL.UEM.TOTL.ZS':{name:'Desempleo',unit:'% de la población activa',dec:1,source:'Banco Mundial',sense:'negative',zeroBase:true},
+ 'SP.DYN.LE00.IN':{name:'Esperanza de vida al nacer',unit:'años',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]},
+ 'SP.DYN.TFRT.IN':{name:'Fecundidad',unit:'hijos por mujer',dec:2,source:'Banco Mundial',sense:'neutral',domain:[0,10]},
+ 'SP.DYN.CDRT.IN':{name:'Mortalidad bruta',unit:'por 1.000 habitantes',dec:1,source:'Banco Mundial',sense:'negative',zeroBase:true},
+ 'SM.POP.NETM':{name:'Migración neta',unit:'personas',dec:0,source:'Banco Mundial',signed:true,sense:'neutral'},
+ 'UNDP_HDI':{name:'Índice de Desarrollo Humano (IDH)',unit:'índice 0–1',dec:3,source:'PNUD',minYear:1990,maxYear:2023,sense:'positive',domain:[0,1]},
+ 'EN.ATM.CO2E.PC':{name:'Emisiones de CO₂ per cápita',unit:'t por habitante',dec:2,source:'Banco Mundial',sense:'negative',zeroBase:true},
+ 'EG.ELC.ACCS.ZS':{name:'Acceso a electricidad',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]},
+ 'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]},
+ 'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]}
 };
-const HUMAN_COLORS=['#ffe34d','#ff9f1c','#ff4d4d','#b63cff','#1769ff'];
+const HUMAN_PALETTES={
+ positive:['#7f0000','#d73027','#fdae61','#66c2a5','#2166ac'],
+ negative:['#2166ac','#66c2a5','#fdae61','#d73027','#7f0000'],
+ neutral:['#fff2a6','#fdb863','#e66101','#b35806','#542788']
+};
 const worldHumanLayers=new Map();
 let worldHumanRequest=0,worldHumanHDICache=null,worldHumanISO2to3=null;
 function activeHumanIndicators(){return [...document.querySelectorAll('.worldHumanLayerCheck:checked')].map(x=>x.dataset.humanIndicator).filter(Boolean);}
@@ -11218,9 +11174,58 @@ function humanCountryCode(p){for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3'
 function humanCountryCode2(p){for(const k of ['ISO_A2','WB_A2','POSTAL']){const v=String(p?.[k]||'').toUpperCase();if(v&&v!=='-99'&&v.length===2)return v;}return '';}
 async function humanISO3FromISO2(iso2){iso2=String(iso2||'').toUpperCase();if(!iso2)return '';if(!worldHumanISO2to3){worldHumanISO2to3=new Map();const geo=await loadCountries();for(const f of (geo?.features||[])){const p=f.properties||{},a2=humanCountryCode2(p),a3=humanCountryCode(p);if(a2&&a3)worldHumanISO2to3.set(a2,a3);}}return worldHumanISO2to3.get(iso2)||'';}
 function humanFmt(v,meta){if(v==null||!Number.isFinite(Number(v)))return 'Sin datos';v=Number(v);if(meta.compact&&Math.abs(v)>=1e9)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:2,notation:'compact'}).format(v)+' '+meta.unit;return new Intl.NumberFormat('es-ES',{minimumFractionDigits:meta.dec||0,maximumFractionDigits:meta.dec||0}).format(v)+' '+meta.unit;}
-function humanBreaks(vals){const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return [];const q=p=>a[Math.min(a.length-1,Math.max(0,Math.round((a.length-1)*p)))];return [q(.2),q(.4),q(.6),q(.8)];}
-function humanColor(v,br){if(!Number.isFinite(v))return '#b8b8b8';let i=0;while(i<br.length&&v>br[i])i++;return HUMAN_COLORS[Math.min(i,HUMAN_COLORS.length-1)];}
-function humanLegendHTML(meta,year,br){if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';for(let i=0;i<5;i++){let label;if(i===0)label='≤ '+humanFmt(br[0],meta);else if(i===4)label='> '+humanFmt(br[3],meta);else label=humanFmt(br[i-1],meta)+' – '+humanFmt(br[i],meta);h+='<div><span class="sw" style="background:'+HUMAN_COLORS[i]+'"></span>'+label+'</div>';}return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';}
+function humanNiceStep(raw){
+ if(!Number.isFinite(raw)||raw<=0)return 1;
+ const p=10**Math.floor(Math.log10(raw)),n=raw/p;
+ const m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;
+ return m*p;
+}
+function humanBreaks(vals,meta){
+ const a=vals.filter(Number.isFinite);
+ if(!a.length)return [];
+ if(Array.isArray(meta?.domain)&&meta.domain.length===2){
+  const lo=Number(meta.domain[0]),hi=Number(meta.domain[1]),step=(hi-lo)/5;
+  return Array.from({length:6},(_,i)=>lo+i*step);
+ }
+ let lo=meta?.zeroBase?0:Math.min(...a),hi=Math.max(...a);
+ if(lo===hi){
+  const s=humanNiceStep(Math.abs(lo||1)/5||1);
+  lo=meta?.zeroBase?0:Math.floor((lo-2.5*s)/s)*s;hi=lo+5*s;
+  return Array.from({length:6},(_,i)=>lo+i*s);
+ }
+ let step=humanNiceStep((hi-lo)/5);
+ let start=meta?.zeroBase?0:Math.floor(lo/step)*step;
+ while(start+5*step<hi-1e-12){
+  step=humanNiceStep(step*1.01);
+  start=meta?.zeroBase?0:Math.floor(lo/step)*step;
+ }
+ return Array.from({length:6},(_,i)=>start+i*step);
+}
+function humanPalette(meta){return HUMAN_PALETTES[meta?.sense]||HUMAN_PALETTES.neutral;}
+function humanClassIndex(v,br){
+ if(!Number.isFinite(v)||!Array.isArray(br)||br.length<6)return -1;
+ if(v<br[0])return 0;
+ for(let i=0;i<5;i++)if(v<=br[i+1]||i===4)return i;
+ return 4;
+}
+function humanColor(v,br,meta){const i=humanClassIndex(v,br);return i<0?'#b8b8b8':humanPalette(meta)[i];}
+function humanLegendNumber(v,meta){
+ const abs=Math.abs(Number(v));
+ if(meta?.compact&&abs>=1e6)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,notation:'compact'}).format(v);
+ const dec=(abs>0&&abs<1)?Math.max(meta?.dec||0,2):(meta?.dec||0);
+ return new Intl.NumberFormat('es-ES',{maximumFractionDigits:dec,minimumFractionDigits:0}).format(v);
+}
+function humanLegendHTML(meta,year,br){
+ if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';
+ const colors=humanPalette(meta);
+ let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
+ for(let i=0;i<5;i++){
+  const left=humanLegendNumber(br[i],meta),right=humanLegendNumber(br[i+1],meta);
+  const label=left+' – '+right;
+  h+='<div><span class="sw" style="background:'+colors[i]+'"></span>'+label+'</div>';
+ }
+ return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';
+}
 async function loadHumanWB(ind,year){const u='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400&date='+year;const r=await fetch(u);if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json();const m=new Map();for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),raw=row?.value;if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(c.length===3&&Number.isFinite(v))m.set(c,v);}return m;}
 function parseCSVLine(line){const out=[];let x='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){x+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(x);x='';}else x+=c;}out.push(x);return out;}
 async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;const u='https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv';const r=await fetch(u);if(!r.ok)throw new Error('PNUD '+r.status);const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]).map(x=>String(x||'').trim());const iso=head.findIndex(x=>/^iso3$/i.test(x)||/^iso3_code$/i.test(x));const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>5)data.push(row);}worldHumanHDICache={head,iso,data};return worldHumanHDICache;}
@@ -11272,7 +11277,7 @@ function clearHumanIndicator(ind){const st=worldHumanLayers.get(ind);if(!st)retu
 async function renderHuman2D(ind,data,meta,year,br){
  const geo=await loadCountries(),st=humanState(ind);if(st.layer2D)map.removeLayer(st.layer2D);
  st.layer2D=L.geoJSON(geo,{pane:'overlayPane',
-  style:f=>{const v=data.get(humanCountryCode(f.properties||{}));return {color:'#565656',weight:.55,opacity:.75,fillColor:humanColor(v,br),fillOpacity:.68};},
+  style:f=>{const v=data.get(humanCountryCode(f.properties||{}));return {color:'#565656',weight:.55,opacity:.75,fillColor:humanColor(v,br,meta),fillOpacity:.68};},
   onEachFeature:(f,l)=>{const props=f.properties||{},code=humanCountryCode(props),name=humanCountryLabel(props);l.on('click',e=>{L.DomEvent.stopPropagation(e);l.bindPopup(humanThematicInfoHTML(name,code),{maxWidth:390}).openPopup(e.latlng);});}
  }).addTo(map);
  syncHumanThematicBasemap();
@@ -11284,14 +11289,17 @@ async function renderHuman3D(ind,data,meta,year,br){
   if(!e.polygon)continue;const p=e.properties;let code='',name='País / territorio';
   for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){try{const v=p?.[k]?.getValue?.();if(v&&v!=='-99'){code=String(v).toUpperCase();break;}}catch(_){}}
   for(const k of ['NAME_ES','ADMIN','NAME_LONG','NAME_EN','NAME','SOVEREIGNT']){try{const v=p?.[k]?.getValue?.();if(v){name=String(v);break;}}catch(_){}}
-  const v=data.get(code),col=Cesium.Color.fromCssColorString(humanColor(v,br)).withAlpha(.68);
+  const v=data.get(code),col=Cesium.Color.fromCssColorString(humanColor(v,br,meta)).withAlpha(.68);
   e.polygon.material=col;e.polygon.outline=true;e.polygon.outlineColor=Cesium.Color.fromCssColorString('#555').withAlpha(.7);
   e.__anambroHuman=true;e.__anambroHumanIndicator=ind;e.__anambroHumanISO3=code;e.__anambroHumanCountry=name;
  }
  st.source3D=ds;await globeViewer.dataSources.add(ds);syncHumanThematicBasemap();globeViewer.scene.requestRender();
 }
-async function updateHumanIndicator(ind){const meta=WORLD_HUMAN_INDICATORS[ind];if(!meta)return;const cb=document.querySelector('.worldHumanLayerCheck[data-human-indicator="'+CSS.escape(ind)+'"]');if(!cb?.checked){clearHumanIndicator(ind);return;}const year=+document.getElementById('worldHumanYear').value,st=humanState(ind);document.getElementById('worldHumanStatus').textContent='Cargando '+meta.name+' · '+year+'…';const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);st.data=data;st.year=year;st.breaks=humanBreaks([...data.values()]);if(!st.breaks.length){clearHumanIndicator(ind);st.data=data;st.year=year;return;}await renderHuman2D(ind,data,meta,year,st.breaks);if(globeViewer)await renderHuman3D(ind,data,meta,year,st.breaks);}
-function refreshHumanLegend(){const year=+document.getElementById('worldHumanYear').value,active=activeHumanIndicators(),el=document.getElementById('worldHumanLegend');syncHumanThematicBasemap();if(!active.length){el.innerHTML='';document.getElementById('worldHumanStatus').textContent='Activa una o varias variables.';setTimeout(updateLegend,0);return;}el.innerHTML=active.map(ind=>{const st=humanState(ind),meta=WORLD_HUMAN_INDICATORS[ind];return '<div style="margin:6px 0 10px;padding-top:5px;border-top:1px solid #ddd">'+humanLegendHTML(meta,year,st.breaks||[])+'</div>';}).join('');document.getElementById('worldHumanStatus').textContent=active.length+' capa'+(active.length===1?'':'s')+' de Geografía humana activa'+(active.length===1?'':'s')+' · '+year;setTimeout(updateLegend,0);}
+async function updateHumanIndicator(ind){const meta=WORLD_HUMAN_INDICATORS[ind];if(!meta)return;const cb=document.querySelector('.worldHumanLayerCheck[data-human-indicator="'+CSS.escape(ind)+'"]');if(!cb?.checked){clearHumanIndicator(ind);return;}const year=+document.getElementById('worldHumanYear').value,st=humanState(ind);document.getElementById('worldHumanStatus').textContent='Cargando '+meta.name+' · '+year+'…';const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);st.data=data;st.year=year;st.breaks=humanBreaks([...data.values()],meta);if(!st.breaks.length){clearHumanIndicator(ind);st.data=data;st.year=year;return;}await renderHuman2D(ind,data,meta,year,st.breaks);if(globeViewer)await renderHuman3D(ind,data,meta,year,st.breaks);}
+function refreshHumanLegend(){const year=+document.getElementById('worldHumanYear').value,active=activeHumanIndicators(),el=document.getElementById('worldHumanLegend');syncHumanThematicBasemap();
+ const dyn=document.getElementById('dynamicLegend'),btn=document.getElementById('legendToggle');
+ if(active.length&&dyn){dyn.classList.remove('hidden');if(btn){btn.innerHTML='<span>✕</span> Ocultar leyenda';btn.setAttribute('aria-expanded','true');}}
+if(!active.length){el.innerHTML='';document.getElementById('worldHumanStatus').textContent='Activa una o varias variables.';setTimeout(updateLegend,0);return;}el.innerHTML=active.map(ind=>{const st=humanState(ind),meta=WORLD_HUMAN_INDICATORS[ind];return '<div style="margin:6px 0 10px;padding-top:5px;border-top:1px solid #ddd">'+humanLegendHTML(meta,year,st.breaks||[])+'</div>';}).join('');document.getElementById('worldHumanStatus').textContent=active.length+' capa'+(active.length===1?'':'s')+' de Geografía humana activa'+(active.length===1?'':'s')+' · '+year;setTimeout(updateLegend,0);}
 async function updateWorldHuman(){const seq=++worldHumanRequest,active=activeHumanIndicators();for(const ind of [...worldHumanLayers.keys()])if(!active.includes(ind))clearHumanIndicator(ind);if(!active.length){refreshHumanLegend();return;}try{for(const ind of active){if(seq!==worldHumanRequest)return;await updateHumanIndicator(ind);}if(seq!==worldHumanRequest)return;refreshHumanLegend();}catch(e){console.error(e);document.getElementById('worldHumanStatus').textContent='No se pudieron cargar una o varias capas para este año.';refreshHumanLegend();}}
 function clearWorldHuman(){for(const ind of [...worldHumanLayers.keys()])clearHumanIndicator(ind);document.querySelectorAll('.worldHumanLayerCheck').forEach(x=>x.checked=false);refreshHumanLegend();}
 function humanPointHtmlByISO3(iso3){const active=activeHumanIndicators();if(!active.length)return '';const year=+document.getElementById('worldHumanYear').value;let h='<hr><b>👥 Geografía humana · '+year+'</b>';for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.year===year?st.data.get(iso3):undefined;h+='<br><b>'+escHtml(meta.name)+':</b> '+escHtml(humanFmt(v,meta));}return h;}
@@ -11299,43 +11307,4 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 (function(){const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');document.querySelectorAll('.worldHumanLayerCheck').forEach(cb=>cb.addEventListener('change',async()=>{if(cb.checked)await updateHumanIndicator(cb.dataset.humanIndicator);else clearHumanIndicator(cb.dataset.humanIndicator);refreshHumanLegend();}));yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',updateWorldHuman);document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{yr.value=2025;yv.textContent='2025';updateWorldHuman();};})();
 </script>
 
-
-<script id="anambro-header-tool-clearance-sync">
-(function(){
- function syncHeaderClearance(){
-  if(window.innerWidth<=760)return;
-  const h=document.querySelector('.brand.brandWide')||document.querySelector('.brand');
-  if(!h)return;
-  const r=h.getBoundingClientRect();
-  const bottom=Math.max(0,Math.ceil(r.bottom));
-  document.documentElement.style.setProperty('--anambro-header-bottom',bottom+'px');
- }
- window.addEventListener('resize',()=>requestAnimationFrame(syncHeaderClearance));
- window.addEventListener('orientationchange',()=>setTimeout(syncHeaderClearance,120));
- document.addEventListener('DOMContentLoaded',()=>{syncHeaderClearance();setTimeout(syncHeaderClearance,80);});
- if(document.readyState!=='loading'){syncHeaderClearance();setTimeout(syncHeaderClearance,80);}
-})();
-</script>
-
-<script id="anambro-world-toponyms-2d-regression-fix">
-(function(){
- function refreshWorldToponyms2D(){
-  try{
-   if(document.body.classList.contains('globe-mode'))return;
-   if(!document.getElementById('worldToponymsCheck')?.checked)return;
-   if(typeof updateWorldToponyms2D==='function')updateWorldToponyms2D(true);
-  }catch(e){console.warn('Refresco de toponimia mundial 2D:',e);}
- }
- map.on('moveend zoomend',()=>{
-  clearTimeout(window.__anambroToponymsRefreshTimer);
-  window.__anambroToponymsRefreshTimer=setTimeout(refreshWorldToponyms2D,120);
- });
- const __toponymToggleGlobe=toggleGlobe;
- toggleGlobe=async function(){
-  const leaving=document.body.classList.contains('globe-mode');
-  await __toponymToggleGlobe();
-  if(leaving&&!document.body.classList.contains('globe-mode'))setTimeout(refreshWorldToponyms2D,160);
- };
-})();
-</script>
 </body></html>
