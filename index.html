@@ -8250,7 +8250,7 @@ async function refreshLayoutSnapshot(){
    syncLayoutThematicAppearance(false);
    const canvas=await html2canvas(document.getElementById('map'),{
     useCORS:true,allowTaint:false,logging:false,
-    backgroundColor:(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)?'#86cbe5':'#d9dde1',
+    backgroundColor:((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#86cbe5':'#d9dde1',
     ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
    });
    layoutSnapshotData=canvas.toDataURL('image/jpeg',.92);
@@ -10471,7 +10471,7 @@ async function toggleHistoryBasemap2D(on){
  if(on){
   if(map.hasLayer(activeBase))map.removeLayer(activeBase);
   historyOldMapBackground=historyOldMapBackground||map.getContainer().style.backgroundColor||'';
-  map.getContainer().style.backgroundColor='#bfe3f2';
+  map.getContainer().style.backgroundColor='#86cbe5';
   try{
    const land=await loadHistoryLand();
    if(!document.getElementById('worldHistoryCheck')?.checked)return;
@@ -10492,7 +10492,7 @@ async function toggleHistoryBasemapGlobe(on){
  if(!globeViewer)return;
  if(on){
   if(globeSatelliteLayer)globeSatelliteLayer.show=false;
-  globeViewer.scene.globe.baseColor=Cesium.Color.fromCssColorString('#bfe3f2');
+  globeViewer.scene.globe.baseColor=Cesium.Color.fromCssColorString('#86cbe5');
   try{
    const land=await loadHistoryLand();
    if(!document.getElementById('worldHistoryCheck')?.checked)return;
