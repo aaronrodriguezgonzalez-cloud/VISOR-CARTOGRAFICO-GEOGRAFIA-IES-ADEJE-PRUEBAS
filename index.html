@@ -4271,8 +4271,8 @@ const hybrid=L.layerGroup([pnoa,labels]);
 const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
-const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
- noWrap:true,minZoom:0,maxZoom:18,maxNativeZoom:18,
+const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',{
+ noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
  attribution:'Esri World Imagery'
 });
 
@@ -10279,8 +10279,8 @@ async function ensureGlobe(){
   globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,baseLayer:false});
   // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
   const sat=new Cesium.UrlTemplateImageryProvider({
-   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-   credit:'Esri World Imagery',maximumLevel:18
+   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',
+   credit:'Esri World Imagery',maximumLevel:23
   });
   globeSatelliteLayer=globeViewer.imageryLayers.addImageryProvider(sat);
   // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
@@ -12842,48 +12842,148 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 
 <script id="anambro-native-imagery-zoom-stop">
 /*
-  No solicitar niveles inexistentes de Esri World Imagery.
-  Nivel 18 = último nivel global fiable usado por ANAMBRO.
-  2D: el mapa no puede superar z18 cuando World Imagery es el fondo elegido.
-  3D: Cesium usa maximumLevel 18 y se fija una distancia mínima de cámara
-      equivalente a ese nivel, evitando el overzoom y las teselas grises.
+  Tope de zoom por PROVEEDOR REALMENTE VISIBLE.
+  - En España/Canarias, si el usuario ha elegido una base IGN/PNOA, se respeta
+    el último nivel declarado por ESA fuente (actualmente z19 en estas capas).
+  - Fuera de España, o si se elige explícitamente World Imagery, el proveedor
+    efectivo es Esri World Imagery. Su resolución no es uniforme en todo el
+    planeta, por lo que el último nivel se consulta en el Tile Map de ArcGIS
+    para la posición actual y se aplica tanto en Leaflet como en Cesium.
+  - blankTile=false evita que ArcGIS sustituya una tesela inexistente por la
+    imagen gris «Map data not yet available»; cualquier 404 sirve además como
+    salvaguarda para retroceder un nivel.
 */
 (function(){
- const WORLD_IMAGERY_LAST_Z=18;
- function worldImageryIsChosen(){
-  try{return typeof activeBase!=='undefined' && activeBase===worldImagery;}catch(e){return false;}
+ const ESRI_HARD_MAX=23;
+ const ESRI_SAFE_FALLBACK=18;
+ const ESRI_TILEMAP='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap';
+ const esriCapCache=new Map();
+ let mapProbeSeq=0, globeProbeSeq=0;
+ let forcedEsriMapCap=null, forcedEsriGlobeCap=null;
+
+ function inSpain(ll){
+  try{return !!(ll&&typeof profileIsSpainLatLng==='function'&&profileIsSpainLatLng(ll));}
+  catch(e){return false;}
  }
- function syncMapNativeZoomStop(){
-  if(typeof map==='undefined')return;
-  const cap=worldImageryIsChosen()?WORLD_IMAGERY_LAST_Z:19;
+ function layerCap(layer){
+  if(!layer)return 19;
+  try{
+   if(typeof layer.getLayers==='function'){
+    const caps=layer.getLayers().map(layerCap).filter(Number.isFinite);
+    if(caps.length)return Math.min(...caps);
+   }
+  }catch(e){}
+  const o=layer.options||{};
+  const n=Number.isFinite(+o.maxNativeZoom)?+o.maxNativeZoom:(Number.isFinite(+o.maxZoom)?+o.maxZoom:null);
+  return n==null?19:n;
+ }
+ function effectiveMapProvider(){
+  if(typeof map==='undefined'||typeof worldImagery==='undefined')return {kind:'esri',layer:worldImagery};
+  const ll=map.getCenter();
+  // World Imagery elegida expresamente = Esri incluso dentro de España.
+  if(typeof activeBase!=='undefined'&&activeBase===worldImagery)return {kind:'esri',layer:worldImagery};
+  // Las bases IGN/PNOA están enmascaradas a España; fuera de ella lo que se ve es Esri.
+  if(!inSpain(ll))return {kind:'esri',layer:worldImagery};
+  return {kind:'leaflet',layer:(typeof activeBase!=='undefined'?activeBase:worldImagery)};
+ }
+ function slippyXY(lat,lng,z){
+  const n=2**z;
+  const la=Math.max(-85.05112878,Math.min(85.05112878,+lat||0));
+  const lo=((+lng||0)+180)%360;
+  const x=Math.max(0,Math.min(n-1,Math.floor(((lo<0?lo+360:lo)/360)*n)));
+  const r=la*Math.PI/180;
+  const y=Math.max(0,Math.min(n-1,Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n)));
+  return {x,y};
+ }
+ function capCacheKey(lat,lng){
+  const t=slippyXY(lat,lng,15);return t.x+':'+t.y;
+ }
+ async function esriTileExists(lat,lng,z){
+  const {x,y}=slippyXY(lat,lng,z);
+  try{
+   const r=await fetch(`${ESRI_TILEMAP}/${z}/${y}/${x}/1/1?f=json`,{cache:'force-cache',mode:'cors'});
+   if(!r.ok)return false;
+   const j=await r.json();
+   return !j?.error && Array.isArray(j?.data) && j.data[0]===1;
+  }catch(e){return null;}
+ }
+ async function esriMaxLevelAt(lat,lng){
+  const key=capCacheKey(lat,lng);
+  if(esriCapCache.has(key))return esriCapCache.get(key);
+  let hadResponse=false;
+  for(let z=ESRI_HARD_MAX;z>=0;z--){
+   const ok=await esriTileExists(lat,lng,z);
+   if(ok===null)break;
+   hadResponse=true;
+   if(ok){esriCapCache.set(key,z);return z;}
+  }
+  const fallback=hadResponse?ESRI_SAFE_FALLBACK:ESRI_SAFE_FALLBACK;
+  esriCapCache.set(key,fallback);return fallback;
+ }
+ function setMapCap(cap){
+  if(typeof map==='undefined'||!Number.isFinite(cap))return;
+  cap=Math.max(0,Math.min(ESRI_HARD_MAX,Math.floor(cap)));
   if(map.getMaxZoom()!==cap)map.setMaxZoom(cap);
   if(map.getZoom()>cap)map.setZoom(cap,{animate:false});
  }
- function globeNativeMinHeight(){
-  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return 250;
-  let lat=0;
+ async function syncMapProviderZoomStop(){
+  if(typeof map==='undefined')return;
+  const seq=++mapProbeSeq;
+  const p=effectiveMapProvider();
+  if(p.kind!=='esri'){
+   forcedEsriMapCap=null;
+   setMapCap(layerCap(p.layer));
+   return;
+  }
+  // Mientras se consulta la disponibilidad local, nunca permitir entrar a un nivel dudoso.
+  setMapCap(forcedEsriMapCap==null?ESRI_SAFE_FALLBACK:forcedEsriMapCap);
+  const c=map.getCenter();
+  let cap=await esriMaxLevelAt(c.lat,c.lng);
+  if(seq!==mapProbeSeq)return;
+  if(forcedEsriMapCap!=null)cap=Math.min(cap,forcedEsriMapCap);
+  setMapCap(cap);
+ }
+
+ // Si ArcGIS informa de una tesela ausente, retroceder inmediatamente un nivel.
+ if(typeof worldImagery!=='undefined'&&worldImagery?.on){
+  worldImagery.on('tileerror',e=>{
+   if(effectiveMapProvider().kind!=='esri')return;
+   const z=Number(e?.coords?.z);
+   if(!Number.isFinite(z)||z<=0)return;
+   forcedEsriMapCap=forcedEsriMapCap==null?z-1:Math.min(forcedEsriMapCap,z-1);
+   setMapCap(forcedEsriMapCap);
+  });
+ }
+
+ function globeCenter(){
   try{
-   const c=(typeof globeCenterLatLng==='function'&&globeCenterLatLng())||null;
-   if(c&&Number.isFinite(c.lat))lat=c.lat;
-   else lat=Cesium.Math.toDegrees(globeViewer.camera.positionCartographic.latitude||0);
+   if(typeof globeCenterLatLng==='function'){
+    const c=globeCenterLatLng();if(c)return c;
+   }
+   if(typeof globeViewer!=='undefined'&&globeViewer&&typeof Cesium!=='undefined'){
+    const q=globeViewer.camera.positionCartographic;
+    return {lat:Cesium.Math.toDegrees(q.latitude),lng:Cesium.Math.toDegrees(q.longitude)};
+   }
   }catch(e){}
-  const cos=Math.max(.05,Math.cos(lat*Math.PI/180));
-  const mpp=156543.03392804097*cos/Math.pow(2,WORLD_IMAGERY_LAST_Z);
+  return {lat:0,lng:0};
+ }
+ function globeMinHeightForLevel(level,lat){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return 250;
+  const cos=Math.max(.05,Math.cos((+lat||0)*Math.PI/180));
+  const mpp=156543.03392804097*cos/Math.pow(2,level);
   const rect=globeViewer.scene.canvas.getBoundingClientRect();
   const hpx=Math.max(320,rect.height||720);
   const vfov=globeViewer.camera.frustum.fovy||Cesium.Math.toRadians(60);
-  // Un pequeño margen impide cruzar por redondeo al nivel siguiente.
-  return Math.max(120,(mpp*hpx)/(2*Math.tan(vfov/2))*1.04);
+  return Math.max(35,(mpp*hpx)/(2*Math.tan(vfov/2))*1.04);
  }
- function syncGlobeNativeZoomStop(){
+ function applyGlobeCap(level,center){
   if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
   const ctl=globeViewer.scene.screenSpaceCameraController;
-  const minH=globeNativeMinHeight();
+  const minH=globeMinHeightForLevel(level,center?.lat||0);
   ctl.minimumZoomDistance=minH;
   try{
-   const h=Cesium.Cartographic.fromCartesian(globeViewer.camera.positionWC).height||Infinity;
-   if(h<minH*.995){
-    const pos=globeViewer.camera.positionCartographic;
+   const pos=globeViewer.camera.positionCartographic;
+   if((pos.height||Infinity)<minH*.995){
     globeViewer.camera.setView({
      destination:Cesium.Cartesian3.fromRadians(pos.longitude,pos.latitude,minH),
      orientation:{heading:globeViewer.camera.heading,pitch:globeViewer.camera.pitch,roll:globeViewer.camera.roll}
@@ -12891,26 +12991,48 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
    }
   }catch(e){}
  }
- // Mantener el límite 2D sincronizado al cambiar el fondo.
- document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>setTimeout(syncMapNativeZoomStop,0)));
- map.on('zoomend',syncMapNativeZoomStop);
- syncMapNativeZoomStop();
+ async function syncGlobeProviderZoomStop(){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
+  const seq=++globeProbeSeq,c=globeCenter();
+  applyGlobeCap(forcedEsriGlobeCap==null?ESRI_SAFE_FALLBACK:forcedEsriGlobeCap,c);
+  let cap=await esriMaxLevelAt(c.lat,c.lng);
+  if(seq!==globeProbeSeq)return;
+  if(forcedEsriGlobeCap!=null)cap=Math.min(cap,forcedEsriGlobeCap);
+  applyGlobeCap(cap,c);
+ }
+ function hookGlobeErrors(){
+  try{
+   const provider=globeSatelliteLayer?.imageryProvider;
+   if(!provider||provider.__anambroZoomErrorHook||!provider.errorEvent)return;
+   provider.errorEvent.addEventListener(err=>{
+    const z=Number(err?.level);
+    if(!Number.isFinite(z)||z<=0)return;
+    forcedEsriGlobeCap=forcedEsriGlobeCap==null?z-1:Math.min(forcedEsriGlobeCap,z-1);
+    applyGlobeCap(forcedEsriGlobeCap,globeCenter());
+   });
+   provider.__anambroZoomErrorHook=true;
+  }catch(e){}
+ }
 
- // Se envuelve toggleGlobe al final de toda la cadena existente.
- const __toggleGlobeNativeStop=toggleGlobe;
+ document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>setTimeout(syncMapProviderZoomStop,0)));
+ map.on('moveend zoomend',()=>{syncMapProviderZoomStop();});
+ setTimeout(syncMapProviderZoomStop,0);
+
+ const __toggleGlobeProviderStop=toggleGlobe;
  toggleGlobe=async function(){
-  await __toggleGlobeNativeStop();
+  await __toggleGlobeProviderStop();
   if(document.body.classList.contains('globe-mode')&&globeViewer){
-   syncGlobeNativeZoomStop();
-   if(!globeViewer.__anambroNativeZoomStop){
-    globeViewer.camera.moveEnd.addEventListener(syncGlobeNativeZoomStop);
-    globeViewer.__anambroNativeZoomStop=true;
+   hookGlobeErrors();
+   await syncGlobeProviderZoomStop();
+   if(!globeViewer.__anambroProviderZoomStop){
+    globeViewer.camera.moveEnd.addEventListener(syncGlobeProviderZoomStop);
+    globeViewer.__anambroProviderZoomStop=true;
    }
-  }else syncMapNativeZoomStop();
+  }else syncMapProviderZoomStop();
  };
  window.addEventListener('resize',()=>setTimeout(()=>{
-  syncMapNativeZoomStop();
-  if(document.body.classList.contains('globe-mode'))syncGlobeNativeZoomStop();
+  syncMapProviderZoomStop();
+  if(document.body.classList.contains('globe-mode'))syncGlobeProviderZoomStop();
  },120));
 })();
 </script>
