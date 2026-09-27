@@ -1841,7 +1841,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
 .layoutTitleBox{left:17%;top:3%;width:74%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
 .layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #333;overflow:hidden;background:#d9dde1}
-.layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none}
+.layoutMapBox img{width:100%;height:100%;object-fit:contain;object-position:50% 50%;display:block;pointer-events:none;background:#fff}
 .layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.95);border:1px solid #555;border-radius:5px;padding:8px;font-size:11px;line-height:1.25}
 .layoutLegendBox> b{font-size:13px}
 .layoutLegendBox .sw{width:12px;height:9px}
@@ -3613,15 +3613,17 @@ body.globe-mode #globeScaleBox{display:block}
       </div>
 
       <label>Zoom de la captura
-        <input id="layoutCropZoom" type="range" min="100" max="240" value="100">
+        <input id="layoutCropZoom" type="range" min="50" max="240" value="100">
       </label>
 
       <div class="layoutHelp">
-        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» también puedes modificar encuadre y zoom.
+        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» también puedes modificar encuadre y zoom. Para un mapamundi completo usa «🌍 Capturar mapamundi completo»; «↔ Encajar captura completa» evita cualquier recorte.
       </div>
       <div class="layoutResizeHint">↔ Selecciona mapa, leyenda, título, escala, norte, fuentes o créditos y estira sus márgenes directamente.</div>
 
       <button class="action" onclick="refreshLayoutSnapshot()">↻ Actualizar mapa desde la vista actual</button>
+      <button class="action" onclick="refreshLayoutWorldSnapshot()">🌍 Capturar mapamundi completo</button>
+      <button class="action" onclick="fitLayoutMapImage()">↔ Encajar captura completa</button>
       <button class="action" onclick="exportLayoutPDF()">📄 Exportar a PDF</button>
     </aside>
 
@@ -7380,6 +7382,48 @@ function scaleForLayout(){
  const n=nice(d);
  return n>=1000?(n/1000).toLocaleString('es-ES')+' km':Math.round(n)+' m';
 }
+function fitLayoutMapImage(){
+ const z=document.getElementById('layoutCropZoom'),px=document.getElementById('layoutPanX'),py=document.getElementById('layoutPanY');
+ if(z)z.value=100;if(px)px.value=50;if(py)py.value=50;
+ const img=document.getElementById('layoutMapImage');
+ if(img){
+  img.style.width='100%';img.style.height='100%';img.style.maxWidth='100%';img.style.maxHeight='100%';
+  img.style.position='absolute';img.style.left='50%';img.style.top='50%';img.style.transform='translate(-50%,-50%)';
+  img.style.objectFit='contain';img.style.objectPosition='50% 50%';
+ }
+}
+async function waitLayoutMapRender(timeout=1800){
+ const start=Date.now();
+ while(Date.now()-start<timeout){
+  const loading=document.querySelectorAll('#map .leaflet-tile-loading').length;
+  if(!loading){await new Promise(r=>setTimeout(r,180));return;}
+  await new Promise(r=>setTimeout(r,120));
+ }
+}
+async function refreshLayoutWorldSnapshot(){
+ const prevCenter=map.getCenter(),prevZoom=map.getZoom(),prevMin=map.getMinZoom();
+ const prevMaxBounds=map.options.maxBounds;
+ const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Preparando mapamundi…';}
+ try{
+  // Para exportar un mapamundi completo hay que permitir temporalmente un zoom
+  // menor que el mínimo dinámico usado por la vista interactiva.
+  map.setMinZoom(0);
+  map.setMaxBounds(null);
+  const worldZoom=map.getBoundsZoom(WORLD_VIEW_BOUNDS,false,[8,8]);
+  map.setView([0,0],Math.max(0,worldZoom),{animate:false});
+  map.invalidateSize({animate:false});
+  await waitLayoutMapRender();
+  await refreshLayoutSnapshot();
+  fitLayoutMapImage();
+ }finally{
+  map.setMinZoom(prevMin);
+  map.setMaxBounds(prevMaxBounds||WORLD_VIEW_BOUNDS);
+  map.setView(prevCenter,Math.max(prevMin,prevZoom),{animate:false});
+  map.invalidateSize({animate:false});
+  if(btn){btn.disabled=false;btn.textContent='🌍 Capturar mapamundi completo';}
+ }
+}
+
 async function refreshLayoutSnapshot(){
  const img=document.getElementById('layoutMapImage');
  img.style.opacity='.35';
@@ -7468,9 +7512,11 @@ function applyLayoutControls(){
  el.style.width=w+'%';el.style.height=h+'%';
  if(key==='map'){
   const img=document.getElementById('layoutMapImage');
-  img.style.width=(+document.getElementById('layoutCropZoom').value)+'%';
-  img.style.height=(+document.getElementById('layoutCropZoom').value)+'%';
+  const cropZoom=+document.getElementById('layoutCropZoom').value;
+  img.style.width=cropZoom+'%';
+  img.style.height=cropZoom+'%';
   img.style.maxWidth='none';img.style.maxHeight='none';
+  img.style.objectFit='contain';
   img.style.position='absolute';
   img.style.left=(50-(+document.getElementById('layoutPanX').value))*s+'%';
   img.style.top=(50-(+document.getElementById('layoutPanY').value))*s+'%';
