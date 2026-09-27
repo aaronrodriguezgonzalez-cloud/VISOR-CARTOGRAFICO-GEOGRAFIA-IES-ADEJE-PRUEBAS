@@ -3354,6 +3354,88 @@ body.globe-mode #globeScaleBox{display:block}
 }
 </style>
 
+
+<style id="anambro-fixes-20260927-final">
+/* ==========================================================
+   Correcciones 27/09/2026 · cabecera definitiva en 4 columnas
+   24 % / 28 % / 27 % / 21 %
+   ========================================================== */
+@media (min-width:761px){
+  html body .brand.brandWide{
+    position:absolute!important;z-index:1500!important;top:0!important;left:0!important;right:0!important;
+    width:100%!important;max-width:none!important;height:118px!important;min-height:118px!important;
+    margin:0!important;padding:7px 14px!important;box-sizing:border-box!important;transform:none!important;
+    display:grid!important;grid-template-columns:24% 28% 27% 21%!important;grid-template-rows:1fr!important;
+    grid-template-areas:"left title center right"!important;column-gap:0!important;row-gap:0!important;align-items:stretch!important;
+    overflow:hidden!important;border:0!important;border-bottom:1px solid rgba(28,67,94,.16)!important;border-radius:0!important;
+    background:linear-gradient(180deg,#fff 0%,#fbfdfe 64%,#f3f8fa 100%)!important;
+    box-shadow:0 4px 16px rgba(13,47,68,.11)!important;
+  }
+  html body .brandWide>.brandSideLeft{
+    grid-area:left!important;height:104px!important;min-width:0!important;margin:0!important;padding:5px 14px 5px 2px!important;
+    display:grid!important;grid-template-columns:70px minmax(0,1fr)!important;align-items:center!important;align-content:center!important;gap:12px!important;
+    border:0!important;border-right:1px solid rgba(45,80,105,.15)!important;box-sizing:border-box!important;
+  }
+  html body .brandWide .brandSideLeft img{width:66px!important;height:66px!important;flex:0 0 66px!important;object-fit:contain!important;margin:0!important}
+  html body .brandWide .brandLeftText{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:5px!important;min-width:0!important}
+  html body .brandWide .brandDept{margin:0!important;font-size:12.4px!important;line-height:1.15!important;text-align:left!important;color:#40596c!important;white-space:normal!important}
+  html body .brandWide .brandDept b{display:block!important;font-size:18px!important;line-height:1!important;color:#17324d!important;font-weight:900!important}
+  html body .brandWide .brandVersion{position:static!important;display:inline-flex!important;align-self:flex-start!important;margin:0!important;padding:3px 8px!important;font-size:9.3px!important;line-height:1!important}
+
+  html body .brandWide>.brandTitleTop{
+    grid-area:title!important;width:100%!important;height:104px!important;min-width:0!important;margin:0!important;padding:2px 12px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;overflow:visible!important;box-sizing:border-box!important;
+    border:0!important;border-right:1px solid rgba(45,80,105,.15)!important;
+  }
+  html body .brandWide .brandAnambroIntegratedLogo{
+    display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:100%!important;
+    object-fit:contain!important;object-position:center!important;border:0!important;box-shadow:none!important;background:transparent!important;
+  }
+
+  html body .brandWide>.brandCenter{
+    grid-area:center!important;height:104px!important;min-width:0!important;margin:0!important;padding:7px 12px!important;
+    display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:5px!important;
+    text-align:center!important;box-sizing:border-box!important;border:0!important;border-right:1px solid rgba(45,80,105,.15)!important;
+  }
+  html body .brandWide .brandDescriptor{display:block!important;margin:0!important;font-size:11.2px!important;line-height:1.1!important;font-weight:800!important;color:#0f756b!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+  html body .brandWide .brandTeacher{display:block!important;margin:0!important;font-size:17px!important;line-height:1.08!important;font-weight:900!important;color:#17324d!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+  html body .brandWide .brandProfessional{display:block!important;margin:0!important;font-size:10.4px!important;line-height:1.15!important;font-weight:720!important;color:#344f63!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+  html body .brandWide .brandProfessional b,html body .brandWide .brandProfessional span{display:block!important}
+
+  html body .brandWide>.brandSideRight{
+    grid-area:right!important;height:104px!important;min-width:0!important;margin:0!important;padding:7px 2px 7px 13px!important;
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:8px!important;
+    box-sizing:border-box!important;border:0!important;
+  }
+  html body .brandWide .brandRoles{display:block!important;margin:0!important;max-width:100%!important;font-size:10.5px!important;line-height:1.23!important;text-align:left!important;font-weight:800!important;color:#3f5d70!important;white-space:normal!important}
+  html body .brandWide .brandActions{position:static!important;display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;gap:6px!important;margin:0!important;flex-wrap:wrap!important}
+  html body .brandWide .brandWelcomeBtn{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;padding:6px 8px!important;font-size:9.2px!important;line-height:1!important;border-radius:999px!important}
+}
+
+@media (min-width:761px) and (max-width:1180px){
+  html body .brand.brandWide{grid-template-columns:23% 29% 28% 20%!important;padding-left:9px!important;padding-right:9px!important}
+  html body .brandWide>.brandSideLeft{grid-template-columns:57px minmax(0,1fr)!important;gap:8px!important;padding-right:8px!important}
+  html body .brandWide .brandSideLeft img{width:53px!important;height:53px!important;flex-basis:53px!important}
+  html body .brandWide .brandDept{font-size:10.3px!important}html body .brandWide .brandDept b{font-size:15px!important}
+  html body .brandWide .brandVersion{font-size:7.8px!important;padding:2px 6px!important}
+  html body .brandWide>.brandTitleTop{padding-left:7px!important;padding-right:7px!important}
+  html body .brandWide>.brandCenter{padding-left:7px!important;padding-right:7px!important;gap:4px!important}
+  html body .brandWide .brandDescriptor{font-size:9.4px!important}
+  html body .brandWide .brandTeacher{font-size:14.5px!important}
+  html body .brandWide .brandProfessional{font-size:8.7px!important}
+  html body .brandWide>.brandSideRight{padding-left:8px!important;gap:6px!important}
+  html body .brandWide .brandRoles{font-size:8.8px!important;line-height:1.18!important}
+  html body .brandWide .brandWelcomeBtn{font-size:7.8px!important;padding:5px 6px!important}
+}
+
+/* Leyenda de mapa temático: transición suave sobre el océano, sin cuadro blanco brusco. */
+.layoutPage.thematicWorld .layoutLegendBox{
+  background:radial-gradient(ellipse at 42% 45%,rgba(255,255,255,.96) 0%,rgba(255,255,255,.91) 55%,rgba(255,255,255,.68) 76%,rgba(255,255,255,0) 100%)!important;
+  border:0!important;border-radius:18px!important;box-shadow:none!important;
+  padding:calc(14px * var(--pageScale)) calc(18px * var(--pageScale))!important;
+}
+</style>
+
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -7791,6 +7873,12 @@ function containLayoutMapImage(){
 function isWorldThematicLayoutMode(){
  try{return !!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length&&map&&map.getZoom&&map.getZoom()<=4.5);}catch(e){return false;}
 }
+function syncLayoutThematicAppearance(force=null){
+ const page=document.getElementById('layoutPage');
+ if(!page)return;
+ const on=(force===null)?!!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length):!!force;
+ page.classList.toggle('thematicWorld',on);
+}
 function equalEarthProject(lon,lat){
  const rad=Math.PI/180,lambda=lon*rad,phi=Math.max(-89.9999,Math.min(89.9999,lat))*rad;
  const A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,M=Math.sqrt(3)/2;
@@ -7817,19 +7905,33 @@ async function renderThematicWorldLayoutSnapshot(){
  const width=2400,height=1350,pad=40;
  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
  const ctx=canvas.getContext('2d');
- const oceanGrad=ctx.createLinearGradient(0,0,0,height);oceanGrad.addColorStop(0,'#a9def1');oceanGrad.addColorStop(.48,'#86cbe5');oceanGrad.addColorStop(1,'#72bad9');ctx.fillStyle=oceanGrad;ctx.fillRect(0,0,width,height);
+ // El exterior de la proyección queda blanco: el océano no continúa por debajo de la Antártida.
+ ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height);
  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
- for(const f of (geo?.features||[])){
-  walkGeoCoords(f?.geometry?.coordinates,r=>{for(const pt of r){
-   const lon=+pt[0],lat=+pt[1];if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
-   const pr=equalEarthProject(lon,lat);if(pr[0]<minX)minX=pr[0];if(pr[0]>maxX)maxX=pr[0];if(pr[1]<minY)minY=pr[1];if(pr[1]>maxY)maxY=pr[1];
-  }});
+ const outlineGeo=[];
+ for(let lon=-180;lon<=180;lon+=2)outlineGeo.push([lon,89.9999]);
+ for(let lat=89;lat>=-89;lat-=2)outlineGeo.push([180,lat]);
+ for(let lon=180;lon>=-180;lon-=2)outlineGeo.push([lon,-89.9999]);
+ for(let lat=-89;lat<=89;lat+=2)outlineGeo.push([-180,lat]);
+ for(const pt of outlineGeo){
+  const pr=equalEarthProject(pt[0],pt[1]);
+  if(pr[0]<minX)minX=pr[0];if(pr[0]>maxX)maxX=pr[0];if(pr[1]<minY)minY=pr[1];if(pr[1]>maxY)maxY=pr[1];
  }
  if(!Number.isFinite(minX)||!Number.isFinite(maxX))throw new Error('No se pudo proyectar el mapamundi');
  const sx=(width-2*pad)/(maxX-minX),sy=(height-2*pad)/(maxY-minY),scale=Math.min(sx,sy);
  const ox=pad+(width-2*pad-(maxX-minX)*scale)/2-minX*scale;
  const oy=pad+(height-2*pad-(maxY-minY)*scale)/2+maxY*scale;
  function px(lon,lat){const p=equalEarthProject(lon,lat);return [ox+p[0]*scale,oy-p[1]*scale];}
+ function traceEqualEarthOutline(){
+  ctx.beginPath();
+  let first=true;
+  for(const pt of outlineGeo){const [x,y]=px(pt[0],pt[1]);if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}
+  ctx.closePath();
+ }
+ ctx.save();traceEqualEarthOutline();ctx.clip();
+ const oceanGrad=ctx.createLinearGradient(0,0,0,height);
+ oceanGrad.addColorStop(0,'#78b7df');oceanGrad.addColorStop(.52,'#68a2d4');oceanGrad.addColorStop(1,'#4e91c7');
+ ctx.fillStyle=oceanGrad;ctx.fillRect(0,0,width,height);ctx.restore();
  ctx.lineJoin='round';ctx.lineCap='round';
  for(const f of (geo?.features||[])){
   const props=f.properties||{},code=humanCountryCode(props),v=data.get(code);
@@ -7845,6 +7947,15 @@ async function renderThematicWorldLayoutSnapshot(){
   ctx.lineWidth=1.1;
   ctx.stroke();
  }
+ // En mapas temáticos se conservan únicamente los nombres de los océanos.
+ ctx.save();
+ ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='italic 800 25px Montserrat, Arial, sans-serif';
+ ctx.fillStyle='rgba(38,87,124,.92)';ctx.strokeStyle='rgba(255,255,255,.82)';ctx.lineWidth=5;
+ for(const x of (typeof ANAMBRO_PHYSICAL_LABELS!=='undefined'?ANAMBRO_PHYSICAL_LABELS:[])){
+  if(x.t!=='ocean')continue;
+  const [tx,ty]=px(x.lon,x.lat);ctx.strokeText(x.n,tx,ty);ctx.fillText(x.n,tx,ty);
+ }
+ ctx.restore();
  const eqWest=px(-180,0),eqEast=px(180,0);
  layoutSnapshotMeta={type:'world-thematic',imgWidth:width,imgHeight:height,equatorKmPerImagePx:40075.016686/Math.max(1,Math.abs(eqEast[0]-eqWest[0]))};
  return canvas.toDataURL('image/jpeg',0.94);
@@ -7864,6 +7975,7 @@ async function refreshLayoutWorldSnapshot(){
  try{
   if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
    layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
+   syncLayoutThematicAppearance(true);
    const img=document.getElementById('layoutMapImage');
    img.src=layoutSnapshotData;
    document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
@@ -7897,7 +8009,9 @@ async function refreshLayoutSnapshot(){
  try{
   if(isWorldThematicLayoutMode()){
    layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
+   syncLayoutThematicAppearance(true);
   }else{
+   syncLayoutThematicAppearance(false);
    const canvas=await html2canvas(document.getElementById('map'),{
     useCORS:true,allowTaint:false,logging:false,
     backgroundColor:(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)?'#86cbe5':'#d9dde1',
@@ -11563,8 +11677,10 @@ function ensurePhysicalLabels2D(){
  if(!anambroPhysical2D)anambroPhysical2D=L.layerGroup().addTo(map);
  anambroPhysical2D.clearLayers();
  const z=map.getZoom();
+ const thematicHuman=!!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length);
  for(const x of ANAMBRO_PHYSICAL_LABELS){
   if(z<x.z0||z>x.z1)continue;
+  if(thematicHuman&&x.t!=='ocean')continue;
   const w=x.t==='continent'?220:x.t==='ocean'?220:x.t==='sea'?170:x.t==='range'?170:160;
   const h=x.t==='continent'||x.t==='ocean'?28:22;
   const icon=L.divIcon({className:'',html:'<div class="'+physicalLabelClass(x.t)+'">'+escHtml(x.n)+'</div>',iconSize:[w,h],iconAnchor:[w/2,h/2]});
@@ -11599,8 +11715,16 @@ function ensurePhysicalLabels3D(){
    distanceDisplayCondition:new Cesium.DistanceDisplayCondition(d[0],d[1]),
    scaleByDistance:new Cesium.NearFarScalar(d[0],1.05,d[1],.72)
   }});
+  e.__anambroPhysicalType=x.t;
   anambroPhysical3D.push(e);
  }
+ syncPhysicalLabels3DVisibility();
+ globeViewer.scene.requestRender();
+}
+function syncPhysicalLabels3DVisibility(){
+ if(!globeViewer||!anambroPhysical3D.length)return;
+ const thematicHuman=!!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length);
+ for(const e of anambroPhysical3D)e.show=!thematicHuman||e.__anambroPhysicalType==='ocean';
  globeViewer.scene.requestRender();
 }
 map.on('zoomend moveend',ensurePhysicalLabels2D);
@@ -11622,7 +11746,7 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
    if(map.hasLayer(activeBase))map.removeLayer(activeBase);
    if(map.hasLayer(worldImagery))map.removeLayer(worldImagery);
-   map.getContainer().style.background='linear-gradient(180deg,#a9def1 0%,#86cbe5 48%,#72bad9 100%)';
+   map.getContainer().style.background='linear-gradient(180deg,#78b7df 0%,#68a2d4 52%,#4e91c7 100%)';
    return;
   }
   const inSpain=isSpainView2D();
@@ -11905,7 +12029,7 @@ function syncHumanThematicBasemap(){
    if(!humanOldMapBackground)humanOldMapBackground=map.getContainer().style.backgroundColor||'';
    if(typeof activeBase!=='undefined'&&activeBase&&map.hasLayer(activeBase))map.removeLayer(activeBase);
    if(typeof worldImagery!=='undefined'&&map.hasLayer(worldImagery))map.removeLayer(worldImagery);
-   map.getContainer().style.background='linear-gradient(180deg,#a9def1 0%,#86cbe5 48%,#72bad9 100%)';
+   map.getContainer().style.background='linear-gradient(180deg,#78b7df 0%,#68a2d4 52%,#4e91c7 100%)';
    if(document.getElementById('countryLabelsCheck')?.checked&&countryLabels2DLayer&&map.hasLayer(countryLabels2DLayer)){map.removeLayer(countryLabels2DLayer);humanAutoHiddenCountryLabels2D=true;}
    if(document.getElementById('worldToponymsCheck')?.checked&&((worldToponyms2DLayer&&map.hasLayer(worldToponyms2DLayer))||(worldToponyms2DSpain&&map.hasLayer(worldToponyms2DSpain)))){toggleWorldToponyms2D(false);humanAutoHiddenWorldToponyms2D=true;}
   }else{
@@ -11921,7 +12045,7 @@ function syncHumanThematicBasemap(){
  }
  if(globeViewer&&!historyOn){
   if(globeSatelliteLayer)globeSatelliteLayer.show=!on;
-  globeViewer.scene.globe.baseColor=on?Cesium.Color.fromCssColorString('#86cbe5'):Cesium.Color.BLACK;
+  globeViewer.scene.globe.baseColor=on?Cesium.Color.fromCssColorString('#68a2d4'):Cesium.Color.BLACK;
   if(on){
    if(document.getElementById('countryLabelsCheck')?.checked&&countryLabelsSource){toggleCountryLabels(false);humanAutoHiddenCountryLabelsGlobe=true;}
    if(document.getElementById('worldToponymsCheck')?.checked&&(worldVectorLabelCollection?.show||globeSpainToponymsLayer?.show)){toggleWorldToponyms(false);humanAutoHiddenWorldToponymsGlobe=true;}
@@ -11930,8 +12054,10 @@ function syncHumanThematicBasemap(){
    if(humanAutoHiddenWorldToponymsGlobe&&document.getElementById('worldToponymsCheck')?.checked)toggleWorldToponyms(true);
    humanAutoHiddenCountryLabelsGlobe=false;humanAutoHiddenWorldToponymsGlobe=false;
   }
+  if(typeof syncPhysicalLabels3DVisibility==='function')syncPhysicalLabels3DVisibility();
   globeViewer.scene.requestRender();
  }
+ if(typeof ensurePhysicalLabels2D==='function')ensurePhysicalLabels2D();
 }
 function humanCountryLabel(p){return (typeof countryName==='function'?countryName(p||{}):(p?.NAME_ES||p?.ADMIN||p?.NAME_LONG||p?.NAME_EN||p?.NAME||'País / territorio'));}
 function humanThematicInfoHTML(country,iso3){
@@ -11984,6 +12110,22 @@ function clearWorldHuman(){for(const ind of [...worldHumanLayers.keys()])clearHu
 function humanPointHtmlByISO3(iso3){const active=activeHumanIndicators();if(!active.length)return '';const year=+document.getElementById('worldHumanYear').value;let h='<hr><b>👥 Geografía humana · '+year+'</b>';for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.year===year?st.data.get(iso3):undefined;h+='<br><b>'+escHtml(meta.name)+':</b> '+escHtml(humanFmt(v,meta));}return h;}
 async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(iso2);return humanPointHtmlByISO3(iso3);}
 (function(){const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');document.querySelectorAll('.worldHumanLayerCheck').forEach(cb=>cb.addEventListener('change',async()=>{if(cb.checked)await updateHumanIndicator(cb.dataset.humanIndicator);else clearHumanIndicator(cb.dataset.humanIndicator);refreshHumanLegend();}));yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',updateWorldHuman);document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{yr.value=2025;yv.textContent='2025';updateWorldHuman();};})();
+</script>
+
+
+<script id="anambro-header-clearance-20260927">
+(function(){
+ function syncHeaderClearance(){
+  const header=document.querySelector('.brand.brandWide');if(!header)return;
+  const r=header.getBoundingClientRect(),gap=8,top=Math.ceil(r.bottom+gap)+'px';
+  const toolbar=document.querySelector('.toolbar');if(toolbar)toolbar.style.setProperty('top',top,'important');
+  const leaflet=document.querySelector('.leaflet-top.leaflet-left');if(leaflet)leaflet.style.setProperty('top',Math.ceil(r.bottom+4)+'px','important');
+ }
+ window.syncHeaderClearance=syncHeaderClearance;
+ window.addEventListener('load',()=>{syncHeaderClearance();setTimeout(syncHeaderClearance,120);setTimeout(syncHeaderClearance,500)});
+ window.addEventListener('resize',syncHeaderClearance,{passive:true});
+ if(window.ResizeObserver){const ro=new ResizeObserver(syncHeaderClearance);window.addEventListener('DOMContentLoaded',()=>{const h=document.querySelector('.brand.brandWide');if(h)ro.observe(h);});}
+})();
 </script>
 
 </body></html>
