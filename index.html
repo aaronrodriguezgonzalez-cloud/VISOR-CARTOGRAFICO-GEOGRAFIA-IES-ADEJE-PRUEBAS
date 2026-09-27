@@ -14143,4 +14143,89 @@ showHistoryGlobeEntity=function(ent,pos){const b=document.getElementById('globeI
 })();
 </script>
 
+
+
+<style id="anambro-history-popup-over-header-drag-20260927">
+/* Ficha histórica 2D: siempre por encima de la cabecera y desplazable. */
+html body .leaflet-popup-pane{
+  z-index:8500!important;
+}
+html body .leaflet-popup.historyPopup{
+  z-index:8510!important;
+  pointer-events:auto!important;
+}
+html body .historyPopup .leaflet-popup-content-wrapper,
+html body .historyPopup .leaflet-popup-tip{
+  pointer-events:auto!important;
+}
+html body .historyPopup .historyCardTitle{
+  cursor:grab!important;
+  touch-action:none!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+html body .leaflet-popup.historyPopup.history-popup-dragging .historyCardTitle{
+  cursor:grabbing!important;
+}
+html body .historyPopup .leaflet-popup-close-button{
+  z-index:20!important;
+}
+</style>
+<script id="anambro-history-popup-drag-20260927">
+(function(){
+  function initHistoryPopupDrag(el){
+    if(!el || !el.classList?.contains('historyPopup')) return;
+    const handle=el.querySelector('.historyCardTitle');
+    if(!handle || handle.dataset.historyDragReady==='1') return;
+    handle.dataset.historyDragReady='1';
+    handle.title='Arrastra para mover la ficha histórica';
+    try{ if(window.L?.DomEvent){L.DomEvent.disableClickPropagation(el);L.DomEvent.disableScrollPropagation(el);} }catch(_){ }
+
+    handle.addEventListener('pointerdown',function(e){
+      if(e.button!==undefined && e.button!==0) return;
+      const rect=el.getBoundingClientRect();
+      const cs=getComputedStyle(el);
+      const startML=parseFloat(cs.marginLeft)||0;
+      const startMT=parseFloat(cs.marginTop)||0;
+      const startX=e.clientX,startY=e.clientY;
+      const pad=6;
+      el.classList.add('history-popup-dragging');
+      el.style.setProperty('z-index','8590','important');
+      try{handle.setPointerCapture(e.pointerId);}catch(_){ }
+      e.preventDefault();e.stopPropagation();
+
+      const move=function(ev){
+        let dx=ev.clientX-startX,dy=ev.clientY-startY;
+        dx=Math.max(pad-rect.left,Math.min(dx,window.innerWidth-pad-rect.right));
+        dy=Math.max(pad-rect.top,Math.min(dy,window.innerHeight-pad-rect.bottom));
+        el.style.marginLeft=(startML+dx)+'px';
+        el.style.marginTop=(startMT+dy)+'px';
+        ev.preventDefault();ev.stopPropagation();
+      };
+      const end=function(ev){
+        el.classList.remove('history-popup-dragging');
+        try{handle.releasePointerCapture(ev.pointerId);}catch(_){ }
+        handle.removeEventListener('pointermove',move);
+        handle.removeEventListener('pointerup',end);
+        handle.removeEventListener('pointercancel',end);
+        ev.preventDefault();ev.stopPropagation();
+      };
+      handle.addEventListener('pointermove',move);
+      handle.addEventListener('pointerup',end);
+      handle.addEventListener('pointercancel',end);
+    });
+  }
+
+  function initOpenHistoryPopup(popup){
+    requestAnimationFrame(()=>initHistoryPopupDrag(popup?.getElement?.()));
+  }
+
+  if(window.map?.on){
+    map.on('popupopen',e=>initOpenHistoryPopup(e.popup));
+  }
+  // Por si alguna ficha ya estaba abierta cuando se evaluó este bloque.
+  document.querySelectorAll('.leaflet-popup.historyPopup').forEach(initHistoryPopupDrag);
+})();
+</script>
+
 </body></html>
