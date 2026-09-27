@@ -3438,12 +3438,15 @@ body.globe-mode #globeScaleBox{display:block}
 <label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div>
 
+<div class="layerThemeTitle">🗺️ Toponimia</div>
+<label><input id="worldToponymsCheck" type="checkbox"> <b>Toponimia mundial vectorial</b></label>
+<div class="layerSubBlock"><small>OpenFreeMap / OpenMapTiles fuera de España · IGN/NGBE en España y Canarias.</small><small>Disponible tanto en el mapa 2D como en el globo 3D; el nivel de detalle aumenta al acercarse.</small></div>
+
 <div class="layerThemeTitle">🧭 Territorio, cartografía y servicios</div>
 <label><input id="countriesCheck" type="checkbox"> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox"> Nombres de países</label>
 <label><input id="worldAdmin1Check" type="checkbox"> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
 <label><input id="worldAdmin2Check" type="checkbox"> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
-<label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · vectoriales / IGN en España</label>
 <label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div>
 <div class="layerThemeTitle secondary">🛰️ Imagen de fondo mundial</div><label><input type="radio" data-base-choice="worldsat" name="baseWorld"> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div>
 </details>
@@ -8410,7 +8413,7 @@ function worldLabelPriority(item){
 function worldLabelScreenPoint(item){
  try{
   return globeViewer.scene.cartesianToCanvasCoordinates(
-   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,18000),
+   Cesium.Cartesian3.fromDegrees(item.lon,item.lat,30),
    new Cesium.Cartesian2()
   );
  }catch(e){return null;}
@@ -8474,7 +8477,8 @@ async function updateWorldVectorToponyms(force=false){
   worldVectorLabelCollection.show=true;
 
   const tileKeys=worldVisibleTileKeys(band.z,1,band.name==='local-detail'?30:26);
-  const renderKey=band.name+'|'+band.z+'|'+tileKeys.map(t=>t.z+'/'+t.x+'/'+t.y).sort().join(',');
+  const heightBucket=Math.floor(globeCameraHeight()/5000);
+  const renderKey=band.name+'|'+band.z+'|h'+heightBucket+'|'+tileKeys.map(t=>t.z+'/'+t.x+'/'+t.y).sort().join(',');
   if(!force&&renderKey===worldVectorLabelRenderKey){
    globeViewer.scene.requestRender();
    return;
@@ -8511,7 +8515,7 @@ async function updateWorldVectorToponyms(force=false){
   for(const item of selected){
    const p=item.p,name=vectorPlaceDisplayProps(p);
    worldVectorLabelCollection.add({
-    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,18000),
+    position:Cesium.Cartesian3.fromDegrees(item.lon,item.lat,30),
     text:name,
     font:vectorPlaceFontProps(p,band.name),
     fillColor:pale,
