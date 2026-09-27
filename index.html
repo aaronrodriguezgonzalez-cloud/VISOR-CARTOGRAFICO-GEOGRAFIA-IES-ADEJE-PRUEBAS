@@ -1839,16 +1839,16 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutItem.resizing{cursor:default!important}
 .layoutLogoBox{left:2.5%;top:2.2%;width:13.5%;height:8%;display:flex;align-items:center;justify-content:flex-start;overflow:visible}
 .layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
-.layoutInstituteBox{left:2.8%;top:10.8%;width:30%;height:9.6%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.88);backdrop-filter:blur(2px);box-shadow:0 6px 18px rgba(0,0,0,.12);border:1px solid rgba(28,56,84,.12)}
+.layoutInstituteBox{left:2.8%;top:10.8%;width:30%;height:9.6%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(2px);box-shadow:none;border:1px solid rgba(28,56,84,.18)}
 .layoutInstituteLogo{width:58px;height:58px;object-fit:contain;flex:0 0 58px}
 .layoutInstituteText{font:700 11px/1.18 Montserrat,Arial,sans-serif;color:#23405d}
 .layoutInstituteText b{font-size:16px;color:#17324d}
 .layoutInstituteMeta{display:block;margin-top:1px;font-size:11px;color:#4a6279;font-weight:700}
 .layoutInstituteExplain{display:block;margin-top:3px;font-size:10.4px;color:#245a6c;font-weight:700}
 .layoutTitleBox{left:17%;top:3%;width:74%;height:7%;padding:4px 12px;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:rgba(255,255,255,.78);backdrop-filter:blur(1.4px);border-radius:16px}
-.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #6f7e88;border-radius:10px;overflow:hidden;background:#d9dde1;box-shadow:0 1px 0 rgba(255,255,255,.7) inset}
+.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #6f7e88;border-radius:10px;overflow:hidden;background:#d9dde1;box-shadow:none}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none;background:#fff;position:absolute;left:0;top:0;transform-origin:50% 50%}
-.layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.96);border:1px solid #c9d3dc;border-radius:14px;padding:11px 12px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:0 8px 22px rgba(0,0,0,.10)}
+.layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.97);border:1px solid #c9d3dc;border-radius:14px;padding:11px 12px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:none}
 .layoutLegendTitle{display:block;margin-bottom:4px;font-size:15px;font-weight:800;color:#17324d}
 .layoutLegendBox small{display:block;color:#556777;font-weight:600}
 .layoutLegendBox .sw{display:inline-block;width:14px;height:10px;border:1px solid rgba(0,0,0,.18);border-radius:2px;margin-right:6px;vertical-align:middle}
@@ -3628,7 +3628,7 @@ body.globe-mode #globeScaleBox{display:block}
       </label>
 
       <div class="layoutHelp">
-        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» puedes modificar el encuadre y el zoom dentro del recuadro. A 100 % la captura llena todo el marco; aumenta el zoom y usa los controles horizontal y vertical para elegir qué zona queda visible. «🌍 Capturar mapamundi completo» obtiene la vista mundial y «▣ Llenar recuadro» la ajusta al marco.
+        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» puedes modificar el encuadre y el zoom dentro del recuadro. A 100 % la captura llena todo el marco; aumenta el zoom y usa los controles horizontal y vertical para elegir qué zona queda visible. «🌍 Capturar mapamundi completo» obtiene la vista mundial y «▣ Llenar recuadro» la ajusta al marco. Además, puedes <b>traer cualquier elemento al frente</b> o <b>enviarlo al fondo</b>.
       </div>
       <div class="layoutResizeHint">↔ Selecciona mapa, leyenda, título, escala, norte, fuentes o créditos y estira sus márgenes directamente.</div>
 
@@ -3636,6 +3636,10 @@ body.globe-mode #globeScaleBox{display:block}
       <button class="action" onclick="refreshLayoutWorldSnapshot()">🌍 Capturar mapamundi completo</button>
       <button class="action" onclick="fitLayoutMapImage()">▣ Llenar recuadro</button>
       <button class="action" onclick="containLayoutMapImage()">↔ Ver captura completa</button>
+      <div class="layoutGrid2" style="margin-top:6px">
+        <button class="action" type="button" onclick="bringSelectedLayoutItemToFront()">⬆ Traer al frente</button>
+        <button class="action" type="button" onclick="sendSelectedLayoutItemToBack()">⬇ Enviar al fondo</button>
+      </div>
       <button class="action" onclick="exportLayoutPDF()">📄 Exportar a PDF</button>
     </aside>
 
@@ -7445,6 +7449,22 @@ function bringLayoutItemToFront(el){
  if(!el)return;
  layoutZCounter+=1;
  el.style.zIndex=String(layoutZCounter);
+}
+function sendLayoutItemToBack(el){
+ if(!el)return;
+ const items=[...document.querySelectorAll('.layoutItem')].filter(x=>x!==el);
+ const minZ=items.length?Math.min(...items.map(x=>Number(x.style.zIndex)||5)):5;
+ el.style.zIndex=String(minZ-1);
+}
+function bringSelectedLayoutItemToFront(){
+ const key=document.getElementById('layoutSelected')?.value;
+ const el=layoutEl(key);
+ if(el)bringLayoutItemToFront(el);
+}
+function sendSelectedLayoutItemToBack(){
+ const key=document.getElementById('layoutSelected')?.value;
+ const el=layoutEl(key);
+ if(el)sendLayoutItemToBack(el);
 }
 function scaleForLayout(){
  const size=map.getSize(),centerY=Math.round(size.y/2);
