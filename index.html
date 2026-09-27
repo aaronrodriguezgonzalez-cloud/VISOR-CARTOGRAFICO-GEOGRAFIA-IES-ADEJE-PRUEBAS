@@ -1815,11 +1815,11 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutHelp{font-size:10.5px;line-height:1.3;background:#f3f6f8;border:1px solid #d5dce1;border-radius:7px;padding:7px;margin:9px 0}
 .layoutSidebar .action{width:100%;margin-top:7px}
 .layoutWorkspace{overflow:auto;padding:18px;display:flex;align-items:flex-start;justify-content:center;background:#bcc3c8}
-.layoutPage{position:relative;background:#fff;box-shadow:0 4px 18px #0006;overflow:hidden;flex:0 0 auto}
-.layoutPage.a4.landscape{width:1120px;height:792px}
-.layoutPage.a4.portrait{width:792px;height:1120px}
-.layoutPage.a3.landscape{width:1584px;height:1120px}
-.layoutPage.a3.portrait{width:1120px;height:1584px}
+.layoutPage{position:relative;background:#fff;box-shadow:0 4px 18px #0006;overflow:hidden;flex:0 0 auto;--pageScale:1}
+.layoutPage.a4.landscape{width:1120px;height:792px;--pageScale:.7071}
+.layoutPage.a4.portrait{width:792px;height:1120px;--pageScale:.7071}
+.layoutPage.a3.landscape{width:1584px;height:1120px;--pageScale:1}
+.layoutPage.a3.portrait{width:1120px;height:1584px;--pageScale:1}
 .layoutItem{position:absolute;box-sizing:border-box;cursor:move;user-select:none;touch-action:none;z-index:5}
 .layoutItem.selected{outline:2px dashed #2563eb;outline-offset:2px}
 .layoutItem.selected::after{
@@ -1843,42 +1843,42 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutResizeHint{margin-top:7px;padding:8px 9px;border-radius:7px;background:#edf4ff;border:1px solid #b8cff7;color:#17324d;font-weight:750;line-height:1.3}
 .layoutItem.resizing{cursor:default!important}
 .layoutLogoBox{left:84.5%;top:2.1%;width:12.5%;height:6.5%;display:flex;align-items:center;justify-content:flex-end;overflow:visible;z-index:12}
-.layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
+.layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:calc(46px * var(--pageScale));line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
 .layoutInstituteBox{left:2.7%;top:1.7%;width:35%;height:7%;display:flex;align-items:center;gap:10px;padding:4px 6px;border:none;border-radius:0;background:transparent;backdrop-filter:none;box-shadow:none;z-index:12}
-.layoutInstituteLogo{width:58px;height:58px;object-fit:contain;flex:0 0 58px}
-.layoutInstituteText{font:700 11px/1.18 Montserrat,Arial,sans-serif;color:#23405d}
-.layoutInstituteText b{font-size:16px;color:#17324d}
-.layoutInstituteMeta{display:block;margin-top:1px;font-size:11px;color:#4a6279;font-weight:700}
-.layoutInstituteExplain{display:block;margin-top:3px;font-size:10.4px;color:#245a6c;font-weight:700}
-.layoutTitleBox{left:37%;top:1.8%;width:47%;height:7%;padding:2px 8px;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:transparent;backdrop-filter:none;border:none;border-radius:0;z-index:12}
+.layoutInstituteLogo{width:calc(72px * var(--pageScale));height:calc(72px * var(--pageScale));object-fit:contain;flex:0 0 calc(72px * var(--pageScale))}
+.layoutInstituteText{font:700 calc(13.2px * var(--pageScale))/1.18 Montserrat,Arial,sans-serif;color:#23405d}
+.layoutInstituteText b{font-size:calc(20px * var(--pageScale));color:#17324d}
+.layoutInstituteMeta{display:block;margin-top:1px;font-size:calc(13px * var(--pageScale));color:#4a6279;font-weight:700}
+.layoutInstituteExplain{display:block;margin-top:3px;font-size:calc(12.6px * var(--pageScale));color:#245a6c;font-weight:700}
+.layoutTitleBox{left:37%;top:1.8%;width:47%;height:7%;padding:2px 8px;font:800 calc(37px * var(--pageScale))/1.08 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:transparent;backdrop-filter:none;border:none;border-radius:0;z-index:12}
 .layoutMapBox{left:2.5%;top:10%;width:95%;height:80%;border:none;border-radius:0;overflow:hidden;background:#fff;box-shadow:none;z-index:1}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none;background:#fff;position:absolute;left:0;top:0;transform-origin:50% 50%}
 .layoutMapBox.handMode{cursor:grab}
 .layoutMapBox.handMode.dragging{cursor:grabbing}
-.layoutLegendBox{left:4.7%;top:63%;width:18%;height:auto;max-height:24%;overflow:hidden;background:rgba(255,255,255,.90);border:none;border-radius:0;padding:7px 8px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:none;z-index:12}
-.layoutLegendTitle{display:block;margin-bottom:4px;font-size:15px;font-weight:800;color:#17324d}
+.layoutLegendBox{left:4.7%;top:63%;width:18%;height:auto;max-height:24%;overflow:hidden;background:rgba(255,255,255,.90);border:none;border-radius:0;padding:calc(8px * var(--pageScale)) calc(9px * var(--pageScale));font:600 calc(14px * var(--pageScale))/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:none;z-index:12}
+.layoutLegendTitle{display:block;margin-bottom:calc(4px * var(--pageScale));font-size:calc(18px * var(--pageScale));font-weight:800;color:#17324d}
 .layoutLegendBox small{display:block;color:#556777;font-weight:600}
-.layoutLegendBox .sw{display:inline-block;width:14px;height:10px;border:1px solid rgba(0,0,0,.18);border-radius:2px;margin-right:6px;vertical-align:middle}
+.layoutLegendBox .sw{display:inline-block;width:calc(17px * var(--pageScale));height:calc(12px * var(--pageScale));border:1px solid rgba(0,0,0,.18);border-radius:2px;margin-right:calc(6px * var(--pageScale));vertical-align:middle}
 .layoutLegendBox #layoutLegendContent>div>div{margin:3px 0}
 .layoutNorthBox{left:91%;top:17%;width:5%;height:9%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#111;z-index:12}
-.layoutNorthN{font:900 25px Montserrat,sans-serif;letter-spacing:.06em}
-.layoutNorthArrowSvg{width:34px;height:54px;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.16))}
-.layoutScaleBox{left:4.8%;top:91.5%;width:30%;height:6.5%;font:700 11.5px/1.2 Montserrat,Arial,sans-serif;color:#1f2f40;z-index:12}
+.layoutNorthN{font:900 calc(31px * var(--pageScale)) Montserrat,sans-serif;letter-spacing:.06em}
+.layoutNorthArrowSvg{width:calc(40px * var(--pageScale));height:calc(64px * var(--pageScale));display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.16))}
+.layoutScaleBox{left:4.8%;top:91.5%;width:30%;height:6.5%;font:700 calc(13.6px * var(--pageScale))/1.2 Montserrat,Arial,sans-serif;color:#1f2f40;z-index:12}
 .layoutScaleTextLabel{margin-bottom:4px}
-.layoutScaleBar{display:block;width:100%;height:10px;border:none;background:transparent;border-radius:0;overflow:visible}
+.layoutScaleBar{display:block;width:100%;height:calc(12px * var(--pageScale));border:none;background:transparent;border-radius:0;overflow:visible}
 #layoutScaleBarInner{display:flex;height:100%;width:60%;min-width:80px;border-bottom:1px solid #111}
 #layoutScaleBarInner span{flex:1;box-sizing:border-box;border-top:1px solid #111;border-left:1px solid #111}
 #layoutScaleBarInner span:last-child{border-right:1px solid #111}
 #layoutScaleBarInner span:nth-child(odd){background:#111}
 #layoutScaleBarInner span:nth-child(even){background:#fff}
-.layoutScaleTicks{position:relative;height:16px;margin-top:2px;width:60%;min-width:80px;font:600 9.5px/1 Montserrat,Arial,sans-serif;color:#1f2f40;white-space:nowrap}
+.layoutScaleTicks{position:relative;height:calc(18px * var(--pageScale));margin-top:calc(2px * var(--pageScale));width:60%;min-width:calc(80px * var(--pageScale));font:600 calc(10.8px * var(--pageScale))/1 Montserrat,Arial,sans-serif;color:#1f2f40;white-space:nowrap}
 .layoutScaleTicks span{position:absolute;top:0;transform:translateX(-50%)}
 .layoutScaleTicks span:nth-child(1){left:0;transform:none}
 .layoutScaleTicks span:nth-child(2){left:25%}
 .layoutScaleTicks span:nth-child(3){left:50%}
 .layoutScaleTicks span:nth-child(4){left:75%}
 .layoutScaleTicks span:nth-child(5){left:100%;transform:translateX(-100%)}
-.layoutCredits{position:absolute;left:58%;top:96%;width:39%;height:2.5%;font-size:11px;font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden;z-index:12}
+.layoutCredits{position:absolute;left:58%;top:96%;width:39%;height:2.5%;font-size:calc(13px * var(--pageScale));font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden;z-index:12}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
  .layoutSidebar{padding:8px}
@@ -2012,7 +2012,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .sourceItem:last-child{border-bottom:0}.sourceItem a{color:#0b5fa5;font-weight:750}
 .sourceOk{border-left:3px solid #2f9b73}.sourceReview{border-left:3px solid #e19c2b;background:#fffaf0}
 .sourcesLegalNote{margin-top:9px;padding:8px 10px;border-radius:8px;background:#fff8e7;border:1px solid #ead59c;line-height:1.35}
-.layoutSources{position:absolute;left:61%;top:92%;width:36%;height:3.2%;font-size:8px;line-height:1.18;color:#444;text-align:right;overflow:hidden;z-index:12}
+.layoutSources{position:absolute;left:61%;top:92%;width:36%;height:3.2%;font-size:calc(9.6px * var(--pageScale));line-height:1.18;color:#444;text-align:right;overflow:hidden;z-index:12}
 
 .volcanoPopup .leaflet-popup-content-wrapper{border-radius:14px!important;padding:0!important;background:rgba(255,254,245,.985)!important}
 .volcanoPopup .leaflet-popup-content{width:min(650px,78vw)!important;max-width:min(650px,78vw)!important;max-height:68vh!important;overflow:auto!important;margin:15px 17px!important}
@@ -3591,7 +3591,7 @@ body.globe-mode #globeScaleBox{display:block}
         <label>Papel
           <select id="layoutPaper">
             <option value="a4">A4</option>
-            <option value="a3">A3</option>
+            <option value="a3" selected>A3</option>
           </select>
         </label>
         <label>Orientación
@@ -3660,7 +3660,7 @@ body.globe-mode #globeScaleBox{display:block}
     </aside>
 
     <main class="layoutWorkspace">
-      <div id="layoutPage" class="layoutPage landscape a4">
+      <div id="layoutPage" class="layoutPage landscape a3">
         <div id="layoutLogoBox" class="layoutItem layoutLogoBox" data-layout="logo" aria-label="Logo ANAMBRO">
           <div class="layoutAnambroLogo">ANAMBRO</div>
         </div>
@@ -7685,10 +7685,17 @@ function openLayoutEditor(){
  closePanels();
  const ov=document.getElementById('layoutOverlay');
  ov.classList.add('open');ov.setAttribute('aria-hidden','false');
+ document.getElementById('layoutPaper').value='a3';
+ document.getElementById('layoutOrientation').value='landscape';
  const title=defaultLayoutTitle();
  document.getElementById('layoutTitleInput').value=title;
  document.getElementById('layoutTitleBox').textContent=title;
-
+ document.getElementById('layoutCropZoom').value=100;
+ document.getElementById('layoutPanX').value=50;
+ document.getElementById('layoutPanY').value=50;
+ document.getElementById('layoutSize').value=100;
+ layoutMapHandMode=true;
+ syncLayoutMapHandButton();
  // El logotipo ANAMBRO forma parte del propio diseño de la página exportable.
  syncLayoutInstituteBox();
  document.querySelectorAll('.layoutItem').forEach(el=>{el.style.zIndex=el.dataset.layout==='map'?'1':'12';});
@@ -7696,14 +7703,18 @@ function openLayoutEditor(){
  updateLayoutPageFormat();
  ensureLayoutResizeHandles();
  selectLayoutItem('map');
- setTimeout(refreshLayoutSnapshot,80);
+ setTimeout(async()=>{await refreshLayoutSnapshot();fitLayoutMapImage();},80);
 }
 function closeLayoutEditor(){
  document.getElementById('layoutOverlay')?.classList.remove('open');
 }
 function updateLayoutPageFormat(){
  const page=document.getElementById('layoutPage');
- page.className='layoutPage '+document.getElementById('layoutPaper').value+' '+document.getElementById('layoutOrientation').value;
+ const paper=document.getElementById('layoutPaper').value;
+ const orientation=document.getElementById('layoutOrientation').value;
+ page.className='layoutPage '+paper+' '+orientation;
+ const scale=(paper==='a4')?0.7071:1;
+ page.style.setProperty('--pageScale',String(scale));
 }
 function layoutEl(key){
  return document.querySelector('[data-layout="'+key+'"]');
