@@ -1888,7 +1888,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutScaleTicks span:nth-child(3){left:50%}
 .layoutScaleTicks span:nth-child(4){left:75%}
 .layoutScaleTicks span:nth-child(5){left:100%;transform:translateX(-100%)}
-.layoutCredits{position:absolute;left:58%;top:92.9%;width:39%;height:2.5%;font-size:calc(13px * var(--pageScale));font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden;z-index:12}
+.layoutCredits{position:absolute;left:58%;top:89%;width:39%;height:3.4%;font-size:calc(13px * var(--pageScale));font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden;z-index:12}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
  .layoutSidebar{padding:8px}
@@ -1914,6 +1914,14 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutScaleTicks{font-family:var(--layoutFontFamily)!important;font-size:calc(10.8px * var(--pageScale) * var(--layoutFontScale))!important}
 .layoutSources{font-family:var(--layoutFontFamily)!important;font-size:calc(9.6px * var(--pageScale) * var(--layoutFontScale))!important}
 .layoutCredits{font-family:var(--layoutFontFamily)!important;font-size:calc(13px * var(--pageScale) * var(--layoutFontScale))!important}
+/* Perfil exportable: leyenda horizontal redimensionable en la base. */
+.layoutPage.profileLayout .layoutLegendBox{display:grid!important;grid-template-columns:max-content minmax(0,1fr);column-gap:calc(12px * var(--pageScale));align-items:start;align-content:start;box-sizing:border-box}
+.layoutPage.profileLayout .layoutLegendTitle{margin:0!important;white-space:nowrap}
+.layoutPage.profileLayout #layoutLegendContent{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;align-content:flex-start;justify-content:flex-start;gap:calc(5px * var(--pageScale)) calc(18px * var(--pageScale));width:100%;min-width:0;height:100%;box-sizing:border-box}
+.layoutPage.profileLayout #layoutLegendContent .profileLegendItem{display:flex!important;align-items:center;gap:calc(5px * var(--pageScale));max-width:none!important;flex:0 1 auto;margin:0!important;white-space:nowrap}
+.layoutPage.profileLayout #layoutLegendContent .profileLegendHint{flex-basis:100%;margin:0}
+.layoutPage.profileLayout #layoutLegendContent .profileLegendSw{flex:0 0 auto}
+
 
 
 /* Autoría ANAMBRO · visible y equilibrada en escritorio y móvil */
@@ -2093,6 +2101,19 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layerSubBlock{padding:2px 2px 6px 13px}
 .miniThemeLegend{margin-top:6px;padding:6px;border:1px solid #ddd;border-radius:6px;background:#fff;font-size:10.5px;line-height:1.25}
 @media(max-width:760px){.layerThemeTitle{font-size:9.5px;margin-top:7px}.layersRule{font-size:9.5px}}
+/* Capas jerárquicas: ámbito → rama temática → subcategoría → capa. */
+#layersPanel>.layerScope{border-top:1px solid #d7dde2;padding:0}
+#layersPanel>.layerScope>summary{font:900 13px/1.2 Montserrat,system-ui,sans-serif;color:#17324d;padding:10px 5px;cursor:pointer;list-style-position:inside}
+#layersPanel .layerScopeInner{padding:0 2px 5px 8px}
+#layersPanel .layerCategory{border-top:1px solid #e3e7ea;margin-left:4px;padding:0}
+#layersPanel .layerCategory>summary{font-weight:850;color:#284c68;padding:8px 4px;cursor:pointer}
+#layersPanel .layerSubcategory{border-top:1px dashed #e1e5e8;margin-left:10px;padding:0}
+#layersPanel .layerSubcategory>summary{font-weight:800;color:#455a69;padding:7px 4px;cursor:pointer}
+#layersPanel .layerSubcategory>label,#layersPanel .layerSubcategory>.layerSubBlock{margin-left:8px}
+#layersPanel .layerEmpty{margin:5px 8px 9px 12px;padding:7px 8px;border-radius:7px;background:#f6f8fa;color:#697783;font-size:10.5px;line-height:1.3}
+#layersPanel details:not([open])>*:not(summary){display:none!important}
+@media(max-width:760px){#layersPanel>.layerScope>summary{font-size:12px;padding:9px 4px}#layersPanel .layerCategory>summary{font-size:11px}#layersPanel .layerSubcategory>summary{font-size:10.5px}}
+
 
 .volcanoGridAuto{align-items:start!important}
 .volcanoGridAuto .volcanoSection{height:auto!important;min-height:0!important}
@@ -3659,204 +3680,179 @@ html body .layoutOverlay{z-index:9000!important}
 </div>
 
 
-<div id="layersPanel" class="panel hidden"><h3>Capas</h3>
-<div class="layersRule">
-  <b>Criterio único:</b> primero el ámbito territorial —<b>Canarias, España, Mundo</b>— y dentro de cada ámbito
-  el mismo orden temático: <b>Geología → Clima → Vegetación / biomas</b>. Después aparecen las capas de
-  territorio, patrimonio y referencia.
-</div>
-
-<details open><summary>🏝️ Canarias</summary>
-
-<div class="layerThemeTitle">🪨 Geología</div>
-<label><input id="canaryGeologyCheck" type="checkbox"> <b>Mapa geológico continuo · Canarias (GEODE)</b></label>
+<div class="panel hidden" id="layersPanel"><h3>Capas</h3>
+<div class="layersRule"><b>Navegación por niveles: </b>ámbito → Geografía Física / Geografía Humana / Historia → subcategoría → capa. La cartografía de referencia y utilidades están en Herramientas Comunes.</div>
+<details class="layerScope"><summary>🏝️ Canarias</summary>
+<div class="layerScopeInner">
+<details class="layerCategory"><summary>🌋 Geografía Física</summary>
+<details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="canaryGeologyCheck" type="checkbox"/> <b>Mapa geológico continuo · Canarias (GEODE)</b></label>
 <div class="layerSubBlock">
-  <small>IGME-CSIC · limitado al Archipiélago Canario.</small>
-  <small><b>Opacidad</b> <span id="canaryGeologyOpacityValue">70 %</span></small>
-  <input id="canaryGeologyOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
-  <div id="canaryGeologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
-    <small><b>Leyenda geológica · IGME</b></small>
-    <div style="max-height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
-      <img alt="Leyenda GEODE Canarias" style="display:block;max-width:none" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=8">
-    </div>
-  </div>
+<small>IGME-CSIC · limitado al Archipiélago Canario.</small>
+<small><b>Opacidad</b> <span id="canaryGeologyOpacityValue">70 %</span></small>
+<input id="canaryGeologyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.70"/>
+<div id="canaryGeologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
+<small><b>Leyenda geológica · IGME</b></small>
+<div style="max-height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
+<img alt="Leyenda GEODE Canarias" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;FORMAT=image%2Fpng&amp;LAYER=8" style="display:block;max-width:none"/>
 </div>
-
-<div class="layerThemeTitle">🌦️ Clima</div>
-<label><input id="canaryClimateCheck" type="checkbox"> <b>Climas Köppen-Geiger · Canarias</b></label>
+</div>
+</div></details>
+<details class="layerSubcategory"><summary>🌦️ Clima</summary><label><input id="canaryClimateCheck" type="checkbox"/> <b>Climas Köppen-Geiger · Canarias</b></label>
 <div class="layerSubBlock">
-  <small>Beck et al. · representación limitada a Canarias.</small>
-  <small><b>Opacidad</b> <span id="canaryClimateOpacityValue">72 %</span></small>
-  <input id="canaryClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-  <div id="canaryClimateLegend" class="miniThemeLegend" style="display:none"></div>
-</div>
-
-<div class="layerThemeTitle">🌿 Vegetación</div>
-<label><input id="vegetationCheck" type="checkbox"> <b>Vegetación actual · Canarias (GRAFCAN)</b></label>
-<label><input id="vegetationPotentialCanaryCheck" type="checkbox"> <b>Vegetación potencial · Canarias (GRAFCAN)</b></label>
+<small>Beck et al. · representación limitada a Canarias.</small>
+<small><b>Opacidad</b> <span id="canaryClimateOpacityValue">72 %</span></small>
+<input id="canaryClimateOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.72"/>
+<div class="miniThemeLegend" id="canaryClimateLegend" style="display:none"></div>
+</div></details>
+<details class="layerSubcategory"><summary>🌿 Vegetación</summary><label><input id="vegetationCheck" type="checkbox"/> <b>Vegetación actual · Canarias (GRAFCAN)</b></label>
+<label><input id="vegetationPotentialCanaryCheck" type="checkbox"/> <b>Vegetación potencial · Canarias (GRAFCAN)</b></label>
 <div class="layerSubBlock">
-  <small>Gobierno de Canarias / GRAFCAN.</small>
-  <input id="vegetationOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-  <div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"></div>
-</div>
+<small>Gobierno de Canarias / GRAFCAN.</small>
+<input id="vegetationOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.72"/>
+<div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"></div>
+</div></details>
+</details>
+<details class="layerCategory"><summary>👥 Geografía Humana</summary><div class="layerEmpty">No hay todavía capas específicas de geografía humana para este ámbito.</div></details>
+<details class="layerCategory"><summary>🏛️ Historia</summary><div class="layerEmpty">No hay todavía capas históricas específicas para este ámbito.</div></details>
 
-<div class="layerThemeTitle secondary">🧭 Territorio y patrimonio</div>
-<label><input id="munCheck" type="checkbox" checked> <b>Municipios · Canarias</b></label>
-<div class="layerSubBlock">
-  <small><b>Opacidad</b> <span id="munOpacityValue">100 %</span></small>
-  <input id="munOpacity" type="range" min="0" max="1" value="1" step="0.05" style="width:100%">
 </div>
-<label><input id="enpMaster" type="checkbox"> <b>Espacios Naturales Protegidos · Canarias</b></label>
+</details>
+<details class="layerScope"><summary>🇪🇸 España</summary>
+<div class="layerScopeInner">
+<details class="layerCategory"><summary>🌋 Geografía Física</summary>
+<details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="spainGeologyCheck" type="checkbox"/> <b>Mapa geológico continuo · España peninsular y Baleares (GEODE)</b></label>
+<div class="layerSubBlock">
+<small>IGME-CSIC · excluye Canarias.</small>
+<small><b>Opacidad</b> <span id="spainGeologyOpacityValue">70 %</span></small>
+<input id="spainGeologyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.70"/>
+<div id="spainGeologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
+<small><b>Leyenda geológica · IGME</b></small>
+<div style="max-height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
+<img alt="Leyenda GEODE España" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;FORMAT=image%2Fpng&amp;LAYER=8" style="display:block;max-width:none"/>
+</div>
+</div>
+</div></details>
+<details class="layerSubcategory"><summary>🌦️ Clima</summary><label><input id="spainClimateCheck" type="checkbox"/> <b>Climas Köppen-Geiger · España peninsular y Baleares</b></label>
+<div class="layerSubBlock">
+<small>Beck et al. · representación limitada al territorio peninsular y balear.</small>
+<small><b>Opacidad</b> <span id="spainClimateOpacityValue">72 %</span></small>
+<input id="spainClimateOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.72"/>
+<div class="miniThemeLegend" id="spainClimateLegend" style="display:none"></div>
+</div></details>
+<details class="layerSubcategory"><summary>🌿 Vegetación</summary><label><input id="mfeCheck" type="checkbox"/> <b>Vegetación actual · España peninsular y Baleares (MFE25)</b></label>
+<label><input id="mitecoPotentialCheck" type="checkbox"/> <b>Vegetación potencial · España peninsular y Baleares (MITECO)</b></label></details>
+</details>
+<details class="layerCategory"><summary>👥 Geografía Humana</summary><div class="layerEmpty">No hay todavía capas específicas de geografía humana para este ámbito.</div></details>
+<details class="layerCategory"><summary>🏛️ Historia</summary><div class="layerEmpty">No hay todavía capas históricas específicas para este ámbito.</div></details>
+
+</div>
+</details>
+<details class="layerScope"><summary>🌍 Mundo</summary>
+<div class="layerScopeInner">
+<details class="layerCategory"><summary>🌋 Geografía Física</summary>
+<div class="layerSubBlock"><small>Relieve, geología, vulcanismo, clima y grandes biomas terrestres.</small></div>
+<details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="worldGeologyCheck" type="checkbox"/> <b>Mapa geológico mundial · Macrostrat</b></label>
+<div class="layerSubBlock"><small>Compilación mundial de mapas geológicos · Macrostrat · CC BY 4.0.</small><small><b>Opacidad</b> <span id="worldGeologyOpacityValue">72 %</span></small><input id="worldGeologyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.72"/><div class="miniThemeLegend" id="worldGeologyLegend" style="display:none"></div></div></details>
+<details class="layerSubcategory"><summary>🌋 Vulcanismo</summary><label><input id="worldVolcanoesCheck" type="checkbox"/> <b>Volcanes del mundo · Smithsonian GVP</b></label>
+<div class="layerSubBlock"><small>Volcanes holocenos del Global Volcanism Program.</small></div></details>
+<details class="layerSubcategory"><summary>🌦️ Clima</summary><label><input id="worldClimateCheck" type="checkbox"/> <b>Climas del mundo · Köppen-Geiger</b></label>
+<div class="layerSubBlock"><small>Beck et al.</small><small><b>Opacidad</b> <span id="worldClimateOpacityValue">72 %</span></small><input id="worldClimateOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.72"/><div class="miniThemeLegend" id="worldClimateLegend" style="display:none"></div></div></details>
+<details class="layerSubcategory"><summary>🌿 Vegetación y biomas</summary><label><input id="worldBiomesCheck" type="checkbox"/> <b>Grandes biomas terrestres · RESOLVE 2017</b></label>
+<div class="layerSubBlock"><small>Ecorregiones y biomas mundiales · Dinerstein et al. (2017).</small><small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small><input id="worldBiomesOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.58"/><div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div></div></details>
+</details>
+<details class="layerCategory"><summary>👥 Geografía Humana</summary><div class="layerSubBlock" id="worldHumanControls">
+<small>Capas independientes · Banco Mundial (World Development Indicators) e IDH · PNUD.</small>
+<label style="padding-top:7px"><b>Año común: <span id="worldHumanYearValue">2023</span></b></label>
+<input id="worldHumanYear" max="2025" min="1960" step="1" style="width:100%" type="range" value="2023"/>
+<div class="row" style="margin-top:5px"><button class="action" id="worldHumanLatestBtn" type="button">2025</button><button class="action" id="worldHumanReloadBtn" type="button">Actualizar activas</button></div>
+<details open=""><summary>Demografía</summary>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.TOTL" type="checkbox"/> Población total</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.POP.DNST" type="checkbox"/> Densidad de población</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.GROW" type="checkbox"/> Crecimiento demográfico anual</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.URB.TOTL.IN.ZS" type="checkbox"/> Población urbana</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.LE00.IN" type="checkbox"/> Esperanza de vida</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.TFRT.IN" type="checkbox"/> Fecundidad</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.CDRT.IN" type="checkbox"/> Mortalidad bruta</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SM.POP.NETM" type="checkbox"/> Migración neta</label>
+</details>
+<details><summary>Economía</summary>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NY.GDP.MKTP.CD" type="checkbox"/> PIB total</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NY.GDP.PCAP.CD" type="checkbox"/> PIB per cápita</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.AGR.TOTL.ZS" type="checkbox"/> Agricultura · % del PIB</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.IND.TOTL.ZS" type="checkbox"/> Industria · % del PIB</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.SRV.TOTL.ZS" type="checkbox"/> Servicios · % del PIB</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SL.UEM.TOTL.ZS" type="checkbox"/> Desempleo</label>
+</details>
+<details><summary>Desarrollo y condiciones de vida</summary>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="UNDP_HDI" type="checkbox"/> Índice de Desarrollo Humano (IDH) · PNUD (hasta 2023)</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.ELC.ACCS.ZS" type="checkbox"/> Acceso a electricidad</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="IT.NET.USER.ZS" type="checkbox"/> Uso de Internet</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SH.H2O.BASW.ZS" type="checkbox"/> Acceso al menos básico a agua potable</label>
+</details>
+<details><summary>Medio ambiente y sociedad</summary>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.ATM.CO2E.PC" type="checkbox"/> Emisiones de CO₂ per cápita</label>
+</details>
+<small id="worldHumanStatus" style="display:block;margin-top:7px">Activa una o varias variables.</small>
+<div id="worldHumanLegend" style="margin-top:7px;font-size:10.5px;line-height:1.35"></div>
+</div></details>
+<details class="layerCategory"><summary>🏛️ Historia</summary><label><input id="worldHistoryCheck" type="checkbox"/> <b>Fronteras políticas históricas · Cliopatria</b></label>
+<div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.58"/></div>
+<label><input id="worldHistoricalEventsCheck" type="checkbox"/> <b>Acontecimientos históricos · Wikidata</b></label>
+<div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div></details>
+
+</div>
+</details>
+<details class="layerScope"><summary>🧭 Herramientas Comunes</summary>
+<div class="layerScopeInner">
+<details class="layerCategory"><summary>🗺️ Cartografía, límites y territorio</summary><details class="layerSubcategory"><summary>🏝️ Canarias</summary><details class="layerSubcategory"><summary>🧭 Territorio y patrimonio</summary><label><input checked="" id="munCheck" type="checkbox"/> <b>Municipios · Canarias</b></label>
+<div class="layerSubBlock">
+<small><b>Opacidad</b> <span id="munOpacityValue">100 %</span></small>
+<input id="munOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="1"/>
+</div>
+<label><input id="enpMaster" type="checkbox"/> <b>Espacios Naturales Protegidos · Canarias</b></label>
 <div style="padding:2px 2px 7px 13px">
 <small><b>Opacidad de la capa</b> <span id="enpOpacityValue">100 %</span></small>
-<input id="enpOpacity" type="range" min="0" max="1" value="1" step="0.05" style="width:100%">
+<input id="enpOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="1"/>
 </div>
-<label class="sub"><input type="checkbox" data-enp="Monumento Natural"> <span class="sw" style="background:#0d4d7c"></span>Monumento Natural</label>
-<label class="sub"><input type="checkbox" data-enp="Paisaje Protegido"> <span class="sw" style="background:#7d99bb"></span>Paisaje Protegido</label>
-<label class="sub"><input type="checkbox" data-enp="Parque Nacional"> <span class="sw" style="background:#f58220"></span>Parque Nacional</label>
-<label class="sub"><input type="checkbox" data-enp="Parque Natural"> <span class="sw" style="background:#f9ad4b"></span>Parque Natural</label>
-<label class="sub"><input type="checkbox" data-enp="Parque Rural"> <span class="sw" style="background:#d9343f"></span>Parque Rural</label>
-<label class="sub"><input type="checkbox" data-enp="Reserva Natural Especial"> <span class="sw" style="background:#699884"></span>Reserva Natural Especial</label>
-<label class="sub"><input type="checkbox" data-enp="Reserva Natural Integral"> <span class="sw" style="background:#075a46"></span>Reserva Natural Integral</label>
-<label class="sub"><input type="checkbox" data-enp="Sitio de Interés Científico"> <span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico</label>
-<details><summary>Leyenda ENP</summary><div><span class="sw" style="background:#0d4d7c"></span>Monumento Natural (52)</div><div><span class="sw" style="background:#7d99bb"></span>Paisaje Protegido (27)</div><div><span class="sw" style="background:#f58220"></span>Parque Nacional (4)</div><div><span class="sw" style="background:#f9ad4b"></span>Parque Natural (11)</div><div><span class="sw" style="background:#d9343f"></span>Parque Rural (7)</div><div><span class="sw" style="background:#699884"></span>Reserva Natural Especial (15)</div><div><span class="sw" style="background:#075a46"></span>Reserva Natural Integral (11)</div><div><span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico (20)</div></details>
-
-<div class="layerThemeTitle secondary">🗺️ Cartografía base</div>
-<label><input type="radio" data-base-choice="raster" name="baseCanary"> Mapa topográfico · MTN</label>
-<label><input type="radio" data-base-choice="pnoa" name="baseCanary"> Imagen · PNOA máxima actualidad</label>
-<label><input type="radio" data-base-choice="street" name="baseCanary"> Callejero · IGN Base</label>
-<label><input type="radio" data-base-choice="hybrid" name="baseCanary" checked> Híbrido · PNOA + cartografía</label>
-<label><input type="radio" data-base-choice="lidar" name="baseCanary"> LiDAR · relieve</label>
-<label><input type="radio" data-base-choice="land" name="baseCanary"> Ocupación del suelo</label>
-<label><input type="radio" data-base-choice="historic" name="baseCanary"> Mapa histórico · 1.ª edición MTN50</label>
-</details>
-
-<details><summary>🇪🇸 España · territorio peninsular y Baleares</summary>
-
-<div class="layerThemeTitle">🪨 Geología</div>
-<label><input id="spainGeologyCheck" type="checkbox"> <b>Mapa geológico continuo · España peninsular y Baleares (GEODE)</b></label>
-<div class="layerSubBlock">
-  <small>IGME-CSIC · excluye Canarias.</small>
-  <small><b>Opacidad</b> <span id="spainGeologyOpacityValue">70 %</span></small>
-  <input id="spainGeologyOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%">
-  <div id="spainGeologyLegendWrap" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid #ddd">
-    <small><b>Leyenda geológica · IGME</b></small>
-    <div style="max-height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px">
-      <img alt="Leyenda GEODE España" style="display:block;max-width:none" src="https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&FORMAT=image%2Fpng&LAYER=8">
-    </div>
-  </div>
-</div>
-
-<div class="layerThemeTitle">🌦️ Clima</div>
-<label><input id="spainClimateCheck" type="checkbox"> <b>Climas Köppen-Geiger · España peninsular y Baleares</b></label>
-<div class="layerSubBlock">
-  <small>Beck et al. · representación limitada al territorio peninsular y balear.</small>
-  <small><b>Opacidad</b> <span id="spainClimateOpacityValue">72 %</span></small>
-  <input id="spainClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%">
-  <div id="spainClimateLegend" class="miniThemeLegend" style="display:none"></div>
-</div>
-
-<div class="layerThemeTitle">🌿 Vegetación</div>
-<label><input id="mfeCheck" type="checkbox"> <b>Vegetación actual · España peninsular y Baleares (MFE25)</b></label>
-<label><input id="mitecoPotentialCheck" type="checkbox"> <b>Vegetación potencial · España peninsular y Baleares (MITECO)</b></label>
-
-<div class="layerThemeTitle secondary">🧭 Territorio y comunicaciones</div>
-<label><input id="transportCheck" type="checkbox"> <b>Vías de comunicación · IGN</b></label>
-<div class="layerSubBlock"><small>IGR Redes de Transporte.</small><input id="transportOpacity" type="range" min="0" max="1" value="0.85" step="0.05" style="width:100%"></div>
-<label><input id="ccaaCheck" type="checkbox"> <b>Comunidades autónomas</b></label>
-<label><input id="provCheck" type="checkbox"> <b>Provincias</b></label>
-<label><input id="munSpainCheck" type="checkbox"> <b>Municipios · España peninsular y Baleares</b></label>
-<div class="layerSubBlock"><small>IGN/CNIG · visualización inteligente según escala.</small><input id="adminOpacity" type="range" min="0" max="1" value="0.95" step="0.05" style="width:100%"></div>
-<label><input id="toponymyCheck" type="checkbox"> <b>Toponimia enriquecida · IGN</b></label>
-<div class="layerSubBlock"><small>Nomenclátor Geográfico Básico de España.</small><input id="toponymyOpacity" type="range" min="0" max="1" value="0.90" step="0.05" style="width:100%"></div>
-
-<div class="layerThemeTitle secondary">🗺️ Cartografía base</div>
-<label><input type="radio" data-base-choice="raster" name="baseSpain"> Mapa topográfico · MTN</label>
-<label><input type="radio" data-base-choice="pnoa" name="baseSpain"> Imagen · PNOA máxima actualidad</label>
-<label><input type="radio" data-base-choice="street" name="baseSpain"> Callejero · IGN Base</label>
-<label><input type="radio" data-base-choice="hybrid" name="baseSpain" checked> Híbrido · PNOA + cartografía</label>
-<label><input type="radio" data-base-choice="lidar" name="baseSpain"> LiDAR · relieve</label>
-<label><input type="radio" data-base-choice="land" name="baseSpain"> Ocupación del suelo</label>
-<label><input type="radio" data-base-choice="historic" name="baseSpain"> Mapa histórico · 1.ª edición MTN50</label>
-</details>
-
-<details><summary>🌍 Mundo</summary>
-
-<div class="layerThemeTitle">🌋 Geografía física</div>
-<div class="layerSubBlock"><small>Relieve, geología, vulcanismo, clima y grandes biomas terrestres.</small></div>
-<label><input id="worldGeologyCheck" type="checkbox"> <b>Mapa geológico mundial · Macrostrat</b></label>
-<div class="layerSubBlock"><small>Compilación mundial de mapas geológicos · Macrostrat · CC BY 4.0.</small><small><b>Opacidad</b> <span id="worldGeologyOpacityValue">72 %</span></small><input id="worldGeologyOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="worldGeologyLegend" class="miniThemeLegend" style="display:none"></div></div>
-<label><input id="worldVolcanoesCheck" type="checkbox"> <b>Volcanes del mundo · Smithsonian GVP</b></label>
-<div class="layerSubBlock"><small>Volcanes holocenos del Global Volcanism Program.</small></div>
-<label><input id="worldClimateCheck" type="checkbox"> <b>Climas del mundo · Köppen-Geiger</b></label>
-<div class="layerSubBlock"><small>Beck et al.</small><small><b>Opacidad</b> <span id="worldClimateOpacityValue">72 %</span></small><input id="worldClimateOpacity" type="range" min="0" max="1" value="0.72" step="0.05" style="width:100%"><div id="worldClimateLegend" class="miniThemeLegend" style="display:none"></div></div>
-<label><input id="worldBiomesCheck" type="checkbox"> <b>Grandes biomas terrestres · RESOLVE 2017</b></label>
-<div class="layerSubBlock"><small>Ecorregiones y biomas mundiales · Dinerstein et al. (2017).</small><small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small><input id="worldBiomesOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"><div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div></div>
-
-<div class="layerThemeTitle">👥 Geografía humana</div>
-<div id="worldHumanControls" class="layerSubBlock">
- <small>Capas independientes · Banco Mundial (World Development Indicators) e IDH · PNUD.</small>
- <label style="padding-top:7px"><b>Año común: <span id="worldHumanYearValue">2023</span></b></label>
- <input id="worldHumanYear" type="range" min="1960" max="2025" value="2023" step="1" style="width:100%">
- <div class="row" style="margin-top:5px"><button id="worldHumanLatestBtn" class="action" type="button">2025</button><button id="worldHumanReloadBtn" class="action" type="button">Actualizar activas</button></div>
- <details open><summary>Demografía</summary>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.TOTL" type="checkbox"> Población total</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.POP.DNST" type="checkbox"> Densidad de población</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.GROW" type="checkbox"> Crecimiento demográfico anual</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.URB.TOTL.IN.ZS" type="checkbox"> Población urbana</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.LE00.IN" type="checkbox"> Esperanza de vida</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.TFRT.IN" type="checkbox"> Fecundidad</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.CDRT.IN" type="checkbox"> Mortalidad bruta</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SM.POP.NETM" type="checkbox"> Migración neta</label>
- </details>
- <details><summary>Economía</summary>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NY.GDP.MKTP.CD" type="checkbox"> PIB total</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NY.GDP.PCAP.CD" type="checkbox"> PIB per cápita</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.AGR.TOTL.ZS" type="checkbox"> Agricultura · % del PIB</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.IND.TOTL.ZS" type="checkbox"> Industria · % del PIB</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.SRV.TOTL.ZS" type="checkbox"> Servicios · % del PIB</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SL.UEM.TOTL.ZS" type="checkbox"> Desempleo</label>
- </details>
- <details><summary>Desarrollo y condiciones de vida</summary>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="UNDP_HDI" type="checkbox"> Índice de Desarrollo Humano (IDH) · PNUD (hasta 2023)</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.ELC.ACCS.ZS" type="checkbox"> Acceso a electricidad</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="IT.NET.USER.ZS" type="checkbox"> Uso de Internet</label>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SH.H2O.BASW.ZS" type="checkbox"> Acceso al menos básico a agua potable</label>
- </details>
- <details><summary>Medio ambiente y sociedad</summary>
-  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.ATM.CO2E.PC" type="checkbox"> Emisiones de CO₂ per cápita</label>
- </details>
- <small id="worldHumanStatus" style="display:block;margin-top:7px">Activa una o varias variables.</small>
- <div id="worldHumanLegend" style="margin-top:7px;font-size:10.5px;line-height:1.35"></div>
-</div>
-
-<div class="layerThemeTitle">🏛️ Historia</div>
-<label><input id="worldHistoryCheck" type="checkbox"> <b>Fronteras políticas históricas · Cliopatria</b></label>
-<div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"></div>
-<label><input id="worldHistoricalEventsCheck" type="checkbox"> <b>Acontecimientos históricos · Wikidata</b></label>
-<div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div>
-
-<div class="layerThemeTitle">🧭 Territorio, cartografía y servicios</div>
-<label><input id="countriesCheck" type="checkbox"> <b>Fronteras internacionales</b></label>
-<label class="sub"><input id="countryLabelsCheck" type="checkbox"> Nombres de países</label>
-<label><input id="worldAdmin1Check" type="checkbox"> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
-<label><input id="worldAdmin2Check" type="checkbox"> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
-<label class="sub"><input id="worldToponymsCheck" type="checkbox"> Topónimos mundiales · vectoriales / IGN en España</label>
-<label><input id="worldRadioGardenCheck" type="checkbox"> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div>
-<div class="layerThemeTitle secondary">🛰️ Imagen de fondo mundial</div><label><input type="radio" data-base-choice="worldsat" name="baseWorld"> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div>
-</details>
-
-<details><summary>🧭 Herramientas cartográficas comunes</summary>
-<label><input id="gridCheck" type="checkbox" checked> <b>Paralelos y meridianos</b></label>
-<div class="layerSubBlock"><small><b>Opacidad</b> <span id="gridOpacityValue">70 %</span></small><input id="gridOpacity" type="range" min="0" max="1" value="0.70" step="0.05" style="width:100%"></div>
-</details>
-
-<details><summary>📍 Lugares buscados</summary>
-<label><input id="placesMaster" type="checkbox" checked> <b>Mostrar todos</b></label>
+<label class="sub"><input data-enp="Monumento Natural" type="checkbox"/> <span class="sw" style="background:#0d4d7c"></span>Monumento Natural</label>
+<label class="sub"><input data-enp="Paisaje Protegido" type="checkbox"/> <span class="sw" style="background:#7d99bb"></span>Paisaje Protegido</label>
+<label class="sub"><input data-enp="Parque Nacional" type="checkbox"/> <span class="sw" style="background:#f58220"></span>Parque Nacional</label>
+<label class="sub"><input data-enp="Parque Natural" type="checkbox"/> <span class="sw" style="background:#f9ad4b"></span>Parque Natural</label>
+<label class="sub"><input data-enp="Parque Rural" type="checkbox"/> <span class="sw" style="background:#d9343f"></span>Parque Rural</label>
+<label class="sub"><input data-enp="Reserva Natural Especial" type="checkbox"/> <span class="sw" style="background:#699884"></span>Reserva Natural Especial</label>
+<label class="sub"><input data-enp="Reserva Natural Integral" type="checkbox"/> <span class="sw" style="background:#075a46"></span>Reserva Natural Integral</label>
+<label class="sub"><input data-enp="Sitio de Interés Científico" type="checkbox"/> <span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico</label>
+<details><summary>Leyenda ENP</summary><div><span class="sw" style="background:#0d4d7c"></span>Monumento Natural (52)</div><div><span class="sw" style="background:#7d99bb"></span>Paisaje Protegido (27)</div><div><span class="sw" style="background:#f58220"></span>Parque Nacional (4)</div><div><span class="sw" style="background:#f9ad4b"></span>Parque Natural (11)</div><div><span class="sw" style="background:#d9343f"></span>Parque Rural (7)</div><div><span class="sw" style="background:#699884"></span>Reserva Natural Especial (15)</div><div><span class="sw" style="background:#075a46"></span>Reserva Natural Integral (11)</div><div><span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico (20)</div></details></details><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseCanary" type="radio"/> Mapa topográfico · MTN</label>
+<label><input data-base-choice="pnoa" name="baseCanary" type="radio"/> Imagen · PNOA máxima actualidad</label>
+<label><input data-base-choice="street" name="baseCanary" type="radio"/> Callejero · IGN Base</label>
+<label><input checked="" data-base-choice="hybrid" name="baseCanary" type="radio"/> Híbrido · PNOA + cartografía</label>
+<label><input data-base-choice="lidar" name="baseCanary" type="radio"/> LiDAR · relieve</label>
+<label><input data-base-choice="land" name="baseCanary" type="radio"/> Ocupación del suelo</label>
+<label><input data-base-choice="historic" name="baseCanary" type="radio"/> Mapa histórico · 1.ª edición MTN50</label></details></details><details class="layerSubcategory"><summary>🇪🇸 España</summary><details class="layerSubcategory"><summary>🛣️ Territorio y comunicaciones</summary><label><input id="transportCheck" type="checkbox"/> <b>Vías de comunicación · IGN</b></label>
+<div class="layerSubBlock"><small>IGR Redes de Transporte.</small><input id="transportOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.85"/></div>
+<label><input id="ccaaCheck" type="checkbox"/> <b>Comunidades autónomas</b></label>
+<label><input id="provCheck" type="checkbox"/> <b>Provincias</b></label>
+<label><input id="munSpainCheck" type="checkbox"/> <b>Municipios · España peninsular y Baleares</b></label>
+<div class="layerSubBlock"><small>IGN/CNIG · visualización inteligente según escala.</small><input id="adminOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.95"/></div>
+<label><input id="toponymyCheck" type="checkbox"/> <b>Toponimia enriquecida · IGN</b></label>
+<div class="layerSubBlock"><small>Nomenclátor Geográfico Básico de España.</small><input id="toponymyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.90"/></div></details><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseSpain" type="radio"/> Mapa topográfico · MTN</label>
+<label><input data-base-choice="pnoa" name="baseSpain" type="radio"/> Imagen · PNOA máxima actualidad</label>
+<label><input data-base-choice="street" name="baseSpain" type="radio"/> Callejero · IGN Base</label>
+<label><input checked="" data-base-choice="hybrid" name="baseSpain" type="radio"/> Híbrido · PNOA + cartografía</label>
+<label><input data-base-choice="lidar" name="baseSpain" type="radio"/> LiDAR · relieve</label>
+<label><input data-base-choice="land" name="baseSpain" type="radio"/> Ocupación del suelo</label>
+<label><input data-base-choice="historic" name="baseSpain" type="radio"/> Mapa histórico · 1.ª edición MTN50</label></details></details><details class="layerSubcategory"><summary>🌍 Mundo</summary><details class="layerSubcategory"><summary>🌐 Límites, divisiones, topónimos y servicios</summary><label><input id="countriesCheck" type="checkbox"/> <b>Fronteras internacionales</b></label>
+<label class="sub"><input id="countryLabelsCheck" type="checkbox"/> Nombres de países</label>
+<label><input id="worldAdmin1Check" type="checkbox"/> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
+<label><input id="worldAdmin2Check" type="checkbox"/> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
+<label class="sub"><input id="worldToponymsCheck" type="checkbox"/> Topónimos mundiales · vectoriales / IGN en España</label>
+<label><input id="worldRadioGardenCheck" type="checkbox"/> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div></details><details class="layerSubcategory"><summary>🛰️ Imagen de fondo mundial</summary><label><input data-base-choice="worldsat" name="baseWorld" type="radio"/> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div></details></details></details><details class="layerCategory"><summary>🧭 Referencia cartográfica</summary><label><input checked="" id="gridCheck" type="checkbox"/> <b>Paralelos y meridianos</b></label>
+<div class="layerSubBlock"><small><b>Opacidad</b> <span id="gridOpacityValue">70 %</span></small><input id="gridOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.70"/></div></details>
+<details class="layerCategory"><summary>📍 Lugares buscados</summary><label><input checked="" id="placesMaster" type="checkbox"/> <b>Mostrar todos</b></label>
 <div id="placesList"><small>Todavía no has añadido lugares.</small></div>
-<button class="action" style="margin-top:5px;width:100%" onclick="deleteAllPlaces()">Eliminar todos</button>
+<button class="action" onclick="deleteAllPlaces()" style="margin-top:5px;width:100%">Eliminar todos</button></details>
+</div>
 </details>
-
 <button class="action" onclick="closePanels()">Cerrar</button>
 </div>
 
@@ -4069,6 +4065,7 @@ html body .layoutOverlay{z-index:9000!important}
       <button id="layoutWorldCaptureBtn" class="action" onclick="refreshLayoutWorldSnapshot()">🌍 Capturar mapamundi completo</button>
       <button id="layoutFitBtn" class="action" onclick="fitLayoutMapImage()">▣ Llenar recuadro</button>
       <button id="layoutContainBtn" class="action" onclick="containLayoutMapImage()">↔ Ver captura completa</button>
+      <button id="layoutProfileLegendWideBtn" class="action" type="button" onclick="fitProfileLegendAcrossBase()" style="display:none">↔ Leyenda del perfil a todo lo ancho</button>
       <button id="layoutHandButton" class="action" type="button" onclick="toggleLayoutMapHandMode()">✋ Mano en el mapa: desactivada</button>
       <div class="layoutGrid2" style="margin-top:6px">
         <button class="action" type="button" onclick="bringSelectedLayoutItemToFront()">⬆ Traer al frente</button>
@@ -7852,7 +7849,19 @@ const LAYOUT_BUILTIN_MAPAMUNDI={
   legend:{left:4.7,top:63,width:18,height:24},
   north:{left:91,top:17,width:5,height:9},
   scale:{left:4.8,top:88.7,width:30,height:6.5},
-  sources:{left:61,top:89.7,width:36,height:3.2}
+  sources:{left:61,top:86.4,width:36,height:3.2}
+ },cropZoom:100,panX:50,panY:50
+};
+const LAYOUT_BUILTIN_PROFILE={
+ paper:'a3',orientation:'landscape',
+ items:{
+  institute:{left:1.2,top:2.2,width:31.2,height:7.2},
+  title:{left:32.4,top:1.55,width:52,height:8.1},
+  map:{left:2.5,top:10,width:95,height:66.5},
+  legend:{left:2.5,top:78,width:95,height:8.8,fontScale:0.9,fontFamily:'montserrat'},
+  north:{left:91,top:17,width:5,height:9},
+  scale:{left:4.8,top:88.7,width:30,height:6.5},
+  sources:{left:61,top:86.4,width:36,height:3.2}
  },cropZoom:100,panX:50,panY:50
 };
 function cloneLayoutPreset(obj){return JSON.parse(JSON.stringify(obj));}
@@ -7911,13 +7920,22 @@ function profileExportSourcesText(){
  src.push('Toponimia: '+ANAMBRO_SOURCES.osm.short);
  return [...new Set(src)].join(' · ');
 }
+function fitProfileLegendAcrossBase(){
+ if(layoutContentMode!=='profile')return;
+ const legend=layoutEl('legend');if(!legend)return;
+ legend.style.left='2.5%';legend.style.top='78%';legend.style.width='95%';legend.style.height='8.8%';legend.style.right='auto';legend.style.bottom='auto';
+ selectLayoutItem('legend');syncLayoutControlValues(legend);
+}
 function syncLayoutModeUI(){
  const profile=layoutContentMode==='profile';
  document.querySelector('.layoutSidebarHead b').textContent=profile?'🖨️ Composición de perfil':'🖨️ Composición de mapa';
  const preset=document.getElementById('layoutPresetBlock');if(preset)preset.style.display=profile?'none':'';
  ['layoutWorldCaptureBtn','layoutHandButton'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=profile?'none':'';});
+ const profileLegendBtn=document.getElementById('layoutProfileLegendWideBtn');if(profileLegendBtn)profileLegendBtn.style.display=profile?'':'none';
  const refresh=document.getElementById('layoutRefreshViewBtn');if(refresh)refresh.textContent=profile?'↻ Actualizar perfil':'↻ Actualizar mapa desde la vista actual';
  const north=layoutEl('north'),scale=layoutEl('scale');if(north)north.style.display=profile?'none':'';if(scale)scale.style.display=profile?'none':'';
+ const page=document.getElementById('layoutPage');if(page)page.classList.toggle('profileLayout',profile);
+ const legend=layoutEl('legend');if(legend){legend.style.overflow=profile?'auto':'hidden';legend.style.maxHeight=profile?'none':'24%';}
 }
 function openProfileLayoutEditor(){
  if(!lastProfileDraw){alert('Genera primero un perfil topográfico.');return;}
@@ -8276,7 +8294,7 @@ function openLayoutEditor(mode='map'){
   applyLayoutPreset(type);
  }else{
   // El perfil utiliza la misma composición editorial, pero sin norte ni escala de mapa.
-  applyLayoutPresetState(layoutPresetFallback('mapamundi'));
+  applyLayoutPresetState(cloneLayoutPreset(LAYOUT_BUILTIN_PROFILE));
   syncLayoutModeUI();
  }
  selectLayoutItem('map');
@@ -8289,7 +8307,7 @@ function updateLayoutPageFormat(){
  const page=document.getElementById('layoutPage');
  const paper=document.getElementById('layoutPaper').value;
  const orientation=document.getElementById('layoutOrientation').value;
- page.className='layoutPage '+paper+' '+orientation;
+ page.className='layoutPage '+paper+' '+orientation+(layoutContentMode==='profile'?' profileLayout':'');
  const scale=(paper==='a4')?0.7071:1;
  page.style.setProperty('--pageScale',String(scale));
 }
@@ -8527,7 +8545,9 @@ function initLayoutDrag(){
 async function exportLayoutPDF(){
  const page=document.getElementById('layoutPage');
  const exportLegend=document.getElementById('layoutLegendContent');
- if(exportLegend)exportLegend.innerHTML=activeLegendHTML();
+ if(exportLegend){
+  exportLegend.innerHTML=layoutContentMode==='profile'?(document.getElementById('profileBandsContent')?.innerHTML||'<small>Perfil topográfico.</small>'):activeLegendHTML();
+ }
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Generando PDF…';}
  try{
