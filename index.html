@@ -3526,6 +3526,15 @@ html body .welcomeOverlay{z-index:8500!important}
 html body .layoutOverlay{z-index:9000!important}
 </style>
 
+
+<style id="anambro-2d-tropics">
+.grid-label.grid-label-tropic{
+  color:#ffd54a!important;
+  background:rgba(0,0,0,.58)!important;
+  border-color:#ffd54a!important;
+  font-weight:800!important;
+}
+</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -3843,7 +3852,7 @@ html body .layoutOverlay{z-index:9000!important}
 </details>
 <details class="layerScope"><summary>🧭 Elementos comunes</summary>
 <div class="layerScopeInner">
-<details class="layerCategory"><summary>🧭 Referencia cartográfica</summary><label><input checked="" id="gridCheck" type="checkbox"/> <b>Paralelos y meridianos</b></label>
+<details class="layerCategory"><summary>🧭 Referencia cartográfica</summary><label><input checked="" id="gridCheck" type="checkbox"/> <b>Paralelos, meridianos y trópicos</b></label>
 <div class="layerSubBlock"><small><b>Opacidad</b> <span id="gridOpacityValue">70 %</span></small><input id="gridOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.70"/></div></details>
 <details class="layerCategory"><summary>📍 Lugares buscados</summary><label><input checked="" id="placesMaster" type="checkbox"/> <b>Mostrar todos</b></label>
 <div id="placesList"><small>Todavía no has añadido lugares.</small></div>
@@ -4268,7 +4277,7 @@ const hybrid=L.layerGroup([pnoa,labels]);
 const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
-const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',{
  noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
  attribution:'Esri World Imagery'
 });
@@ -6194,6 +6203,16 @@ function redrawGeoGrid(){
    L.polyline([[y,west],[y,east]],isEquator?{color:'#ffb000',weight:4.2,opacity:Math.min(1,gridOpacity+.18),interactive:false}:style).addTo(geoGrid);
    L.circleMarker([y,west+(east-west)*.045],{radius:0,opacity:0,fillOpacity:0,interactive:false}).bindTooltip(isEquator?'Ecuador · 0°':fmtDeg(y,'lat',step),{permanent:true,direction:'right',className:'grid-label',opacity:1}).addTo(geoGrid);
  }
+ // Trópicos: paralelos especiales permanentes, iguales a los del globo 3D.
+ const tropicStyle={color:'#ffd54a',weight:2.2,opacity:Math.min(1,gridOpacity+.28),dashArray:'14 9',interactive:false};
+ const addTropic=(lat,label)=>{
+   if(lat<south-1e-9||lat>north+1e-9)return;
+   L.polyline([[lat,west],[lat,east]],tropicStyle).addTo(geoGrid);
+   L.circleMarker([lat,west+(east-west)*.045],{radius:0,opacity:0,fillOpacity:0,interactive:false})
+    .bindTooltip(label,{permanent:true,direction:'right',className:'grid-label grid-label-tropic',opacity:1}).addTo(geoGrid);
+ };
+ addTropic(23.4366,'Trópico de Cáncer · 23°26′ N');
+ addTropic(-23.4366,'Trópico de Capricornio · 23°26′ S');
  count=0;
  for(let lon=lon0;lon<=east+1e-9 && count<MAX_GRID;lon+=step,count++){
    const x=+lon.toFixed(8),isGreenwich=Math.abs(x)<1e-8;
@@ -10276,8 +10295,8 @@ async function ensureGlobe(){
   globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,baseLayer:false});
   // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
   const sat=new Cesium.UrlTemplateImageryProvider({
-   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-   credit:'Esri World Imagery',maximumLevel:19
+   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',
+   credit:'Esri World Imagery',maximumLevel:23
   });
   globeSatelliteLayer=globeViewer.imageryLayers.addImageryProvider(sat);
   // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
@@ -12843,6 +12862,221 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 
 
 
+
+<script id="anambro-safe-provider-zoomin-cap-v2">
+/*
+  Límite de ZOOM-IN por proveedor, sin intervenir en el zoom-out.
+  - Nunca usa map.setMaxZoom(): modifica únicamente map.options.maxZoom, por lo
+    que no dispara zoomlevelschange ni cadenas de corrección al alejarse.
+  - IGN/PNOA usan el máximo declarado por su propia capa.
+  - Fuera de España, Esri World Imagery consulta el TileMap de la zona actual.
+  - Mientras llega la consulta se usa z18 como tope provisional seguro.
+  - Las consultas solo se programan al terminar el movimiento y se cancelan
+    de facto cuando el usuario ya está haciendo zoom-out a escalas pequeñas.
+*/
+(function(){
+ const ESRI_HARD_MAX=23, ESRI_PROVISIONAL=18;
+ const ESRI_TILEMAP='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap';
+ const capCache=new Map(), pending=new Map();
+ let mapTimer=0, mapSeq=0, mapAdjusting=false, lastMapCap=null;
+ let globeTimer=0, globeSeq=0, lastGlobeCap=null;
+
+ function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+ function inSpain(ll){
+  try{return !!(ll&&typeof profileIsSpainLatLng==='function'&&profileIsSpainLatLng(ll));}
+  catch(e){return false;}
+ }
+ function layerCap(layer){
+  if(!layer)return 19;
+  try{
+   if(typeof layer.getLayers==='function'){
+    const caps=layer.getLayers().map(layerCap).filter(Number.isFinite);
+    if(caps.length)return Math.min(...caps);
+   }
+  }catch(e){}
+  const o=layer.options||{};
+  if(Number.isFinite(+o.maxNativeZoom))return +o.maxNativeZoom;
+  if(Number.isFinite(+o.maxZoom))return +o.maxZoom;
+  return 19;
+ }
+ function effectiveMapProvider(){
+  if(typeof map==='undefined'||typeof worldImagery==='undefined')return {kind:'esri',cap:ESRI_PROVISIONAL};
+  const thematic=!!document.getElementById('worldHistoryCheck')?.checked ||
+    (typeof activeHumanIndicators==='function'&&activeHumanIndicators().length>0);
+  if(thematic)return {kind:'free',cap:ESRI_HARD_MAX};
+  const ll=map.getCenter();
+  if(typeof activeBase!=='undefined'&&activeBase===worldImagery)return {kind:'esri'};
+  if(!inSpain(ll))return {kind:'esri'};
+  return {kind:'leaflet',cap:layerCap(typeof activeBase!=='undefined'?activeBase:worldImagery)};
+ }
+ function slippyXY(lat,lng,z){
+  const n=2**z;
+  const la=clamp(+lat||0,-85.05112878,85.05112878);
+  let lo=((+lng||0)+180)%360;if(lo<0)lo+=360;
+  const x=clamp(Math.floor(lo/360*n),0,n-1);
+  const r=la*Math.PI/180;
+  const y=clamp(Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n),0,n-1);
+  return {x,y};
+ }
+ function zoneKey(lat,lng){const q=slippyXY(lat,lng,14);return q.x+':'+q.y;}
+ async function tileExists(lat,lng,z){
+  const q=slippyXY(lat,lng,z);
+  const ctrl=typeof AbortController!=='undefined'?new AbortController():null;
+  const timer=ctrl?setTimeout(()=>ctrl.abort(),3500):0;
+  try{
+   const r=await fetch(`${ESRI_TILEMAP}/${z}/${q.y}/${q.x}/1/1?f=json`,{cache:'force-cache',mode:'cors',signal:ctrl?.signal});
+   if(!r.ok)return false;
+   const j=await r.json();
+   return !j?.error&&Array.isArray(j?.data)&&j.data[0]===1;
+  }catch(e){return null;}
+  finally{if(timer)clearTimeout(timer);}
+ }
+ async function esriCapAt(lat,lng){
+  const key=zoneKey(lat,lng);
+  if(capCache.has(key))return capCache.get(key);
+  if(pending.has(key))return pending.get(key);
+  const task=(async()=>{
+   // Búsqueda binaria: 4–5 consultas en vez de barrer todos los niveles.
+   let lo=0,hi=ESRI_HARD_MAX,hadAnswer=false;
+   while(lo<hi){
+    const mid=Math.ceil((lo+hi+1)/2);
+    const ok=await tileExists(lat,lng,mid);
+    if(ok===null){break;}
+    hadAnswer=true;
+    if(ok)lo=mid;else hi=mid-1;
+   }
+   const cap=hadAnswer?lo:ESRI_PROVISIONAL;
+   capCache.set(key,cap);return cap;
+  })();
+  pending.set(key,task);
+  try{return await task;}finally{pending.delete(key);}
+ }
+ function syncZoomSliderValue(){
+  try{
+   const slider=document.getElementById('anambroZoomSlider');if(!slider||typeof map==='undefined')return;
+   const lo=Number.isFinite(map.getMinZoom())?map.getMinZoom():0;
+   const hi=Number.isFinite(map.getMaxZoom())?map.getMaxZoom():19;
+   const t=hi>lo?(map.getZoom()-lo)/(hi-lo):0;
+   slider.value=String(Math.round(100*clamp(t,0,1)));
+  }catch(e){}
+ }
+ function applyMapCapSilently(cap){
+  if(typeof map==='undefined'||!Number.isFinite(cap))return;
+  cap=clamp(Math.floor(cap),0,ESRI_HARD_MAX);
+  if(lastMapCap===cap&&map.options.maxZoom===cap)return;
+  lastMapCap=cap;
+  // CLAVE: no usar map.setMaxZoom(). Esto solo limita futuros zoom-in.
+  map.options.maxZoom=cap;
+  if(map.getZoom()>cap&&!mapAdjusting){
+   mapAdjusting=true;
+   try{map.setZoom(cap,{animate:false});}finally{setTimeout(()=>{mapAdjusting=false;},0);}
+  }
+  syncZoomSliderValue();
+ }
+ async function syncMapCap(){
+  if(typeof map==='undefined'||mapAdjusting)return;
+  const seq=++mapSeq,p=effectiveMapProvider();
+  if(p.kind!=='esri'){applyMapCapSilently(p.cap);return;}
+  // Tope provisional inmediato: impide entrar en niveles dudosos mientras se consulta Esri.
+  applyMapCapSilently(ESRI_PROVISIONAL);
+  const c=map.getCenter(),cap=await esriCapAt(c.lat,c.lng);
+  if(seq!==mapSeq)return;
+  applyMapCapSilently(cap);
+ }
+ function scheduleMapCap(delay=220){
+  clearTimeout(mapTimer);
+  mapTimer=setTimeout(()=>{
+   // A escalas planetarias no se hace ninguna consulta remota: el límite de
+   // zoom-in no participa en absoluto en el zoom-out máximo.
+   const p=effectiveMapProvider();
+   if(p.kind==='esri'&&map.getZoom()<8){
+    applyMapCapSilently(ESRI_PROVISIONAL);
+    return;
+   }
+   syncMapCap();
+  },delay);
+ }
+
+ // En capas IGN/PNOA el tope se conoce al instante al cambiar de fondo.
+ document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>scheduleMapCap(0)));
+ if(typeof map!=='undefined'){
+  map.on('zoomend moveend',()=>scheduleMapCap(260));
+  setTimeout(()=>scheduleMapCap(0),0);
+ }
+
+ function globeCenter(){
+  try{
+   if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return null;
+   const canvas=globeViewer.scene.canvas,r=canvas.getBoundingClientRect();
+   const p=new Cesium.Cartesian2(r.width/2,r.height/2);
+   let c=globeViewer.camera.pickEllipsoid(p,globeViewer.scene.globe.ellipsoid);
+   if(!c){
+    const ray=globeViewer.camera.getPickRay(p);c=ray?globeViewer.scene.globe.pick(ray,globeViewer.scene):null;
+   }
+   if(!c)return null;
+   const q=Cesium.Cartographic.fromCartesian(c);
+   return {lat:Cesium.Math.toDegrees(q.latitude),lng:Cesium.Math.toDegrees(q.longitude)};
+  }catch(e){return null;}
+ }
+ function globeMinHeight(level,lat){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return 35;
+  const cos=Math.max(.05,Math.cos((+lat||0)*Math.PI/180));
+  const mpp=156543.03392804097*cos/Math.pow(2,level);
+  const rect=globeViewer.scene.canvas.getBoundingClientRect();
+  const hpx=Math.max(320,rect.height||720);
+  const vfov=globeViewer.camera.frustum.fovy||Cesium.Math.toRadians(60);
+  return Math.max(35,(mpp*hpx)/(2*Math.tan(vfov/2))*1.04);
+ }
+ function applyGlobeCap(cap,c){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined'||!c)return;
+  cap=clamp(Math.floor(cap),0,ESRI_HARD_MAX);
+  lastGlobeCap=cap;
+  const ctl=globeViewer.scene.screenSpaceCameraController;
+  const minH=globeMinHeight(cap,c.lat);
+  ctl.minimumZoomDistance=minH;
+  try{
+   const pos=globeViewer.camera.positionCartographic;
+   if((pos.height||Infinity)<minH*.995){
+    globeViewer.camera.setView({
+     destination:Cesium.Cartesian3.fromRadians(pos.longitude,pos.latitude,minH),
+     orientation:{heading:globeViewer.camera.heading,pitch:globeViewer.camera.pitch,roll:globeViewer.camera.roll}
+    });
+   }
+  }catch(e){}
+ }
+ async function syncGlobeCap(){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
+  const c=globeCenter();if(!c)return;
+  const seq=++globeSeq;
+  applyGlobeCap(ESRI_PROVISIONAL,c);
+  const cap=await esriCapAt(c.lat,c.lng);
+  if(seq!==globeSeq)return;
+  applyGlobeCap(cap,c);
+ }
+ function scheduleGlobeCap(delay=220){
+  clearTimeout(globeTimer);globeTimer=setTimeout(syncGlobeCap,delay);
+ }
+ function hookGlobe(){
+  if(typeof globeViewer==='undefined'||!globeViewer||globeViewer.__anambroSafeZoomInCap)return;
+  globeViewer.camera.moveEnd.addEventListener(()=>scheduleGlobeCap(240));
+  globeViewer.__anambroSafeZoomInCap=true;
+  scheduleGlobeCap(0);
+ }
+ const prevToggle=typeof toggleGlobe==='function'?toggleGlobe:null;
+ if(prevToggle){
+  toggleGlobe=async function(){
+   const r=await prevToggle.apply(this,arguments);
+   if(document.body.classList.contains('globe-mode'))hookGlobe();
+   else scheduleMapCap(0);
+   return r;
+  };
+ }
+ window.addEventListener('resize',()=>{
+  if(document.body.classList.contains('globe-mode'))scheduleGlobeCap(120);
+  else scheduleMapCap(120);
+ });
+})();
+</script>
 
 <style id="anambro-unified-zoom-slider-style">
 /* Control único de zoom para mapa 2D y globo 3D. */
