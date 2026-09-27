@@ -4221,7 +4221,7 @@ const map=L.map('map',{
  worldCopyJump:false,
  preferCanvas:true
 }).setView([28.30,-16.55],9);
-L.control.scale({metric:true,imperial:false,position:'bottomleft'}).addTo(map);
+L.control.scale({metric:true,imperial:false,position:'bottomleft',maxWidth:180}).addTo(map);
 if(map.attributionControl)map.attributionControl.setPrefix(false);
 
 let dynamicWorldMinZoom=0;
@@ -4243,7 +4243,6 @@ function applyDynamicWorldMinZoom(){
  // CENTRO, que conserva la navegación sin bloquear el zoom-out.
  map.setMaxBounds(null);
  if(map.getZoom()<z)map.setZoom(z,{animate:false});
- clampWorldCenter();
 }
 function fitWorldToViewport(){
  applyDynamicWorldMinZoom();
@@ -11843,20 +11842,14 @@ function clampWorldCenter(){
  setTimeout(()=>{__clampingWorldCenter=false;},0);
 }
 function clampWorldAtMinZoom(){
- // En el zoom mundial NO intentamos encajar los bordes del viewport dentro
- // de los límites geográficos: el viewport puede ser mayor que el mundo.
- // En el último zoom-out centramos una sola vez el mapamundi en [0,0].
- if(map.getZoom()>dynamicWorldMinZoom+.0001)return;
- if(__clampingWorldCenter)return;
- const c=map.getCenter();
- if(Math.abs(c.lat)<=.0001&&Math.abs(c.lng)<=.0001)return;
- __clampingWorldCenter=true;
- map.panTo([0,0],{animate:false});
- setTimeout(()=>{__clampingWorldCenter=false;},0);
+ // Intencionadamente vacío. El mínimo lo gestiona Leaflet mediante minZoom.
+ // No ejecutar panTo/setView desde zoomend/moveend en el límite mundial.
+ return;
 }
 
 map.on('moveend zoomend',scheduleWorldAdmins2D);
-map.on('moveend zoomend',clampWorldAtMinZoom);
+// No recentrar automáticamente en moveend/zoomend: Leaflet detiene el zoom en minZoom sin generar ciclos de pan.
+// map.on('moveend zoomend',clampWorldAtMinZoom);
 document.getElementById('countriesCheck').addEventListener('change',e=>{
  toggleCountries2D(e.target.checked);
  if(globeViewer)toggleCountriesLayer(e.target.checked);
@@ -12866,6 +12859,7 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
  const ESRI_SAFE_FALLBACK=18;
  const ESRI_TILEMAP='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap';
  const esriCapCache=new Map();
+ const esriCapPending=new Map();
  let mapProbeSeq=0, globeProbeSeq=0;
  let forcedEsriMapCap=null, forcedEsriGlobeCap=null;
 
@@ -12918,15 +12912,23 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
  async function esriMaxLevelAt(lat,lng){
   const key=capCacheKey(lat,lng);
   if(esriCapCache.has(key))return esriCapCache.get(key);
-  let hadResponse=false;
-  for(let z=ESRI_HARD_MAX;z>=0;z--){
-   const ok=await esriTileExists(lat,lng,z);
-   if(ok===null)break;
-   hadResponse=true;
-   if(ok){esriCapCache.set(key,z);return z;}
-  }
-  const fallback=hadResponse?ESRI_SAFE_FALLBACK:ESRI_SAFE_FALLBACK;
-  esriCapCache.set(key,fallback);return fallback;
+  // Una sola consulta por zona. Al hacer varios zooms seguidos, todos los
+  // eventos reutilizan la misma promesa en vez de lanzar decenas de barridos
+  // TileMap simultáneos (que podían saturar el navegador al llegar al zoom mínimo).
+  if(esriCapPending.has(key))return esriCapPending.get(key);
+  const task=(async()=>{
+   let hadResponse=false;
+   for(let z=ESRI_HARD_MAX;z>=0;z--){
+    const ok=await esriTileExists(lat,lng,z);
+    if(ok===null)break;
+    hadResponse=true;
+    if(ok){esriCapCache.set(key,z);return z;}
+   }
+   const fallback=ESRI_SAFE_FALLBACK;
+   esriCapCache.set(key,fallback);return fallback;
+  })();
+  esriCapPending.set(key,task);
+  try{return await task;}finally{esriCapPending.delete(key);}
  }
  function setMapCap(cap){
   if(typeof map==='undefined'||!Number.isFinite(cap))return;
@@ -13022,9 +13024,16 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
   }catch(e){}
  }
 
- document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>setTimeout(syncMapProviderZoomStop,0)));
- map.on('moveend zoomend',()=>{syncMapProviderZoomStop();});
- setTimeout(syncMapProviderZoomStop,0);
+ let mapProviderSyncTimer=0;
+ function scheduleMapProviderZoomStop(delay=180){
+  clearTimeout(mapProviderSyncTimer);
+  mapProviderSyncTimer=setTimeout(syncMapProviderZoomStop,delay);
+ }
+ document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>scheduleMapProviderZoomStop(0)));
+ // Debounce: una ráfaga de rueda/trackpad no debe disparar una consulta remota
+ // por cada nivel intermedio. Se recalcula una sola vez cuando cesa el gesto.
+ map.on('moveend zoomend',()=>scheduleMapProviderZoomStop(220));
+ setTimeout(()=>scheduleMapProviderZoomStop(0),0);
 
  const __toggleGlobeProviderStop=toggleGlobe;
  toggleGlobe=async function(){
@@ -13039,7 +13048,7 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
   }else syncMapProviderZoomStop();
  };
  window.addEventListener('resize',()=>setTimeout(()=>{
-  syncMapProviderZoomStop();
+  scheduleMapProviderZoomStop(0);
   if(document.body.classList.contains('globe-mode'))syncGlobeProviderZoomStop();
  },120));
 })();
@@ -13180,5 +13189,29 @@ body.globe-mode #anambroZoomSliderControl{background:rgba(255,255,255,.93)}
  setTimeout(updateSlider,0);
 })();
 </script>
+
+
+<style id="anambro-scale-size-restored-20260927">
+/* Escala cartográfica: recuperar tamaño amplio y legible. */
+html body .leaflet-control-scale-line{
+  min-width:150px!important;
+  font-size:15px!important;
+  font-weight:800!important;
+  padding:4px 9px!important;
+}
+html body #globeScaleBox{
+  min-width:165px!important;
+  padding:7px 10px 8px!important;
+}
+html body #globeScaleNumeric{font-size:12px!important;font-weight:800!important;}
+html body #globeScaleGraphic{min-width:70px!important;max-width:220px!important;height:11px!important;}
+html body #globeScaleGraphicLabel{font-size:11px!important;}
+@media(max-width:700px){
+  html body .leaflet-control-scale-line{min-width:138px!important;font-size:14px!important;padding:4px 8px!important;}
+  html body #globeScaleBox{min-width:150px!important;padding:6px 8px 7px!important;}
+  html body #globeScaleNumeric{font-size:11px!important;}
+  html body #globeScaleGraphicLabel{font-size:10px!important;}
+}
+</style>
 
 </body></html>
