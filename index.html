@@ -2504,26 +2504,39 @@ body.globe-mode #globeScaleBox{display:block}
 <div class="layerSubBlock"><small>Ecorregiones y biomas mundiales · Dinerstein et al. (2017).</small><small><b>Opacidad</b> <span id="worldBiomesOpacityValue">58 %</span></small><input id="worldBiomesOpacity" type="range" min="0" max="1" value="0.58" step="0.05" style="width:100%"><div id="worldBiomesLegend" style="display:none;margin-top:5px;font-size:10.5px;line-height:1.25"></div></div>
 
 <div class="layerThemeTitle">👥 Geografía humana</div>
-<label><input id="worldHumanCheck" type="checkbox"> <b>Atlas mundial de Geografía humana</b></label>
-<div id="worldHumanControls" class="layerSubBlock" style="display:none">
- <small>Banco Mundial · World Development Indicators; IDH · PNUD.</small>
- <label style="padding-top:6px"><b>Indicador</b></label>
- <select id="worldHumanIndicator" style="width:100%;padding:7px;border:1px solid #aaa;border-radius:6px">
-  <optgroup label="Demografía">
-   <option value="SP.POP.TOTL">Población total</option><option value="EN.POP.DNST">Densidad de población</option><option value="SP.POP.GROW">Crecimiento demográfico anual</option><option value="SP.URB.TOTL.IN.ZS">Población urbana</option><option value="SP.DYN.LE00.IN">Esperanza de vida</option><option value="SP.DYN.TFRT.IN">Fecundidad</option><option value="SP.DYN.CDRT.IN">Mortalidad bruta</option><option value="SM.POP.NETM">Migración neta</option>
-  </optgroup>
-  <optgroup label="Economía">
-   <option value="NY.GDP.MKTP.CD">PIB total</option><option value="NY.GDP.PCAP.CD">PIB per cápita</option><option value="NV.AGR.TOTL.ZS">Agricultura · % del PIB</option><option value="NV.IND.TOTL.ZS">Industria · % del PIB</option><option value="NV.SRV.TOTL.ZS">Servicios · % del PIB</option><option value="SL.UEM.TOTL.ZS">Desempleo</option>
-  </optgroup>
-  <optgroup label="Desarrollo y condiciones de vida">
-   <option value="UNDP_HDI">Índice de Desarrollo Humano (IDH)</option><option value="EG.ELC.ACCS.ZS">Acceso a electricidad</option><option value="IT.NET.USER.ZS">Uso de Internet</option><option value="SH.H2O.BASW.ZS">Acceso al menos básico a agua potable</option>
-  </optgroup>
-  <optgroup label="Medio ambiente y sociedad"><option value="EN.ATM.CO2E.PC">Emisiones de CO₂ per cápita</option></optgroup>
- </select>
- <label style="padding-top:7px"><b>Año: <span id="worldHumanYearValue">2023</span></b></label>
+<div id="worldHumanControls" class="layerSubBlock">
+ <small>Capas independientes · Banco Mundial (World Development Indicators) e IDH · PNUD.</small>
+ <label style="padding-top:7px"><b>Año común: <span id="worldHumanYearValue">2023</span></b></label>
  <input id="worldHumanYear" type="range" min="1960" max="2025" value="2023" step="1" style="width:100%">
- <div class="row" style="margin-top:5px"><button id="worldHumanLatestBtn" class="action" type="button">Último dato disponible</button><button id="worldHumanReloadBtn" class="action" type="button">Actualizar</button></div>
- <small id="worldHumanStatus" style="display:block;margin-top:6px">Activa la capa para representar el indicador.</small>
+ <div class="row" style="margin-top:5px"><button id="worldHumanLatestBtn" class="action" type="button">2025</button><button id="worldHumanReloadBtn" class="action" type="button">Actualizar activas</button></div>
+ <details open><summary>Demografía</summary>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.TOTL" type="checkbox"> Población total</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.POP.DNST" type="checkbox"> Densidad de población</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.GROW" type="checkbox"> Crecimiento demográfico anual</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.URB.TOTL.IN.ZS" type="checkbox"> Población urbana</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.LE00.IN" type="checkbox"> Esperanza de vida</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.TFRT.IN" type="checkbox"> Fecundidad</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.DYN.CDRT.IN" type="checkbox"> Mortalidad bruta</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SM.POP.NETM" type="checkbox"> Migración neta</label>
+ </details>
+ <details><summary>Economía</summary>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NY.GDP.MKTP.CD" type="checkbox"> PIB total</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NY.GDP.PCAP.CD" type="checkbox"> PIB per cápita</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.AGR.TOTL.ZS" type="checkbox"> Agricultura · % del PIB</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.IND.TOTL.ZS" type="checkbox"> Industria · % del PIB</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="NV.SRV.TOTL.ZS" type="checkbox"> Servicios · % del PIB</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SL.UEM.TOTL.ZS" type="checkbox"> Desempleo</label>
+ </details>
+ <details><summary>Desarrollo y condiciones de vida</summary>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="UNDP_HDI" type="checkbox"> Índice de Desarrollo Humano (IDH)</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.ELC.ACCS.ZS" type="checkbox"> Acceso a electricidad</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="IT.NET.USER.ZS" type="checkbox"> Uso de Internet</label>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SH.H2O.BASW.ZS" type="checkbox"> Acceso al menos básico a agua potable</label>
+ </details>
+ <details><summary>Medio ambiente y sociedad</summary>
+  <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.ATM.CO2E.PC" type="checkbox"> Emisiones de CO₂ per cápita</label>
+ </details>
+ <small id="worldHumanStatus" style="display:block;margin-top:7px">Activa una o varias variables.</small>
  <div id="worldHumanLegend" style="margin-top:7px;font-size:10.5px;line-height:1.35"></div>
 </div>
 
@@ -2831,7 +2844,7 @@ function activeSourceKeys(){
  if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
  if(document.getElementById('worldAdmin1Check')?.checked||document.getElementById('worldAdmin2Check')?.checked)s.add('wbadm');
  if(document.getElementById('worldToponymsCheck')?.checked){s.add('openfreemap');s.add('osm');}
- if(document.getElementById('worldHumanCheck')?.checked){s.add('worldbank');if(document.getElementById('worldHumanIndicator')?.value==='UNDP_HDI')s.add('undp');}
+ if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){s.add('worldbank');if(activeHumanIndicators().includes('UNDP_HDI'))s.add('undp');}
  if(document.body.classList.contains('globe-mode')&&!document.getElementById('worldHistoryCheck')?.checked)s.add('esri');
  return [...s];
 }
@@ -5299,9 +5312,9 @@ function pointHtml(lat,lon,title='Punto consultado',altText='Consultando altitud
 let coordMarker=null,coordQuerySeq=0;
 async function showPoint(ll,title='Punto consultado',useMarker=true){
  const seq=++coordQuerySeq,lat=ll.lat,lon=ll.lng,geoOn=geologyEnabledAt(lat,lon),vegOn=['vegetationCheck','vegetationPotentialCanaryCheck','mfeCheck','mitecoPotentialCheck'].some(id=>document.getElementById(id).checked),c=coordsDMS(lat,lon);
- const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null,b:null,mg:null};
- const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c,state.b,state.mg));coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
- if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null,null,null),{maxWidth:430}).openPopup();}
+ const state={z:null,zDone:false,g:null,v:null,t:null,a:null,c:null,b:null,mg:null,h:''};
+ const render=()=>{if(seq!==coordQuerySeq)return;const ztxt=state.zDone?(state.z===null?'sin dato':state.z.toLocaleString('es-ES')+' m'):'consultando…';if(useMarker&&coordMarker){coordMarker.setPopupContent(pointHtml(lat,lon,title,ztxt,state.g,state.v,state.t,state.a,false,state.c,state.b,state.mg)+state.h);coordMarker.openPopup();}status((state.t?state.t.name+' · ':'')+c.lat+' · '+c.lon+' · '+ztxt);};
+ if(useMarker){if(coordMarker)map.removeLayer(coordMarker);coordMarker=L.circleMarker(ll,{radius:5}).addTo(map);coordMarker.bindPopup(pointHtml(lat,lon,title,'consultando…',null,null,null,null,true,null,null,null)+(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length?'<hr><b>👥 Geografía humana:</b> consultando…':''),{maxWidth:430}).openPopup();}
  status(c.lat+' · '+c.lon+' · consultando altitud…');
  // PRIORIDAD 1: elevación. Se lanza antes que cualquier consulta territorial/temática.
  const pz=elevationAt(lat,lon).then(x=>{state.z=x;state.zDone=true;render();return x;}).catch(()=>{state.zDone=true;render();return null;});
@@ -5318,17 +5331,21 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
    macrostratGeologyAt(lat,lon,map.getZoom()).then(x=>{state.mg=x;render();}).catch(()=>{state.mg=null;render();});
   }
   if(profileIsSpainLatLng(ll)){
+   if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){state.h=humanPointHtmlByISO3('ESP');render();}
    nearestToponymAt(lat,lon).then(x=>{state.t=x;render();});
    adminAt(lat,lon).then(x=>{state.a=x;render();});
    if(geoOn)geologyAt(lat,lon).then(x=>{state.g=x;render();});
    if(vegOn)vegetationAt(lat,lon).then(x=>{state.v=x;render();});
   }else{
-   reverseWorldAt(lat,lon).then(reverse=>{
+   reverseWorldAt(lat,lon).then(async reverse=>{
     if(seq!==coordQuerySeq)return;
     if(reverse?.place)state.t={name:reverse.place,dist:null};
     const rows=globeTerritorialRows(reverse,null,reverse?.country||'')
       .filter(r=>r[0]!=='Topónimo / lugar próximo');
     state.a={globalRows:rows};
+    if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+     state.h=await humanPointHtmlFromISO2(reverse?.countryCode2||'');
+    }
     render();
    });
   }
@@ -8174,9 +8191,9 @@ async function reverseWorldAt(lat,lon){
    const municipality=a.municipality||a.city_district||a.borough||a.city||a.town||a.village||'';
    const subregion=a.county||a.state_district||a.region||'';
    const region=a.state||a.province||a.region||'';
-   const country=a.country||'';
+   const country=a.country||'',countryCode2=String(a.country_code||'').toUpperCase();
    return {
-    place,municipality,subregion,region,country,
+    place,municipality,subregion,region,country,countryCode2,
     display:j.display_name||''
    };
   }catch(e){
@@ -8263,6 +8280,10 @@ async function showGlobePoint(ll,screenPos=null){
  if(document.getElementById('worldGeologyCheck')?.checked)html+=macrostratGeologyHtml(worldGeo);
  if(document.getElementById('worldClimateCheck')?.checked)html+=climateDetailHtml(climate);
  if(document.getElementById('worldBiomesCheck')?.checked)html+=biomeDetailHtml(biome);
+ if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+  const iso3=inSpain?'ESP':await humanISO3FromISO2(reverse?.countryCode2||'');
+  html+=humanPointHtmlByISO3(iso3);
+ }
 
  box.innerHTML=html;
  requestAnimationFrame(()=>{if(screenPos)placeGlobeInfoAtCanvasPoint(screenPos);else positionGlobeInfo();});
@@ -9841,10 +9862,8 @@ function syncWorldThematicGlobe(){
  toggleWorldClimateGlobe(!!document.getElementById('worldClimateCheck')?.checked);
  toggleWorldBiomesGlobe(!!document.getElementById('worldBiomesCheck')?.checked);
  toggleWorldVolcanoesGlobe(!!document.getElementById('worldVolcanoesCheck')?.checked);
- // Sincronizar también el Atlas mundial de Geografía humana al entrar en el globo.
- // Si se activó en el mapa 2D antes de inicializar Cesium, su fuente 3D todavía no existe.
- if(document.getElementById('worldHumanCheck')?.checked)updateWorldHuman();
- else if(worldHuman3DSource){globeViewer.dataSources.remove(worldHuman3DSource,true);worldHuman3DSource=null;}
+ // Sincronizar las capas independientes de Geografía humana al entrar en el globo.
+ if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)updateWorldHuman();
  toggleHistoryGlobe(!!document.getElementById('worldHistoryCheck')?.checked);
  if(document.getElementById('worldHistoricalEventsCheck')?.checked)renderHistoricalEventsGlobe();else clearHistoricalEventsGlobe();
  toggleRadioGardenGlobe(!!document.getElementById('worldRadioGardenCheck')?.checked);
@@ -10239,22 +10258,32 @@ const WORLD_HUMAN_INDICATORS={
  'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial'},
  'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial'}
 };
-let worldHuman2DLayer=null,worldHuman3DSource=null,worldHumanValues=new Map(),worldHumanRequest=0,worldHumanHDICache=null;
+const HUMAN_COLORS=['#f1eef6','#bdc9e1','#74a9cf','#2b8cbe','#045a8d'];
+const worldHumanLayers=new Map();
+let worldHumanRequest=0,worldHumanHDICache=null,worldHumanISO2to3=null;
+function activeHumanIndicators(){return [...document.querySelectorAll('.worldHumanLayerCheck:checked')].map(x=>x.dataset.humanIndicator).filter(Boolean);}
 function humanCountryCode(p){for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){const v=String(p?.[k]||'').toUpperCase();if(v&&v!=='-99')return v;}return '';}
+function humanCountryCode2(p){for(const k of ['ISO_A2','WB_A2','POSTAL']){const v=String(p?.[k]||'').toUpperCase();if(v&&v!=='-99'&&v.length===2)return v;}return '';}
+async function humanISO3FromISO2(iso2){iso2=String(iso2||'').toUpperCase();if(!iso2)return '';if(!worldHumanISO2to3){worldHumanISO2to3=new Map();const geo=await loadCountries();for(const f of (geo?.features||[])){const p=f.properties||{},a2=humanCountryCode2(p),a3=humanCountryCode(p);if(a2&&a3)worldHumanISO2to3.set(a2,a3);}}return worldHumanISO2to3.get(iso2)||'';}
 function humanFmt(v,meta){if(v==null||!Number.isFinite(Number(v)))return 'Sin datos';v=Number(v);if(meta.compact&&Math.abs(v)>=1e9)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:2,notation:'compact'}).format(v)+' '+meta.unit;return new Intl.NumberFormat('es-ES',{minimumFractionDigits:meta.dec||0,maximumFractionDigits:meta.dec||0}).format(v)+' '+meta.unit;}
 function humanBreaks(vals){const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return [];const q=p=>a[Math.min(a.length-1,Math.max(0,Math.round((a.length-1)*p)))];return [q(.2),q(.4),q(.6),q(.8)];}
-const HUMAN_COLORS=['#f1eef6','#bdc9e1','#74a9cf','#2b8cbe','#045a8d'];
 function humanColor(v,br){if(!Number.isFinite(v))return '#b8b8b8';let i=0;while(i<br.length&&v>br[i])i++;return HUMAN_COLORS[Math.min(i,HUMAN_COLORS.length-1)];}
-function humanLegendHTML(meta,year,br){let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';let lo='mín.';for(let i=0;i<5;i++){let label;if(i===0)label='≤ '+humanFmt(br[0],meta);else if(i===4)label='> '+humanFmt(br[3],meta);else label=humanFmt(br[i-1],meta)+' – '+humanFmt(br[i],meta);h+='<div><span class="sw" style="background:'+HUMAN_COLORS[i]+'"></span>'+label+'</div>';}return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';}
+function humanLegendHTML(meta,year,br){if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';for(let i=0;i<5;i++){let label;if(i===0)label='≤ '+humanFmt(br[0],meta);else if(i===4)label='> '+humanFmt(br[3],meta);else label=humanFmt(br[i-1],meta)+' – '+humanFmt(br[i],meta);h+='<div><span class="sw" style="background:'+HUMAN_COLORS[i]+'"></span>'+label+'</div>';}return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';}
 async function loadHumanWB(ind,year){const u='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400&date='+year;const r=await fetch(u);if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json();const m=new Map();for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),raw=row?.value;if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(c.length===3&&Number.isFinite(v))m.set(c,v);}return m;}
 function parseCSVLine(line){const out=[];let x='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){x+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(x);x='';}else x+=c;}out.push(x);return out;}
 async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;const u='https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv';const r=await fetch(u);if(!r.ok)throw new Error('PNUD '+r.status);const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]);const iso=head.findIndex(x=>/iso3/i.test(x)),ind=head.findIndex(x=>/^indicator$/i.test(x)||/index code/i.test(x));const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>5)data.push(row);}worldHumanHDICache={head,iso,ind,data};return worldHumanHDICache;}
 async function loadHumanHDI(year){const c=await loadHDICSV(),m=new Map();let yi=c.head.indexOf(String(year));if(yi<0)yi=c.head.findIndex(x=>x.trim()===String(year));if(yi<0)return m;for(const row of c.data){const code=String(row[c.iso]||'').toUpperCase();const indicator=String(row[c.ind]||'').toLowerCase();if(code.length!==3||!(indicator==='hdi'||indicator.includes('human development index')))continue;const raw=row[yi];if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(Number.isFinite(v))m.set(code,v);}return m;}
-async function renderHuman2D(data,meta,year,br){const geo=await loadCountries();if(worldHuman2DLayer)map.removeLayer(worldHuman2DLayer);worldHuman2DLayer=L.geoJSON(geo,{pane:'overlayPane',style:f=>{const v=data.get(humanCountryCode(f.properties||{}));return {color:'#565656',weight:.55,opacity:.75,fillColor:humanColor(v,br),fillOpacity:.76};},onEachFeature:(f,l)=>{const p=f.properties||{},v=data.get(humanCountryCode(p));l.bindPopup('<div style="min-width:220px"><b>'+escHtml(countryName(p))+'</b><br>'+escHtml(meta.name)+': <b>'+escHtml(humanFmt(v,meta))+'</b><br>Año: '+year+'<br><small>Fuente: '+escHtml(meta.source)+'</small></div>');}}).addTo(map);}
-async function renderHuman3D(data,meta,year,br){if(!globeViewer)return;const geo=await loadCountries();if(worldHuman3DSource){globeViewer.dataSources.remove(worldHuman3DSource,true);worldHuman3DSource=null;}const ds=await Cesium.GeoJsonDataSource.load(geo,{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#555').withAlpha(.7),strokeWidth:1});for(const e of ds.entities.values){if(!e.polygon)continue;const p=e.properties;let code='';for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){try{const v=p?.[k]?.getValue?.();if(v&&v!=='-99'){code=String(v).toUpperCase();break;}}catch(_){}}const v=data.get(code),col=Cesium.Color.fromCssColorString(humanColor(v,br)).withAlpha(.76);e.polygon.material=col;e.polygon.outline=true;e.polygon.outlineColor=Cesium.Color.fromCssColorString('#555').withAlpha(.65);}worldHuman3DSource=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();}
-async function updateWorldHuman(){if(!document.getElementById('worldHumanCheck')?.checked)return;const seq=++worldHumanRequest,ind=document.getElementById('worldHumanIndicator').value,meta=WORLD_HUMAN_INDICATORS[ind],year=+document.getElementById('worldHumanYear').value,statusEl=document.getElementById('worldHumanStatus');statusEl.textContent='Cargando '+meta.name+' · '+year+'…';try{const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);if(seq!==worldHumanRequest)return;worldHumanValues=data;const br=humanBreaks([...data.values()]);if(!br.length){clearWorldHuman();document.getElementById('worldHumanLegend').innerHTML='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles para este año · '+escHtml(meta.source)+'</small>';statusEl.textContent='Sin datos disponibles para '+year+' · '+meta.source;setTimeout(updateLegend,0);return;}await renderHuman2D(data,meta,year,br);if(globeViewer)await renderHuman3D(data,meta,year,br);document.getElementById('worldHumanLegend').innerHTML=humanLegendHTML(meta,year,br);statusEl.textContent=data.size+' países/territorios con dato · '+meta.source;setTimeout(updateLegend,0);}catch(e){console.error(e);statusEl.textContent='No se pudieron cargar datos para '+year+'. Prueba otro año.';}}
-function clearWorldHuman(){if(worldHuman2DLayer){map.removeLayer(worldHuman2DLayer);worldHuman2DLayer=null;}if(globeViewer&&worldHuman3DSource){globeViewer.dataSources.remove(worldHuman3DSource,true);worldHuman3DSource=null;globeViewer.scene.requestRender();}document.getElementById('worldHumanLegend').innerHTML='';document.getElementById('worldHumanStatus').textContent='Capa desactivada.';}
-(function(){const ck=document.getElementById('worldHumanCheck'),controls=document.getElementById('worldHumanControls'),sel=document.getElementById('worldHumanIndicator'),yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');if(!ck)return;ck.addEventListener('change',()=>{controls.style.display=ck.checked?'block':'none';if(ck.checked)updateWorldHuman();else clearWorldHuman();});yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',()=>{if(ck.checked)updateWorldHuman();});sel.addEventListener('change',()=>{const m=WORLD_HUMAN_INDICATORS[sel.value];if(m?.minYear)yr.min=m.minYear;else yr.min=1960;if(m?.maxYear&&+yr.value>m.maxYear){yr.value=m.maxYear;yv.textContent=yr.value;}else yr.max=m?.maxYear||2025;if(ck.checked)updateWorldHuman();});document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{const m=WORLD_HUMAN_INDICATORS[sel.value];yr.value=m?.maxYear||2025;yv.textContent=yr.value;if(ck.checked)updateWorldHuman();};})();
+function humanState(ind){if(!worldHumanLayers.has(ind))worldHumanLayers.set(ind,{data:new Map(),layer2D:null,source3D:null,year:null,breaks:[]});return worldHumanLayers.get(ind);}
+function clearHumanIndicator(ind){const st=worldHumanLayers.get(ind);if(!st)return;if(st.layer2D){map.removeLayer(st.layer2D);st.layer2D=null;}if(globeViewer&&st.source3D){globeViewer.dataSources.remove(st.source3D,true);st.source3D=null;globeViewer.scene.requestRender();}}
+async function renderHuman2D(ind,data,meta,year,br){const geo=await loadCountries(),st=humanState(ind);if(st.layer2D)map.removeLayer(st.layer2D);st.layer2D=L.geoJSON(geo,{pane:'overlayPane',style:f=>{const v=data.get(humanCountryCode(f.properties||{}));return {color:'#565656',weight:.55,opacity:.75,fillColor:humanColor(v,br),fillOpacity:.58};},onEachFeature:(f,l)=>{l.on('click',e=>{L.DomEvent.stopPropagation(e);showPoint(e.latlng,'Punto consultado',true);});}}).addTo(map);}
+async function renderHuman3D(ind,data,meta,year,br){if(!globeViewer)return;const geo=await loadCountries(),st=humanState(ind);if(st.source3D){globeViewer.dataSources.remove(st.source3D,true);st.source3D=null;}const ds=await Cesium.GeoJsonDataSource.load(geo,{clampToGround:true,stroke:Cesium.Color.fromCssColorString('#555').withAlpha(.7),strokeWidth:1});for(const e of ds.entities.values){if(!e.polygon)continue;const p=e.properties;let code='';for(const k of ['ADM0_A3','ISO_A3','WB_A3','SOV_A3','GU_A3']){try{const v=p?.[k]?.getValue?.();if(v&&v!=='-99'){code=String(v).toUpperCase();break;}}catch(_){}}const v=data.get(code),col=Cesium.Color.fromCssColorString(humanColor(v,br)).withAlpha(.58);e.polygon.material=col;e.polygon.outline=true;e.polygon.outlineColor=Cesium.Color.fromCssColorString('#555').withAlpha(.65);e.__anambroHuman=true;e.__anambroHumanIndicator=ind;e.__anambroHumanISO3=code;}st.source3D=ds;await globeViewer.dataSources.add(ds);globeViewer.scene.requestRender();}
+async function updateHumanIndicator(ind){const meta=WORLD_HUMAN_INDICATORS[ind];if(!meta)return;const cb=document.querySelector('.worldHumanLayerCheck[data-human-indicator="'+CSS.escape(ind)+'"]');if(!cb?.checked){clearHumanIndicator(ind);return;}const year=+document.getElementById('worldHumanYear').value,st=humanState(ind);document.getElementById('worldHumanStatus').textContent='Cargando '+meta.name+' · '+year+'…';const data=ind==='UNDP_HDI'?await loadHumanHDI(year):await loadHumanWB(ind,year);st.data=data;st.year=year;st.breaks=humanBreaks([...data.values()]);if(!st.breaks.length){clearHumanIndicator(ind);st.data=data;st.year=year;return;}await renderHuman2D(ind,data,meta,year,st.breaks);if(globeViewer)await renderHuman3D(ind,data,meta,year,st.breaks);}
+function refreshHumanLegend(){const year=+document.getElementById('worldHumanYear').value,active=activeHumanIndicators(),el=document.getElementById('worldHumanLegend');if(!active.length){el.innerHTML='';document.getElementById('worldHumanStatus').textContent='Activa una o varias variables.';setTimeout(updateLegend,0);return;}el.innerHTML=active.map(ind=>{const st=humanState(ind),meta=WORLD_HUMAN_INDICATORS[ind];return '<div style="margin:6px 0 10px;padding-top:5px;border-top:1px solid #ddd">'+humanLegendHTML(meta,year,st.breaks||[])+'</div>';}).join('');document.getElementById('worldHumanStatus').textContent=active.length+' capa'+(active.length===1?'':'s')+' de Geografía humana activa'+(active.length===1?'':'s')+' · '+year;setTimeout(updateLegend,0);}
+async function updateWorldHuman(){const seq=++worldHumanRequest,active=activeHumanIndicators();for(const ind of [...worldHumanLayers.keys()])if(!active.includes(ind))clearHumanIndicator(ind);if(!active.length){refreshHumanLegend();return;}try{for(const ind of active){if(seq!==worldHumanRequest)return;await updateHumanIndicator(ind);}if(seq!==worldHumanRequest)return;refreshHumanLegend();}catch(e){console.error(e);document.getElementById('worldHumanStatus').textContent='No se pudieron cargar una o varias capas para este año.';refreshHumanLegend();}}
+function clearWorldHuman(){for(const ind of [...worldHumanLayers.keys()])clearHumanIndicator(ind);document.querySelectorAll('.worldHumanLayerCheck').forEach(x=>x.checked=false);refreshHumanLegend();}
+function humanPointHtmlByISO3(iso3){const active=activeHumanIndicators();if(!active.length)return '';const year=+document.getElementById('worldHumanYear').value;let h='<hr><b>👥 Geografía humana · '+year+'</b>';for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.year===year?st.data.get(iso3):undefined;h+='<br><b>'+escHtml(meta.name)+':</b> '+escHtml(humanFmt(v,meta));}return h;}
+async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(iso2);return humanPointHtmlByISO3(iso3);}
+(function(){const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');document.querySelectorAll('.worldHumanLayerCheck').forEach(cb=>cb.addEventListener('change',async()=>{if(cb.checked)await updateHumanIndicator(cb.dataset.humanIndicator);else clearHumanIndicator(cb.dataset.humanIndicator);refreshHumanLegend();}));yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',updateWorldHuman);document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{yr.value=2025;yv.textContent='2025';updateWorldHuman();};})();
 </script>
 
 </body></html>
