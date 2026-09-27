@@ -8181,6 +8181,41 @@ function walkGeoCoords(coords,cb){
  if(typeof coords[0]?.[0]==='number'){cb(coords);return;}
  for(const part of coords)walkGeoCoords(part,cb);
 }
+let layoutGebcoRasterPromise=null;
+async function loadLayoutGebcoRaster(){
+ if(layoutGebcoRasterPromise)return layoutGebcoRasterPromise;
+ const url='https://wms.gebco.net/mapserv?service=WMS&request=GetMap&version=1.1.1&layers=gebco_latest&styles=&srs=EPSG:4326&bbox=-180,-90,180,90&width=2048&height=1024&format=image/jpeg';
+ layoutGebcoRasterPromise=(async()=>{
+  const res=await fetch(url,{mode:'cors',cache:'force-cache'});
+  if(!res.ok)throw new Error('GEBCO WMS '+res.status);
+  const blob=await res.blob();
+  if(typeof createImageBitmap==='function')return await createImageBitmap(blob);
+  return await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=URL.createObjectURL(blob);});
+ })().catch(e=>{layoutGebcoRasterPromise=null;throw e;});
+ return layoutGebcoRasterPromise;
+}
+function drawEqualEarthGebco(ctx,img,px,traceOutline,width,height){
+ // MISMO tratamiento del mapa 2D: #d9eef6 + GEBCO al 50 % y mismo filtro CSS.
+ ctx.save();traceOutline();ctx.clip();
+ ctx.fillStyle='#d9eef6';ctx.fillRect(0,0,width,height);
+ if(img){
+  const iw=img.width||img.naturalWidth||2048, ih=img.height||img.naturalHeight||1024;
+  ctx.globalAlpha=.50;
+  ctx.filter='saturate(.62) brightness(1.18) contrast(.86) hue-rotate(-4deg)';
+  // Equal Earth es lineal en longitud para una latitud dada. Bandas finas de 1°
+  // permiten reproyectar el WMS sin introducir otra estética distinta a la del visor.
+  for(let latTop=90;latTop>-90;latTop-=1){
+   const latBottom=Math.max(-90,latTop-1);
+   const a=px(-180,latTop), b=px(180,latTop), c=px(-180,latBottom), d=px(180,latBottom);
+   const dx=Math.min(a[0],c[0]), dr=Math.max(b[0],d[0]);
+   const dy=Math.min(a[1],c[1]), db=Math.max(a[1],c[1]);
+   const sy=(90-latTop)/180*ih, sh=(latTop-latBottom)/180*ih;
+   if(dr>dx&&db>dy&&sh>0)ctx.drawImage(img,0,sy,iw,sh,dx,dy,dr-dx,Math.max(1,db-dy+1));
+  }
+  ctx.filter='none';ctx.globalAlpha=1;
+ }
+ ctx.restore();
+}
 async function renderThematicWorldLayoutSnapshot(){
  const active=(typeof activeHumanIndicators==='function'?activeHumanIndicators():[]);
  if(!active.length)throw new Error('No hay capa temática mundial activa');
@@ -8216,8 +8251,9 @@ async function renderThematicWorldLayoutSnapshot(){
   for(const pt of outlineGeo){const [x,y]=px(pt[0],pt[1]);if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}
   ctx.closePath();
  }
- ctx.save();traceEqualEarthOutline();ctx.clip();
- ctx.fillStyle='#d9eef6';ctx.fillRect(0,0,width,height);ctx.restore();
+ let gebcoRaster=null;
+ try{gebcoRaster=await loadLayoutGebcoRaster();}catch(e){console.warn('GEBCO exportación',e);}
+ drawEqualEarthGebco(ctx,gebcoRaster,px,traceEqualEarthOutline,width,height);
  ctx.lineJoin='round';ctx.lineCap='round';
  for(const f of (geo?.features||[])){
   const props=f.properties||{},code=humanCountryCode(props),v=data.get(code);
@@ -11151,7 +11187,7 @@ function normalizeHistoryYear(y){return Math.max(-3400,Math.min(2024,Math.trunc(
 function updateHistoryControls(y=historyYear){historyYear=normalizeHistoryYear(y);const r=document.getElementById('historyYearRange'),i=document.getElementById('historyYearInput'),l=document.getElementById('historyYearLabel');if(r)r.value=String(historyYear);if(i)i.value=String(historyYear);if(l)l.textContent=historyYearText(historyYear);}
 function historyStatus(t){const el=document.getElementById('historyStatus');if(el)el.textContent=t;}
 function historyHash(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
-const HISTORY_PALETTE=['#c96f5b','#d78e59','#d3ad55','#b7b85f','#8eae68','#68a77f','#5da3a0','#5d92b5','#6f7fb5','#8874ad','#a66f9d','#bc7186','#b47a68','#a28c66','#87966b','#6e9a83','#66979d','#718ba8','#8584a8','#9b7f9f','#ad7b86','#c1846b','#c89b62','#9fa867'];
+const HISTORY_PALETTE=['#e45756','#ed7d3f','#e6a62f','#d4bd35','#a9bd3f','#73b657','#43ae75','#2eaa96','#2b9fb0','#3389c6','#4a72cf','#665fc9','#8558bf','#a952b0','#c4529a','#d55b82','#dc695f','#d88345','#c89f35','#9eae42','#65aa63','#3ca081','#3693a2','#507fb6','#6d6fb8','#895fac','#a75b9c','#c05f86','#d06d68','#d18b4f'];
 function historyColor(n){return HISTORY_PALETTE[historyHash(n)%HISTORY_PALETTE.length];}
 function historyProp(p,...ks){for(const k of ks)if(p&&p[k]!==undefined&&p[k]!==null&&String(p[k]).trim()!=='')return p[k];return '';}
 function historyFeatureData(f){const p=f?.properties||{};return{name:historyProp(p,'__name','Name','name','Polity','polity')||'Entidad política',from:Number(historyProp(p,'__from','FromYear','from_year','from')),to:Number(historyProp(p,'__to','ToYear','to_year','to')),wikidata:historyProp(p,'__wikidata','Wikidata','WikidataID','wikidata'),wikipedia:historyProp(p,'__wikipedia','Wikipedia','WikipediaPage','wikipedia'),seshat:historyProp(p,'__seshat','SeshatID','seshat_id'),area:historyProp(p,'__area','Area','area')};}
@@ -13324,7 +13360,7 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
    coast2D=L.geoJSON(land,{pane:'atlasCoastPane',interactive:false,style:{color:COAST,weight:1.15,opacity:.88,fill:false}});
   }
   if(!landTint2D){
-   landTint2D=L.geoJSON(land,{pane:'atlasLandPane',interactive:false,style:{color:COAST,weight:.45,opacity:.42,fillColor:LAND,fillOpacity:.50}});
+   landTint2D=L.geoJSON(land,{pane:'atlasLandPane',interactive:false,style:{color:COAST,weight:.45,opacity:.42,fillColor:LAND,fillOpacity:.36}});
   }
  }
  async function sync2D(){
@@ -13373,8 +13409,8 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
    coast3D=ds;await globeViewer.dataSources.add(ds);
   }
   if(!landTint3D){
-   const ds=await Cesium.GeoJsonDataSource.load(land,{clampToGround:true,stroke:Cesium.Color.fromCssColorString(COAST).withAlpha(.25),strokeWidth:.5,fill:Cesium.Color.fromCssColorString(LAND).withAlpha(.48)});
-   for(const ent of ds.entities.values)if(ent.polygon){ent.polygon.material=Cesium.Color.fromCssColorString(LAND).withAlpha(.48);ent.polygon.outline=false;}
+   const ds=await Cesium.GeoJsonDataSource.load(land,{clampToGround:true,stroke:Cesium.Color.fromCssColorString(COAST).withAlpha(.25),strokeWidth:.5,fill:Cesium.Color.fromCssColorString(LAND).withAlpha(.36)});
+   for(const ent of ds.entities.values)if(ent.polygon){ent.polygon.material=Cesium.Color.fromCssColorString(LAND).withAlpha(.36);ent.polygon.outline=false;}
    landTint3D=ds;await globeViewer.dataSources.add(ds);
   }
  }
