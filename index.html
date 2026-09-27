@@ -2346,6 +2346,89 @@ body.globe-mode #globeScaleBox{display:block}
   .leaflet-top.leaflet-left{top:80px!important}
 }
 </style>
+
+<style id="anambro-header-narrow-v3">
+/* Cabecera más estrecha sin reducir la jerarquía tipográfica */
+@media(min-width:1061px){
+  .brand.brandWide{
+    width:min(840px,calc(100vw - 80px))!important;
+    max-width:none!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-areas:
+      "title title"
+      "center center"
+      "left right"!important;
+    column-gap:22px!important;
+    row-gap:7px!important;
+    padding:10px 16px 11px!important;
+    align-items:center!important;
+  }
+  .brandWide>.brandTitleTop{
+    grid-area:title!important;
+    font-size:24px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:30px!important}
+  .brandWide>.brandCenter{
+    grid-area:center!important;
+    width:100%!important;
+    max-width:none!important;
+    padding:0 8px 4px!important;
+    box-sizing:border-box!important;
+  }
+  .brandWide .brandDescriptor{font-size:9.6px!important}
+  .brandWide .brandTeacher{font-size:15px!important}
+  .brandWide .brandProfessional{font-size:9.8px!important;max-width:760px!important}
+  .brandWide>.brandSideLeft{
+    grid-area:left!important;
+    justify-content:flex-start!important;
+    border-right:0!important;
+    padding-right:0!important;
+    align-self:stretch!important;
+  }
+  .brandWide>.brandSideRight{
+    grid-area:right!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    border-left:1px solid rgba(45,80,105,.16)!important;
+    padding-left:18px!important;
+    align-self:stretch!important;
+  }
+  .brandWide .brandRoles{
+    max-width:360px!important;
+    text-align:right!important;
+    font-size:9px!important;
+    line-height:1.2!important;
+  }
+  .brandWide .brandActions{justify-content:flex-end!important}
+  .toolbar{top:166px!important}
+}
+
+/* Portátiles/tablets: misma jerarquía, algo más de anchura útil. */
+@media(min-width:761px) and (max-width:1060px){
+  .brand.brandWide{
+    width:min(760px,calc(100vw - 54px))!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-areas:
+      "title title"
+      "center center"
+      "left right"!important;
+    column-gap:14px!important;
+    row-gap:6px!important;
+    padding:8px 12px 9px!important;
+  }
+  .brandWide>.brandTitleTop{font-size:20px!important}
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:25px!important}
+  .brandWide>.brandCenter{grid-area:center!important;padding:0 4px 3px!important}
+  .brandWide>.brandSideLeft{grid-area:left!important;border-right:0!important;padding-right:0!important}
+  .brandWide>.brandSideRight{grid-area:right!important;border-left:1px solid rgba(45,80,105,.16)!important;padding-left:12px!important}
+  .brandWide .brandTeacher{font-size:13px!important}
+  .brandWide .brandDescriptor,.brandWide .brandProfessional{font-size:8.2px!important}
+  .brandWide .brandRoles{font-size:8px!important;text-align:right!important}
+  .toolbar{top:148px!important}
+}
+</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
