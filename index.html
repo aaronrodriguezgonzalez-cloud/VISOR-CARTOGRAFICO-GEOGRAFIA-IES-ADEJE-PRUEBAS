@@ -4068,21 +4068,48 @@ const ANAMBRO_SOURCES={
  wikidata:{short:'Wikidata · datos estructurados · CC0'}
 };
 function activeSourceKeys(){
- const s=new Set(['ign']);
- if(document.getElementById('vegetationCheck')?.checked||document.getElementById('vegetationPotentialCanaryCheck')?.checked)s.add('grafcan');
- if(document.getElementById('canaryGeologyCheck')?.checked||document.getElementById('spainGeologyCheck')?.checked)s.add('igme');
- if(document.getElementById('mfeCheck')?.checked||document.getElementById('mitecoPotentialCheck')?.checked)s.add('miteco');
- if(document.getElementById('worldClimateCheck')?.checked||document.getElementById('canaryClimateCheck')?.checked||document.getElementById('spainClimateCheck')?.checked)s.add('beck');
+ const s=new Set();
+ const has=(layer)=>{try{return !!(layer&&map&&map.hasLayer&&map.hasLayer(layer));}catch(e){return false;}};
+ // La atribución es estrictamente dinámica: solo se citan fuentes de capas realmente visibles.
+ // Bases y capas IGN/CNIG.
+ const ignVisible=
+   (typeof raster!=='undefined'&&has(raster))||
+   (typeof pnoa!=='undefined'&&has(pnoa))||
+   (typeof street!=='undefined'&&has(street))||
+   (typeof labels!=='undefined'&&has(labels))||
+   (typeof hybrid!=='undefined'&&has(hybrid))||
+   (typeof lidar!=='undefined'&&has(lidar))||
+   (typeof land!=='undefined'&&has(land))||
+   (typeof historic!=='undefined'&&has(historic))||
+   (typeof toponymy!=='undefined'&&has(toponymy))||
+   (typeof transport!=='undefined'&&has(transport))||
+   (typeof adminCCAA!=='undefined'&&has(adminCCAA))||
+   (typeof adminProv!=='undefined'&&has(adminProv))||
+   (typeof adminMun!=='undefined'&&has(adminMun));
+ if(ignVisible)s.add('ign');
+ if(typeof worldImagery!=='undefined'&&has(worldImagery))s.add('esri');
+
+ if((typeof vegetation!=='undefined'&&has(vegetation))||(typeof vegetationCanaryPotential!=='undefined'&&has(vegetationCanaryPotential)))s.add('grafcan');
+ if((typeof geologyCanary!=='undefined'&&has(geologyCanary))||(typeof geologySpain!=='undefined'&&has(geologySpain)))s.add('igme');
+ if((typeof mfeCurrent!=='undefined'&&has(mfeCurrent))||(typeof vegetationPotential!=='undefined'&&has(vegetationPotential)))s.add('miteco');
+ if((typeof worldClimate!=='undefined'&&has(worldClimate))||document.getElementById('canaryClimateCheck')?.checked||document.getElementById('spainClimateCheck')?.checked)s.add('beck');
  if(document.getElementById('worldBiomesCheck')?.checked)s.add('resolve');
- if(document.getElementById('worldGeologyCheck')?.checked)s.add('macrostrat');
+ if((typeof worldGeology!=='undefined'&&has(worldGeology))||document.getElementById('worldGeologyCheck')?.checked)s.add('macrostrat');
  if(document.getElementById('worldHistoryCheck')?.checked){s.add('cliopatria');s.add('naturalearth');s.add('wikipedia');}
  if(document.getElementById('worldHistoricalEventsCheck')?.checked)s.add('wikidata');
  if(document.getElementById('worldVolcanoesCheck')?.checked)s.add('gvp');
  if(document.getElementById('worldRadioGardenCheck')?.checked)s.add('radiogarden');
  if(document.getElementById('countriesCheck')?.checked||document.getElementById('countryLabelsCheck')?.checked)s.add('naturalearth');
  if(document.getElementById('worldAdmin1Check')?.checked||document.getElementById('worldAdmin2Check')?.checked)s.add('wbadm');
- if(document.getElementById('worldToponymsCheck')?.checked){s.add('openfreemap');s.add('osm');}
- if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){s.add('worldbank');if(activeHumanIndicators().includes('UNDP_HDI'))s.add('undp');}
+ const humanActive=(typeof activeHumanIndicators==='function')?activeHumanIndicators():[];
+ if(document.getElementById('worldToponymsCheck')?.checked&&!humanActive.length){s.add('openfreemap');s.add('osm');}
+ if(humanActive.length){
+   // El mapa temático usa geometrías de países de Natural Earth y únicamente
+   // la fuente de datos correspondiente a los indicadores efectivamente activos.
+   s.add('naturalearth');
+   if(humanActive.some(ind=>ind!=='UNDP_HDI'))s.add('worldbank');
+   if(humanActive.includes('UNDP_HDI'))s.add('undp');
+ }
  if(document.body.classList.contains('globe-mode')&&!document.getElementById('worldHistoryCheck')?.checked)s.add('esri');
  return [...s];
 }
@@ -4107,11 +4134,11 @@ if(map.attributionControl)map.attributionControl.setPrefix(false);
 
 let dynamicWorldMinZoom=0;
 function calculateDynamicWorldMinZoom(){
- // El viewport debe quedar ENTERAMENTE dentro del marco mundial.
- // Con inside=true evitamos que en pantallas panorámicas el mundo quede
- // "flotando" con grandes márgenes blancos a derecha o abajo.
- const fill=map.getBoundsZoom(WORLD_VIEW_BOUNDS,true,[0,0]);
- return Math.max(0,fill);
+ // Permitir alejarse hasta encajar el mapamundi completo en el visor,
+ // de forma equivalente a la vista global disponible en la exportación.
+ // inside=false devuelve el mayor zoom al que TODO el mundo cabe en pantalla.
+ const fit=map.getBoundsZoom(WORLD_VIEW_BOUNDS,false,[16,16]);
+ return Math.max(0,fit);
 }
 function applyDynamicWorldMinZoom(){
  const z=calculateDynamicWorldMinZoom();
@@ -7947,15 +7974,8 @@ async function renderThematicWorldLayoutSnapshot(){
   ctx.lineWidth=1.1;
   ctx.stroke();
  }
- // En mapas temáticos se conservan únicamente los nombres de los océanos.
- ctx.save();
- ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='italic 800 25px Montserrat, Arial, sans-serif';
- ctx.fillStyle='rgba(38,87,124,.92)';ctx.strokeStyle='rgba(255,255,255,.82)';ctx.lineWidth=5;
- for(const x of (typeof ANAMBRO_PHYSICAL_LABELS!=='undefined'?ANAMBRO_PHYSICAL_LABELS:[])){
-  if(x.t!=='ocean')continue;
-  const [tx,ty]=px(x.lon,x.lat);ctx.strokeText(x.n,tx,ty);ctx.fillText(x.n,tx,ty);
- }
- ctx.restore();
+ // En la exportación temática no se dibujan topónimos: la composición queda limpia
+ // y la lectura se concentra en la variable representada y su leyenda.
  const eqWest=px(-180,0),eqEast=px(180,0);
  layoutSnapshotMeta={type:'world-thematic',imgWidth:width,imgHeight:height,equatorKmPerImagePx:40075.016686/Math.max(1,Math.abs(eqEast[0]-eqWest[0]))};
  return canvas.toDataURL('image/jpeg',0.94);
