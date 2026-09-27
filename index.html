@@ -2429,6 +2429,152 @@ body.globe-mode #globeScaleBox{display:block}
   .toolbar{top:148px!important}
 }
 </style>
+
+<style id="anambro-header-narrow-v4">
+/* Cabecera estrecha real: aproximadamente la mitad de la anchura panorámica original,
+   manteniendo tamaños tipográficos y jerarquía. */
+@media(min-width:1061px){
+  .brand.brandWide{
+    width:min(680px,calc(100vw - 56px))!important;
+    max-width:none!important;
+    grid-template-columns:minmax(250px,.9fr) minmax(0,1.1fr)!important;
+    grid-template-areas:
+      "title title"
+      "center center"
+      "left right"!important;
+    column-gap:16px!important;
+    row-gap:7px!important;
+    padding:10px 14px 11px!important;
+  }
+  .brandWide>.brandTitleTop{
+    font-size:24px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:30px!important}
+  .brandWide>.brandCenter{padding:0 4px 4px!important}
+  .brandWide .brandDescriptor{font-size:9.6px!important}
+  .brandWide .brandTeacher{font-size:15px!important}
+  .brandWide .brandProfessional{font-size:9.8px!important;max-width:640px!important}
+  .brandWide>.brandSideLeft{
+    justify-content:flex-start!important;
+    gap:10px!important;
+    padding-right:8px!important;
+    border-right:1px solid rgba(45,80,105,.16)!important;
+  }
+  .brandWide>.brandSideRight{
+    align-items:flex-end!important;
+    justify-content:center!important;
+    padding-left:0!important;
+    border-left:0!important;
+  }
+  .brandWide .brandRoles{
+    max-width:320px!important;
+    text-align:right!important;
+    font-size:9px!important;
+    line-height:1.2!important;
+  }
+  .brandWide .brandActions{justify-content:flex-end!important}
+  .toolbar{top:172px!important}
+}
+@media(min-width:761px) and (max-width:1060px){
+  .brand.brandWide{
+    width:min(640px,calc(100vw - 42px))!important;
+    grid-template-columns:minmax(225px,.9fr) minmax(0,1.1fr)!important;
+    grid-template-areas:
+      "title title"
+      "center center"
+      "left right"!important;
+    column-gap:12px!important;
+    row-gap:6px!important;
+    padding:8px 10px 9px!important;
+  }
+  .brandWide>.brandTitleTop{font-size:20px!important;white-space:nowrap!important}
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:25px!important}
+  .brandWide>.brandCenter{padding:0 3px 3px!important}
+  .brandWide .brandTeacher{font-size:13px!important}
+  .brandWide .brandDescriptor,.brandWide .brandProfessional{font-size:8.2px!important}
+  .brandWide>.brandSideLeft{padding-right:7px!important;border-right:1px solid rgba(45,80,105,.16)!important}
+  .brandWide>.brandSideRight{padding-left:0!important;border-left:0!important}
+  .brandWide .brandRoles{font-size:8px!important;text-align:right!important;max-width:290px!important}
+  .toolbar{top:158px!important}
+}
+</style>
+
+<style id="anambro-header-slim-v5">
+/* Escritorio: banda ancha de lado a lado, pero mucho más fina en altura. */
+@media(min-width:761px){
+  .brand.brandWide{
+    width:calc(100vw - 70px)!important;
+    max-width:1760px!important;
+    min-height:0!important;
+    padding:7px 14px 8px!important;
+    display:grid!important;
+    grid-template-columns:minmax(220px,.9fr) minmax(480px,1.65fr) minmax(280px,1fr)!important;
+    grid-template-areas:
+      "title title title"
+      "left center right"!important;
+    column-gap:16px!important;
+    row-gap:2px!important;
+    align-items:center!important;
+  }
+  .brandWide>.brandTitleTop{
+    grid-area:title!important;
+    font-size:24px!important;
+    line-height:.98!important;
+    white-space:nowrap!important;
+    margin:0!important;
+  }
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:30px!important}
+  .brandWide>.brandSideLeft{
+    grid-area:left!important;
+    align-self:center!important;
+    justify-content:flex-start!important;
+    gap:9px!important;
+    padding:0 12px 0 0!important;
+    border-right:1px solid rgba(45,80,105,.16)!important;
+  }
+  .brandWide .brandSideLeft img{width:48px!important;height:48px!important;flex:0 0 48px!important}
+  .brandWide .brandDept{font-size:10.5px!important;line-height:1.18!important}
+  .brandWide .brandVersion{margin-top:3px!important}
+  .brandWide>.brandCenter{
+    grid-area:center!important;
+    padding:0!important;
+    gap:1px!important;
+    justify-content:center!important;
+  }
+  .brandWide .brandDescriptor{font-size:9.6px!important;line-height:1.1!important}
+  .brandWide .brandTeacher{font-size:15px!important;line-height:1.08!important;margin:0!important}
+  .brandWide .brandProfessional{font-size:9.8px!important;line-height:1.12!important;max-width:none!important}
+  .brandWide>.brandSideRight{
+    grid-area:right!important;
+    align-self:center!important;
+    justify-content:center!important;
+    align-items:flex-end!important;
+    gap:4px!important;
+    padding:0 0 0 12px!important;
+    border-left:1px solid rgba(45,80,105,.16)!important;
+  }
+  .brandWide .brandRoles{font-size:9px!important;line-height:1.12!important;max-width:360px!important;text-align:right!important}
+  .brandWide .brandActions{display:flex!important;flex-direction:row!important;gap:6px!important;justify-content:flex-end!important}
+  .brandWide .brandWelcomeBtn{padding:5px 9px!important;font-size:9.5px!important}
+  .toolbar{top:106px!important}
+  .leaflet-top.leaflet-left{top:102px!important}
+}
+@media(min-width:761px) and (max-width:1100px){
+  .brand.brandWide{
+    width:calc(100vw - 36px)!important;
+    grid-template-columns:minmax(170px,.8fr) minmax(360px,1.55fr) minmax(220px,.9fr)!important;
+    column-gap:10px!important;
+    padding:6px 10px 7px!important;
+  }
+  .brandWide .brandSideLeft img{width:42px!important;height:42px!important;flex-basis:42px!important}
+  .brandWide .brandDept{font-size:9px!important}
+  .brandWide .brandRoles{font-size:8px!important}
+  .toolbar{top:100px!important}
+  .leaflet-top.leaflet-left{top:96px!important}
+}
+</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
