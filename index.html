@@ -1815,7 +1815,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutPage.a4.portrait{width:792px;height:1120px}
 .layoutPage.a3.landscape{width:1584px;height:1120px}
 .layoutPage.a3.portrait{width:1120px;height:1584px}
-.layoutItem{position:absolute;box-sizing:border-box;cursor:move;user-select:none;touch-action:none}
+.layoutItem{position:absolute;box-sizing:border-box;cursor:move;user-select:none;touch-action:none;z-index:5}
 .layoutItem.selected{outline:2px dashed #2563eb;outline-offset:2px}
 .layoutItem.selected::after{
  content:'';
@@ -1839,20 +1839,30 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutItem.resizing{cursor:default!important}
 .layoutLogoBox{left:2.5%;top:2.2%;width:13.5%;height:8%;display:flex;align-items:center;justify-content:flex-start;overflow:visible}
 .layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
-.layoutTitleBox{left:17%;top:3%;width:74%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
-.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #333;overflow:hidden;background:#d9dde1}
+.layoutInstituteBox{left:2.8%;top:10.8%;width:30%;height:9.6%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.88);backdrop-filter:blur(2px);box-shadow:0 6px 18px rgba(0,0,0,.12);border:1px solid rgba(28,56,84,.12)}
+.layoutInstituteLogo{width:58px;height:58px;object-fit:contain;flex:0 0 58px}
+.layoutInstituteText{font:700 11px/1.18 Montserrat,Arial,sans-serif;color:#23405d}
+.layoutInstituteText b{font-size:16px;color:#17324d}
+.layoutInstituteMeta{display:block;margin-top:1px;font-size:11px;color:#4a6279;font-weight:700}
+.layoutInstituteExplain{display:block;margin-top:3px;font-size:10.4px;color:#245a6c;font-weight:700}
+.layoutTitleBox{left:17%;top:3%;width:74%;height:7%;padding:4px 12px;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:rgba(255,255,255,.78);backdrop-filter:blur(1.4px);border-radius:16px}
+.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #6f7e88;border-radius:10px;overflow:hidden;background:#d9dde1;box-shadow:0 1px 0 rgba(255,255,255,.7) inset}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none;background:#fff;position:absolute;left:0;top:0;transform-origin:50% 50%}
-.layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.95);border:1px solid #555;border-radius:5px;padding:8px;font-size:11px;line-height:1.25}
-.layoutLegendBox> b{font-size:13px}
-.layoutLegendBox .sw{width:12px;height:9px}
-.layoutNorthBox{left:83%;top:71%;width:8%;height:11%;text-align:center}
-.layoutNorthN{font:900 22px Montserrat,sans-serif}
-.layoutNorthArrow{font-size:44px;line-height:.8}
-.layoutScaleBox{left:7%;top:87%;width:24%;height:7%;font-size:11px}
-.layoutScaleBar{display:flex;width:100%;height:10px;margin-top:4px;border:1px solid #111}
-.layoutScaleBar span{flex:1}
-.layoutScaleBar span:first-child{background:#111}
-.layoutScaleBar span:last-child{background:#fff}
+.layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.96);border:1px solid #c9d3dc;border-radius:14px;padding:11px 12px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:0 8px 22px rgba(0,0,0,.10)}
+.layoutLegendTitle{display:block;margin-bottom:4px;font-size:15px;font-weight:800;color:#17324d}
+.layoutLegendBox small{display:block;color:#556777;font-weight:600}
+.layoutLegendBox .sw{display:inline-block;width:14px;height:10px;border:1px solid rgba(0,0,0,.18);border-radius:2px;margin-right:6px;vertical-align:middle}
+.layoutLegendBox #layoutLegendContent>div>div{margin:3px 0}
+.layoutNorthBox{left:83%;top:71%;width:8%;height:11%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#111}
+.layoutNorthN{font:900 25px Montserrat,sans-serif;letter-spacing:.06em}
+.layoutNorthArrowSvg{width:34px;height:54px;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.16))}
+.layoutScaleBox{left:7%;top:87%;width:24%;height:7%;font:700 11.5px/1.2 Montserrat,Arial,sans-serif;color:#1f2f40}
+.layoutScaleTextLabel{margin-bottom:5px}
+.layoutScaleBar{display:block;width:100%;height:12px;border:1px solid #111;background:#fff;border-radius:2px;overflow:hidden}
+#layoutScaleBarInner{display:flex;height:100%;width:60%;min-width:36px}
+#layoutScaleBarInner span{flex:1}
+#layoutScaleBarInner span:nth-child(odd){background:#111}
+#layoutScaleBarInner span:nth-child(even){background:#fff}
 .layoutCredits{position:absolute;left:60%;top:95%;width:37%;height:3%;font-size:11px;font-weight:750;color:#3f4e5b;text-align:right;overflow:hidden}
 @media(max-width:900px){
  .layoutEditor{inset:4px;grid-template-columns:220px 1fr}
@@ -3581,6 +3591,7 @@ body.globe-mode #globeScaleBox{display:block}
         <select id="layoutSelected">
           <option value="map">Mapa</option>
           <option value="logo">Logo ANAMBRO</option>
+          <option value="institute">IES Adeje + explicación</option>
           <option value="title">Título</option>
           <option value="legend">Leyenda</option>
           <option value="north">Orientación</option>
@@ -3633,6 +3644,10 @@ body.globe-mode #globeScaleBox{display:block}
         <div id="layoutLogoBox" class="layoutItem layoutLogoBox" data-layout="logo" aria-label="Logo ANAMBRO">
           <div class="layoutAnambroLogo">ANAMBRO</div>
         </div>
+        <div id="layoutInstituteBox" class="layoutItem layoutInstituteBox" data-layout="institute" aria-label="Identidad del proyecto">
+          <img id="layoutInstituteLogo" class="layoutInstituteLogo" alt="Logo IES Adeje">
+          <div id="layoutInstituteText" class="layoutInstituteText"></div>
+        </div>
         <div id="layoutTitleBox" class="layoutItem layoutTitleBox" data-layout="title">Mapa elaborado con ANAMBRO</div>
 
         <div id="layoutMapBox" class="layoutItem layoutMapBox" data-layout="map">
@@ -3640,18 +3655,21 @@ body.globe-mode #globeScaleBox{display:block}
         </div>
 
         <div id="layoutLegendBox" class="layoutItem layoutLegendBox" data-layout="legend">
-          <b>Leyenda</b>
+          <div class="layoutLegendTitle">Leyenda</div>
           <div id="layoutLegendContent"></div>
         </div>
 
         <div id="layoutNorthBox" class="layoutItem layoutNorthBox" data-layout="north">
           <div class="layoutNorthN">N</div>
-          <div class="layoutNorthArrow">▲</div>
+          <svg class="layoutNorthArrowSvg" viewBox="0 0 48 72" aria-hidden="true">
+            <path d="M24 4 L37 38 L24 31 L11 38 Z" fill="#111"></path>
+            <path d="M24 68 L11 34 L24 41 L37 34 Z" fill="#ffffff" stroke="#111" stroke-width="2"></path>
+          </svg>
         </div>
 
         <div id="layoutScaleBox" class="layoutItem layoutScaleBox" data-layout="scale">
-          <div id="layoutScaleText">Escala gráfica</div>
-          <div class="layoutScaleBar"><span></span><span></span></div>
+          <div id="layoutScaleText" class="layoutScaleTextLabel">Escala gráfica</div>
+          <div class="layoutScaleBar"><div id="layoutScaleBarInner"><span></span><span></span><span></span><span></span></div></div>
         </div>
 
         <div id="layoutSources" class="layoutItem layoutSources" data-layout="sources"></div>
@@ -7371,6 +7389,63 @@ function activeLegendHTML(){
  if(!html||html.includes('No hay capas visibles'))html='<small>Mapa base y elementos cartográficos activos.</small>';
  return html;
 }
+
+let layoutSnapshotMeta=null,layoutZCounter=20;
+function layoutInstituteHTML(){
+ return '<b>IES ADEJE</b><span class="layoutInstituteMeta">Herramienta cartográfica abierta · Curso 2026-2027</span><span class="layoutInstituteExplain">ANAMBRO · Análisis territorial · SIG web · cartografía temática 2D/3D</span>';
+}
+function syncLayoutInstituteBox(){
+ const imgSrc=document.querySelector('.brandSideLeft img')?.src||'';
+ const img=document.getElementById('layoutInstituteLogo');
+ const txt=document.getElementById('layoutInstituteText');
+ if(img&&imgSrc)img.src=imgSrc;
+ if(txt)txt.innerHTML=layoutInstituteHTML();
+}
+function niceScaleDistance(raw){
+ if(!Number.isFinite(raw)||raw<=0)return 1;
+ const p=10**Math.floor(Math.log10(raw)),n=raw/p;
+ const m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;
+ return m*p;
+}
+function layoutMapDisplayMetrics(){
+ const box=document.getElementById('layoutMapBox'),img=document.getElementById('layoutMapImage');
+ if(!box||!img)return null;
+ const boxW=box.clientWidth||1,boxH=box.clientHeight||1;
+ const imgW=layoutSnapshotMeta?.imgWidth||img.naturalWidth||map.getSize().x||1;
+ const imgH=layoutSnapshotMeta?.imgHeight||img.naturalHeight||map.getSize().y||1;
+ const fit=(img.style.objectFit||'cover')==='contain' ? Math.min(boxW/imgW,boxH/imgH) : Math.max(boxW/imgW,boxH/imgH);
+ const m=(img.style.transform||'').match(/scale\(([^)]+)\)/);
+ const extra=m?Math.max(0.01,Number(m[1])||1):1;
+ return {boxW,boxH,imgW,imgH,ratio:fit*extra,displayW:imgW*fit*extra,displayH:imgH*fit*extra};
+}
+function updateLayoutScaleBox(){
+ const textEl=document.getElementById('layoutScaleText'),barInner=document.getElementById('layoutScaleBarInner');
+ if(!textEl||!barInner)return;
+ const m=layoutMapDisplayMetrics();
+ if(!m){textEl.textContent='Escala gráfica';return;}
+ let kmPerPx=null;
+ if(layoutSnapshotMeta?.type==='world-thematic'){
+  kmPerPx=layoutSnapshotMeta.equatorKmPerImagePx/m.ratio;
+ }else{
+  kmPerPx=layoutSnapshotMeta?.kmPerImagePxAtCenter?layoutSnapshotMeta.kmPerImagePxAtCenter/m.ratio:null;
+ }
+ if(!Number.isFinite(kmPerPx)||kmPerPx<=0){
+  textEl.textContent='Escala gráfica';
+  barInner.style.width='60%';
+  return;
+ }
+ const targetPx=Math.min(Math.max(110,m.boxW*0.38),m.boxW*0.82);
+ const distanceKm=niceScaleDistance(kmPerPx*targetPx);
+ const widthPx=Math.max(36,Math.min(m.boxW*0.92,distanceKm/kmPerPx));
+ barInner.style.width=widthPx+'px';
+ const label=distanceKm>=1000 ? new Intl.NumberFormat('es-ES',{maximumFractionDigits:distanceKm<10000?1:0}).format(distanceKm/1000)+' km' : new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(distanceKm)+' m';
+ textEl.textContent='Escala gráfica · '+label;
+}
+function bringLayoutItemToFront(el){
+ if(!el)return;
+ layoutZCounter+=1;
+ el.style.zIndex=String(layoutZCounter);
+}
 function scaleForLayout(){
  const size=map.getSize(),centerY=Math.round(size.y/2);
  const a=map.containerPointToLatLng([Math.round(size.x*.25),centerY]);
@@ -7393,6 +7468,7 @@ function fitLayoutMapImage(){
   img.style.objectFit='cover';img.style.objectPosition='50% 50%';
   img.style.transform='scale(1)';img.style.transformOrigin='50% 50%';
  }
+ updateLayoutScaleBox();
 }
 function containLayoutMapImage(){
  const z=document.getElementById('layoutCropZoom'),px=document.getElementById('layoutPanX'),py=document.getElementById('layoutPanY'),sz=document.getElementById('layoutSize');
@@ -7404,6 +7480,7 @@ function containLayoutMapImage(){
   img.style.objectFit='contain';img.style.objectPosition='50% 50%';
   img.style.transform='scale(1)';img.style.transformOrigin='50% 50%';
  }
+ updateLayoutScaleBox();
 }
 function isWorldThematicLayoutMode(){
  try{return !!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length&&map&&map.getZoom&&map.getZoom()<=4.5);}catch(e){return false;}
@@ -7462,6 +7539,8 @@ async function renderThematicWorldLayoutSnapshot(){
   ctx.lineWidth=1.1;
   ctx.stroke();
  }
+ const eqWest=px(-180,0),eqEast=px(180,0);
+ layoutSnapshotMeta={type:'world-thematic',imgWidth:width,imgHeight:height,equatorKmPerImagePx:40075.016686/Math.max(1,Math.abs(eqEast[0]-eqWest[0]))};
  return canvas.toDataURL('image/jpeg',0.94);
 }
 async function waitLayoutMapRender(timeout=1800){
@@ -7481,10 +7560,10 @@ async function refreshLayoutWorldSnapshot(){
    layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
    const img=document.getElementById('layoutMapImage');
    img.src=layoutSnapshotData;
-   document.getElementById('layoutScaleText').textContent='Escala gráfica · 10.000 km';
    document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
    document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
    fitLayoutMapImage();
+   updateLayoutScaleBox();
    return;
   }
   // Para exportar un mapamundi completo hay que permitir temporalmente un zoom
@@ -7519,10 +7598,11 @@ async function refreshLayoutSnapshot(){
     ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
    });
    layoutSnapshotData=canvas.toDataURL('image/jpeg',.92);
+   const size=map.getSize(),centerY=Math.round(size.y/2),a=map.containerPointToLatLng([Math.round(size.x*.25),centerY]),b=map.containerPointToLatLng([Math.round(size.x*.55),centerY]);
+   layoutSnapshotMeta={type:'live-map',imgWidth:size.x,imgHeight:size.y,kmPerImagePxAtCenter:(map.distance(a,b)/1000)/Math.max(1,Math.round(size.x*.30))};
   }
   img.src=layoutSnapshotData;
-  if(isWorldThematicLayoutMode())document.getElementById('layoutScaleText').textContent='Escala gráfica · 10.000 km';
-  else document.getElementById('layoutScaleText').textContent='Escala gráfica · '+scaleForLayout();
+  updateLayoutScaleBox();
   document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
   document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
  }catch(e){
@@ -7539,7 +7619,9 @@ function openLayoutEditor(){
  document.getElementById('layoutTitleBox').textContent=title;
 
  // El logotipo ANAMBRO forma parte del propio diseño de la página exportable.
-
+ syncLayoutInstituteBox();
+ document.querySelectorAll('.layoutItem').forEach((el,i)=>{el.style.zIndex=String(5+i);});
+ layoutZCounter=20;
  updateLayoutPageFormat();
  ensureLayoutResizeHandles();
  selectLayoutItem('map');
@@ -7588,6 +7670,7 @@ function selectLayoutItem(key){
  ensureLayoutResizeHandles();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
  const el=layoutEl(key);if(!el)return;
+ bringLayoutItemToFront(el);
  el.classList.add('selected');
  document.getElementById('layoutSelected').value=key;
  syncLayoutControlValues(el);
@@ -7616,6 +7699,7 @@ function applyLayoutControls(){
   el.style.transform='scale('+s+')';
   el.style.transformOrigin='top left';
  }
+ if(key==='map')updateLayoutScaleBox();
 }
 function initLayoutDrag(){
  ensureLayoutResizeHandles();
@@ -7625,6 +7709,7 @@ function initLayoutDrag(){
    if(e.button!==0)return;
    const handle=e.target.closest?.('.layoutResizeHandle');
    selectLayoutItem(el.dataset.layout);
+   bringLayoutItemToFront(el);
 
    const page=document.getElementById('layoutPage');
    const pr=page.getBoundingClientRect(),r=el.getBoundingClientRect();
@@ -7691,6 +7776,7 @@ function initLayoutDrag(){
    s.el.style.bottom='auto';
    s.el.style.maxHeight='none';
    syncLayoutControlValues(s.el);
+   if(s.el.dataset.layout==='map')updateLayoutScaleBox();
    e.preventDefault();
    return;
   }
@@ -7704,6 +7790,7 @@ function initLayoutDrag(){
    y=Math.max(0,Math.min(100-h,y));
    el.style.left=x+'%';el.style.top=y+'%';
    el.style.right='auto';el.style.bottom='auto';
+   if(el.dataset.layout==='map')updateLayoutScaleBox();
    e.preventDefault();
   }
  });
@@ -7743,6 +7830,8 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.getElementById('layoutPaper')?.addEventListener('change',updateLayoutPageFormat);
  document.getElementById('layoutOrientation')?.addEventListener('change',updateLayoutPageFormat);
  document.getElementById('layoutTitleInput')?.addEventListener('input',e=>document.getElementById('layoutTitleBox').textContent=e.target.value||' ');
+ document.getElementById('layoutMapImage')?.addEventListener('load',updateLayoutScaleBox);
+ syncLayoutInstituteBox();
 });
 
 window.addEventListener('orientationchange',()=>setTimeout(()=>{
@@ -11297,9 +11386,9 @@ const WORLD_HUMAN_INDICATORS={
  'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'positive',domain:[0,100]}
 };
 const HUMAN_PALETTES={
- positive:['#7f0000','#d73027','#fdae61','#66c2a5','#2166ac'],
- negative:['#2166ac','#66c2a5','#fdae61','#d73027','#7f0000'],
- neutral:['#fff2a6','#fdb863','#e66101','#b35806','#542788']
+ positive:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000'],
+ negative:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000'],
+ neutral:['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000']
 };
 const worldHumanLayers=new Map();
 let worldHumanRequest=0,worldHumanHDICache=null,worldHumanISO2to3=null;
@@ -11333,7 +11422,7 @@ function humanClassIndex(v,br){
  for(let i=0;i<5;i++)if(v<=br[i+1]||i===4)return i;
  return 4;
 }
-function humanColor(v,br,meta){const i=humanClassIndex(v,br);return i<0?'#b8b8b8':humanPalette(meta)[i];}
+function humanColor(v,br,meta){const i=humanClassIndex(v,br);return i<0?'#b0b0b0':humanPalette(meta)[i];}
 function humanLegendNumber(v,meta){
  const abs=Math.abs(Number(v));
  if(meta?.compact&&abs>=1e6)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,notation:'compact'}).format(v);
@@ -11349,7 +11438,7 @@ function humanLegendHTML(meta,year,br){
   const label=left+' – '+right;
   h+='<div><span class="sw" style="background:'+colors[i]+'"></span>'+label+'</div>';
  }
- return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';
+ return h+'<div><span class="sw" style="background:#b0b0b0"></span>Sin datos</div></div>';
 }
 async function loadHumanWB(ind,year){const u='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400&date='+year;const r=await fetch(u);if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json();const m=new Map();for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),raw=row?.value;if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(c.length===3&&Number.isFinite(v))m.set(c,v);}return m;}
 function parseCSVLine(line){const out=[];let x='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){x+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(x);x='';}else x+=c;}out.push(x);return out;}
@@ -11357,6 +11446,7 @@ async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;cons
 async function loadHumanHDI(year){const c=await loadHDICSV(),m=new Map();const candidates=['hdi_'+year,'HDI_'+year,String(year)];let yi=-1;for(const key of candidates){yi=c.head.findIndex(x=>String(x).toLowerCase()===String(key).toLowerCase());if(yi>=0)break;}if(c.iso<0||yi<0)return m;for(const row of c.data){const code=String(row[c.iso]||'').trim().toUpperCase();if(code.length!==3)continue;const raw=row[yi];if(raw===null||raw===undefined||String(raw).trim()===''||String(raw).trim().toLowerCase()==='n/a')continue;const v=Number(String(raw).replace(',','.'));if(Number.isFinite(v))m.set(code,v);}return m;}
 function humanState(ind){if(!worldHumanLayers.has(ind))worldHumanLayers.set(ind,{data:new Map(),layer2D:null,source3D:null,year:null,breaks:[]});return worldHumanLayers.get(ind);}
 let humanOldMapBackground='';
+let humanAutoHiddenCountryLabels2D=false,humanAutoHiddenWorldToponyms2D=false,humanAutoHiddenCountryLabelsGlobe=false,humanAutoHiddenWorldToponymsGlobe=false;
 function syncHumanThematicBasemap(){
  const on=activeHumanIndicators().length>0;
  const historyOn=!!document.getElementById('worldHistoryCheck')?.checked;
@@ -11366,16 +11456,29 @@ function syncHumanThematicBasemap(){
    if(typeof activeBase!=='undefined'&&activeBase&&map.hasLayer(activeBase))map.removeLayer(activeBase);
    if(typeof worldImagery!=='undefined'&&map.hasLayer(worldImagery))map.removeLayer(worldImagery);
    map.getContainer().style.backgroundColor='#ffffff';
+   if(document.getElementById('countryLabelsCheck')?.checked&&countryLabels2DLayer&&map.hasLayer(countryLabels2DLayer)){map.removeLayer(countryLabels2DLayer);humanAutoHiddenCountryLabels2D=true;}
+   if(document.getElementById('worldToponymsCheck')?.checked&&((worldToponyms2DLayer&&map.hasLayer(worldToponyms2DLayer))||(worldToponyms2DSpain&&map.hasLayer(worldToponyms2DSpain)))){toggleWorldToponyms2D(false);humanAutoHiddenWorldToponyms2D=true;}
   }else{
    map.getContainer().style.backgroundColor=humanOldMapBackground||'';
    humanOldMapBackground='';
    if(typeof syncWorldImagery2D==='function')syncWorldImagery2D();
    else if(typeof activeBase!=='undefined'&&activeBase&&!map.hasLayer(activeBase))activeBase.addTo(map);
+   if(humanAutoHiddenCountryLabels2D&&document.getElementById('countryLabelsCheck')?.checked)toggleCountryLabels2D(true);
+   if(humanAutoHiddenWorldToponyms2D&&document.getElementById('worldToponymsCheck')?.checked)updateWorldToponyms2D(true);
+   humanAutoHiddenCountryLabels2D=false;humanAutoHiddenWorldToponyms2D=false;
   }
  }
  if(globeViewer&&!historyOn){
   if(globeSatelliteLayer)globeSatelliteLayer.show=!on;
   globeViewer.scene.globe.baseColor=on?Cesium.Color.WHITE:Cesium.Color.BLACK;
+  if(on){
+   if(document.getElementById('countryLabelsCheck')?.checked&&countryLabelsSource){toggleCountryLabels(false);humanAutoHiddenCountryLabelsGlobe=true;}
+   if(document.getElementById('worldToponymsCheck')?.checked&&(worldVectorLabelCollection?.show||globeSpainToponymsLayer?.show)){toggleWorldToponyms(false);humanAutoHiddenWorldToponymsGlobe=true;}
+  }else{
+   if(humanAutoHiddenCountryLabelsGlobe&&document.getElementById('countryLabelsCheck')?.checked)toggleCountryLabels(true);
+   if(humanAutoHiddenWorldToponymsGlobe&&document.getElementById('worldToponymsCheck')?.checked)toggleWorldToponyms(true);
+   humanAutoHiddenCountryLabelsGlobe=false;humanAutoHiddenWorldToponymsGlobe=false;
+  }
   globeViewer.scene.requestRender();
  }
 }
