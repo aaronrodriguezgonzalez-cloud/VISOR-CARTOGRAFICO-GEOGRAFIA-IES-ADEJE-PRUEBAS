@@ -3799,7 +3799,11 @@ html body .layoutOverlay{z-index:9000!important}
 <label class="sub"><input id="worldToponymsCheck" type="checkbox"/> Topónimos mundiales · vectoriales / IGN en España</label>
 <label><input id="worldRadioGardenCheck" type="checkbox"/> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div></details>
 <details class="layerCategory"><summary>🌋 Geografía Física</summary>
-<div class="layerSubBlock"><small>Relieve, geología, vulcanismo, clima y grandes biomas terrestres.</small></div>
+<div class="layerSubBlock"><small>Relieve, geología, vulcanismo, clima, toponimia física y grandes biomas terrestres.</small></div>
+<details class="layerSubcategory"><summary>🏷️ Toponimia física</summary>
+<label><input id="worldPhysicalToponymsCheck" type="checkbox" checked/> <b>Topónimos físicos mundiales</b></label>
+<div class="layerSubBlock"><small>Continentes, océanos, mares, penínsulas, islas y grandes cordilleras · mapa 2D y globo 3D.</small></div>
+</details>
 <details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="worldGeologyCheck" type="checkbox"/> <b>Mapa geológico mundial · Macrostrat</b></label>
 <div class="layerSubBlock"><small>Compilación mundial de mapas geológicos · Macrostrat · CC BY 4.0.</small><small><b>Opacidad</b> <span id="worldGeologyOpacityValue">72 %</span></small><input id="worldGeologyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.72"/><div class="miniThemeLegend" id="worldGeologyLegend" style="display:none"></div></div></details>
 <details class="layerSubcategory"><summary>🌋 Vulcanismo</summary><label><input id="worldVolcanoesCheck" type="checkbox"/> <b>Volcanes del mundo · Smithsonian GVP</b></label>
@@ -3846,6 +3850,8 @@ html body .layoutOverlay{z-index:9000!important}
 </div></details>
 <details class="layerCategory"><summary>🏛️ Historia</summary><label><input id="worldHistoryCheck" type="checkbox"/> <b>Fronteras políticas históricas · Cliopatria</b></label>
 <div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.58"/></div>
+<label class="sub"><input id="worldHistoryLabelsCheck" type="checkbox" checked/> <b>Nombres de reinos y países</b></label>
+<div class="layerSubBlock"><small>Etiquetas dinámicas según la escala y la extensión visible: al acercarte aparecen entidades menores. La exportación conserva el nivel de detalle de la vista.</small></div>
 <label><input id="worldHistoricalEventsCheck" type="checkbox"/> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div></details>
 </div>
@@ -8318,6 +8324,7 @@ async function refreshLayoutWorldSnapshot(){
   map.setView([0,0],Math.max(0,worldZoom),{animate:false});
   map.invalidateSize({animate:false});
   await waitLayoutMapRender();
+  if(typeof window.anambroRefreshHistoryLabelsForExport==='function')await window.anambroRefreshHistoryLabelsForExport();
   await refreshLayoutSnapshot();
   fitLayoutMapImage();
  }finally{
@@ -8351,6 +8358,7 @@ async function refreshLayoutSnapshot(){
    syncLayoutThematicAppearance(true);
   }else{
    syncLayoutThematicAppearance(false);
+   if(typeof window.anambroRefreshHistoryLabelsForExport==='function')await window.anambroRefreshHistoryLabelsForExport();
    const canvas=await html2canvas(document.getElementById('map'),{
     useCORS:true,allowTaint:false,logging:false,
     backgroundColor:((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#86cbe5':'#d9dde1',
@@ -12039,8 +12047,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleWelcome(false)
 document.addEventListener('click',e=>{const ov=document.getElementById('welcomeOverlay');if(!ov||!ov.classList.contains('open'))return;if(e.target===ov)toggleWelcome(false);});
 </script>
 <script id="anambro-physical-labels-js">
-/* ANAMBRO · toponimia física mundial permanente en 2D y 3D.
-   Independiente de las capas políticas: permanece visible sobre mapas temáticos e históricos. */
+/* ANAMBRO · toponimia física mundial con control de visibilidad en 2D y 3D.
+   Independiente de las capas políticas: puede mantenerse visible sobre mapas temáticos e históricos. */
 const ANAMBRO_PHYSICAL_LABELS=[
  // Continentes
  {n:'AMÉRICA DEL NORTE',lat:48,lon:-106,t:'continent',z0:2,z1:5},{n:'AMÉRICA DEL SUR',lat:-18,lon:-61,t:'continent',z0:2,z1:5},
@@ -12078,10 +12086,16 @@ const ANAMBRO_PHYSICAL_LABELS=[
 ];
 let anambroPhysical2D=null,anambroPhysical3D=[];
 function physicalLabelClass(t){return 'physical-label physical-'+t;}
+function physicalToponymsEnabled(){return document.getElementById('worldPhysicalToponymsCheck')?.checked!==false;}
 function ensurePhysicalLabels2D(){
  if(typeof map==='undefined'||typeof L==='undefined')return;
+ if(!physicalToponymsEnabled()){
+  if(anambroPhysical2D){anambroPhysical2D.clearLayers();if(map.hasLayer(anambroPhysical2D))map.removeLayer(anambroPhysical2D);}
+  return;
+ }
  if(!map.getPane('physicalLabelsPane')){const p=map.createPane('physicalLabelsPane');p.style.zIndex='590';p.style.pointerEvents='none';}
- if(!anambroPhysical2D)anambroPhysical2D=L.layerGroup().addTo(map);
+ if(!anambroPhysical2D)anambroPhysical2D=L.layerGroup();
+ if(!map.hasLayer(anambroPhysical2D))anambroPhysical2D.addTo(map);
  anambroPhysical2D.clearLayers();
  const z=map.getZoom();
  const thematicHuman=!!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length);
@@ -12130,10 +12144,17 @@ function ensurePhysicalLabels3D(){
 }
 function syncPhysicalLabels3DVisibility(){
  if(!globeViewer||!anambroPhysical3D.length)return;
+ const enabled=physicalToponymsEnabled();
  const thematicHuman=!!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length);
- for(const e of anambroPhysical3D)e.show=!thematicHuman||e.__anambroPhysicalType==='ocean';
+ for(const e of anambroPhysical3D)e.show=enabled&&(!thematicHuman||e.__anambroPhysicalType==='ocean');
  globeViewer.scene.requestRender();
 }
+function syncPhysicalToponymsVisibility(){
+ if(physicalToponymsEnabled())ensurePhysicalLabels2D();
+ else if(anambroPhysical2D){anambroPhysical2D.clearLayers();if(map.hasLayer(anambroPhysical2D))map.removeLayer(anambroPhysical2D);}
+ if(globeViewer){ensurePhysicalLabels3D();syncPhysicalLabels3DVisibility();}
+}
+document.getElementById('worldPhysicalToponymsCheck')?.addEventListener('change',syncPhysicalToponymsVisibility);
 map.on('zoomend moveend',ensurePhysicalLabels2D);
 ensurePhysicalLabels2D();
 const __anambroToggleGlobeBase=toggleGlobe;
@@ -13465,6 +13486,200 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
  document.getElementById('historyYearRange')?.addEventListener('change',()=>setTimeout(()=>{sync();restyleHistory();},250));
  if(typeof map!=='undefined')map.on('layeradd',()=>{if(atlasOn())setTimeout(sync2D,40);});
  setTimeout(()=>{sync();restyleHistory();},250);
+})();
+</script>
+
+
+<style id="anambro-dynamic-history-labels-css">
+/* Nombres históricos dinámicos: legibles, discretos y por encima de los polígonos. */
+.history-polity-label{
+  font-family:Montserrat,Arial,sans-serif;
+  font-weight:900;
+  line-height:1.04;
+  text-align:center;
+  color:#203342;
+  white-space:normal;
+  overflow:visible;
+  pointer-events:none;
+  user-select:none;
+  letter-spacing:.12px;
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,.98),1px -1px 0 rgba(255,255,255,.98),
+    -1px 1px 0 rgba(255,255,255,.98),1px 1px 0 rgba(255,255,255,.98),
+    0 0 4px rgba(255,255,255,.98),0 1px 5px rgba(255,255,255,.92);
+}
+.history-polity-label.history-label-major{font-size:14.5px;letter-spacing:.35px;text-transform:uppercase}
+.history-polity-label.history-label-medium{font-size:12.5px}
+.history-polity-label.history-label-minor{font-size:10.5px;font-weight:850}
+@media(max-width:760px){
+ .history-polity-label.history-label-major{font-size:12px}
+ .history-polity-label.history-label-medium{font-size:10.5px}
+ .history-polity-label.history-label-minor{font-size:9px}
+}
+</style>
+<script id="anambro-dynamic-history-labels-js">
+(function(){
+ 'use strict';
+ let historyLabels2D=null, historyLabels3D=null, historyLabelsTimer=null;
+ const historyLabelAnchorCache=new WeakMap();
+ function historyNamesEnabled(){return document.getElementById('worldHistoryLabelsCheck')?.checked!==false;}
+ function historyModeActive(){return !!document.getElementById('worldHistoryCheck')?.checked;}
+ function ringInfo(ring){
+  if(!Array.isArray(ring)||ring.length<3)return null;
+  let area2=0,cx=0,cy=0,minLon=Infinity,maxLon=-Infinity,minLat=Infinity,maxLat=-Infinity;
+  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+   const a=ring[j],b=ring[i]; if(!a||!b)continue;
+   const x0=+a[0],y0=+a[1],x1=+b[0],y1=+b[1];
+   if(![x0,y0,x1,y1].every(Number.isFinite))continue;
+   minLon=Math.min(minLon,x1);maxLon=Math.max(maxLon,x1);minLat=Math.min(minLat,y1);maxLat=Math.max(maxLat,y1);
+   const cross=x0*y1-x1*y0; area2+=cross; cx+=(x0+x1)*cross; cy+=(y0+y1)*cross;
+  }
+  let lon=(minLon+maxLon)/2,lat=(minLat+maxLat)/2;
+  if(Math.abs(area2)>1e-10){lon=cx/(3*area2);lat=cy/(3*area2);}
+  if(!Number.isFinite(lon)||lon<minLon||lon>maxLon||!Number.isFinite(lat)||lat<minLat||lat>maxLat){lon=(minLon+maxLon)/2;lat=(minLat+maxLat)/2;}
+  const cos=Math.max(.15,Math.cos(lat*Math.PI/180));
+  const bboxMetric=Math.max(0,(maxLon-minLon)*cos)*Math.max(0,maxLat-minLat);
+  return {lon,lat,minLon,maxLon,minLat,maxLat,metric:bboxMetric,ring};
+ }
+ function featureLabelInfo(f){
+  if(!f?.geometry)return null;
+  if(historyLabelAnchorCache.has(f))return historyLabelAnchorCache.get(f);
+  const g=f.geometry, candidates=[];
+  if(g.type==='Polygon'){
+   const r=ringInfo(g.coordinates?.[0]);if(r)candidates.push(r);
+  }else if(g.type==='MultiPolygon'){
+   for(const poly of (g.coordinates||[])){const r=ringInfo(poly?.[0]);if(r)candidates.push(r);}
+  }
+  candidates.sort((a,b)=>b.metric-a.metric);
+  const r=candidates[0];
+  if(!r){historyLabelAnchorCache.set(f,null);return null;}
+  const d=typeof historyFeatureData==='function'?historyFeatureData(f):{name:f.properties?.__name||'Entidad política'};
+  const areaKm=Number(d?.area);
+  const result={...r,name:String(d?.name||'Entidad política'),areaKm:Number.isFinite(areaKm)?Math.abs(areaKm):null,feature:f};
+  historyLabelAnchorCache.set(f,result);return result;
+ }
+ function visibleFeatureCandidate(f,bounds){
+  const i=featureLabelInfo(f);if(!i)return null;
+  try{
+   const fb=L.latLngBounds([i.minLat,i.minLon],[i.maxLat,i.maxLon]);
+   if(!bounds.intersects(fb))return null;
+  }catch(e){}
+  const nw=map.latLngToContainerPoint([i.maxLat,i.minLon]),se=map.latLngToContainerPoint([i.minLat,i.maxLon]);
+  const w=Math.max(1,Math.abs(se.x-nw.x)),h=Math.max(1,Math.abs(se.y-nw.y));
+  const screenArea=w*h,span=Math.max(w,h);
+  return {...i,w,h,screenArea,span};
+ }
+ function labelClassFor(c,z){
+  if(c.span>150||c.screenArea>16000||z<=3)return 'history-label-major';
+  if(c.span>65||c.screenArea>4500)return 'history-label-medium';
+  return 'history-label-minor';
+ }
+ function labelFontPx(cls){return cls==='history-label-major'?14.5:cls==='history-label-medium'?12.5:10.5;}
+ function labelBox(c,cls,pt,dx,dy){
+  const fs=labelFontPx(cls), chars=Math.max(4,Math.min(34,c.name.length));
+  const maxW=cls==='history-label-major'?190:cls==='history-label-medium'?155:130;
+  const width=Math.min(maxW,Math.max(42,chars*fs*.56));
+  const lines=Math.max(1,Math.ceil((c.name.length*fs*.54)/width));
+  const height=Math.max(fs*1.15,lines*fs*1.08);
+  return {left:pt.x+dx-width/2-3,right:pt.x+dx+width/2+3,top:pt.y+dy-height/2-2,bottom:pt.y+dy+height/2+2,width,height};
+ }
+ function boxesIntersect(a,b,pad=2){return !(a.right+pad<b.left||a.left-pad>b.right||a.bottom+pad<b.top||a.top-pad>b.bottom);}
+ function ensureHistoryLabelsPane(){
+  if(!map.getPane('historyLabelsPane')){const p=map.createPane('historyLabelsPane');p.style.zIndex='635';p.style.pointerEvents='none';}
+  if(!historyLabels2D)historyLabels2D=L.layerGroup();
+  return historyLabels2D;
+ }
+ function clearHistoryLabels2D(){if(historyLabels2D){historyLabels2D.clearLayers();if(map.hasLayer(historyLabels2D))map.removeLayer(historyLabels2D);}}
+ function updateHistoryLabels2D(force=false){
+  if(typeof map==='undefined'||typeof L==='undefined'||!historyModeActive()||!historyNamesEnabled()||!historyCurrentFC){clearHistoryLabels2D();return;}
+  const group=ensureHistoryLabelsPane();group.clearLayers();if(!map.hasLayer(group))group.addTo(map);
+  const z=map.getZoom(),bounds=map.getBounds(),size=map.getSize();
+  const byName=new Map();
+  for(const f of (historyCurrentFC.features||[])){
+   const c=visibleFeatureCandidate(f,bounds);if(!c)continue;
+   const key=c.name.trim().toLocaleLowerCase('es');
+   const old=byName.get(key);if(!old||c.screenArea>old.screenArea)byName.set(key,c);
+  }
+  let candidates=[...byName.values()];
+  const minSpan=z<=2.4?82:z<=3.2?52:z<=4.2?30:z<=5.2?18:z<=6.2?10:5;
+  const minArea=z<=2.4?4400:z<=3.2?2200:z<=4.2?850:z<=5.2?300:z<=6.2?90:15;
+  candidates=candidates.filter(c=>c.span>=minSpan||c.screenArea>=minArea);
+  candidates.sort((a,b)=>(b.screenArea-a.screenArea)||((b.areaKm||0)-(a.areaKm||0))||a.name.localeCompare(b.name,'es'));
+  const maxLabels=z<=2.4?26:z<=3.2?58:z<=4.2?120:z<=5.2?220:z<=6.2?360:520;
+  const placed=[];
+  const offsets=z>=5.2?[[0,0],[0,-14],[0,14],[-18,0],[18,0],[-18,-14],[18,-14],[-18,14],[18,14],[0,-28],[0,28],[-34,0],[34,0]]:[[0,0],[0,-15],[0,15],[-22,0],[22,0],[-20,-15],[20,-15],[-20,15],[20,15]];
+  for(const c of candidates.slice(0,maxLabels)){
+   const pt=map.latLngToContainerPoint([c.lat,c.lon]);
+   if(pt.x<-80||pt.y<-60||pt.x>size.x+80||pt.y>size.y+60)continue;
+   const cls=labelClassFor(c,z);let chosen=null;
+   for(const [dx,dy] of offsets){
+    const box=labelBox(c,cls,pt,dx,dy);
+    if(box.left<-35||box.right>size.x+35||box.top<-25||box.bottom>size.y+25)continue;
+    if(!placed.some(p=>boxesIntersect(box,p,1))){chosen={box,dx,dy};break;}
+   }
+   // En detalle regional preferimos conservar el nombre aunque el espacio sea muy ajustado.
+   if(!chosen&&z>=6){const box=labelBox(c,'history-label-minor',pt,0,0);chosen={box,dx:0,dy:0};}
+   if(!chosen)continue;
+   placed.push(chosen.box);
+   const maxW=Math.round(chosen.box.width);
+   const html='<div class="history-polity-label '+cls+'" style="width:'+maxW+'px;max-width:'+maxW+'px">'+escHtml(c.name)+'</div>';
+   const icon=L.divIcon({className:'',html,iconSize:[maxW,Math.max(18,Math.round(chosen.box.height))],iconAnchor:[maxW/2-chosen.dx,Math.max(18,Math.round(chosen.box.height))/2-chosen.dy]});
+   L.marker([c.lat,c.lon],{icon,pane:'historyLabelsPane',interactive:false,keyboard:false}).addTo(group);
+  }
+  group.bringToFront?.();
+ }
+ function scheduleHistoryLabels2D(immediate=false){clearTimeout(historyLabelsTimer);historyLabelsTimer=setTimeout(()=>updateHistoryLabels2D(true),immediate?0:90);}
+ function historyLabelDistance(info){
+  const s=Math.sqrt(Math.max(.001,info.metric||0));
+  if(s>35)return 55000000;if(s>20)return 42000000;if(s>10)return 30000000;if(s>5)return 21000000;if(s>2)return 13500000;if(s>1)return 9000000;if(s>.4)return 5500000;return 2800000;
+ }
+ function clearHistoryLabels3D(){
+  if(historyLabels3D&&globeViewer){try{globeViewer.scene.primitives.remove(historyLabels3D);}catch(e){};historyLabels3D=null;globeViewer.scene.requestRender();}
+ }
+ function renderHistoryLabels3D(fc){
+  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined'||!historyModeActive()||!historyNamesEnabled()){clearHistoryLabels3D();return;}
+  clearHistoryLabels3D();
+  historyLabels3D=new Cesium.LabelCollection({scene:globeViewer.scene});globeViewer.scene.primitives.add(historyLabels3D);
+  const byName=new Map();
+  for(const f of (fc?.features||[])){const i=featureLabelInfo(f);if(!i)continue;const k=i.name.trim().toLocaleLowerCase('es'),old=byName.get(k);if(!old||i.metric>old.metric)byName.set(k,i);}
+  for(const i of byName.values()){
+   const maxD=historyLabelDistance(i),major=i.metric>55,medium=i.metric>8;
+   historyLabels3D.add({
+    position:Cesium.Cartesian3.fromDegrees(i.lon,i.lat,9000),text:i.name,
+    font:(major?'900 16px':medium?'850 13px':'800 11px')+' Montserrat, Arial, sans-serif',
+    fillColor:Cesium.Color.fromCssColorString('#233947'),outlineColor:Cesium.Color.WHITE.withAlpha(.96),outlineWidth:4,
+    style:Cesium.LabelStyle.FILL_AND_OUTLINE,showBackground:false,
+    horizontalOrigin:Cesium.HorizontalOrigin.CENTER,verticalOrigin:Cesium.VerticalOrigin.CENTER,
+    distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxD),
+    scaleByDistance:new Cesium.NearFarScalar(Math.max(1,maxD*.08),1.05,maxD,.72),disableDepthTestDistance:0
+   });
+  }
+  globeViewer.scene.requestRender();
+ }
+ // Wrap the existing renderers rather than rebuilding them: polygons/popups keep their current behavior.
+ if(typeof applyHistory2D==='function'){
+  const base2D=applyHistory2D;
+  applyHistory2D=function(fc){const r=base2D(fc);scheduleHistoryLabels2D(true);return r;};
+ }
+ if(typeof applyHistoryGlobe==='function'){
+  const base3D=applyHistoryGlobe;
+  applyHistoryGlobe=async function(fc){const r=await base3D(fc);renderHistoryLabels3D(fc);return r;};
+ }
+ if(typeof toggleHistoryGlobe==='function'){
+  const baseToggle=toggleHistoryGlobe;
+  toggleHistoryGlobe=function(on){const r=baseToggle(on);if(!on)clearHistoryLabels3D();else if(historyCurrentFC)setTimeout(()=>renderHistoryLabels3D(historyCurrentFC),0);return r;};
+ }
+ document.getElementById('worldHistoryLabelsCheck')?.addEventListener('change',()=>{
+  scheduleHistoryLabels2D(true);
+  if(globeViewer){if(historyNamesEnabled()&&historyModeActive()&&historyCurrentFC)renderHistoryLabels3D(historyCurrentFC);else clearHistoryLabels3D();}
+ });
+ document.getElementById('worldHistoryCheck')?.addEventListener('change',()=>setTimeout(()=>{scheduleHistoryLabels2D(true);if(!historyModeActive())clearHistoryLabels3D();else if(globeViewer&&historyCurrentFC)renderHistoryLabels3D(historyCurrentFC);},0));
+ map.on('zoomend moveend resize',()=>scheduleHistoryLabels2D(false));
+ // Force an exact label refresh before an export snapshot, so regional exports use the current extent/zoom.
+ window.anambroRefreshHistoryLabelsForExport=async function(){
+  if(historyModeActive()&&historyNamesEnabled()){updateHistoryLabels2D(true);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}
+ };
+ scheduleHistoryLabels2D(true);
 })();
 </script>
 
