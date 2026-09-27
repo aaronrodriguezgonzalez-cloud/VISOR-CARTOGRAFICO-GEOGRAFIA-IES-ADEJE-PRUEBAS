@@ -4268,7 +4268,7 @@ const hybrid=L.layerGroup([pnoa,labels]);
 const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
-const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',{
+const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
  noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
  attribution:'Esri World Imagery'
 });
@@ -10276,8 +10276,8 @@ async function ensureGlobe(){
   globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,baseLayer:false});
   // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
   const sat=new Cesium.UrlTemplateImageryProvider({
-   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',
-   credit:'Esri World Imagery',maximumLevel:23
+   url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+   credit:'Esri World Imagery',maximumLevel:19
   });
   globeSatelliteLayer=globeViewer.imageryLayers.addImageryProvider(sat);
   // Red geográfica del globo: red ordinaria blanca, Ecuador/Greenwich destacados y trópicos diferenciados.
@@ -12841,218 +12841,7 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 </style>
 
 
-<script id="anambro-native-imagery-zoom-stop">
-/*
-  Tope de zoom por PROVEEDOR REALMENTE VISIBLE.
-  - En España/Canarias, si el usuario ha elegido una base IGN/PNOA, se respeta
-    el último nivel declarado por ESA fuente (actualmente z19 en estas capas).
-  - Fuera de España, o si se elige explícitamente World Imagery, el proveedor
-    efectivo es Esri World Imagery. Su resolución no es uniforme en todo el
-    planeta, por lo que el último nivel se consulta en el Tile Map de ArcGIS
-    para la posición actual y se aplica tanto en Leaflet como en Cesium.
-  - blankTile=false evita que ArcGIS sustituya una tesela inexistente por la
-    imagen gris «Map data not yet available»; cualquier 404 sirve además como
-    salvaguarda para retroceder un nivel.
-*/
-(function(){
- const ESRI_HARD_MAX=23;
- const ESRI_SAFE_FALLBACK=18;
- const ESRI_TILEMAP='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap';
- const esriCapCache=new Map();
- const esriCapPending=new Map();
- let mapProbeSeq=0, globeProbeSeq=0;
- let forcedEsriMapCap=null, forcedEsriGlobeCap=null;
 
- function inSpain(ll){
-  try{return !!(ll&&typeof profileIsSpainLatLng==='function'&&profileIsSpainLatLng(ll));}
-  catch(e){return false;}
- }
- function layerCap(layer){
-  if(!layer)return 19;
-  try{
-   if(typeof layer.getLayers==='function'){
-    const caps=layer.getLayers().map(layerCap).filter(Number.isFinite);
-    if(caps.length)return Math.min(...caps);
-   }
-  }catch(e){}
-  const o=layer.options||{};
-  const n=Number.isFinite(+o.maxNativeZoom)?+o.maxNativeZoom:(Number.isFinite(+o.maxZoom)?+o.maxZoom:null);
-  return n==null?19:n;
- }
- function effectiveMapProvider(){
-  if(typeof map==='undefined'||typeof worldImagery==='undefined')return {kind:'esri',layer:worldImagery};
-  const ll=map.getCenter();
-  // World Imagery elegida expresamente = Esri incluso dentro de España.
-  if(typeof activeBase!=='undefined'&&activeBase===worldImagery)return {kind:'esri',layer:worldImagery};
-  // Las bases IGN/PNOA están enmascaradas a España; fuera de ella lo que se ve es Esri.
-  if(!inSpain(ll))return {kind:'esri',layer:worldImagery};
-  return {kind:'leaflet',layer:(typeof activeBase!=='undefined'?activeBase:worldImagery)};
- }
- function slippyXY(lat,lng,z){
-  const n=2**z;
-  const la=Math.max(-85.05112878,Math.min(85.05112878,+lat||0));
-  const lo=((+lng||0)+180)%360;
-  const x=Math.max(0,Math.min(n-1,Math.floor(((lo<0?lo+360:lo)/360)*n)));
-  const r=la*Math.PI/180;
-  const y=Math.max(0,Math.min(n-1,Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n)));
-  return {x,y};
- }
- function capCacheKey(lat,lng){
-  const t=slippyXY(lat,lng,15);return t.x+':'+t.y;
- }
- async function esriTileExists(lat,lng,z){
-  const {x,y}=slippyXY(lat,lng,z);
-  try{
-   const r=await fetch(`${ESRI_TILEMAP}/${z}/${y}/${x}/1/1?f=json`,{cache:'force-cache',mode:'cors'});
-   if(!r.ok)return false;
-   const j=await r.json();
-   return !j?.error && Array.isArray(j?.data) && j.data[0]===1;
-  }catch(e){return null;}
- }
- async function esriMaxLevelAt(lat,lng){
-  const key=capCacheKey(lat,lng);
-  if(esriCapCache.has(key))return esriCapCache.get(key);
-  // Una sola consulta por zona. Al hacer varios zooms seguidos, todos los
-  // eventos reutilizan la misma promesa en vez de lanzar decenas de barridos
-  // TileMap simultáneos (que podían saturar el navegador al llegar al zoom mínimo).
-  if(esriCapPending.has(key))return esriCapPending.get(key);
-  const task=(async()=>{
-   let hadResponse=false;
-   for(let z=ESRI_HARD_MAX;z>=0;z--){
-    const ok=await esriTileExists(lat,lng,z);
-    if(ok===null)break;
-    hadResponse=true;
-    if(ok){esriCapCache.set(key,z);return z;}
-   }
-   const fallback=ESRI_SAFE_FALLBACK;
-   esriCapCache.set(key,fallback);return fallback;
-  })();
-  esriCapPending.set(key,task);
-  try{return await task;}finally{esriCapPending.delete(key);}
- }
- function setMapCap(cap){
-  if(typeof map==='undefined'||!Number.isFinite(cap))return;
-  cap=Math.max(0,Math.min(ESRI_HARD_MAX,Math.floor(cap)));
-  if(map.getMaxZoom()!==cap)map.setMaxZoom(cap);
-  if(map.getZoom()>cap)map.setZoom(cap,{animate:false});
- }
- async function syncMapProviderZoomStop(){
-  if(typeof map==='undefined')return;
-  const seq=++mapProbeSeq;
-  const p=effectiveMapProvider();
-  if(p.kind!=='esri'){
-   forcedEsriMapCap=null;
-   setMapCap(layerCap(p.layer));
-   return;
-  }
-  // Mientras se consulta la disponibilidad local, nunca permitir entrar a un nivel dudoso.
-  setMapCap(forcedEsriMapCap==null?ESRI_SAFE_FALLBACK:forcedEsriMapCap);
-  const c=map.getCenter();
-  let cap=await esriMaxLevelAt(c.lat,c.lng);
-  if(seq!==mapProbeSeq)return;
-  if(forcedEsriMapCap!=null)cap=Math.min(cap,forcedEsriMapCap);
-  setMapCap(cap);
- }
-
- // Si ArcGIS informa de una tesela ausente, retroceder inmediatamente un nivel.
- if(typeof worldImagery!=='undefined'&&worldImagery?.on){
-  worldImagery.on('tileerror',e=>{
-   if(effectiveMapProvider().kind!=='esri')return;
-   const z=Number(e?.coords?.z);
-   if(!Number.isFinite(z)||z<=0)return;
-   forcedEsriMapCap=forcedEsriMapCap==null?z-1:Math.min(forcedEsriMapCap,z-1);
-   setMapCap(forcedEsriMapCap);
-  });
- }
-
- function globeCenter(){
-  try{
-   if(typeof globeCenterLatLng==='function'){
-    const c=globeCenterLatLng();if(c)return c;
-   }
-   if(typeof globeViewer!=='undefined'&&globeViewer&&typeof Cesium!=='undefined'){
-    const q=globeViewer.camera.positionCartographic;
-    return {lat:Cesium.Math.toDegrees(q.latitude),lng:Cesium.Math.toDegrees(q.longitude)};
-   }
-  }catch(e){}
-  return {lat:0,lng:0};
- }
- function globeMinHeightForLevel(level,lat){
-  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return 250;
-  const cos=Math.max(.05,Math.cos((+lat||0)*Math.PI/180));
-  const mpp=156543.03392804097*cos/Math.pow(2,level);
-  const rect=globeViewer.scene.canvas.getBoundingClientRect();
-  const hpx=Math.max(320,rect.height||720);
-  const vfov=globeViewer.camera.frustum.fovy||Cesium.Math.toRadians(60);
-  return Math.max(35,(mpp*hpx)/(2*Math.tan(vfov/2))*1.04);
- }
- function applyGlobeCap(level,center){
-  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
-  const ctl=globeViewer.scene.screenSpaceCameraController;
-  const minH=globeMinHeightForLevel(level,center?.lat||0);
-  ctl.minimumZoomDistance=minH;
-  try{
-   const pos=globeViewer.camera.positionCartographic;
-   if((pos.height||Infinity)<minH*.995){
-    globeViewer.camera.setView({
-     destination:Cesium.Cartesian3.fromRadians(pos.longitude,pos.latitude,minH),
-     orientation:{heading:globeViewer.camera.heading,pitch:globeViewer.camera.pitch,roll:globeViewer.camera.roll}
-    });
-   }
-  }catch(e){}
- }
- async function syncGlobeProviderZoomStop(){
-  if(typeof globeViewer==='undefined'||!globeViewer||typeof Cesium==='undefined')return;
-  const seq=++globeProbeSeq,c=globeCenter();
-  applyGlobeCap(forcedEsriGlobeCap==null?ESRI_SAFE_FALLBACK:forcedEsriGlobeCap,c);
-  let cap=await esriMaxLevelAt(c.lat,c.lng);
-  if(seq!==globeProbeSeq)return;
-  if(forcedEsriGlobeCap!=null)cap=Math.min(cap,forcedEsriGlobeCap);
-  applyGlobeCap(cap,c);
- }
- function hookGlobeErrors(){
-  try{
-   const provider=globeSatelliteLayer?.imageryProvider;
-   if(!provider||provider.__anambroZoomErrorHook||!provider.errorEvent)return;
-   provider.errorEvent.addEventListener(err=>{
-    const z=Number(err?.level);
-    if(!Number.isFinite(z)||z<=0)return;
-    forcedEsriGlobeCap=forcedEsriGlobeCap==null?z-1:Math.min(forcedEsriGlobeCap,z-1);
-    applyGlobeCap(forcedEsriGlobeCap,globeCenter());
-   });
-   provider.__anambroZoomErrorHook=true;
-  }catch(e){}
- }
-
- let mapProviderSyncTimer=0;
- function scheduleMapProviderZoomStop(delay=180){
-  clearTimeout(mapProviderSyncTimer);
-  mapProviderSyncTimer=setTimeout(syncMapProviderZoomStop,delay);
- }
- document.querySelectorAll('input[data-base-choice]').forEach(el=>el.addEventListener('change',()=>scheduleMapProviderZoomStop(0)));
- // Debounce: una ráfaga de rueda/trackpad no debe disparar una consulta remota
- // por cada nivel intermedio. Se recalcula una sola vez cuando cesa el gesto.
- map.on('moveend zoomend',()=>scheduleMapProviderZoomStop(220));
- setTimeout(()=>scheduleMapProviderZoomStop(0),0);
-
- const __toggleGlobeProviderStop=toggleGlobe;
- toggleGlobe=async function(){
-  await __toggleGlobeProviderStop();
-  if(document.body.classList.contains('globe-mode')&&globeViewer){
-   hookGlobeErrors();
-   await syncGlobeProviderZoomStop();
-   if(!globeViewer.__anambroProviderZoomStop){
-    globeViewer.camera.moveEnd.addEventListener(syncGlobeProviderZoomStop);
-    globeViewer.__anambroProviderZoomStop=true;
-   }
-  }else syncMapProviderZoomStop();
- };
- window.addEventListener('resize',()=>setTimeout(()=>{
-  scheduleMapProviderZoomStop(0);
-  if(document.body.classList.contains('globe-mode'))syncGlobeProviderZoomStop();
- },120));
-})();
-</script>
 
 
 <style id="anambro-unified-zoom-slider-style">
