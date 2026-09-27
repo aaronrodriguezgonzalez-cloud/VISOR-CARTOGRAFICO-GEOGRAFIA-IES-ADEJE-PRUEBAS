@@ -1837,9 +1837,9 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutResizeHandle.sw{bottom:-7px;left:-7px;cursor:nesw-resize}
 .layoutResizeHint{margin-top:7px;padding:8px 9px;border-radius:7px;background:#edf4ff;border:1px solid #b8cff7;color:#17324d;font-weight:750;line-height:1.3}
 .layoutItem.resizing{cursor:default!important}
-.layoutLogoBox{left:2.5%;top:2.2%;width:5.5%;height:8%;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.layoutLogoBox img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none}
-.layoutTitleBox{left:9%;top:3%;width:82%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
+.layoutLogoBox{left:2.5%;top:2.2%;width:13.5%;height:8%;display:flex;align-items:center;justify-content:flex-start;overflow:visible}
+.layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
+.layoutTitleBox{left:17%;top:3%;width:74%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
 .layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #333;overflow:hidden;background:#d9dde1}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none}
 .layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.95);border:1px solid #555;border-radius:5px;padding:8px;font-size:11px;line-height:1.25}
@@ -3627,8 +3627,8 @@ body.globe-mode #globeScaleBox{display:block}
 
     <main class="layoutWorkspace">
       <div id="layoutPage" class="layoutPage landscape a4">
-        <div id="layoutLogoBox" class="layoutItem layoutLogoBox" data-layout="logo">
-          <img id="layoutLogoImage" alt="Logo ANAMBRO">
+        <div id="layoutLogoBox" class="layoutItem layoutLogoBox" data-layout="logo" aria-label="Logo ANAMBRO">
+          <div class="layoutAnambroLogo">ANAMBRO</div>
         </div>
         <div id="layoutTitleBox" class="layoutItem layoutTitleBox" data-layout="title">Mapa elaborado con ANAMBRO</div>
 
@@ -7407,11 +7407,7 @@ function openLayoutEditor(){
  document.getElementById('layoutTitleInput').value=title;
  document.getElementById('layoutTitleBox').textContent=title;
 
- // Reutilizar exactamente el logo incrustado del visor para que también
- // aparezca en la exportación PDF, sin depender de una URL externa.
- const sourceLogo=document.querySelector('.brandWide .brandSideLeft img,.brand img');
- const layoutLogo=document.getElementById('layoutLogoImage');
- if(sourceLogo&&layoutLogo)layoutLogo.src=sourceLogo.src;
+ // El logotipo ANAMBRO forma parte del propio diseño de la página exportable.
 
  updateLayoutPageFormat();
  ensureLayoutResizeHandles();
@@ -7745,8 +7741,21 @@ function updateLegend(){
  if(!c) return;
  let h='';
 
- // Fondo activo. Los mapas de Geografía humana usan deliberadamente fondo blanco.
- const humanActive=(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length>0);
+ // Si hay una capa geodemográfica activa, la leyenda cartográfica muestra SOLO
+ // la temática representada: sin fondo base, red geográfica ni capas auxiliares.
+ const humanActiveList=(typeof activeHumanIndicators==='function'?activeHumanIndicators():[]);
+ const humanActive=humanActiveList.length>0;
+ if(humanActive){
+  const humanYear=+document.getElementById('worldHumanYear').value;
+  c.innerHTML=humanActiveList.map(ind=>{
+   const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind);
+   return '<div style="margin-bottom:8px">'+humanLegendHTML(meta,humanYear,st.breaks||[])+'</div>';
+  }).join('');
+  return;
+ }
+
+ // Fuera de las capas geodemográficas se mantiene la leyenda general del visor.
+ // Fondo activo.
  const baseRadio=document.querySelector('input[name=base]:checked');
  if(humanActive){
    h+='<div style="margin-bottom:8px"><b>Fondo temático</b><br>▣ Blanco</div>';
@@ -7797,18 +7806,6 @@ function updateLegend(){
  }
  if(document.getElementById('worldBiomesCheck')?.checked && worldBiomesLayer && map.hasLayer(worldBiomesLayer)){
    h+='<div style="margin-bottom:8px"><b>Vegetación mundial · grandes biomas (RESOLVE 2017)</b><br>'+WORLD_BIOME_COLORS.map(([n,c])=>'<div><span class="sw" style="background:'+c+'"></span>'+esc(n)+'</div>').join('')+'</div>';
- }
- // Geografía humana: incluir en la leyenda los rangos/clases de cada variable activa.
- if(typeof activeHumanIndicators==='function'){
-  const humanActiveList=activeHumanIndicators();
-  if(humanActiveList.length){
-   const humanYear=+document.getElementById('worldHumanYear').value;
-   h+='<div style="margin-bottom:8px"><b>Geografía humana</b>'+
-    humanActiveList.map(ind=>{
-     const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind);
-     return '<div style="margin-top:6px">'+humanLegendHTML(meta,humanYear,st.breaks||[])+'</div>';
-    }).join('')+'</div>';
-  }
  }
  if(document.getElementById('worldVolcanoesCheck')?.checked && worldVolcanoesLayer && map.hasLayer(worldVolcanoesLayer)){
    h+='<div style="margin-bottom:8px"><b>Volcanes del mundo</b><br><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d8432f;border:1px solid #4a160e;margin-right:5px"></span>Volcanes</div>';
@@ -11142,7 +11139,7 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
 
 <script id="anambro-human-geography">
 const WORLD_HUMAN_INDICATORS={
- 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial',sense:'neutral',zeroBase:true},
+ 'SP.POP.TOTL':{name:'Población total',unit:'habitantes',dec:0,source:'Banco Mundial',compact:true,sense:'neutral'},
  'EN.POP.DNST':{name:'Densidad de población',unit:'hab./km²',dec:1,source:'Banco Mundial',sense:'neutral',zeroBase:true},
  'SP.POP.GROW':{name:'Crecimiento demográfico anual',unit:'%',dec:2,source:'Banco Mundial',sense:'neutral'},
  'SP.URB.TOTL.IN.ZS':{name:'Población urbana',unit:'% de la población',dec:1,source:'Banco Mundial',sense:'neutral',domain:[0,100]},
@@ -11181,25 +11178,16 @@ function humanNiceStep(raw){
  return m*p;
 }
 function humanBreaks(vals,meta){
- const a=vals.filter(Number.isFinite);
+ const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);
  if(!a.length)return [];
- if(Array.isArray(meta?.domain)&&meta.domain.length===2){
-  const lo=Number(meta.domain[0]),hi=Number(meta.domain[1]),step=(hi-lo)/5;
-  return Array.from({length:6},(_,i)=>lo+i*step);
- }
- let lo=meta?.zeroBase?0:Math.min(...a),hi=Math.max(...a);
- if(lo===hi){
-  const s=humanNiceStep(Math.abs(lo||1)/5||1);
-  lo=meta?.zeroBase?0:Math.floor((lo-2.5*s)/s)*s;hi=lo+5*s;
-  return Array.from({length:6},(_,i)=>lo+i*s);
- }
- let step=humanNiceStep((hi-lo)/5);
- let start=meta?.zeroBase?0:Math.floor(lo/step)*step;
- while(start+5*step<hi-1e-12){
-  step=humanNiceStep(step*1.01);
-  start=meta?.zeroBase?0:Math.floor(lo/step)*step;
- }
- return Array.from({length:6},(_,i)=>start+i*step);
+ // Clasificación por quintiles reales de los datos disponibles del año activo:
+ // cada clase contiene aproximadamente el 20 % de las observaciones válidas.
+ const q=p=>{
+  if(a.length===1)return a[0];
+  const pos=(a.length-1)*p,lo=Math.floor(pos),hi=Math.ceil(pos),t=pos-lo;
+  return a[lo]+(a[hi]-a[lo])*t;
+ };
+ return [a[0],q(.2),q(.4),q(.6),q(.8),a[a.length-1]];
 }
 function humanPalette(meta){return HUMAN_PALETTES[meta?.sense]||HUMAN_PALETTES.neutral;}
 function humanClassIndex(v,br){
@@ -11218,7 +11206,7 @@ function humanLegendNumber(v,meta){
 function humanLegendHTML(meta,year,br){
  if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';
  const colors=humanPalette(meta);
- let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
+ let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · quintiles de los datos disponibles · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
  for(let i=0;i<5;i++){
   const left=humanLegendNumber(br[i],meta),right=humanLegendNumber(br[i+1],meta);
   const label=left+' – '+right;
