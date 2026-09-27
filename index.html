@@ -1846,8 +1846,10 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutInstituteMeta{display:block;margin-top:1px;font-size:11px;color:#4a6279;font-weight:700}
 .layoutInstituteExplain{display:block;margin-top:3px;font-size:10.4px;color:#245a6c;font-weight:700}
 .layoutTitleBox{left:17%;top:3%;width:74%;height:7%;padding:4px 12px;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center;color:#111;background:rgba(255,255,255,.78);backdrop-filter:blur(1.4px);border-radius:16px}
-.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #6f7e88;border-radius:10px;overflow:hidden;background:#d9dde1;box-shadow:none}
+.layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:none;border-radius:0;overflow:hidden;background:#d9dde1;box-shadow:none}
 .layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none;background:#fff;position:absolute;left:0;top:0;transform-origin:50% 50%}
+.layoutMapBox.handMode{cursor:grab}
+.layoutMapBox.handMode.dragging{cursor:grabbing}
 .layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.97);border:1px solid #c9d3dc;border-radius:14px;padding:11px 12px;font:600 11.5px/1.34 Montserrat,Arial,sans-serif;color:#263746;box-shadow:none}
 .layoutLegendTitle{display:block;margin-bottom:4px;font-size:15px;font-weight:800;color:#17324d}
 .layoutLegendBox small{display:block;color:#556777;font-weight:600}
@@ -3628,7 +3630,7 @@ body.globe-mode #globeScaleBox{display:block}
       </label>
 
       <div class="layoutHelp">
-        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» puedes modificar el encuadre y el zoom dentro del recuadro. A 100 % la captura llena todo el marco; aumenta el zoom y usa los controles horizontal y vertical para elegir qué zona queda visible. «🌍 Capturar mapamundi completo» obtiene la vista mundial y «▣ Llenar recuadro» la ajusta al marco. Además, puedes <b>traer cualquier elemento al frente</b> o <b>enviarlo al fondo</b>.
+        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» puedes modificar el encuadre y el zoom dentro del recuadro. A 100 % la captura llena todo el marco; aumenta el zoom y usa los controles horizontal y vertical para elegir qué zona queda visible. «🌍 Capturar mapamundi completo» obtiene la vista mundial y «▣ Llenar recuadro» la ajusta al marco. Además, puedes <b>traer cualquier elemento al frente</b> o <b>enviarlo al fondo</b>. En el mapa, activa <b>✋ Mano en el mapa</b> para arrastrar el contenido dentro del marco sin mover el marco.
       </div>
       <div class="layoutResizeHint">↔ Selecciona mapa, leyenda, título, escala, norte, fuentes o créditos y estira sus márgenes directamente.</div>
 
@@ -3636,6 +3638,7 @@ body.globe-mode #globeScaleBox{display:block}
       <button class="action" onclick="refreshLayoutWorldSnapshot()">🌍 Capturar mapamundi completo</button>
       <button class="action" onclick="fitLayoutMapImage()">▣ Llenar recuadro</button>
       <button class="action" onclick="containLayoutMapImage()">↔ Ver captura completa</button>
+      <button id="layoutHandButton" class="action" type="button" onclick="toggleLayoutMapHandMode()">✋ Mano en el mapa: desactivada</button>
       <div class="layoutGrid2" style="margin-top:6px">
         <button class="action" type="button" onclick="bringSelectedLayoutItemToFront()">⬆ Traer al frente</button>
         <button class="action" type="button" onclick="sendSelectedLayoutItemToBack()">⬇ Enviar al fondo</button>
@@ -7442,7 +7445,7 @@ function updateLayoutScaleBox(){
  const distanceKm=niceScaleDistance(kmPerPx*targetPx);
  const widthPx=Math.max(36,Math.min(m.boxW*0.92,distanceKm/kmPerPx));
  barInner.style.width=widthPx+'px';
- const label=distanceKm>=1000 ? new Intl.NumberFormat('es-ES',{maximumFractionDigits:distanceKm<10000?1:0}).format(distanceKm/1000)+' km' : new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(distanceKm)+' m';
+ const label=distanceKm>=1 ? new Intl.NumberFormat('es-ES',{maximumFractionDigits:distanceKm<10?1:0}).format(distanceKm)+' km' : new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(distanceKm*1000)+' m';
  textEl.textContent='Escala gráfica · '+label;
 }
 function bringLayoutItemToFront(el){
@@ -7461,10 +7464,20 @@ function bringSelectedLayoutItemToFront(){
  const el=layoutEl(key);
  if(el)bringLayoutItemToFront(el);
 }
+let layoutMapHandMode=false,layoutMapPanDrag=null;
 function sendSelectedLayoutItemToBack(){
  const key=document.getElementById('layoutSelected')?.value;
  const el=layoutEl(key);
  if(el)sendLayoutItemToBack(el);
+}
+function syncLayoutMapHandButton(){
+ const btn=document.getElementById('layoutHandButton'),box=document.getElementById('layoutMapBox');
+ if(btn)btn.textContent='✋ Mano en el mapa: '+(layoutMapHandMode?'activada':'desactivada');
+ if(box)box.classList.toggle('handMode',layoutMapHandMode);
+}
+function toggleLayoutMapHandMode(){
+ layoutMapHandMode=!layoutMapHandMode;
+ syncLayoutMapHandButton();
 }
 function scaleForLayout(){
  const size=map.getSize(),centerY=Math.round(size.y/2);
@@ -7737,6 +7750,7 @@ function initLayoutDrag(){
    if(handle){
     const dir=handle.dataset.resize;
     layoutDrag=null;
+    layoutMapPanDrag=null;
     layoutResize={
      el,page,dir,pr,
      startX:e.clientX,startY:e.clientY,
@@ -7752,6 +7766,17 @@ function initLayoutDrag(){
    }
 
    layoutResize=null;
+   if(el.dataset.layout==='map'&&layoutMapHandMode){
+    const box=el.getBoundingClientRect();
+    const startPanX=+document.getElementById('layoutPanX').value||50;
+    const startPanY=+document.getElementById('layoutPanY').value||50;
+    layoutDrag=null;
+    layoutMapPanDrag={el,box,startX:e.clientX,startY:e.clientY,startPanX,startPanY};
+    el.classList.add('dragging');
+    el.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+    return;
+   }
    layoutDrag={el,page,dx:e.clientX-r.left,dy:e.clientY-r.top,pr};
    el.setPointerCapture?.(e.pointerId);
    e.preventDefault();
@@ -7759,6 +7784,18 @@ function initLayoutDrag(){
  });
 
  window.addEventListener('pointermove',e=>{
+  if(layoutMapPanDrag){
+   const s=layoutMapPanDrag;
+   const dx=(e.clientX-s.startX)/Math.max(1,s.box.width)*100;
+   const dy=(e.clientY-s.startY)/Math.max(1,s.box.height)*100;
+   const panX=Math.max(0,Math.min(100,s.startPanX+dx));
+   const panY=Math.max(0,Math.min(100,s.startPanY+dy));
+   document.getElementById('layoutPanX').value=panX;
+   document.getElementById('layoutPanY').value=panY;
+   applyLayoutControls();
+   e.preventDefault();
+   return;
+  }
   if(layoutResize){
    const s=layoutResize,dx=(e.clientX-s.startX)/s.pr.width*100,dy=(e.clientY-s.startY)/s.pr.height*100;
    let {x,y,w,h}=s;
@@ -7817,8 +7854,10 @@ function initLayoutDrag(){
 
  window.addEventListener('pointerup',()=>{
   if(layoutResize?.el)layoutResize.el.classList.remove('resizing');
+  if(layoutMapPanDrag?.el)layoutMapPanDrag.el.classList.remove('dragging');
   layoutResize=null;
   layoutDrag=null;
+  layoutMapPanDrag=null;
  });
 }
 async function exportLayoutPDF(){
@@ -7852,6 +7891,7 @@ document.addEventListener('DOMContentLoaded',()=>{
  document.getElementById('layoutTitleInput')?.addEventListener('input',e=>document.getElementById('layoutTitleBox').textContent=e.target.value||' ');
  document.getElementById('layoutMapImage')?.addEventListener('load',updateLayoutScaleBox);
  syncLayoutInstituteBox();
+ syncLayoutMapHandButton();
 });
 
 window.addEventListener('orientationchange',()=>setTimeout(()=>{
@@ -11423,17 +11463,37 @@ function humanNiceStep(raw){
  const m=n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10;
  return m*p;
 }
+function humanRoundNice(raw){
+ if(!Number.isFinite(raw)||raw===0)return 0;
+ const sign=raw<0?-1:1,v=Math.abs(raw),p=10**Math.floor(Math.log10(v));
+ const cand=[1,2,2.5,5,10].map(m=>m*p);
+ let best=cand[0],d=Math.abs(v-best);
+ for(const c of cand){const dd=Math.abs(v-c);if(dd<d){best=c;d=dd;}}
+ return sign*best;
+}
+function humanCeilNice(raw){
+ if(!Number.isFinite(raw)||raw<=0)return 0;
+ const p=10**Math.floor(Math.log10(raw));
+ for(const mult of [1,2,2.5,5,10]){const c=mult*p;if(c>=raw)return c;}
+ return 10*p;
+}
 function humanBreaks(vals,meta){
  const a=vals.filter(Number.isFinite).sort((x,y)=>x-y);
  if(!a.length)return [];
- // Clasificación por quintiles reales de los datos disponibles del año activo:
- // cada clase contiene aproximadamente el 20 % de las observaciones válidas.
  const q=p=>{
   if(a.length===1)return a[0];
   const pos=(a.length-1)*p,lo=Math.floor(pos),hi=Math.ceil(pos),t=pos-lo;
   return a[lo]+(a[hi]-a[lo])*t;
  };
- return [a[0],q(.2),q(.4),q(.6),q(.8),a[a.length-1]];
+ const raw=[q(.2),q(.4),q(.6),q(.8)];
+ const nice=[];
+ let prev=-Infinity;
+ for(const r of raw){
+   let b=humanRoundNice(r);
+   if(!(b>prev)) b=humanCeilNice(prev+(Math.abs(prev)||1)*0.02);
+   nice.push(b); prev=b;
+ }
+ return [a[0],nice[0],nice[1],nice[2],nice[3],a[a.length-1]];
 }
 function humanPalette(meta){return HUMAN_PALETTES[meta?.sense]||HUMAN_PALETTES.neutral;}
 function humanClassIndex(v,br){
@@ -11452,10 +11512,12 @@ function humanLegendNumber(v,meta){
 function humanLegendHTML(meta,year,br){
  if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';
  const colors=humanPalette(meta);
- let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · quintiles de los datos disponibles · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
+ let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · quintiles ajustados a intervalos coherentes · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';
  for(let i=0;i<5;i++){
-  const left=humanLegendNumber(br[i],meta),right=humanLegendNumber(br[i+1],meta);
-  const label=left+' – '+right;
+  let label='';
+  if(i===0) label='Menos de '+humanLegendNumber(br[1],meta);
+  else if(i===4) label='Más de '+humanLegendNumber(br[4],meta);
+  else label=humanLegendNumber(br[i],meta)+' – '+humanLegendNumber(br[i+1],meta);
   h+='<div><span class="sw" style="background:'+colors[i]+'"></span>'+label+'</div>';
  }
  return h+'<div><span class="sw" style="background:#b0b0b0"></span>Sin datos</div></div>';
