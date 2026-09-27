@@ -2734,6 +2734,183 @@ body.globe-mode #globeScaleBox{display:block}
 }
 </style>
 
+
+<style id="anambro-header-balanced-v8">
+/* ESCRITORIO · cabecera legible, llena y sin solapamientos */
+@media (min-width:761px){
+  .brand.brandWide{
+    position:absolute!important;
+    top:6px!important;
+    left:12px!important;
+    right:12px!important;
+    width:auto!important;
+    max-width:none!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:7px 12px 8px!important;
+    box-sizing:border-box!important;
+    display:grid!important;
+    grid-template-columns:minmax(260px,.92fr) minmax(540px,1.45fr) minmax(330px,1.05fr)!important;
+    grid-template-areas:
+      "title title title"
+      "left center right"!important;
+    grid-template-rows:auto auto!important;
+    column-gap:18px!important;
+    row-gap:5px!important;
+    align-items:center!important;
+    border-radius:14px!important;
+    overflow:hidden!important;
+  }
+
+  .brandWide>.brandTitleTop{
+    grid-area:title!important;
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    text-align:center!important;
+    font-size:30px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+  .brandWide>.brandTitleTop .brandLogoWord{
+    font-size:36px!important;
+    line-height:.9!important;
+  }
+
+  .brandWide>.brandSideLeft{
+    grid-area:left!important;
+    display:grid!important;
+    grid-template-columns:58px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:10px!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0 16px 0 0!important;
+    border-right:1px solid rgba(45,80,105,.18)!important;
+  }
+  .brandWide .brandSideLeft img{
+    width:58px!important;
+    height:58px!important;
+    flex:0 0 58px!important;
+    margin:0!important;
+  }
+  .brandWide .brandLeftText{
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    gap:3px!important;
+    min-width:0!important;
+  }
+  .brandWide .brandDept{
+    margin:0!important;
+    font-size:13px!important;
+    line-height:1.18!important;
+    text-align:left!important;
+  }
+  .brandWide .brandDept b{font-size:15px!important}
+  .brandWide .brandVersion{
+    position:static!important;
+    display:inline-flex!important;
+    width:max-content!important;
+    margin:0!important;
+    padding:2px 8px!important;
+    font-size:9.5px!important;
+    line-height:1!important;
+  }
+
+  .brandWide>.brandCenter{
+    grid-area:center!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0 4px!important;
+    gap:2px!important;
+    text-align:center!important;
+  }
+  .brandWide .brandDescriptor{
+    margin:0!important;
+    font-size:12.5px!important;
+    line-height:1.12!important;
+  }
+  .brandWide .brandTeacher{
+    margin:0!important;
+    font-size:19px!important;
+    line-height:1.08!important;
+  }
+  .brandWide .brandProfessional{
+    margin:0!important;
+    font-size:11.5px!important;
+    line-height:1.15!important;
+    max-width:760px!important;
+  }
+
+  .brandWide>.brandSideRight{
+    grid-area:right!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0 0 0 16px!important;
+    gap:6px!important;
+    border-left:1px solid rgba(45,80,105,.18)!important;
+  }
+  .brandWide .brandRoles{
+    margin:0!important;
+    max-width:100%!important;
+    font-size:11px!important;
+    line-height:1.18!important;
+    text-align:right!important;
+  }
+  .brandWide .brandActions{
+    position:static!important;
+    display:flex!important;
+    flex-direction:row!important;
+    justify-content:flex-end!important;
+    gap:7px!important;
+    margin:0!important;
+  }
+  .brandWide .brandWelcomeBtn{
+    padding:7px 11px!important;
+    font-size:10.5px!important;
+    line-height:1!important;
+  }
+
+  /* Las herramientas empiezan después de la cabecera, nunca encima. */
+  .toolbar{top:132px!important}
+  .leaflet-top.leaflet-left{top:126px!important}
+}
+
+/* Portátiles / escritorio estrecho: conserva legibilidad sin apretar la tipografía */
+@media (min-width:761px) and (max-width:1180px){
+  .brand.brandWide{
+    grid-template-columns:minmax(220px,.9fr) minmax(430px,1.35fr) minmax(270px,1fr)!important;
+    column-gap:11px!important;
+    padding:6px 10px 7px!important;
+  }
+  .brandWide>.brandTitleTop{font-size:25px!important}
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:31px!important}
+  .brandWide .brandSideLeft img{width:50px!important;height:50px!important;flex-basis:50px!important}
+  .brandWide .brandDept{font-size:11px!important}
+  .brandWide .brandDept b{font-size:13px!important}
+  .brandWide .brandDescriptor{font-size:11px!important}
+  .brandWide .brandTeacher{font-size:16px!important}
+  .brandWide .brandProfessional{font-size:10px!important}
+  .brandWide .brandRoles{font-size:9.5px!important}
+  .brandWide .brandWelcomeBtn{font-size:9px!important;padding:6px 8px!important}
+  .toolbar{top:119px!important}
+  .leaflet-top.leaflet-left{top:113px!important}
+}
+</style>
+
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
