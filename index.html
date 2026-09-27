@@ -6964,6 +6964,18 @@ function profileThemeMode(){
  if(lastProfileWorld&&mode==='veg_potential')return 'alt';
  return mode;
 }
+function profileThemeDisplayName(){
+ const mode=profileThemeMode();
+ if(mode==='alt')return 'Altimetría';
+ if(mode==='veg_actual')return lastProfileWorld?'Biomas':'Vegetación actual';
+ if(mode==='veg_potential')return 'Vegetación potencial';
+ if(mode==='geo')return 'Geología';
+ return 'Perfil topográfico';
+}
+function syncProfileLayoutLegendTitle(){
+ const title=document.querySelector('#layoutLegendBox .layoutLegendTitle');
+ if(title)title.textContent=layoutContentMode==='profile'?profileThemeDisplayName():'Leyenda';
+}
 function setProfileThemeLabel(id,text){
  const el=document.getElementById(id),lab=el?.parentElement;if(!el||!lab)return;
  const node=[...lab.childNodes].find(n=>n.nodeType===3);
@@ -7964,6 +7976,7 @@ function syncLayoutModeUI(){
  const north=layoutEl('north'),scale=layoutEl('scale');if(north)north.style.display=profile?'none':'';if(scale)scale.style.display=profile?'none':'';
  const page=document.getElementById('layoutPage');if(page)page.classList.toggle('profileLayout',profile);
  const legend=layoutEl('legend');if(legend){legend.style.overflow=profile?'auto':'hidden';legend.style.maxHeight=profile?'none':'24%';}
+ syncProfileLayoutLegendTitle();
 }
 function openProfileLayoutEditor(){
  if(!lastProfileDraw){alert('Genera primero un perfil topográfico.');return;}
@@ -8268,6 +8281,7 @@ async function refreshLayoutSnapshot(){
    layoutSnapshotMeta={type:'profile',imgWidth:c.width/(window.devicePixelRatio||1),imgHeight:c.height/(window.devicePixelRatio||1)};
    img.src=layoutSnapshotData;
    const leg=document.getElementById('layoutLegendContent');if(leg)leg.innerHTML=document.getElementById('profileBandsContent')?.innerHTML||'<small>Perfil topográfico.</small>';
+   syncProfileLayoutLegendTitle();
    const src=document.getElementById('layoutSources');if(src)src.textContent='Fuentes: '+profileExportSourcesText();
    return;
   }
@@ -8576,6 +8590,7 @@ async function exportLayoutPDF(){
  if(exportLegend){
   exportLegend.innerHTML=layoutContentMode==='profile'?(document.getElementById('profileBandsContent')?.innerHTML||'<small>Perfil topográfico.</small>'):activeLegendHTML();
  }
+ syncProfileLayoutLegendTitle();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Generando PDF…';}
  try{
