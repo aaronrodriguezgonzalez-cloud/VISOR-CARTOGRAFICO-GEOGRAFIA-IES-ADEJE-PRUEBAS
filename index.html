@@ -1841,7 +1841,7 @@ body.globe-mode #orientation,body.globe-mode #status{display:none!important}
 .layoutAnambroLogo{font-family:"Satisfy",cursive;font-size:38px;line-height:1;color:#0f9d8a;font-weight:400;letter-spacing:.2px;white-space:nowrap;text-shadow:0 2px 0 rgba(255,255,255,.7),0 3px 8px rgba(15,157,138,.18);pointer-events:none}
 .layoutTitleBox{left:17%;top:3%;width:74%;height:7%;font:800 28px/1.1 Montserrat,Arial,sans-serif;text-align:center;display:flex;align-items:center;justify-content:center}
 .layoutMapBox{left:6%;top:12%;width:70%;height:72%;border:1px solid #333;overflow:hidden;background:#d9dde1}
-.layoutMapBox img{width:100%;height:100%;object-fit:contain;object-position:50% 50%;display:block;pointer-events:none;background:#fff}
+.layoutMapBox img{width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block;pointer-events:none;background:#fff;position:absolute;left:0;top:0;transform-origin:50% 50%}
 .layoutLegendBox{left:78%;top:12%;width:19%;height:auto;max-height:65%;overflow:hidden;background:rgba(255,255,255,.95);border:1px solid #555;border-radius:5px;padding:8px;font-size:11px;line-height:1.25}
 .layoutLegendBox> b{font-size:13px}
 .layoutLegendBox .sw{width:12px;height:9px}
@@ -3613,17 +3613,18 @@ body.globe-mode #globeScaleBox{display:block}
       </div>
 
       <label>Zoom de la captura
-        <input id="layoutCropZoom" type="range" min="50" max="240" value="100">
+        <input id="layoutCropZoom" type="range" min="100" max="300" value="100">
       </label>
 
       <div class="layoutHelp">
-        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» también puedes modificar encuadre y zoom. Para un mapamundi completo usa «🌍 Capturar mapamundi completo»; «↔ Encajar captura completa» evita cualquier recorte.
+        <b>Cómo editar:</b> haz clic en cualquier elemento y arrástralo para moverlo. Para cambiar su tamaño, <b>tira directamente de cualquiera de sus bordes o esquinas</b>, igual que una ventana de Windows. Los controles laterales quedan como ajuste fino. En «Mapa» puedes modificar el encuadre y el zoom dentro del recuadro. A 100 % la captura llena todo el marco; aumenta el zoom y usa los controles horizontal y vertical para elegir qué zona queda visible. «🌍 Capturar mapamundi completo» obtiene la vista mundial y «▣ Llenar recuadro» la ajusta al marco.
       </div>
       <div class="layoutResizeHint">↔ Selecciona mapa, leyenda, título, escala, norte, fuentes o créditos y estira sus márgenes directamente.</div>
 
       <button class="action" onclick="refreshLayoutSnapshot()">↻ Actualizar mapa desde la vista actual</button>
       <button class="action" onclick="refreshLayoutWorldSnapshot()">🌍 Capturar mapamundi completo</button>
-      <button class="action" onclick="fitLayoutMapImage()">↔ Encajar captura completa</button>
+      <button class="action" onclick="fitLayoutMapImage()">▣ Llenar recuadro</button>
+      <button class="action" onclick="containLayoutMapImage()">↔ Ver captura completa</button>
       <button class="action" onclick="exportLayoutPDF()">📄 Exportar a PDF</button>
     </aside>
 
@@ -7383,13 +7384,25 @@ function scaleForLayout(){
  return n>=1000?(n/1000).toLocaleString('es-ES')+' km':Math.round(n)+' m';
 }
 function fitLayoutMapImage(){
- const z=document.getElementById('layoutCropZoom'),px=document.getElementById('layoutPanX'),py=document.getElementById('layoutPanY');
- if(z)z.value=100;if(px)px.value=50;if(py)py.value=50;
+ const z=document.getElementById('layoutCropZoom'),px=document.getElementById('layoutPanX'),py=document.getElementById('layoutPanY'),sz=document.getElementById('layoutSize');
+ if(z)z.value=100;if(px)px.value=50;if(py)py.value=50;if(sz)sz.value=100;
  const img=document.getElementById('layoutMapImage');
  if(img){
-  img.style.width='100%';img.style.height='100%';img.style.maxWidth='100%';img.style.maxHeight='100%';
-  img.style.position='absolute';img.style.left='50%';img.style.top='50%';img.style.transform='translate(-50%,-50%)';
+  img.style.width='100%';img.style.height='100%';img.style.maxWidth='none';img.style.maxHeight='none';
+  img.style.position='absolute';img.style.left='0';img.style.top='0';
+  img.style.objectFit='cover';img.style.objectPosition='50% 50%';
+  img.style.transform='scale(1)';img.style.transformOrigin='50% 50%';
+ }
+}
+function containLayoutMapImage(){
+ const z=document.getElementById('layoutCropZoom'),px=document.getElementById('layoutPanX'),py=document.getElementById('layoutPanY'),sz=document.getElementById('layoutSize');
+ if(z)z.value=100;if(px)px.value=50;if(py)py.value=50;if(sz)sz.value=100;
+ const img=document.getElementById('layoutMapImage');
+ if(img){
+  img.style.width='100%';img.style.height='100%';img.style.maxWidth='none';img.style.maxHeight='none';
+  img.style.position='absolute';img.style.left='0';img.style.top='0';
   img.style.objectFit='contain';img.style.objectPosition='50% 50%';
+  img.style.transform='scale(1)';img.style.transformOrigin='50% 50%';
  }
 }
 async function waitLayoutMapRender(timeout=1800){
@@ -7512,15 +7525,19 @@ function applyLayoutControls(){
  el.style.width=w+'%';el.style.height=h+'%';
  if(key==='map'){
   const img=document.getElementById('layoutMapImage');
-  const cropZoom=+document.getElementById('layoutCropZoom').value;
-  img.style.width=cropZoom+'%';
-  img.style.height=cropZoom+'%';
+  const cropZoom=Math.max(1,(+document.getElementById('layoutCropZoom').value||100)/100);
+  const panX=+document.getElementById('layoutPanX').value||50;
+  const panY=+document.getElementById('layoutPanY').value||50;
+  const effectiveZoom=cropZoom*s;
+  img.style.width='100%';
+  img.style.height='100%';
   img.style.maxWidth='none';img.style.maxHeight='none';
-  img.style.objectFit='contain';
+  img.style.objectFit='cover';
+  img.style.objectPosition=panX+'% '+panY+'%';
   img.style.position='absolute';
-  img.style.left=(50-(+document.getElementById('layoutPanX').value))*s+'%';
-  img.style.top=(50-(+document.getElementById('layoutPanY').value))*s+'%';
-  img.style.transform='translate(-50%,-50%)';
+  img.style.left='0';img.style.top='0';
+  img.style.transform='scale('+effectiveZoom+')';
+  img.style.transformOrigin=panX+'% '+panY+'%';
  }else{
   el.style.transform='scale('+s+')';
   el.style.transformOrigin='top left';
