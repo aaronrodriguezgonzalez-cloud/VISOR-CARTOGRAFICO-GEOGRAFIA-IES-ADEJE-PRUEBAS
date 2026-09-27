@@ -3098,6 +3098,19 @@ body.globe-mode #globeScaleBox{display:block}
   html body .leaflet-top.leaflet-left{top:118px!important}
 }
 </style>
+
+<style id="anambro-header-tool-clearance-fix">
+/* Escritorio: herramientas y paneles nunca pueden quedar debajo de la cabecera. */
+@media (min-width:761px){
+  :root{--anambro-header-bottom:92px}
+  .toolbar{top:calc(var(--anambro-header-bottom) + 8px)!important}
+  .panel{
+    top:calc(var(--anambro-header-bottom) + 8px)!important;
+    max-height:calc(100vh - var(--anambro-header-bottom) - 16px)!important
+  }
+  .leaflet-top.leaflet-left{top:var(--anambro-header-bottom)!important}
+}
+</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -3792,7 +3805,8 @@ const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&requ
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
 const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=1%C2%AA%20Edicion%20MTN&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'1.ª edición MTN · © IGN/CNIG'});
 const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
- noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
+ noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:19,
+ updateWhenZooming:true,updateWhenIdle:false,keepBuffer:4,
  attribution:'Esri World Imagery'
 });
 
@@ -11098,6 +11112,17 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   const cos=Math.max(.05,Math.cos((lat||0)*Math.PI/180));
   return Math.max(0,Math.min(23,Math.log2(156543.03392804097*cos/mpp)));
  }
+ function refreshWorldImageryTiles2D(){
+  if(typeof worldImagery==='undefined'||typeof map==='undefined')return;
+  if(document.body.classList.contains('globe-mode'))return;
+  if(!map.hasLayer(worldImagery))return;
+  // Recreate the tile level after the map has been hidden by the 3D globe.
+  // Leaflet can otherwise keep the previous low-resolution tile pyramid and scale it.
+  map.removeLayer(worldImagery);
+  worldImagery.addTo(map);
+  try{worldImagery.bringToBack();}catch(e){}
+  worldImagery.redraw();
+ }
  function cameraHeightForLeafletView(){
   if(!globeViewer||!window.Cesium)return null;
   const c=map.getCenter(),z=map.getZoom();
@@ -11128,11 +11153,19 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
    }
    updateGlobeScale();
   }else if(!document.body.classList.contains('globe-mode')){
+   // El mapa vuelve a estar visible: recalcular primero su tamaño y después su escala.
+   map.invalidateSize({pan:false,animate:false});
    if(gCenter&&gMpp){
     const z=leafletZoomForMpp(gMpp,gCenter.lat);
     map.setView([gCenter.lat,gCenter.lng],z,{animate:false});
    }
-   setTimeout(()=>{syncWorldImagery2D();map.invalidateSize();},0);
+   // Forzar que Esri World Imagery solicite las teselas del nivel actual, no una
+   // pirámide antigua ampliada tras haber estado oculto bajo el globo 3D.
+   setTimeout(()=>{
+    map.invalidateSize({pan:false,animate:false});
+    syncWorldImagery2D();
+    refreshWorldImageryTiles2D();
+   },60);
   }
  };
 })();
@@ -11249,4 +11282,21 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 (function(){const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');document.querySelectorAll('.worldHumanLayerCheck').forEach(cb=>cb.addEventListener('change',async()=>{if(cb.checked)await updateHumanIndicator(cb.dataset.humanIndicator);else clearHumanIndicator(cb.dataset.humanIndicator);refreshHumanLegend();}));yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',updateWorldHuman);document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{yr.value=2025;yv.textContent='2025';updateWorldHuman();};})();
 </script>
 
+
+<script id="anambro-header-tool-clearance-sync">
+(function(){
+ function syncHeaderClearance(){
+  if(window.innerWidth<=760)return;
+  const h=document.querySelector('.brand.brandWide')||document.querySelector('.brand');
+  if(!h)return;
+  const r=h.getBoundingClientRect();
+  const bottom=Math.max(0,Math.ceil(r.bottom));
+  document.documentElement.style.setProperty('--anambro-header-bottom',bottom+'px');
+ }
+ window.addEventListener('resize',()=>requestAnimationFrame(syncHeaderClearance));
+ window.addEventListener('orientationchange',()=>setTimeout(syncHeaderClearance,120));
+ document.addEventListener('DOMContentLoaded',()=>{syncHeaderClearance();setTimeout(syncHeaderClearance,80);});
+ if(document.readyState!=='loading'){syncHeaderClearance();setTimeout(syncHeaderClearance,80);}
+})();
+</script>
 </body></html>
