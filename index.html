@@ -7405,6 +7405,65 @@ function containLayoutMapImage(){
   img.style.transform='scale(1)';img.style.transformOrigin='50% 50%';
  }
 }
+function isWorldThematicLayoutMode(){
+ try{return !!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length&&map&&map.getZoom&&map.getZoom()<=4.5);}catch(e){return false;}
+}
+function equalEarthProject(lon,lat){
+ const rad=Math.PI/180,lambda=lon*rad,phi=Math.max(-89.9999,Math.min(89.9999,lat))*rad;
+ const A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,M=Math.sqrt(3)/2;
+ const theta=Math.asin(M*Math.sin(phi));
+ const t2=theta*theta;
+ const t6=t2*t2*t2;
+ const x=(2*Math.sqrt(3)*lambda*Math.cos(theta))/(3*(A1+3*A2*t2+t6*(7*A3+9*A4*t2)));
+ const y=theta*(A1+A2*t2+t6*(A3+A4*t2));
+ return [x,y];
+}
+function walkGeoCoords(coords,cb){
+ if(!Array.isArray(coords))return;
+ if(typeof coords[0]?.[0]==='number'){cb(coords);return;}
+ for(const part of coords)walkGeoCoords(part,cb);
+}
+async function renderThematicWorldLayoutSnapshot(){
+ const active=(typeof activeHumanIndicators==='function'?activeHumanIndicators():[]);
+ if(!active.length)throw new Error('No hay capa temática mundial activa');
+ const ind=active[0],meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),year=+document.getElementById('worldHumanYear').value;
+ if(!st?.data?.size||st.year!==year||!(st.breaks||[]).length)await updateHumanIndicator(ind);
+ const data=(st.data&&st.year===year)?st.data:humanState(ind).data;
+ const br=(humanState(ind).breaks||[]);
+ const geo=await loadCountries();
+ const width=2400,height=1350,pad=40;
+ const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#ffffff';ctx.fillRect(0,0,width,height);
+ let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+ for(const f of (geo?.features||[])){
+  walkGeoCoords(f?.geometry?.coordinates,r=>{for(const pt of r){
+   const lon=+pt[0],lat=+pt[1];if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
+   const pr=equalEarthProject(lon,lat);if(pr[0]<minX)minX=pr[0];if(pr[0]>maxX)maxX=pr[0];if(pr[1]<minY)minY=pr[1];if(pr[1]>maxY)maxY=pr[1];
+  }});
+ }
+ if(!Number.isFinite(minX)||!Number.isFinite(maxX))throw new Error('No se pudo proyectar el mapamundi');
+ const sx=(width-2*pad)/(maxX-minX),sy=(height-2*pad)/(maxY-minY),scale=Math.min(sx,sy);
+ const ox=pad+(width-2*pad-(maxX-minX)*scale)/2-minX*scale;
+ const oy=pad+(height-2*pad-(maxY-minY)*scale)/2+maxY*scale;
+ function px(lon,lat){const p=equalEarthProject(lon,lat);return [ox+p[0]*scale,oy-p[1]*scale];}
+ ctx.lineJoin='round';ctx.lineCap='round';
+ for(const f of (geo?.features||[])){
+  const props=f.properties||{},code=humanCountryCode(props),v=data.get(code);
+  ctx.beginPath();
+  walkGeoCoords(f?.geometry?.coordinates,ring=>{
+   let first=true;
+   for(const pt of ring){const lon=+pt[0],lat=+pt[1];if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;const [x,y]=px(lon,lat);if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);} 
+   if(!first)ctx.closePath();
+  });
+  ctx.fillStyle=humanColor(v,br,meta);
+  ctx.fill();
+  ctx.strokeStyle='rgba(86,86,86,0.78)';
+  ctx.lineWidth=1.1;
+  ctx.stroke();
+ }
+ return canvas.toDataURL('image/jpeg',0.94);
+}
 async function waitLayoutMapRender(timeout=1800){
  const start=Date.now();
  while(Date.now()-start<timeout){
@@ -7418,6 +7477,16 @@ async function refreshLayoutWorldSnapshot(){
  const prevMaxBounds=map.options.maxBounds;
  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Preparando mapamundi…';}
  try{
+  if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+   layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
+   const img=document.getElementById('layoutMapImage');
+   img.src=layoutSnapshotData;
+   document.getElementById('layoutScaleText').textContent='Escala gráfica · 10.000 km';
+   document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
+   document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
+   fitLayoutMapImage();
+   return;
+  }
   // Para exportar un mapamundi completo hay que permitir temporalmente un zoom
   // menor que el mínimo dinámico usado por la vista interactiva.
   map.setMinZoom(0);
@@ -7441,14 +7510,19 @@ async function refreshLayoutSnapshot(){
  const img=document.getElementById('layoutMapImage');
  img.style.opacity='.35';
  try{
-  const canvas=await html2canvas(document.getElementById('map'),{
-   useCORS:true,allowTaint:false,logging:false,
-   backgroundColor:(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)?'#ffffff':'#d9dde1',
-   ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
-  });
-  layoutSnapshotData=canvas.toDataURL('image/jpeg',.92);
+  if(isWorldThematicLayoutMode()){
+   layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
+  }else{
+   const canvas=await html2canvas(document.getElementById('map'),{
+    useCORS:true,allowTaint:false,logging:false,
+    backgroundColor:(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)?'#ffffff':'#d9dde1',
+    ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
+   });
+   layoutSnapshotData=canvas.toDataURL('image/jpeg',.92);
+  }
   img.src=layoutSnapshotData;
-  document.getElementById('layoutScaleText').textContent='Escala gráfica · '+scaleForLayout();
+  if(isWorldThematicLayoutMode())document.getElementById('layoutScaleText').textContent='Escala gráfica · 10.000 km';
+  else document.getElementById('layoutScaleText').textContent='Escala gráfica · '+scaleForLayout();
   document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
   document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
  }catch(e){
