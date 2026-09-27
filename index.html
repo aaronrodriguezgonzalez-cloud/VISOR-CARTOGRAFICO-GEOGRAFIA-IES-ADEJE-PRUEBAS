@@ -4770,7 +4770,7 @@ let activeBase=hybrid;
 hybrid.addTo(map);
 document.querySelectorAll('input[data-base-choice]').forEach(r=>r.addEventListener('change',()=>{
  const value=r.dataset.baseChoice;
- if(map.hasLayer(activeBase))map.removeLayer(activeBase);activeBase=bases[value];if(!document.getElementById('worldHistoryCheck')?.checked)activeBase.addTo(map);
+ if(map.hasLayer(activeBase))map.removeLayer(activeBase);activeBase=bases[value];if(!document.getElementById('worldHistoryCheck')?.checked&&!(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length))activeBase.addTo(map);
  document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice===value));
  bringGeologyToFront();
  if(document.getElementById('toponymyCheck')?.checked)toponymy.bringToFront();
@@ -10151,6 +10151,12 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   if(typeof map==='undefined'||typeof worldImagery==='undefined'||typeof activeBase==='undefined')return;
   if(document.body.classList.contains('globe-mode'))return;
   if(document.getElementById('worldHistoryCheck')?.checked)return;
+  if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
+   if(map.hasLayer(activeBase))map.removeLayer(activeBase);
+   if(map.hasLayer(worldImagery))map.removeLayer(worldImagery);
+   map.getContainer().style.backgroundColor='#ffffff';
+   return;
+  }
   const inSpain=isSpainView2D();
   // Fuera de España las bases IGN/PNOA no son un fondo mundial: se usa exactamente Esri World Imagery, igual que en el globo.
   if(!inSpain && activeBase!==worldImagery){
@@ -10275,7 +10281,7 @@ const WORLD_HUMAN_INDICATORS={
  'IT.NET.USER.ZS':{name:'Personas que usan Internet',unit:'% de la población',dec:1,source:'Banco Mundial'},
  'SH.H2O.BASW.ZS':{name:'Acceso al menos básico a agua potable',unit:'% de la población',dec:1,source:'Banco Mundial'}
 };
-const HUMAN_COLORS=['#f1eef6','#bdc9e1','#74a9cf','#2b8cbe','#045a8d'];
+const HUMAN_COLORS=['#ffe34d','#ff9f1c','#ff4d4d','#b63cff','#1769ff'];
 const worldHumanLayers=new Map();
 let worldHumanRequest=0,worldHumanHDICache=null,worldHumanISO2to3=null;
 function activeHumanIndicators(){return [...document.querySelectorAll('.worldHumanLayerCheck:checked')].map(x=>x.dataset.humanIndicator).filter(Boolean);}
@@ -10288,8 +10294,8 @@ function humanColor(v,br){if(!Number.isFinite(v))return '#b8b8b8';let i=0;while(
 function humanLegendHTML(meta,year,br){if(!br.length)return '<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>Sin datos disponibles · '+escHtml(meta.source)+'</small>';let h='<b>'+escHtml(meta.name)+' · '+year+'</b><br><small>'+escHtml(meta.unit)+' · '+escHtml(meta.source)+'</small><div style="margin-top:5px">';for(let i=0;i<5;i++){let label;if(i===0)label='≤ '+humanFmt(br[0],meta);else if(i===4)label='> '+humanFmt(br[3],meta);else label=humanFmt(br[i-1],meta)+' – '+humanFmt(br[i],meta);h+='<div><span class="sw" style="background:'+HUMAN_COLORS[i]+'"></span>'+label+'</div>';}return h+'<div><span class="sw" style="background:#b8b8b8"></span>Sin datos</div></div>';}
 async function loadHumanWB(ind,year){const u='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400&date='+year;const r=await fetch(u);if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json();const m=new Map();for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),raw=row?.value;if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(c.length===3&&Number.isFinite(v))m.set(c,v);}return m;}
 function parseCSVLine(line){const out=[];let x='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){x+='"';i++;}else q=!q;}else if(c===','&&!q){out.push(x);x='';}else x+=c;}out.push(x);return out;}
-async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;const u='https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv';const r=await fetch(u);if(!r.ok)throw new Error('PNUD '+r.status);const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]);const iso=head.findIndex(x=>/iso3/i.test(x)),ind=head.findIndex(x=>/^indicator$/i.test(x)||/index code/i.test(x));const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>5)data.push(row);}worldHumanHDICache={head,iso,ind,data};return worldHumanHDICache;}
-async function loadHumanHDI(year){const c=await loadHDICSV(),m=new Map();let yi=c.head.indexOf(String(year));if(yi<0)yi=c.head.findIndex(x=>x.trim()===String(year));if(yi<0)return m;for(const row of c.data){const code=String(row[c.iso]||'').toUpperCase();const indicator=String(row[c.ind]||'').toLowerCase();if(code.length!==3||!(indicator==='hdi'||indicator.includes('human development index')))continue;const raw=row[yi];if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(Number.isFinite(v))m.set(code,v);}return m;}
+async function loadHDICSV(){if(worldHumanHDICache)return worldHumanHDICache;const u='https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv';const r=await fetch(u);if(!r.ok)throw new Error('PNUD '+r.status);const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean),head=parseCSVLine(lines[0]).map(x=>String(x||'').trim());const iso=head.findIndex(x=>/^iso3$/i.test(x)||/^iso3_code$/i.test(x));const data=[];for(let i=1;i<lines.length;i++){const row=parseCSVLine(lines[i]);if(row.length>5)data.push(row);}worldHumanHDICache={head,iso,data};return worldHumanHDICache;}
+async function loadHumanHDI(year){const c=await loadHDICSV(),m=new Map();const candidates=['hdi_'+year,'HDI_'+year,String(year)];let yi=-1;for(const key of candidates){yi=c.head.findIndex(x=>String(x).toLowerCase()===String(key).toLowerCase());if(yi>=0)break;}if(c.iso<0||yi<0)return m;for(const row of c.data){const code=String(row[c.iso]||'').trim().toUpperCase();if(code.length!==3)continue;const raw=row[yi];if(raw===null||raw===undefined||String(raw).trim()===''||String(raw).trim().toLowerCase()==='n/a')continue;const v=Number(String(raw).replace(',','.'));if(Number.isFinite(v))m.set(code,v);}return m;}
 function humanState(ind){if(!worldHumanLayers.has(ind))worldHumanLayers.set(ind,{data:new Map(),layer2D:null,source3D:null,year:null,breaks:[]});return worldHumanLayers.get(ind);}
 let humanOldMapBackground='';
 function syncHumanThematicBasemap(){
