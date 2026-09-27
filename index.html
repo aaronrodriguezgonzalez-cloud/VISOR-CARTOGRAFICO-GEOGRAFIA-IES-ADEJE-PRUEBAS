@@ -2915,126 +2915,187 @@ body.globe-mode #globeScaleBox{display:block}
 
 
 
-<style id="anambro-header-final-v10">
-/* CABECERA DEFINITIVA ESCRITORIO: de lado a lado, compacta, sin zonas muertas */
+
+
+
+<style id="anambro-header-final-v12">
+/* CABECERA ESCRITORIO v12
+   Regla: laterales ocupan TODA la altura; el centro se divide entre título e identificación.
+   Así no quedan mitades superiores vacías, ANAMBRO nunca se recorta y las tipografías laterales siguen siendo legibles. */
 @media (min-width:761px){
   html body .brand.brandWide{
     position:absolute!important;
     z-index:1500!important;
     top:0!important;
     left:0!important;
-    right:auto!important;
-    width:100vw!important;
-    max-width:100vw!important;
-    height:102px!important;
-    min-height:102px!important;
+    right:0!important;
+    width:100%!important;
+    max-width:none!important;
+    height:112px!important;
+    min-height:112px!important;
     margin:0!important;
-    padding:4px 12px 6px!important;
+    padding:0 14px!important;
     box-sizing:border-box!important;
     transform:none!important;
     display:grid!important;
-    grid-template-columns:minmax(235px,26%) minmax(500px,48%) minmax(300px,26%)!important;
-    grid-template-rows:37px 55px!important;
+    grid-template-columns:27% 46% 27%!important;
+    grid-template-rows:48px 64px!important;
     grid-template-areas:
-      "title title title"
+      "left title right"
       "left center right"!important;
     column-gap:0!important;
     row-gap:0!important;
     align-items:stretch!important;
     overflow:hidden!important;
     border-radius:0 0 12px 12px!important;
+    background:linear-gradient(180deg,rgba(255,255,255,.988),rgba(244,248,251,.988))!important;
   }
 
+  /* TÍTULO: solo en el centro, completo y sin recorte */
   html body .brandWide>.brandTitleTop{
     grid-area:title!important;
     display:flex!important;
-    align-items:center!important;
+    align-items:flex-end!important;
     justify-content:center!important;
-    margin:0!important;
-    padding:0 8px!important;
     width:100%!important;
+    min-width:0!important;
+    height:48px!important;
+    margin:0!important;
+    padding:4px 8px 2px!important;
     box-sizing:border-box!important;
-    text-align:center!important;
-    white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:clip!important;
     font-size:29px!important;
     line-height:1!important;
+    font-weight:900!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
   }
-  html body .brandWide>.brandTitleTop .brandLogoWord{font-size:36px!important;line-height:.9!important}
+  html body .brandWide>.brandTitleTop .brandBase{display:inline!important;white-space:nowrap!important}
+  html body .brandWide>.brandTitleTop .brandLogoWord{
+    display:inline!important;
+    flex:0 0 auto!important;
+    margin-left:8px!important;
+    font-size:37px!important;
+    line-height:.88!important;
+    white-space:nowrap!important;
+  }
 
+  /* IZQUIERDA: ocupa las DOS filas; nada de media columna vacía */
   html body .brandWide>.brandSideLeft{
     grid-area:left!important;
     display:grid!important;
-    grid-template-columns:52px minmax(0,1fr)!important;
+    grid-template-columns:66px minmax(0,1fr)!important;
     align-items:center!important;
-    gap:9px!important;
+    align-content:center!important;
+    gap:12px!important;
     min-width:0!important;
+    height:112px!important;
     margin:0!important;
-    padding:2px 14px 2px 4px!important;
-    border-right:1px solid rgba(45,80,105,.22)!important;
+    padding:10px 18px 10px 4px!important;
+    box-sizing:border-box!important;
+    border-right:1px solid rgba(45,80,105,.20)!important;
   }
-  html body .brandWide .brandSideLeft img{width:50px!important;height:50px!important;flex:0 0 50px!important;margin:0!important}
-  html body .brandWide .brandLeftText{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:2px!important;min-width:0!important}
-  html body .brandWide .brandDept{margin:0!important;font-size:12.5px!important;line-height:1.08!important;text-align:left!important;color:#40596c!important}
-  html body .brandWide .brandDept b{font-size:15px!important;color:#17324d!important}
-  html body .brandWide .brandVersion{position:static!important;display:inline-flex!important;align-self:flex-start!important;margin:0!important;padding:2px 7px!important;font-size:9px!important;line-height:1!important}
+  html body .brandWide .brandSideLeft img{
+    width:62px!important;height:62px!important;flex:0 0 62px!important;margin:0!important;
+  }
+  html body .brandWide .brandLeftText{
+    display:flex!important;flex-direction:column!important;justify-content:center!important;gap:4px!important;min-width:0!important;
+  }
+  html body .brandWide .brandDept{
+    margin:0!important;font-size:14px!important;line-height:1.15!important;text-align:left!important;color:#40596c!important;
+  }
+  html body .brandWide .brandDept b{
+    font-size:19px!important;line-height:1!important;color:#17324d!important;
+  }
+  html body .brandWide .brandVersion{
+    position:static!important;display:inline-flex!important;align-self:flex-start!important;margin:0!important;
+    padding:3px 8px!important;font-size:10px!important;line-height:1!important;
+  }
 
+  /* CENTRO: jerarquía clara, sin apelotonar */
   html body .brandWide>.brandCenter{
     grid-area:center!important;
     display:grid!important;
-    grid-template-rows:16px 22px 17px!important;
+    grid-template-rows:18px 26px 20px!important;
     align-content:center!important;
     align-items:center!important;
     justify-items:center!important;
     gap:0!important;
     min-width:0!important;
     margin:0!important;
-    padding:0 14px!important;
+    padding:0 14px 5px!important;
+    box-sizing:border-box!important;
     text-align:center!important;
   }
-  html body .brandWide .brandDescriptor{margin:0!important;font-size:12.5px!important;line-height:1!important;white-space:nowrap!important}
-  html body .brandWide .brandTeacher{margin:0!important;font-size:19px!important;line-height:1!important;white-space:nowrap!important}
-  html body .brandWide .brandProfessional{margin:0!important;font-size:11.5px!important;line-height:1.08!important;max-width:none!important;white-space:nowrap!important}
+  html body .brandWide .brandDescriptor{
+    margin:0!important;font-size:13px!important;line-height:1.05!important;font-weight:800!important;white-space:nowrap!important;
+  }
+  html body .brandWide .brandTeacher{
+    margin:0!important;font-size:21px!important;line-height:1.05!important;font-weight:900!important;white-space:nowrap!important;
+  }
+  html body .brandWide .brandProfessional{
+    margin:0!important;font-size:11.8px!important;line-height:1.08!important;font-weight:700!important;max-width:none!important;white-space:nowrap!important;
+  }
 
+  /* DERECHA: también ocupa las DOS filas y usa toda su altura */
   html body .brandWide>.brandSideRight{
     grid-area:right!important;
     display:grid!important;
-    grid-template-rows:minmax(0,1fr) 28px!important;
+    grid-template-rows:1fr auto!important;
+    align-content:center!important;
     align-items:center!important;
-    justify-items:end!important;
-    gap:1px!important;
+    justify-items:stretch!important;
     min-width:0!important;
+    height:112px!important;
     margin:0!important;
-    padding:2px 4px 2px 14px!important;
-    border-left:1px solid rgba(45,80,105,.22)!important;
+    padding:10px 4px 10px 18px!important;
+    box-sizing:border-box!important;
+    gap:8px!important;
+    border-left:1px solid rgba(45,80,105,.20)!important;
   }
-  html body .brandWide .brandRoles{margin:0!important;max-width:100%!important;font-size:10.5px!important;line-height:1.12!important;text-align:right!important}
-  html body .brandWide .brandActions{position:static!important;display:flex!important;flex-direction:row!important;justify-content:flex-end!important;align-items:center!important;gap:6px!important;margin:0!important}
-  html body .brandWide .brandWelcomeBtn{padding:6px 10px!important;font-size:9.5px!important;line-height:1!important}
+  html body .brandWide .brandRoles{
+    margin:0!important;max-width:100%!important;font-size:13px!important;line-height:1.16!important;text-align:center!important;font-weight:800!important;
+  }
+  html body .brandWide .brandActions{
+    position:static!important;display:flex!important;flex-direction:row!important;justify-content:center!important;align-items:center!important;
+    gap:8px!important;margin:0!important;
+  }
+  html body .brandWide .brandWelcomeBtn{
+    padding:7px 11px!important;font-size:10.5px!important;line-height:1!important;
+  }
 
-  html body .toolbar{top:110px!important}
-  html body .leaflet-top.leaflet-left{top:104px!important}
+  /* Controles SIEMPRE por debajo de la cabecera */
+  html body .toolbar{top:120px!important}
+  html body .leaflet-top.leaflet-left{top:114px!important}
 }
 
-/* Escritorio estrecho: mantiene jerarquía sin convertir la letra en microscópica */
-@media (min-width:761px) and (max-width:1220px){
+/* Escritorio/intermedio: se reduce solo lo imprescindible, sin miniaturizar laterales. */
+@media (min-width:761px) and (max-width:1320px){
   html body .brand.brandWide{
-    grid-template-columns:minmax(210px,25%) minmax(390px,48%) minmax(260px,27%)!important;
-    height:106px!important;
-    min-height:106px!important;
-    grid-template-rows:37px 59px!important;
+    grid-template-columns:26% 48% 26%!important;
+    height:116px!important;min-height:116px!important;
+    grid-template-rows:48px 68px!important;
+    padding:0 10px!important;
   }
-  html body .brandWide>.brandTitleTop{font-size:26px!important}
+  html body .brandWide>.brandTitleTop{font-size:25px!important;height:48px!important}
   html body .brandWide>.brandTitleTop .brandLogoWord{font-size:32px!important}
+  html body .brandWide>.brandSideLeft,
+  html body .brandWide>.brandSideRight{height:116px!important}
+  html body .brandWide>.brandSideLeft{grid-template-columns:56px minmax(0,1fr)!important;gap:8px!important;padding:8px 10px 8px 2px!important}
+  html body .brandWide .brandSideLeft img{width:52px!important;height:52px!important;flex-basis:52px!important}
   html body .brandWide .brandDept{font-size:11.5px!important}
-  html body .brandWide .brandDept b{font-size:14px!important}
-  html body .brandWide .brandDescriptor{font-size:11.5px!important}
+  html body .brandWide .brandDept b{font-size:15px!important}
+  html body .brandWide .brandVersion{font-size:8.5px!important;padding:2px 6px!important}
+  html body .brandWide>.brandCenter{padding-left:8px!important;padding-right:8px!important}
+  html body .brandWide .brandDescriptor{font-size:11px!important}
   html body .brandWide .brandTeacher{font-size:17px!important}
-  html body .brandWide .brandProfessional{font-size:10.3px!important}
-  html body .brandWide .brandRoles{font-size:9.6px!important}
-  html body .toolbar{top:114px!important}
-  html body .leaflet-top.leaflet-left{top:108px!important}
+  html body .brandWide .brandProfessional{font-size:9.8px!important}
+  html body .brandWide>.brandSideRight{padding:8px 2px 8px 10px!important;gap:6px!important}
+  html body .brandWide .brandRoles{font-size:10.8px!important}
+  html body .brandWide .brandWelcomeBtn{font-size:9px!important;padding:6px 8px!important}
+  html body .toolbar{top:124px!important}
+  html body .leaflet-top.leaflet-left{top:118px!important}
 }
 </style>
 </head><body>
