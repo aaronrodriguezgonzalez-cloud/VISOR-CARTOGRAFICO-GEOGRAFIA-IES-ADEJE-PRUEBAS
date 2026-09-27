@@ -3681,9 +3681,33 @@ html body .layoutOverlay{z-index:9000!important}
 
 
 <div class="panel hidden" id="layersPanel"><h3>Capas</h3>
-<div class="layersRule"><b>Navegación por niveles: </b>ámbito → Geografía Física / Geografía Humana / Historia → subcategoría → capa. La cartografía de referencia y utilidades están en Herramientas Comunes.</div>
+<div class="layersRule"><b>Navegación por niveles: </b>ámbito → cartografía/territorio o Geografía Física / Geografía Humana / Historia → subcategoría → capa. Cada ámbito contiene sus propias capas; los elementos realmente transversales quedan aparte.</div>
 <details class="layerScope"><summary>🏝️ Canarias</summary>
-<div class="layerScopeInner">
+<div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseCanary" type="radio"/> Mapa topográfico · MTN</label>
+<label><input data-base-choice="pnoa" name="baseCanary" type="radio"/> Imagen · PNOA máxima actualidad</label>
+<label><input data-base-choice="street" name="baseCanary" type="radio"/> Callejero · IGN Base</label>
+<label><input checked="" data-base-choice="hybrid" name="baseCanary" type="radio"/> Híbrido · PNOA + cartografía</label>
+<label><input data-base-choice="lidar" name="baseCanary" type="radio"/> LiDAR · relieve</label>
+<label><input data-base-choice="land" name="baseCanary" type="radio"/> Ocupación del suelo</label>
+<label><input data-base-choice="historic" name="baseCanary" type="radio"/> Mapa histórico · 1.ª edición MTN50</label></details><details class="layerSubcategory"><summary>🧭 Territorio y patrimonio</summary><label><input checked="" id="munCheck" type="checkbox"/> <b>Municipios · Canarias</b></label>
+<div class="layerSubBlock">
+<small><b>Opacidad</b> <span id="munOpacityValue">100 %</span></small>
+<input id="munOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="1"/>
+</div>
+<label><input id="enpMaster" type="checkbox"/> <b>Espacios Naturales Protegidos · Canarias</b></label>
+<div style="padding:2px 2px 7px 13px">
+<small><b>Opacidad de la capa</b> <span id="enpOpacityValue">100 %</span></small>
+<input id="enpOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="1"/>
+</div>
+<label class="sub"><input data-enp="Monumento Natural" type="checkbox"/> <span class="sw" style="background:#0d4d7c"></span>Monumento Natural</label>
+<label class="sub"><input data-enp="Paisaje Protegido" type="checkbox"/> <span class="sw" style="background:#7d99bb"></span>Paisaje Protegido</label>
+<label class="sub"><input data-enp="Parque Nacional" type="checkbox"/> <span class="sw" style="background:#f58220"></span>Parque Nacional</label>
+<label class="sub"><input data-enp="Parque Natural" type="checkbox"/> <span class="sw" style="background:#f9ad4b"></span>Parque Natural</label>
+<label class="sub"><input data-enp="Parque Rural" type="checkbox"/> <span class="sw" style="background:#d9343f"></span>Parque Rural</label>
+<label class="sub"><input data-enp="Reserva Natural Especial" type="checkbox"/> <span class="sw" style="background:#699884"></span>Reserva Natural Especial</label>
+<label class="sub"><input data-enp="Reserva Natural Integral" type="checkbox"/> <span class="sw" style="background:#075a46"></span>Reserva Natural Integral</label>
+<label class="sub"><input data-enp="Sitio de Interés Científico" type="checkbox"/> <span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico</label>
+<details><summary>Leyenda ENP</summary><div><span class="sw" style="background:#0d4d7c"></span>Monumento Natural (52)</div><div><span class="sw" style="background:#7d99bb"></span>Paisaje Protegido (27)</div><div><span class="sw" style="background:#f58220"></span>Parque Nacional (4)</div><div><span class="sw" style="background:#f9ad4b"></span>Parque Natural (11)</div><div><span class="sw" style="background:#d9343f"></span>Parque Rural (7)</div><div><span class="sw" style="background:#699884"></span>Reserva Natural Especial (15)</div><div><span class="sw" style="background:#075a46"></span>Reserva Natural Integral (11)</div><div><span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico (20)</div></details></details>
 <details class="layerCategory"><summary>🌋 Geografía Física</summary>
 <details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="canaryGeologyCheck" type="checkbox"/> <b>Mapa geológico continuo · Canarias (GEODE)</b></label>
 <div class="layerSubBlock">
@@ -3714,11 +3738,23 @@ html body .layoutOverlay{z-index:9000!important}
 </details>
 <details class="layerCategory"><summary>👥 Geografía Humana</summary><div class="layerEmpty">No hay todavía capas específicas de geografía humana para este ámbito.</div></details>
 <details class="layerCategory"><summary>🏛️ Historia</summary><div class="layerEmpty">No hay todavía capas históricas específicas para este ámbito.</div></details>
-
 </div>
 </details>
 <details class="layerScope"><summary>🇪🇸 España</summary>
-<div class="layerScopeInner">
+<div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseSpain" type="radio"/> Mapa topográfico · MTN</label>
+<label><input data-base-choice="pnoa" name="baseSpain" type="radio"/> Imagen · PNOA máxima actualidad</label>
+<label><input data-base-choice="street" name="baseSpain" type="radio"/> Callejero · IGN Base</label>
+<label><input checked="" data-base-choice="hybrid" name="baseSpain" type="radio"/> Híbrido · PNOA + cartografía</label>
+<label><input data-base-choice="lidar" name="baseSpain" type="radio"/> LiDAR · relieve</label>
+<label><input data-base-choice="land" name="baseSpain" type="radio"/> Ocupación del suelo</label>
+<label><input data-base-choice="historic" name="baseSpain" type="radio"/> Mapa histórico · 1.ª edición MTN50</label></details><details class="layerSubcategory"><summary>🛣️ Territorio y comunicaciones</summary><label><input id="transportCheck" type="checkbox"/> <b>Vías de comunicación · IGN</b></label>
+<div class="layerSubBlock"><small>IGR Redes de Transporte.</small><input id="transportOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.85"/></div>
+<label><input id="ccaaCheck" type="checkbox"/> <b>Comunidades autónomas</b></label>
+<label><input id="provCheck" type="checkbox"/> <b>Provincias</b></label>
+<label><input id="munSpainCheck" type="checkbox"/> <b>Municipios · España peninsular y Baleares</b></label>
+<div class="layerSubBlock"><small>IGN/CNIG · visualización inteligente según escala.</small><input id="adminOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.95"/></div>
+<label><input id="toponymyCheck" type="checkbox"/> <b>Toponimia enriquecida · IGN</b></label>
+<div class="layerSubBlock"><small>Nomenclátor Geográfico Básico de España.</small><input id="toponymyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.90"/></div></details>
 <details class="layerCategory"><summary>🌋 Geografía Física</summary>
 <details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="spainGeologyCheck" type="checkbox"/> <b>Mapa geológico continuo · España peninsular y Baleares (GEODE)</b></label>
 <div class="layerSubBlock">
@@ -3744,11 +3780,15 @@ html body .layoutOverlay{z-index:9000!important}
 </details>
 <details class="layerCategory"><summary>👥 Geografía Humana</summary><div class="layerEmpty">No hay todavía capas específicas de geografía humana para este ámbito.</div></details>
 <details class="layerCategory"><summary>🏛️ Historia</summary><div class="layerEmpty">No hay todavía capas históricas específicas para este ámbito.</div></details>
-
 </div>
 </details>
 <details class="layerScope"><summary>🌍 Mundo</summary>
-<div class="layerScopeInner">
+<div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="worldsat" name="baseWorld" type="radio"/> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div></details><details class="layerSubcategory"><summary>🌐 Límites, divisiones, topónimos y servicios</summary><label><input id="countriesCheck" type="checkbox"/> <b>Fronteras internacionales</b></label>
+<label class="sub"><input id="countryLabelsCheck" type="checkbox"/> Nombres de países</label>
+<label><input id="worldAdmin1Check" type="checkbox"/> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
+<label><input id="worldAdmin2Check" type="checkbox"/> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
+<label class="sub"><input id="worldToponymsCheck" type="checkbox"/> Topónimos mundiales · vectoriales / IGN en España</label>
+<label><input id="worldRadioGardenCheck" type="checkbox"/> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div></details>
 <details class="layerCategory"><summary>🌋 Geografía Física</summary>
 <div class="layerSubBlock"><small>Relieve, geología, vulcanismo, clima y grandes biomas terrestres.</small></div>
 <details class="layerSubcategory"><summary>🪨 Geología</summary><label><input id="worldGeologyCheck" type="checkbox"/> <b>Mapa geológico mundial · Macrostrat</b></label>
@@ -3799,54 +3839,11 @@ html body .layoutOverlay{z-index:9000!important}
 <div class="layerSubBlock"><small>Seshat Global History Databank · 3400 a. C.–2024 · CC BY 4.0.</small><small>Al activar la capa aparece un control temporal. Las fronteras antiguas son reconstrucciones historiográficas y pueden ser inciertas.</small><small><b>Opacidad</b> <span id="worldHistoryOpacityValue">58 %</span></small><input id="worldHistoryOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.58"/></div>
 <label><input id="worldHistoricalEventsCheck" type="checkbox"/> <b>Acontecimientos históricos · Wikidata</b></label>
 <div class="layerSubBlock"><small>Acontecimientos históricos fechados de Wikidata y geolocalizados en el catálogo local del visor.</small><small id="historicalEventsStatus">Capa desactivada.</small></div></details>
-
 </div>
 </details>
-<details class="layerScope"><summary>🧭 Herramientas Comunes</summary>
+<details class="layerScope"><summary>🧭 Elementos comunes</summary>
 <div class="layerScopeInner">
-<details class="layerCategory"><summary>🗺️ Cartografía, límites y territorio</summary><details class="layerSubcategory"><summary>🏝️ Canarias</summary><details class="layerSubcategory"><summary>🧭 Territorio y patrimonio</summary><label><input checked="" id="munCheck" type="checkbox"/> <b>Municipios · Canarias</b></label>
-<div class="layerSubBlock">
-<small><b>Opacidad</b> <span id="munOpacityValue">100 %</span></small>
-<input id="munOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="1"/>
-</div>
-<label><input id="enpMaster" type="checkbox"/> <b>Espacios Naturales Protegidos · Canarias</b></label>
-<div style="padding:2px 2px 7px 13px">
-<small><b>Opacidad de la capa</b> <span id="enpOpacityValue">100 %</span></small>
-<input id="enpOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="1"/>
-</div>
-<label class="sub"><input data-enp="Monumento Natural" type="checkbox"/> <span class="sw" style="background:#0d4d7c"></span>Monumento Natural</label>
-<label class="sub"><input data-enp="Paisaje Protegido" type="checkbox"/> <span class="sw" style="background:#7d99bb"></span>Paisaje Protegido</label>
-<label class="sub"><input data-enp="Parque Nacional" type="checkbox"/> <span class="sw" style="background:#f58220"></span>Parque Nacional</label>
-<label class="sub"><input data-enp="Parque Natural" type="checkbox"/> <span class="sw" style="background:#f9ad4b"></span>Parque Natural</label>
-<label class="sub"><input data-enp="Parque Rural" type="checkbox"/> <span class="sw" style="background:#d9343f"></span>Parque Rural</label>
-<label class="sub"><input data-enp="Reserva Natural Especial" type="checkbox"/> <span class="sw" style="background:#699884"></span>Reserva Natural Especial</label>
-<label class="sub"><input data-enp="Reserva Natural Integral" type="checkbox"/> <span class="sw" style="background:#075a46"></span>Reserva Natural Integral</label>
-<label class="sub"><input data-enp="Sitio de Interés Científico" type="checkbox"/> <span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico</label>
-<details><summary>Leyenda ENP</summary><div><span class="sw" style="background:#0d4d7c"></span>Monumento Natural (52)</div><div><span class="sw" style="background:#7d99bb"></span>Paisaje Protegido (27)</div><div><span class="sw" style="background:#f58220"></span>Parque Nacional (4)</div><div><span class="sw" style="background:#f9ad4b"></span>Parque Natural (11)</div><div><span class="sw" style="background:#d9343f"></span>Parque Rural (7)</div><div><span class="sw" style="background:#699884"></span>Reserva Natural Especial (15)</div><div><span class="sw" style="background:#075a46"></span>Reserva Natural Integral (11)</div><div><span class="sw" style="background:#c8c8ca"></span>Sitio de Interés Científico (20)</div></details></details><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseCanary" type="radio"/> Mapa topográfico · MTN</label>
-<label><input data-base-choice="pnoa" name="baseCanary" type="radio"/> Imagen · PNOA máxima actualidad</label>
-<label><input data-base-choice="street" name="baseCanary" type="radio"/> Callejero · IGN Base</label>
-<label><input checked="" data-base-choice="hybrid" name="baseCanary" type="radio"/> Híbrido · PNOA + cartografía</label>
-<label><input data-base-choice="lidar" name="baseCanary" type="radio"/> LiDAR · relieve</label>
-<label><input data-base-choice="land" name="baseCanary" type="radio"/> Ocupación del suelo</label>
-<label><input data-base-choice="historic" name="baseCanary" type="radio"/> Mapa histórico · 1.ª edición MTN50</label></details></details><details class="layerSubcategory"><summary>🇪🇸 España</summary><details class="layerSubcategory"><summary>🛣️ Territorio y comunicaciones</summary><label><input id="transportCheck" type="checkbox"/> <b>Vías de comunicación · IGN</b></label>
-<div class="layerSubBlock"><small>IGR Redes de Transporte.</small><input id="transportOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.85"/></div>
-<label><input id="ccaaCheck" type="checkbox"/> <b>Comunidades autónomas</b></label>
-<label><input id="provCheck" type="checkbox"/> <b>Provincias</b></label>
-<label><input id="munSpainCheck" type="checkbox"/> <b>Municipios · España peninsular y Baleares</b></label>
-<div class="layerSubBlock"><small>IGN/CNIG · visualización inteligente según escala.</small><input id="adminOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.95"/></div>
-<label><input id="toponymyCheck" type="checkbox"/> <b>Toponimia enriquecida · IGN</b></label>
-<div class="layerSubBlock"><small>Nomenclátor Geográfico Básico de España.</small><input id="toponymyOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.90"/></div></details><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseSpain" type="radio"/> Mapa topográfico · MTN</label>
-<label><input data-base-choice="pnoa" name="baseSpain" type="radio"/> Imagen · PNOA máxima actualidad</label>
-<label><input data-base-choice="street" name="baseSpain" type="radio"/> Callejero · IGN Base</label>
-<label><input checked="" data-base-choice="hybrid" name="baseSpain" type="radio"/> Híbrido · PNOA + cartografía</label>
-<label><input data-base-choice="lidar" name="baseSpain" type="radio"/> LiDAR · relieve</label>
-<label><input data-base-choice="land" name="baseSpain" type="radio"/> Ocupación del suelo</label>
-<label><input data-base-choice="historic" name="baseSpain" type="radio"/> Mapa histórico · 1.ª edición MTN50</label></details></details><details class="layerSubcategory"><summary>🌍 Mundo</summary><details class="layerSubcategory"><summary>🌐 Límites, divisiones, topónimos y servicios</summary><label><input id="countriesCheck" type="checkbox"/> <b>Fronteras internacionales</b></label>
-<label class="sub"><input id="countryLabelsCheck" type="checkbox"/> Nombres de países</label>
-<label><input id="worldAdmin1Check" type="checkbox"/> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
-<label><input id="worldAdmin2Check" type="checkbox"/> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
-<label class="sub"><input id="worldToponymsCheck" type="checkbox"/> Topónimos mundiales · vectoriales / IGN en España</label>
-<label><input id="worldRadioGardenCheck" type="checkbox"/> <b>Emisoras en directo · Radio Garden</b></label><div class="layerSubBlock"><small>Ciudades y emisoras de todo el mundo · integración no oficial.</small><small id="radioGardenLayerStatus">Capa desactivada.</small></div></details><details class="layerSubcategory"><summary>🛰️ Imagen de fondo mundial</summary><label><input data-base-choice="worldsat" name="baseWorld" type="radio"/> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div></details></details></details><details class="layerCategory"><summary>🧭 Referencia cartográfica</summary><label><input checked="" id="gridCheck" type="checkbox"/> <b>Paralelos y meridianos</b></label>
+<details class="layerCategory"><summary>🧭 Referencia cartográfica</summary><label><input checked="" id="gridCheck" type="checkbox"/> <b>Paralelos y meridianos</b></label>
 <div class="layerSubBlock"><small><b>Opacidad</b> <span id="gridOpacityValue">70 %</span></small><input id="gridOpacity" max="1" min="0" step="0.05" style="width:100%" type="range" value="0.70"/></div></details>
 <details class="layerCategory"><summary>📍 Lugares buscados</summary><label><input checked="" id="placesMaster" type="checkbox"/> <b>Mostrar todos</b></label>
 <div id="placesList"><small>Todavía no has añadido lugares.</small></div>
@@ -3855,7 +3852,6 @@ html body .layoutOverlay{z-index:9000!important}
 </details>
 <button class="action" onclick="closePanels()">Cerrar</button>
 </div>
-
 <div id="dynamicLegend" class="panel hidden" role="region" aria-label="Leyenda activa">
 <h3>Leyenda activa</h3>
 <div id="legendContent"></div>
