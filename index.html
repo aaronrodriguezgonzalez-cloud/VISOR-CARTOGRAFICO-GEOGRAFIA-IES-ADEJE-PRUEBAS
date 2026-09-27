@@ -3980,6 +3980,7 @@ html body .layoutOverlay{z-index:9000!important}
         <label>Configuración estándar
           <select id="layoutPresetType">
             <option value="mapamundi">🌍 Estándar · Mapamundi</option>
+            <option value="history">🏛️ Estándar · Histórico</option>
             <option value="spain">🇪🇸 Estándar · España</option>
             <option value="canarias">🏝️ Estándar · Canarias</option>
           </select>
@@ -3988,7 +3989,7 @@ html body .layoutOverlay{z-index:9000!important}
           <button class="action" type="button" onclick="applySelectedLayoutPreset()">Aplicar estándar</button>
           <button class="action" type="button" onclick="saveSelectedLayoutPreset()">Fijar diseño actual</button>
         </div>
-        <small class="layoutPresetNote">Los tres estándares se guardan en este navegador. El mapamundi temático usa automáticamente «Estándar · Mapamundi».</small>
+        <small class="layoutPresetNote">Los cuatro estándares se guardan en este navegador. El mapamundi temático usa automáticamente «Estándar · Mapamundi» y el histórico «Estándar · Histórico».</small>
       </div>
 
       <label>Título
@@ -6996,7 +6997,7 @@ function profileThemeDisplayName(){
 }
 function syncProfileLayoutLegendTitle(){
  const title=document.querySelector('#layoutLegendBox .layoutLegendTitle');
- if(title)title.textContent=layoutContentMode==='profile'?profileThemeDisplayName():'Leyenda';
+ if(title){if(layoutContentMode==='profile')title.textContent=profileThemeDisplayName();else if(typeof syncLayoutLegendTitle==='function')syncLayoutLegendTitle();else title.textContent='Leyenda';}
 }
 function setProfileThemeLabel(id,text){
  const el=document.getElementById(id),lab=el?.parentElement;if(!el||!lab)return;
@@ -7932,7 +7933,7 @@ function writeLayoutPresets(v){try{localStorage.setItem(LAYOUT_PRESET_STORAGE,JS
 function layoutPresetFallback(type){
  const p=cloneLayoutPreset(LAYOUT_BUILTIN_MAPAMUNDI);
  // España y Canarias parten de la misma composición editorial limpia; el usuario puede fijar después su estándar propio.
- if(type==='spain'||type==='canarias')return p;
+ if(type==='spain'||type==='canarias'||type==='history')return p;
  return p;
 }
 function captureCurrentLayoutPreset(){
@@ -7956,7 +7957,7 @@ function applyLayoutPreset(type){const stored=readLayoutPresets();applyLayoutPre
 function applySelectedLayoutPreset(){applyLayoutPreset(document.getElementById('layoutPresetType')?.value||'mapamundi');}
 function saveSelectedLayoutPreset(){const type=document.getElementById('layoutPresetType')?.value||'mapamundi',stored=readLayoutPresets();stored[type]=captureCurrentLayoutPreset();writeLayoutPresets(stored);status('Configuración «'+type+'» fijada como estándar en este navegador');}
 function detectLayoutPresetType(){
- try{if(isWorldThematicLayoutMode())return 'mapamundi';const c=map.getCenter();if(c.lat>27&&c.lat<30.5&&c.lng>-19&&c.lng<-13)return 'canarias';if(c.lat>35&&c.lat<44.5&&c.lng>-10&&c.lng<5)return 'spain';}catch(e){}
+ try{if(document.getElementById('worldHistoryCheck')?.checked)return 'history';if(isWorldThematicLayoutMode())return 'mapamundi';const c=map.getCenter();if(c.lat>27&&c.lat<30.5&&c.lng>-19&&c.lng<-13)return 'canarias';if(c.lat>35&&c.lat<44.5&&c.lng>-10&&c.lng<5)return 'spain';}catch(e){}
  return 'mapamundi';
 }
 function profileEndpointNames(){
@@ -8006,6 +8007,7 @@ function openProfileLayoutEditor(){
 }
 
 function defaultLayoutTitle(){
+ try{if(document.getElementById('worldHistoryCheck')?.checked)return 'Mapa histórico del mundo · '+historyYearText(historyYear);}catch(e){}
  try{
   const active=(typeof activeHumanIndicators==='function')?activeHumanIndicators():[];
   if(active.length){
@@ -8088,7 +8090,7 @@ function updateLayoutScaleBox(){
   if(v>=1)return new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(v)+' km';
   return new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(v*1000)+' m';
  };
- textEl.textContent='Escala gráfica · '+fmtKm(segmentKm)+' por tramo';
+ textEl.textContent='Escala gráfica';
  if(ticks){
   const spans=ticks.querySelectorAll('span');
   const vals=[0,segmentKm,segmentKm*2,segmentKm*3,totalKm];
@@ -8305,12 +8307,22 @@ async function refreshLayoutWorldSnapshot(){
  const prevMaxBounds=map.options.maxBounds;
  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Preparando mapamundi…';}
  try{
+  if(document.getElementById('worldHistoryCheck')?.checked&&typeof renderHistoricalEqualEarthLayoutSnapshot==='function'){
+   layoutSnapshotData=await renderHistoricalEqualEarthLayoutSnapshot(true);
+   syncLayoutThematicAppearance(true);
+   const img=document.getElementById('layoutMapImage');
+   img.src=layoutSnapshotData;
+   document.getElementById('layoutLegendContent').innerHTML=(typeof layoutExportLegendHTML==='function'?layoutExportLegendHTML():activeLegendHTML());
+   document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
+   fitLayoutMapImage();updateLayoutScaleBox();
+   return;
+  }
   if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
    layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
    syncLayoutThematicAppearance(true);
    const img=document.getElementById('layoutMapImage');
    img.src=layoutSnapshotData;
-   document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
+   document.getElementById('layoutLegendContent').innerHTML=(typeof layoutExportLegendHTML==='function'?layoutExportLegendHTML():activeLegendHTML());
    document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
    fitLayoutMapImage();
    updateLayoutScaleBox();
@@ -8353,7 +8365,10 @@ async function refreshLayoutSnapshot(){
    const src=document.getElementById('layoutSources');if(src)src.textContent='Fuentes: '+profileExportSourcesText();
    return;
   }
-  if(isWorldThematicLayoutMode()){
+  if(document.getElementById('worldHistoryCheck')?.checked&&typeof renderHistoricalEqualEarthLayoutSnapshot==='function'){
+   layoutSnapshotData=await renderHistoricalEqualEarthLayoutSnapshot(false);
+   syncLayoutThematicAppearance(true);
+  }else if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length){
    layoutSnapshotData=await renderThematicWorldLayoutSnapshot();
    syncLayoutThematicAppearance(true);
   }else{
@@ -8361,7 +8376,7 @@ async function refreshLayoutSnapshot(){
    if(typeof window.anambroRefreshHistoryLabelsForExport==='function')await window.anambroRefreshHistoryLabelsForExport();
    const canvas=await html2canvas(document.getElementById('map'),{
     useCORS:true,allowTaint:false,logging:false,
-    backgroundColor:((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#86cbe5':'#d9dde1',
+    backgroundColor:((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#d9eef6':'#d9dde1',
     ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
    });
    layoutSnapshotData=canvas.toDataURL('image/jpeg',.92);
@@ -8370,7 +8385,7 @@ async function refreshLayoutSnapshot(){
   }
   img.src=layoutSnapshotData;
   updateLayoutScaleBox();
-  document.getElementById('layoutLegendContent').innerHTML=activeLegendHTML();
+  document.getElementById('layoutLegendContent').innerHTML=(typeof layoutExportLegendHTML==='function'?layoutExportLegendHTML():activeLegendHTML());
   document.getElementById('layoutSources').textContent='Fuentes: '+activeSourcesText();
  }catch(e){
   console.error(e);
@@ -8387,6 +8402,7 @@ function openLayoutEditor(mode='map'){
  const title=layoutContentMode==='profile'?defaultProfileLayoutTitle():defaultLayoutTitle();
  document.getElementById('layoutTitleInput').value=title;
  document.getElementById('layoutTitleBox').textContent=title;
+ syncLayoutLegendTitle?.();
  document.getElementById('layoutCropZoom').value=100;
  document.getElementById('layoutPanX').value=50;
  document.getElementById('layoutPanY').value=50;
@@ -8657,7 +8673,7 @@ async function exportLayoutPDF(){
  const page=document.getElementById('layoutPage');
  const exportLegend=document.getElementById('layoutLegendContent');
  if(exportLegend){
-  exportLegend.innerHTML=layoutContentMode==='profile'?(document.getElementById('profileBandsContent')?.innerHTML||'<small>Perfil topográfico.</small>'):activeLegendHTML();
+  exportLegend.innerHTML=layoutContentMode==='profile'?(document.getElementById('profileBandsContent')?.innerHTML||'<small>Perfil topográfico.</small>'):(typeof layoutExportLegendHTML==='function'?layoutExportLegendHTML():activeLegendHTML());
  }
  syncProfileLayoutLegendTitle();
  document.querySelectorAll('.layoutItem').forEach(x=>x.classList.remove('selected'));
@@ -8896,6 +8912,9 @@ function updateLegend(){
  }
  if(document.getElementById('worldRadioGardenCheck')?.checked){
    h+='<div style="margin-bottom:8px"><b>Radio mundial · Radio Garden</b><br><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#19d37e;border:2px solid #083d2c;margin-right:5px;vertical-align:middle"></span>Localidades con emisoras</div>';
+ }
+ if(document.getElementById('worldHistoryCheck')?.checked){
+   h+='<div style="margin-bottom:8px"><b>Fronteras políticas históricas</b><br><span style="display:inline-block;width:24px;height:10px;background:#4a72cfaa;border:1px solid #465765;vertical-align:middle;margin-right:6px"></span>Cada color identifica una entidad política representada para '+escHtml(historyYearText(historyYear))+'</div>';
  }
  if(document.getElementById('worldHistoricalEventsCheck')?.checked){
    h+='<div style="margin-bottom:8px"><b>Acontecimientos históricos · Wikidata</b><br><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #6b3fa0;margin-right:5px;vertical-align:middle"></span>Registros históricos geolocalizados del año seleccionado</div>';
@@ -11192,7 +11211,7 @@ let historyYear=1492,historyCurrentFC=null,historyLayer2D=null,globeHistorySourc
 let historyOpacity=.58,historyDebounce=null,historyPlayTimer=null,historyPlayRunning=false;
 function historyYearText(y){y=Math.trunc(Number(y)||1);return y<0?Math.abs(y).toLocaleString('es-ES')+' a. C.':y===0?'1 a. C. / 1 d. C.':y.toLocaleString('es-ES');}
 function normalizeHistoryYear(y){return Math.max(-3400,Math.min(2024,Math.trunc(Number(y)||1)));}
-function updateHistoryControls(y=historyYear){historyYear=normalizeHistoryYear(y);const r=document.getElementById('historyYearRange'),i=document.getElementById('historyYearInput'),l=document.getElementById('historyYearLabel');if(r)r.value=String(historyYear);if(i)i.value=String(historyYear);if(l)l.textContent=historyYearText(historyYear);}
+function updateHistoryControls(y=historyYear){historyYear=normalizeHistoryYear(y);const r=document.getElementById('historyYearRange'),i=document.getElementById('historyYearInput'),l=document.getElementById('historyYearLabel');if(r)r.value=String(historyYear);if(i)i.value=String(historyYear);if(l)l.textContent=historyYearText(historyYear);try{if(typeof syncHistoricalLayoutTitle==='function')syncHistoricalLayoutTitle();}catch(e){}}
 function historyStatus(t){const el=document.getElementById('historyStatus');if(el)el.textContent=t;}
 function historyHash(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 const HISTORY_PALETTE=['#e45756','#ed7d3f','#e6a62f','#d4bd35','#a9bd3f','#73b657','#43ae75','#2eaa96','#2b9fb0','#3389c6','#4a72cf','#665fc9','#8558bf','#a952b0','#c4529a','#d55b82','#dc695f','#d88345','#c89f35','#9eae42','#65aa63','#3ca081','#3693a2','#507fb6','#6d6fb8','#895fac','#a75b9c','#c05f86','#d06d68','#d18b4f'];
@@ -13400,12 +13419,13 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
    await ensureAtlasVectors2D();
    // En Historia: relieve terrestre visible bajo una veladura cálida. En temáticos humanos: países ya cubren la tierra.
    if(historyOn()){if(!map.hasLayer(landTint2D))landTint2D.addTo(map);}else if(landTint2D&&map.hasLayer(landTint2D))map.removeLayer(landTint2D);
-   if(!map.hasLayer(coast2D))coast2D.addTo(map);
+   // En Historia no se superpone la costa moderna sobre Cliopatria: evita dobles líneas y cuñas por geometrías no coincidentes.
+   if(historyOn()){if(coast2D&&map.hasLayer(coast2D))map.removeLayer(coast2D);}else if(!map.hasLayer(coast2D))coast2D.addTo(map);
    if(historyBase2DLayer&&map.hasLayer(historyBase2DLayer)){
     // Se retira el antiguo relleno blanco: lo sustituye la veladura física con relieve.
     map.removeLayer(historyBase2DLayer);
    }
-   if(historyLayer2D&&map.hasLayer(historyLayer2D))historyLayer2D.setStyle(f=>({color:'#465765',weight:.85,opacity:.88,fillColor:historyColor(historyFeatureData(f).name),fillOpacity:historyOpacity}));
+   if(historyLayer2D&&map.hasLayer(historyLayer2D))historyLayer2D.setStyle(f=>({color:'#384b59',weight:1.05,opacity:.92,fillColor:historyColor(historyFeatureData(f).name),fillOpacity:historyOpacity}));
   }catch(e){console.warn('Atlas 2D',e);}
  }
  async function ensureGebco3D(){
@@ -13449,7 +13469,8 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
   const g=await ensureGebco3D();if(g)g.show=true;
   try{
    await ensureAtlasVectors3D();
-   if(coast3D)coast3D.show=true;
+   // Igual que en 2D: la costa moderna solo se superpone en temáticos, nunca sobre fronteras históricas.
+   if(coast3D)coast3D.show=!historyOn();
    if(landTint3D)landTint3D.show=historyOn();
    // El antiguo fondo blanco histórico no debe tapar el relieve.
    if(typeof globeHistoryBaseSource!=='undefined'&&globeHistoryBaseSource)globeHistoryBaseSource.show=false;
@@ -13478,7 +13499,7 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
  }
  // Reaplica la paleta al contenido ya cargado.
  function restyleHistory(){
-  try{if(historyLayer2D)historyLayer2D.setStyle(f=>({color:'#465765',weight:.85,opacity:.88,fillColor:historyColor(historyFeatureData(f).name),fillOpacity:historyOpacity}));}catch(e){}
+  try{if(historyLayer2D)historyLayer2D.setStyle(f=>({color:'#384b59',weight:1.05,opacity:.92,fillColor:historyColor(historyFeatureData(f).name),fillOpacity:historyOpacity}));}catch(e){}
   try{if(globeHistorySource)for(const ent of globeHistorySource.entities.values)if(ent.polygon){ent.polygon.material=Cesium.Color.fromCssColorString(historyColor(ent.__anambroHistoryData?.name||ent.name||'')).withAlpha(historyOpacity);ent.polygon.outlineColor=Cesium.Color.fromCssColorString('#465765').withAlpha(.86);}}catch(e){}
  }
  document.getElementById('worldHistoryCheck')?.addEventListener('change',()=>setTimeout(()=>{sync();restyleHistory();},50));
@@ -13680,6 +13701,165 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
   if(historyModeActive()&&historyNamesEnabled()){updateHistoryLabels2D(true);await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}
  };
  scheduleHistoryLabels2D(true);
+})();
+</script>
+
+
+<style id="anambro-history-export-translation-20260927">
+/* Etiquetas históricas exportadas: halo fuerte y legibilidad sobre colores vivos. */
+.layoutPage.historyLayout .layoutLegendBox{background:rgba(255,255,255,.86)!important;}
+</style>
+<script id="anambro-history-export-translation-20260927-js">
+(function(){
+ const DIRECT_ES={
+  'Holy Roman Empire':'Sacro Imperio Romano Germánico','Byzantine Empire':'Imperio bizantino','Ottoman Empire':'Imperio otomano',
+  'Roman Empire':'Imperio romano','Western Roman Empire':'Imperio romano de Occidente','Eastern Roman Empire':'Imperio romano de Oriente',
+  'Kingdom of France':'Reino de Francia','Kingdom of England':'Reino de Inglaterra','Kingdom of Scotland':'Reino de Escocia',
+  'Kingdom of Spain':'Reino de España','Kingdom of Portugal':'Reino de Portugal','Kingdom of Castile':'Reino de Castilla',
+  'Crown of Castile':'Corona de Castilla','Crown of Aragon':'Corona de Aragón','Kingdom of Aragon':'Reino de Aragón',
+  'Kingdom of Navarre':'Reino de Navarra','Kingdom of León':'Reino de León','Kingdom of Leon':'Reino de León',
+  'Kingdom of Hungary':'Reino de Hungría','Kingdom of Poland':'Reino de Polonia','Kingdom of Bohemia':'Reino de Bohemia',
+  'Kingdom of Naples':'Reino de Nápoles','Kingdom of Sicily':'Reino de Sicilia','Papal States':'Estados Pontificios',
+  'Republic of Venice':'República de Venecia','Republic of Genoa':'República de Génova','Duchy of Burgundy':'Ducado de Borgoña',
+  'Mongol Empire':'Imperio mongol','Mughal Empire':'Imperio mogol','Persian Empire':'Imperio persa','Russian Empire':'Imperio ruso',
+  'British Empire':'Imperio británico','French Empire':'Imperio francés','Spanish Empire':'Imperio español','Portuguese Empire':'Imperio portugués',
+  'Abbasid Caliphate':'Califato abasí','Umayyad Caliphate':'Califato omeya','Fatimid Caliphate':'Califato fatimí',
+  'Achaemenid Empire':'Imperio aqueménida','Sasanian Empire':'Imperio sasánida','Sassanid Empire':'Imperio sasánida',
+  'Habsburg Monarchy':'Monarquía de los Habsburgo','Austrian Empire':'Imperio austríaco','Austro-Hungarian Empire':'Imperio austrohúngaro',
+  'Soviet Union':'Unión Soviética','United States':'Estados Unidos','United Kingdom':'Reino Unido'
+ };
+ const BASE_ES={
+  'France':'Francia','England':'Inglaterra','Scotland':'Escocia','Wales':'Gales','Ireland':'Irlanda','Spain':'España','Portugal':'Portugal',
+  'Castile':'Castilla','Aragon':'Aragón','Navarre':'Navarra','Leon':'León','León':'León','Hungary':'Hungría','Poland':'Polonia',
+  'Bohemia':'Bohemia','Naples':'Nápoles','Sicily':'Sicilia','Burgundy':'Borgoña','Venice':'Venecia','Genoa':'Génova',
+  'Germany':'Alemania','Austria':'Austria','Prussia':'Prusia','Russia':'Rusia','Sweden':'Suecia','Norway':'Noruega','Denmark':'Dinamarca',
+  'Greece':'Grecia','Serbia':'Serbia','Bulgaria':'Bulgaria','Romania':'Rumanía','Egypt':'Egipto','Persia':'Persia','China':'China','Japan':'Japón',
+  'Korea':'Corea','India':'India','Morocco':'Marruecos','Algeria':'Argelia','Tunisia':'Túnez','Libya':'Libia','Ethiopia':'Etiopía','Georgia':'Georgia'
+ };
+ const historyEsCache=new Map(Object.entries(DIRECT_ES));
+ const pendingQids=new Map();
+ function normalizeQid(v){const m=String(v||'').match(/Q\d+/i);return m?m[0].toUpperCase():'';}
+ function fallbackHistoryEs(name){
+  name=String(name||'').trim();if(!name)return 'Entidad política';if(historyEsCache.has(name))return historyEsCache.get(name);
+  let m;
+  const rules=[
+   [/^Kingdom of (.+)$/i,'Reino de '],[/^Republic of (.+)$/i,'República de '],[/^Empire of (.+)$/i,'Imperio de '],
+   [/^Duchy of (.+)$/i,'Ducado de '],[/^Grand Duchy of (.+)$/i,'Gran Ducado de '],[/^Principality of (.+)$/i,'Principado de '],
+   [/^County of (.+)$/i,'Condado de '],[/^Sultanate of (.+)$/i,'Sultanato de '],[/^Emirate of (.+)$/i,'Emirato de '],
+   [/^Caliphate of (.+)$/i,'Califato de '],[/^Khanate of (.+)$/i,'Kanato de '],[/^Confederation of (.+)$/i,'Confederación de ']
+  ];
+  for(const [re,prefix] of rules){m=name.match(re);if(m){const base=BASE_ES[m[1]]||m[1];return prefix+base;}}
+  return BASE_ES[name]||name;
+ }
+ async function fetchWikidataLabels(qids){
+  const unique=[...new Set(qids.filter(Boolean))].filter(q=>!pendingQids.has(q));
+  for(let i=0;i<unique.length;i+=50){
+   const batch=unique.slice(i,i+50),promise=(async()=>{
+    try{
+     const u='https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&origin=*&props=labels&languages=es%7Cen&ids='+encodeURIComponent(batch.join('|'));
+     const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(!r.ok)throw new Error('Wikidata '+r.status);const j=await r.json();
+     for(const q of batch){const e=j?.entities?.[q],lab=e?.labels?.es?.value||e?.labels?.en?.value||'';if(lab)historyEsCache.set(q,lab);}
+    }catch(e){console.warn('Traducción histórica Wikidata',e);}
+   })();
+   batch.forEach(q=>pendingQids.set(q,promise));await promise;batch.forEach(q=>pendingQids.delete(q));
+  }
+ }
+ async function translateHistoryFeatureCollection(fc){
+  if(!fc?.features?.length)return fc;
+  const qids=[];
+  for(const f of fc.features){const p=f.properties||{},raw=String(p.__name||p.Name||p.name||'').trim(),q=normalizeQid(p.__wikidata||p.Wikidata||p.wikidata);if(q)qids.push(q);if(raw&&!historyEsCache.has(raw))historyEsCache.set(raw,fallbackHistoryEs(raw));}
+  await fetchWikidataLabels(qids);
+  for(const f of fc.features){const p=f.properties||(f.properties={}),raw=String(p.__name||p.Name||p.name||'Entidad política').trim(),q=normalizeQid(p.__wikidata||p.Wikidata||p.wikidata);p.__name_raw=raw;p.__name_es=(q&&historyEsCache.get(q))||historyEsCache.get(raw)||fallbackHistoryEs(raw);}
+  return fc;
+ }
+ window.translateHistoryFeatureCollection=translateHistoryFeatureCollection;
+ const oldHistoryFeatureData=historyFeatureData;
+ historyFeatureData=function(f){const d=oldHistoryFeatureData(f),p=f?.properties||{},raw=String(p.__name_raw||p.__name||d.name||'Entidad política');return {...d,rawName:raw,name:String(p.__name_es||historyEsCache.get(normalizeQid(d.wikidata))||historyEsCache.get(raw)||fallbackHistoryEs(raw))};};
+ // Re-render the active year after translations arrive. The geometry is untouched.
+ const baseApply2D=applyHistory2D,baseApply3D=applyHistoryGlobe;
+ applyHistory2D=function(fc){
+  for(const f of (fc?.features||[])){const p=f.properties||(f.properties={});if(!p.__name_es){const raw=String(p.__name||'Entidad política');p.__name_raw=raw;p.__name_es=historyEsCache.get(raw)||fallbackHistoryEs(raw);}}
+  const r=baseApply2D(fc);
+  translateHistoryFeatureCollection(fc).then(translated=>{if(historyCurrentFC===fc||historyCurrentFC===translated){historyCurrentFC=translated;baseApply2D(translated);if(globeViewer&&document.getElementById('worldHistoryCheck')?.checked)baseApply3D(translated);}}).catch(()=>{});
+  return r;
+ };
+ applyHistoryGlobe=async function(fc){
+  try{await translateHistoryFeatureCollection(fc);}catch(e){}
+  return baseApply3D(fc);
+ };
+ function historyMode(){return !!document.getElementById('worldHistoryCheck')?.checked;}
+ function activeHuman(){try{return typeof activeHumanIndicators==='function'?activeHumanIndicators():[];}catch(e){return [];}}
+ function layoutLegendHeading(){
+  if(layoutContentMode==='profile')return profileThemeDisplayName();
+  if(historyMode())return 'Fronteras políticas históricas';
+  const a=activeHuman();if(a.length===1)return WORLD_HUMAN_INDICATORS?.[a[0]]?.name||'Variable temática';
+  if(a.length>1)return a.map(x=>WORLD_HUMAN_INDICATORS?.[x]?.name).filter(Boolean).join(' · ');
+  return 'Leyenda';
+ }
+ window.syncLayoutLegendTitle=function(){const t=document.querySelector('#layoutLegendBox .layoutLegendTitle');if(t)t.textContent=layoutLegendHeading();const pg=document.getElementById('layoutPage');if(pg)pg.classList.toggle('historyLayout',historyMode()&&layoutContentMode==='map');};
+ window.syncHistoricalLayoutTitle=function(){
+  if(!historyMode()||layoutContentMode!=='map'||!document.getElementById('layoutOverlay')?.classList.contains('open'))return;
+  const text='Mapa histórico del mundo · '+historyYearText(historyYear),inp=document.getElementById('layoutTitleInput'),box=document.getElementById('layoutTitleBox');if(inp)inp.value=text;if(box)box.textContent=text;syncLayoutLegendTitle();
+ };
+ window.layoutExportLegendHTML=function(){
+  if(layoutContentMode==='profile')return document.getElementById('profileBandsContent')?.innerHTML||'<small>Perfil topográfico.</small>';
+  if(historyMode())return '<div><span class="sw" style="background:#4a72cfaa;border-color:#465765"></span>Entidades políticas representadas en '+escHtml(historyYearText(historyYear))+'</div><small>Los colores diferencian entidades políticas; no expresan categorías ni jerarquías.</small>';
+  const a=activeHuman();if(a.length){const requested=+document.getElementById('worldHumanYear')?.value;return a.map(ind=>{const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),year=st.year||requested;return humanLegendHTML(meta,year,st.breaks||[]).replace(/^<b>[\s\S]*?<\/b><br>/,'');}).join('<div style="height:6px"></div>');}
+  return activeLegendHTML();
+ };
+ // Add the historical preset once, defaulting to the same layout as Mapamundi until the user saves a different one.
+ function ensureHistoryPresetUI(){const sel=document.getElementById('layoutPresetType');if(sel&&!sel.querySelector('option[value="history"]')){const o=document.createElement('option');o.value='history';o.textContent='🏛️ Estándar · Histórico';sel.insertBefore(o,sel.querySelector('option[value="spain"]'));}}
+ ensureHistoryPresetUI();
+ // ----- Equal Earth historical renderer -----
+ function historyExportExtent(fullWorld){
+  if(fullWorld||!map)return {west:-180,east:180,south:-89.5,north:89.5};
+  const b=map.getBounds();let w=Math.max(-180,b.getWest()),e=Math.min(180,b.getEast()),s=Math.max(-85,b.getSouth()),n=Math.min(85,b.getNorth());
+  if(!Number.isFinite(w+e+s+n)||e<=w||n<=s)return {west:-180,east:180,south:-89.5,north:89.5};
+  return {west:w,east:e,south:s,north:n};
+ }
+ function projectedExtentSetup(ext,width,height,pad){
+  const pts=[];const step=Math.max(.5,Math.min(3,(ext.east-ext.west)/80,(ext.north-ext.south)/50));
+  for(let lon=ext.west;lon<=ext.east+1e-9;lon+=step){pts.push([lon,ext.north],[lon,ext.south]);}
+  for(let lat=ext.south;lat<=ext.north+1e-9;lat+=step){pts.push([ext.west,lat],[ext.east,lat]);}
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;for(const [lon,lat] of pts){const [x,y]=equalEarthProject(lon,lat);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+  const scale=Math.min((width-2*pad)/(maxX-minX),(height-2*pad)/(maxY-minY));const ox=pad+(width-2*pad-(maxX-minX)*scale)/2-minX*scale,oy=pad+(height-2*pad-(maxY-minY)*scale)/2+maxY*scale;
+  return {px:(lon,lat)=>{const q=equalEarthProject(lon,lat);return [ox+q[0]*scale,oy-q[1]*scale];},scale};
+ }
+ function traceExtent(ctx,px,ext){ctx.beginPath();let first=true;const add=(lon,lat)=>{const [x,y]=px(lon,lat);if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);};const st=Math.max(.5,(ext.east-ext.west)/120);for(let x=ext.west;x<=ext.east;x+=st)add(x,ext.north);for(let y=ext.north;y>=ext.south;y-=st)add(ext.east,y);for(let x=ext.east;x>=ext.west;x-=st)add(x,ext.south);for(let y=ext.south;y<=ext.north;y+=st)add(ext.west,y);ctx.closePath();}
+ function drawGebcoExtent(ctx,img,px,ext,width,height){
+  ctx.save();traceExtent(ctx,px,ext);ctx.clip();ctx.fillStyle='#d9eef6';ctx.fillRect(0,0,width,height);
+  if(img){const iw=img.width||img.naturalWidth||2048,ih=img.height||img.naturalHeight||1024;ctx.globalAlpha=.50;ctx.filter='saturate(.62) brightness(1.18) contrast(.86) hue-rotate(-4deg)';const latStep=Math.max(.35,Math.min(1,(ext.north-ext.south)/120));for(let top=ext.north;top>ext.south;top-=latStep){const bot=Math.max(ext.south,top-latStep),a=px(ext.west,top),b=px(ext.east,top),c=px(ext.west,bot),d=px(ext.east,bot);const dx=Math.min(a[0],c[0]),dr=Math.max(b[0],d[0]),dy=Math.min(a[1],c[1]),db=Math.max(a[1],c[1]);const sx=(ext.west+180)/360*iw,sw=(ext.east-ext.west)/360*iw,sy=(90-top)/180*ih,sh=(top-bot)/180*ih;if(dr>dx&&db>dy)ctx.drawImage(img,sx,sy,sw,sh,dx,dy,dr-dx,Math.max(1,db-dy+1));}ctx.filter='none';ctx.globalAlpha=1;}
+  ctx.restore();
+ }
+ function exportLabelInfo(f){
+  const g=f?.geometry;if(!g)return null;const rings=[];if(g.type==='Polygon')rings.push(g.coordinates?.[0]);else if(g.type==='MultiPolygon')for(const p of (g.coordinates||[]))rings.push(p?.[0]);let best=null;
+  for(const ring of rings){if(!ring?.length)continue;let minLon=Infinity,maxLon=-Infinity,minLat=Infinity,maxLat=-Infinity;for(const pt of ring){const x=+pt[0],y=+pt[1];if(!Number.isFinite(x)||!Number.isFinite(y))continue;minLon=Math.min(minLon,x);maxLon=Math.max(maxLon,x);minLat=Math.min(minLat,y);maxLat=Math.max(maxLat,y);}const metric=Math.max(0,maxLon-minLon)*Math.max(0,maxLat-minLat)*Math.max(.15,Math.cos(((minLat+maxLat)/2)*Math.PI/180));if(!best||metric>best.metric)best={minLon,maxLon,minLat,maxLat,metric,lon:(minLon+maxLon)/2,lat:(minLat+maxLat)/2};}
+  if(!best)return null;const d=historyFeatureData(f);return {...best,name:d.name,rawName:d.rawName||d.name};
+ }
+ function drawHistoryExportLabels(ctx,fc,px,ext,width,height,fullWorld){
+  if(document.getElementById('worldHistoryLabelsCheck')?.checked===false)return;const by=new Map(),placed=[];for(const f of (fc?.features||[])){const i=exportLabelInfo(f);if(!i||i.maxLon<ext.west||i.minLon>ext.east||i.maxLat<ext.south||i.minLat>ext.north)continue;const a=px(i.minLon,i.maxLat),b=px(i.maxLon,i.minLat);i.screenArea=Math.abs((b[0]-a[0])*(b[1]-a[1]));i.span=Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]));const k=i.name.toLocaleLowerCase('es');if(!by.has(k)||i.screenArea>by.get(k).screenArea)by.set(k,i);}
+  let list=[...by.values()],regionSpan=Math.max(ext.east-ext.west,ext.north-ext.south),minSpan=fullWorld?38:regionSpan>100?25:regionSpan>55?15:regionSpan>25?8:3,minArea=fullWorld?650:regionSpan>100?300:regionSpan>55?120:regionSpan>25?35:5,maxLabels=fullWorld?55:regionSpan>100?110:regionSpan>55?220:regionSpan>25?360:600;list=list.filter(x=>x.span>=minSpan||x.screenArea>=minArea).sort((a,b)=>b.screenArea-a.screenArea).slice(0,maxLabels);
+  function hit(a,b){return !(a.r<b.l||a.l>b.r||a.b<b.t||a.t>b.b);}const offsets=[[0,0],[0,-18],[0,18],[-24,0],[24,0],[-24,-16],[24,-16],[-24,16],[24,16],[0,-34],[0,34]];
+  for(const i of list){const [x,y]=px(i.lon,i.lat);if(x<-40||x>width+40||y<-30||y>height+30)continue;const fs=i.span>130?25:i.span>55?20:16,weight=i.span>130?'900':'800',text=i.name,maxChars=i.span>130?28:22;const words=text.split(/\s+/),lines=[];let line='';for(const w of words){const n=(line?line+' ':'')+w;if(n.length>maxChars&&line){lines.push(line);line=w;}else line=n;}if(line)lines.push(line);const tw=Math.min(330,Math.max(...lines.map(t=>ctx.measureText(t).width),70)),th=lines.length*fs*1.13;let chosen=null;for(const [dx,dy] of offsets){const box={l:x+dx-tw/2-6,r:x+dx+tw/2+6,t:y+dy-th/2-4,b:y+dy+th/2+4};if(box.l<0||box.r>width||box.t<0||box.b>height)continue;if(!placed.some(p=>hit(box,p))){chosen={dx,dy,box};break;}}if(!chosen&&!fullWorld&&regionSpan<35)chosen={dx:0,dy:0,box:{l:x-tw/2,r:x+tw/2,t:y-th/2,b:y+th/2}};if(!chosen)continue;placed.push(chosen.box);ctx.save();ctx.font=weight+' '+fs+'px Montserrat,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.strokeStyle='rgba(255,255,255,.96)';ctx.lineWidth=Math.max(4,fs*.26);ctx.fillStyle='#243946';lines.forEach((ln,j)=>{const yy=y+chosen.dy+(j-(lines.length-1)/2)*fs*1.08;ctx.strokeText(ln,x+chosen.dx,yy);ctx.fillText(ln,x+chosen.dx,yy);});ctx.restore();}
+ }
+ window.renderHistoricalEqualEarthLayoutSnapshot=async function(fullWorld=false){
+  if(!historyCurrentFC?.features?.length)throw new Error('La cartografía histórica todavía no está cargada');await translateHistoryFeatureCollection(historyCurrentFC);const ext=historyExportExtent(fullWorld),width=2400,height=1350,pad=42,canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);const {px}=projectedExtentSetup(ext,width,height,pad);let gebco=null;try{gebco=await loadLayoutGebcoRaster();}catch(e){}drawGebcoExtent(ctx,gebco,px,ext,width,height);
+  let land=null;try{land=await loadHistoryLand();}catch(e){}
+  if(land){ctx.save();ctx.fillStyle='rgba(233,225,207,.36)';ctx.strokeStyle='rgba(57,119,157,0)';ctx.lineWidth=0;for(const f of (land.features||[])){ctx.beginPath();walkGeoCoords(f?.geometry?.coordinates,ring=>{let first=true;for(const q of ring){const [x,y]=px(+q[0],+q[1]);if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}if(!first)ctx.closePath();});ctx.fill();ctx.stroke();}ctx.restore();}
+  ctx.lineJoin='round';for(const f of historyCurrentFC.features){const d=historyFeatureData(f);ctx.beginPath();walkGeoCoords(f?.geometry?.coordinates,ring=>{let first=true;for(const q of ring){const [x,y]=px(+q[0],+q[1]);if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);}if(!first)ctx.closePath();});ctx.globalAlpha=Math.min(.88,Math.max(.58,historyOpacity+.12));ctx.fillStyle=historyColor(d.rawName||d.name);ctx.fill();ctx.globalAlpha=.94;ctx.strokeStyle='#384b59';ctx.lineWidth=1.55;ctx.stroke();ctx.globalAlpha=1;}
+  // En exportación histórica no se redibuja la costa moderna por encima de Cliopatria.
+  // Así el contorno visible coincide exactamente con la geometría histórica y no aparecen dobles líneas/cuñas.
+  drawHistoryExportLabels(ctx,historyCurrentFC,px,ext,width,height,fullWorld);
+  const midLat=(ext.south+ext.north)/2,a=px(ext.west,midLat),b=px(ext.east,midLat),km=map.distance(L.latLng(midLat,ext.west),L.latLng(midLat,ext.east))/1000;layoutSnapshotMeta={type:'history-equal-earth',imgWidth:width,imgHeight:height,kmPerImagePxAtCenter:km/Math.max(1,Math.abs(b[0]-a[0]))};return canvas.toDataURL('image/jpeg',.95);
+ };
+ // Make the historical standard the automatic one, but let it diverge after “Fijar diseño actual”.
+ const oldDetect=detectLayoutPresetType;detectLayoutPresetType=function(){if(historyMode())return 'history';return oldDetect();};
+ const oldFallback=layoutPresetFallback;layoutPresetFallback=function(type){if(type==='history')return cloneLayoutPreset(LAYOUT_BUILTIN_MAPAMUNDI);return oldFallback(type);};
+ // Keep title/legend synchronized when the active variable or historical year changes.
+ document.getElementById('worldHistoryCheck')?.addEventListener('change',()=>setTimeout(()=>{syncLayoutLegendTitle();if(historyMode())syncHistoricalLayoutTitle();},0));
+ document.querySelectorAll('.worldHumanLayerCheck').forEach(x=>x.addEventListener('change',()=>setTimeout(syncLayoutLegendTitle,0)));
+ document.getElementById('worldHumanYear')?.addEventListener('input',()=>setTimeout(syncLayoutLegendTitle,0));
+ setTimeout(()=>{ensureHistoryPresetUI();syncLayoutLegendTitle();},0);
 })();
 </script>
 
