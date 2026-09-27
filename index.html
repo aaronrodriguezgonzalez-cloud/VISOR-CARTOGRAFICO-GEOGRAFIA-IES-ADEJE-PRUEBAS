@@ -2575,6 +2575,165 @@ body.globe-mode #globeScaleBox{display:block}
   .leaflet-top.leaflet-left{top:96px!important}
 }
 </style>
+
+<style id="anambro-header-no-dead-space-v6">
+/* Escritorio: aprovechar toda la banda, sin zonas blancas muertas. */
+@media(min-width:761px){
+  .brand.brandWide{
+    width:calc(100vw - 36px)!important;
+    max-width:none!important;
+    padding:4px 10px 5px!important;
+    grid-template-columns:minmax(230px,1fr) minmax(520px,1.8fr) minmax(300px,1.15fr)!important;
+    grid-template-areas:
+      "title title title"
+      "left center right"!important;
+    column-gap:10px!important;
+    row-gap:0!important;
+    align-items:center!important;
+  }
+  .brandWide>.brandTitleTop{
+    margin:0!important;
+    padding:0!important;
+    min-height:0!important;
+    line-height:.94!important;
+  }
+  .brandWide>.brandSideLeft,
+  .brandWide>.brandCenter,
+  .brandWide>.brandSideRight{
+    min-height:0!important;
+    margin:0!important;
+  }
+  .brandWide>.brandSideLeft{
+    gap:7px!important;
+    padding:0 9px 0 0!important;
+  }
+  .brandWide .brandSideLeft img{
+    width:42px!important;height:42px!important;flex:0 0 42px!important;
+  }
+  .brandWide .brandDept{margin:0!important}
+  .brandWide .brandVersion{margin-top:1px!important}
+  .brandWide>.brandCenter{
+    gap:0!important;
+    padding:0 4px!important;
+  }
+  .brandWide .brandDescriptor,
+  .brandWide .brandTeacher,
+  .brandWide .brandProfessional{margin:0!important}
+  .brandWide>.brandSideRight{
+    gap:2px!important;
+    padding:0 0 0 9px!important;
+  }
+  .brandWide .brandRoles{margin:0!important;max-width:none!important}
+  .brandWide .brandActions{margin:0!important;gap:5px!important}
+  .brandWide .brandWelcomeBtn{padding:4px 8px!important}
+  .toolbar{top:88px!important}
+  .leaflet-top.leaflet-left{top:84px!important}
+}
+@media(min-width:761px) and (max-width:1100px){
+  .brand.brandWide{
+    width:calc(100vw - 20px)!important;
+    grid-template-columns:minmax(180px,.9fr) minmax(390px,1.65fr) minmax(230px,1fr)!important;
+    column-gap:7px!important;
+    padding:4px 7px 5px!important;
+  }
+  .toolbar{top:86px!important}
+  .leaflet-top.leaflet-left{top:82px!important}
+}
+</style>
+
+
+<style id="anambro-header-packed-v7">
+/* Escritorio: banda completa, muy compacta y sin espacios blancos muertos. */
+@media(min-width:761px){
+  .brand.brandWide{
+    top:6px!important;
+    width:calc(100vw - 24px)!important;
+    max-width:none!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:3px 8px 4px!important;
+    display:grid!important;
+    grid-template-columns:minmax(220px,.95fr) minmax(520px,1.85fr) minmax(330px,1.2fr)!important;
+    grid-template-areas:
+      "title title title"
+      "left center right"!important;
+    grid-template-rows:auto auto!important;
+    column-gap:8px!important;
+    row-gap:0!important;
+    align-items:center!important;
+    border-radius:12px!important;
+  }
+  .brandWide>.brandTitleTop{
+    grid-area:title!important;
+    margin:0!important;
+    padding:0!important;
+    font-size:24px!important;
+    line-height:.92!important;
+    white-space:nowrap!important;
+    align-self:center!important;
+  }
+  .brandWide>.brandTitleTop .brandLogoWord{font-size:30px!important;line-height:.9!important}
+  .brandWide>.brandSideLeft{
+    grid-area:left!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0 8px 0 0!important;
+    gap:7px!important;
+    border-right:1px solid rgba(45,80,105,.16)!important;
+    align-self:stretch!important;
+    display:flex!important;
+    align-items:center!important;
+  }
+  .brandWide .brandSideLeft img{width:40px!important;height:40px!important;flex:0 0 40px!important;margin:0!important}
+  .brandWide .brandLeftText{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:1px!important}
+  .brandWide .brandDept{margin:0!important;font-size:10.5px!important;line-height:1.08!important}
+  .brandWide .brandVersion{margin:0!important;padding:1px 6px!important;font-size:8.5px!important;line-height:1.05!important}
+  .brandWide>.brandCenter{
+    grid-area:center!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0 4px!important;
+    gap:0!important;
+    align-self:center!important;
+    justify-content:center!important;
+  }
+  .brandWide .brandDescriptor{margin:0!important;font-size:9.6px!important;line-height:1.03!important}
+  .brandWide .brandTeacher{margin:0!important;font-size:15px!important;line-height:1.02!important}
+  .brandWide .brandProfessional{margin:0!important;font-size:9.8px!important;line-height:1.04!important;max-width:none!important}
+  .brandWide>.brandSideRight{
+    grid-area:right!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0 0 0 8px!important;
+    gap:1px!important;
+    border-left:1px solid rgba(45,80,105,.16)!important;
+    align-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+  }
+  .brandWide .brandRoles{margin:0!important;max-width:none!important;font-size:9px!important;line-height:1.04!important;text-align:right!important}
+  .brandWide .brandActions{margin:1px 0 0!important;gap:5px!important;display:flex!important;flex-direction:row!important;justify-content:flex-end!important}
+  .brandWide .brandWelcomeBtn{padding:4px 8px!important;font-size:9px!important;line-height:1!important}
+  .toolbar{top:79px!important}
+  .leaflet-top.leaflet-left{top:75px!important}
+}
+@media(min-width:761px) and (max-width:1100px){
+  .brand.brandWide{
+    width:calc(100vw - 12px)!important;
+    grid-template-columns:minmax(170px,.9fr) minmax(390px,1.7fr) minmax(250px,1fr)!important;
+    column-gap:6px!important;
+    padding:3px 6px 4px!important;
+  }
+  .brandWide .brandSideLeft img{width:36px!important;height:36px!important;flex-basis:36px!important}
+  .brandWide .brandDept{font-size:9px!important}
+  .brandWide .brandRoles{font-size:8px!important}
+  .toolbar{top:76px!important}
+  .leaflet-top.leaflet-left{top:72px!important}
+}
+</style>
+
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
