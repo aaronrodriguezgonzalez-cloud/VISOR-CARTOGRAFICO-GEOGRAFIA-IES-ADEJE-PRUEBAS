@@ -11037,8 +11037,12 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
 // Sincronización 2D/3D: misma imagen mundial, misma escala práctica y escala gráfica + numérica en el globo.
 (function(){
  function isSpainView2D(){
-  try{return typeof profileIsSpainLatLng==='function' && profileIsSpainLatLng(map.getCenter());}
-  catch(e){return false;}
+  try{
+   const c=map.getCenter();
+   const inCanarias=(typeof isCanaryLatLng==='function')&&isCanaryLatLng(c);
+   const inPenBal=(typeof isPeninsularBalearicLatLng==='function')&&isPeninsularBalearicLatLng(c);
+   return !!(inCanarias||inPenBal);
+  }catch(e){return false;}
  }
  function syncWorldImagery2D(){
   if(typeof map==='undefined'||typeof worldImagery==='undefined'||typeof activeBase==='undefined')return;
@@ -11055,6 +11059,7 @@ toggleGlobe=async function(){await __anambroToggleGlobeBase();if(document.body.c
   if(!inSpain && activeBase!==worldImagery){
    if(map.hasLayer(activeBase))map.removeLayer(activeBase);
    if(!map.hasLayer(worldImagery))worldImagery.addTo(map);
+   if(typeof worldImagery.redraw==='function')worldImagery.redraw();
   }else if(inSpain && activeBase!==worldImagery){
    if(map.hasLayer(worldImagery))map.removeLayer(worldImagery);
    if(!map.hasLayer(activeBase))activeBase.addTo(map);
