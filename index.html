@@ -2225,6 +2225,20 @@ body.globe-mode #globeScaleBox{display:block}
 #globeScaleGraphic{height:10px;border-left:2px solid #111;border-right:2px solid #111;border-bottom:3px solid #111;box-sizing:border-box;min-width:40px;max-width:190px}
 #globeScaleGraphicLabel{font-size:10px;font-weight:800;text-align:center;margin-top:2px;white-space:nowrap}
 @media(max-width:700px){#globeScaleBox{left:7px;bottom:7px;padding:5px 6px}#globeScaleNumeric{font-size:10px}#globeScaleGraphicLabel{font-size:9px}}
+
+/* ANAMBRO · identidad profesional y descripción funcional central */
+.brandWide .brandCenter{gap:2px!important;text-align:center!important}
+.brandWide .brandDescriptor{font-size:10.5px;font-weight:800;color:#0f756b;line-height:1.15;letter-spacing:.15px;text-align:center}
+.brandWide .brandTeacher{font-size:16px!important;font-weight:900!important;color:#17324d!important}
+.brandWide .brandGeo{font-weight:750;color:#42627b}
+.brandWide .brandProfessional{font-size:10.5px;font-weight:700;line-height:1.22;color:#344f63;text-align:center;max-width:720px}
+.brandWide .brandProfessional b{font-weight:900;color:#17324d}
+.brandWide .brandSideRight{justify-content:center!important}
+.brandWide .brandRoles{font-size:9.4px!important;line-height:1.25!important;text-align:center!important;max-width:330px!important;color:#476273!important}
+.welcomeAuthor{margin-top:10px;padding:10px 12px;background:#f2f7fa;border:1px solid #d3e0e8;border-radius:12px;text-align:center}
+.welcomeAuthorName{font-size:15px;color:#17324d;margin-bottom:4px}.welcomeAuthorContext{font-size:12.5px;line-height:1.4;color:#40586a}
+@media(max-width:1050px){.brandWide .brandDescriptor{font-size:9px}.brandWide .brandProfessional{font-size:9px}.brandWide .brandTeacher{font-size:14px!important}}
+@media(max-width:760px){.brandWide .brandDescriptor{font-size:7.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brandWide .brandProfessional{font-size:7.2px!important;line-height:1.1!important;white-space:normal}.brandWide .brandGeo{display:none}.brandWide .brandRoles{display:none!important}}
 </style>
 </head><body>
 <div id="map"></div>
@@ -2258,12 +2272,14 @@ body.globe-mode #globeScaleBox{display:block}
   </div>
 
   <div class="brandText brandCenter">
-    <div class="brandTitle"><span class="brandBase">VISOR CARTOGRÁFICO</span> <span class="brandLogoWord">ANAMBRO</span></div>
-    <div class="brandTeacher"><span class="brandAuthorshipPrefix">Elaborado por </span>Aarón Rodríguez González <span style="font-weight:700">(Geógrafo)</span></div>
+    <div class="brandTitle"><span class="brandBase">VISOR CARTOGRÁFICO INTERACTIVO</span> <span class="brandLogoWord">ANAMBRO</span></div>
+    <div class="brandDescriptor">Análisis territorial · SIG web · cartografía temática 2D/3D</div>
+    <div class="brandTeacher">Aarón Rodríguez González <span class="brandGeo">· Geógrafo</span></div>
+    <div class="brandProfessional"><b>Docente del Departamento de Geografía e Historia · IES ADEJE</b><span> · Coordinador de Patrimonio Natural, Social y Cultural Canario</span></div>
   </div>
 
   <div class="brandSide brandSideRight">
-    <div class="brandRoles"><b>Proyecto elaborado en el marco de su actividad docente en el IES ADEJE</b><br>Departamento de Geografía e Historia · Coordinador de Patrimonio Natural, Social y Cultural Canario</div>
+    <div class="brandRoles"><b>Cartografía base y temática · consulta espacial · series temporales · perfiles · geodemografía · leyendas dinámicas · exportación cartográfica</b></div>
     <div class="brandActions">
       <button type="button" class="brandWelcomeBtn" onclick="toggleWelcome(true)">👋 ¡Bienvenido!</button>
       <button type="button" class="brandWelcomeBtn brandSourcesBtn" onclick="openSourcesPanel()">ⓘ Fuentes y licencias</button>
@@ -2274,14 +2290,18 @@ body.globe-mode #globeScaleBox{display:block}
   <div class="welcomeModal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="welcomeHead">
       <div>
-        <div id="welcomeTitle" class="welcomeTitle">VISOR CARTOGRÁFICO <span class="brandLogoWord">ANAMBRO</span></div>
-        <div class="welcomeSub"><b>ANAMBRO</b> es una plataforma cartográfica abierta para explorar, medir, comparar y comprender el territorio desde distintas escalas. Nace en Canarias y sitúa al Archipiélago en el centro del proyecto, pero el visor <b>está creciendo de forma continua</b>: amplía progresivamente sus capas, herramientas y ámbitos de análisis hacia el resto de España y hacia el conjunto del planeta mediante un mapamundi 2D y un globo 3D. Reúne cartografía oficial, ortofotografía, información temática, perfiles topográficos, geología, biomas, vulcanismo y ahora también cartografía política histórica con control temporal. Está concebida especialmente para la enseñanza de la <b>Geografía de España</b>, la <b>Geografía e Historia de 1.º a 4.º de ESO</b>, <b>Biología y Geología</b> y, cada vez más, para el trabajo con <b>Historia Universal e Historia del Mundo Contemporáneo</b>, al permitir observar la evolución espacial de entidades políticas y procesos históricos a lo largo del tiempo.</div>
+        <div id="welcomeTitle" class="welcomeTitle">VISOR CARTOGRÁFICO INTERACTIVO <span class="brandLogoWord">ANAMBRO</span></div>
+        <div class="welcomeSub"><b>ANAMBRO</b> es un <b>visor cartográfico interactivo con capacidades de análisis territorial y SIG web</b>. Integra cartografía base y temática, consulta espacial, navegación continua entre <b>mapamundi 2D y globo 3D</b>, series temporales, datos geodemográficos, perfiles topográficos y temáticos, mediciones, leyendas dinámicas y exportación cartográfica. Permite explorar, comparar y comprender el territorio desde Canarias hasta la escala mundial, combinando fuentes oficiales y conjuntos de datos especializados con una interfaz pensada para la docencia, la divulgación y el análisis territorial.</div>
         <div class="welcomeAuthor">
-          <div class="welcomeAuthorName">Elaborado por <b>Aarón Rodríguez González</b> <span>(Geógrafo)</span></div>
-          <div class="welcomeAuthorContext">Proyecto desarrollado en el marco de su actividad docente en el <b>IES ADEJE</b>, desde el Departamento de Geografía e Historia y la coordinación del eje de Patrimonio Natural, Social y Cultural Canario.</div>
+          <div class="welcomeAuthorName"><b>Aarón Rodríguez González</b> <span>· Geógrafo</span></div>
+          <div class="welcomeAuthorContext"><b>Docente del Departamento de Geografía e Historia · IES ADEJE</b><br><b>Coordinador de Patrimonio Natural, Social y Cultural Canario</b></div>
         </div>
       </div>
       <button type="button" class="welcomeClose" onclick="toggleWelcome(false)" aria-label="Cerrar bienvenida">×</button>
+    </div>
+    <div class="welcomeCard" style="margin:10px 0 12px;border-left:4px solid #0f9d8a">
+      <h4 style="margin:0 0 5px">🗺️ Cartografía, análisis territorial y SIG web</h4>
+      <p style="margin:0">ANAMBRO combina <b>cartografía base y temática</b>, consulta espacial y temporal, <b>mapa 2D y globo 3D</b>, geodemografía mundial, perfiles topográficos y temáticos, mediciones, búsqueda y localización, leyendas dinámicas y composición de mapas para exportación. Las capas pueden consultarse, compararse y combinarse para estudiar el territorio, el paisaje, la población y los procesos históricos en distintas escalas.</p>
     </div>
     <div class="welcomeCard" style="margin:10px 0 12px;border-left:4px solid #7a5fb4">
       <h4 style="margin:0 0 5px">🌍 Un visor en expansión</h4>
@@ -2319,6 +2339,7 @@ body.globe-mode #globeScaleBox{display:block}
           <li>Red geográfica mundial y consulta de puntos con topónimo próximo, país, divisiones territoriales, coordenadas y altitud aproximada.</li>
           <li>Búsqueda mundial de lugares también desde el mapa 2D, además del globo 3D.</li>
           <li>Medición de distancias y superficies y perfiles topográficos altimétricos de ámbito mundial.</li>
+          <li><b>Geografía humana y geodemografía mundial:</b> variables independientes de población, densidad, crecimiento, urbanización, esperanza de vida, fecundidad, mortalidad, migraciones, PIB, estructura económica, desempleo, IDH, conectividad, agua, electricidad y emisiones, con <b>series temporales</b>, consulta por país, clases temáticas y leyendas exportables.</li>
           <li>Mapas temáticos mundiales opcionales de <b>climas Köppen-Geiger</b>, <b>grandes biomas terrestres</b> y <b>volcanes holocenos del Smithsonian Global Volcanism Program</b>. En clima y biomas, al pulsar cualquier punto se muestra una <b>ficha territorial completa</b> —topónimo, país, divisiones administrativas, coordenadas, altitud y datos temáticos— tanto en el mapamundi 2D como en el globo 3D. Los volcanes consultan además Smithsonian GVP y, cuando existen, datos USGS.</li>
           <li>Las capas mundiales se cargan únicamente cuando se activan para mantener el visor ligero y rápido.</li>
           <li><b>Historia Universal:</b> además de las fronteras políticas históricas, ANAMBRO puede superponer <b>acontecimientos históricos geolocalizados</b> extraídos previamente de Wikidata y sincronizados con el mismo control temporal. Se muestran todos los registros fechados del catálogo; los que tienen ubicación aparecen como puntos del mapa.</li>
@@ -2351,7 +2372,7 @@ body.globe-mode #globeScaleBox{display:block}
       </section>
 
     </div>
-    <div class="welcomeFooter"><b>ANAMBRO · Versión 1.0 · Curso 2026-2027.</b> Elaborado por <b>Aarón Rodríguez González</b> en el marco de su actividad docente en el <b>IES ADEJE</b>. Esta primera versión es solo el comienzo: ANAMBRO se irá actualizando con nuevas capas, fuentes, herramientas y ámbitos de análisis, manteniendo Canarias como núcleo del proyecto y ampliando progresivamente sus posibilidades para España y el mundo. Puedes volver a abrir esta ventana cuando quieras pulsando el botón <b>¡Bienvenido!</b> de la cabecera.</div>
+    <div class="welcomeFooter"><b>ANAMBRO · Versión 1.0 · Curso 2026-2027.</b> Proyecto de <b>Aarón Rodríguez González · Geógrafo</b>, <b>docente del Departamento de Geografía e Historia del IES ADEJE</b> y <b>Coordinador de Patrimonio Natural, Social y Cultural Canario</b>. ANAMBRO continuará ampliando sus capas, fuentes, herramientas y capacidades de análisis territorial y SIG web, manteniendo Canarias como núcleo del proyecto y extendiendo progresivamente sus posibilidades para España y el mundo.</div>
   </div>
 </div>
 
