@@ -8408,6 +8408,7 @@ async function refreshLayoutSnapshot(){
   }else{
    syncLayoutThematicAppearance(false);
    if(typeof window.anambroRefreshHistoryLabelsForExport==='function')await window.anambroRefreshHistoryLabelsForExport();
+   if(document.getElementById('worldHistoryCheck')?.checked)await waitLayoutMapRender(2600);
    const canvas=await html2canvas(document.getElementById('map'),{
     useCORS:true,allowTaint:false,logging:false,
     backgroundColor:((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#d9eef6':'#d9dde1',
@@ -9738,7 +9739,8 @@ async function toggleCountryLabels(on){
       horizontalOrigin:Cesium.HorizontalOrigin.CENTER,
       verticalOrigin:Cesium.VerticalOrigin.CENTER,
       distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,maxDist*1.45),
-      scaleByDistance:new Cesium.NearFarScalar(600000,1.12,maxDist*1.45,.78)
+      scaleByDistance:new Cesium.NearFarScalar(600000,1.12,maxDist*1.45,.78),
+      disableDepthTestDistance:0
      }
     });
    }
@@ -10155,7 +10157,7 @@ async function toggleCountriesLayer(on){
    for(const f of data.features||[])addBorderGeometry(ds,f.geometry);
    countriesSource=ds;
    await globeViewer.dataSources.add(ds);
-   globeViewer.scene.globe.depthTestAgainstTerrain=false;
+   globeViewer.scene.globe.depthTestAgainstTerrain=true;
    globeViewer.scene.requestRender();
    status('Fronteras internacionales · Natural Earth 1:10 M');
   }catch(e){
@@ -10399,6 +10401,7 @@ async function ensureGlobe(){
   loadCssOnce(base+'Widgets/widgets.css');await loadScriptOnce(base+'Cesium.js');
   globeTerrainProvider=null;
   globeViewer=new Cesium.Viewer('globe',{animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:true,sceneModePicker:false,navigationHelpButton:false,fullscreenButton:false,infoBox:false,selectionIndicator:false,baseLayer:false});
+  globeViewer.scene.globe.depthTestAgainstTerrain=true;
   // Imagen satelital mundial: PNOA es excelente para España, pero no sirve como fondo planetario.
   const sat=new Cesium.UrlTemplateImageryProvider({
    url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',
@@ -10410,8 +10413,9 @@ async function ensureGlobe(){
   const gridMain=Cesium.Color.fromCssColorString('#ff7043').withAlpha(0.98); // Ecuador, Greenwich y antimeridiano
   const tropicColor=Cesium.Color.fromCssColorString('#ffd54a').withAlpha(0.98); // Trópicos
   const polarColor=Cesium.Color.fromCssColorString('#5ed5ff').withAlpha(0.98); // Círculos polares
-  const mkLine=(coords,main=false)=>globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(coords),width:main?2.7:1.0,material:main?gridMain:gridSoft,arcType:Cesium.ArcType.GEODESIC}});
-  const mkGeoLabel=(lon,lat,text,color,opts={})=>globeViewer.entities.add({
+  window.__anambroGlobeGridEntities=window.__anambroGlobeGridEntities||[];
+  const mkLine=(coords,main=false)=>{const e=globeViewer.entities.add({polyline:{positions:Cesium.Cartesian3.fromDegreesArray(coords),width:main?2.7:1.0,material:main?gridMain:gridSoft,arcType:Cesium.ArcType.GEODESIC}});e.__anambroGeoGrid=true;window.__anambroGlobeGridEntities.push(e);return e;};
+  const mkGeoLabel=(lon,lat,text,color,opts={})=>{const e=globeViewer.entities.add({
    position:Cesium.Cartesian3.fromDegrees(lon,lat,12000),
    label:{
     text,
@@ -10424,17 +10428,18 @@ async function ensureGlobe(){
     backgroundColor:Cesium.Color.BLACK.withAlpha(.45),
     pixelOffset:opts.pixelOffset||new Cesium.Cartesian2(8,-4),
     horizontalOrigin:opts.horizontalOrigin||Cesium.HorizontalOrigin.LEFT,
-    verticalOrigin:opts.verticalOrigin||Cesium.VerticalOrigin.CENTER
+    verticalOrigin:opts.verticalOrigin||Cesium.VerticalOrigin.CENTER,
+    disableDepthTestDistance:0
    }
-  });
+  });e.__anambroGeoGrid=true;window.__anambroGlobeGridEntities.push(e);return e;};
   const mkSpecialParallel=(lat,label,color,dashLength=16)=>{
    const a=[];for(let lon=-180;lon<=180;lon+=2)a.push(lon,lat);
-   globeViewer.entities.add({polyline:{
+   {const e=globeViewer.entities.add({polyline:{
     positions:Cesium.Cartesian3.fromDegreesArray(a),
     width:2.2,
     material:new Cesium.PolylineDashMaterialProperty({color,dashLength}),
     arcType:Cesium.ArcType.GEODESIC
-   }});
+   }});e.__anambroGeoGrid=true;window.__anambroGlobeGridEntities.push(e);}
    mkGeoLabel(-38,lat,label,color);
   };
   for(let lon=-180;lon<180;lon+=15){
@@ -12071,7 +12076,7 @@ document.getElementById('worldBiomesCheck').addEventListener('change',async e=>{
    if(globeViewer)await toggleWorldBiomesGlobe(true);
    status('Vegetación mundial · grandes biomas (RESOLVE 2017)');
   }
- }catch(err){console.warn(err);e.target.checked=false;alert('No se pudo cargar ahora la capa mundial de biomas.');}
+ }catch(err){console.warn(err);e.target.checked=false;setTimeout(()=>window.anambroSyncThematicReferenceLayers?.(),0);alert('No se pudo cargar ahora la capa mundial de biomas.');}
 });
 document.getElementById('worldBiomesOpacity').addEventListener('input',e=>{
  const o=+e.target.value;document.getElementById('worldBiomesOpacityValue').textContent=Math.round(o*100)+' %';
@@ -13432,7 +13437,7 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
   ensurePanes();
   gebco2D=L.tileLayer.wms(GEBCO_URL,{
    layers:'gebco_latest',format:'image/jpeg',transparent:false,version:'1.3.0',
-   pane:'atlasBathymetryPane',opacity:.50,maxZoom:10,className:'anambro-gebco-tile',
+   pane:'atlasBathymetryPane',opacity:.50,maxZoom:10,className:'anambro-gebco-tile',crossOrigin:true,
    attribution:'GEBCO_2026'
   });
   return gebco2D;
@@ -14458,4 +14463,155 @@ html body.admin-atlas-mode #map .anambro-admin-gebco-tile{filter:saturate(.62) b
 <script id="anambro-logo-clone-init">
 (()=>{const master=document.querySelector('.brandAnambroIntegratedLogo');if(!master)return;document.querySelectorAll('[data-anambro-logo-clone="1"]').forEach(img=>{img.src=master.src;});})();
 </script>
+
+<style id="anambro-regression-guard-20260928">
+/* La escala numérica es una herramienta didáctica: nunca se oculta en móvil. */
+@media (max-width:950px){
+  html body .anambro-scale-num{
+    display:block!important;
+    font-size:12px!important;
+    line-height:1.05!important;
+    padding:5px 7px!important;
+    margin-bottom:36px!important;
+    background:rgba(255,255,255,.94)!important;
+    border:2px solid #222!important;
+    border-radius:5px!important;
+    white-space:nowrap!important;
+  }
+}
+</style>
+<script id="anambro-regression-guard-20260928">
+(function(){
+ 'use strict';
+
+ /* =============================================================
+    1. BIOMAS: visualización raster ligera.
+    La información puntual y los perfiles siguen consultando RESOLVE
+    mediante sus consultas espaciales existentes; solo se sustituye
+    el dibujo masivo de 846 polígonos en 2D/3D.
+    ============================================================= */
+ const BIOME_MAPSERVER='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/MapServer';
+ let globeBiomesImageryLayer=null;
+ function rgbaFromHex(hex,a=210){
+  let h=String(hex||'').replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');
+  const n=parseInt(h,16);return [n>>16&255,n>>8&255,n&255,a];
+ }
+ function biomeRenderer(){
+  const infos=(WORLD_BIOME_COLORS||[]).map(([name,color])=>({
+   value:name,label:name,symbol:{type:'esriSFS',style:'esriSFSSolid',color:rgbaFromHex(color,235),outline:{type:'esriSLS',style:'esriSLSSolid',color:[70,80,78,75],width:.25}}
+  }));
+  return {type:'uniqueValue',field1:'biome_name',defaultSymbol:{type:'esriSFS',style:'esriSFSSolid',color:[138,160,143,225],outline:{type:'esriSLS',style:'esriSLSSolid',color:[70,80,78,60],width:.2}},uniqueValueInfos:infos};
+ }
+ function biomeRasterUrl(){
+  const dynamic=[{id:0,source:{type:'mapLayer',mapLayerId:0},drawingInfo:{renderer:biomeRenderer()}}];
+  const q=new URLSearchParams({
+   bbox:'-180,-85.05112878,180,85.05112878',bboxSR:'4326',imageSR:'4326',size:'4096,2048',dpi:'96',
+   format:'png32',transparent:'true',dynamicLayers:JSON.stringify(dynamic),f:'image'
+  });
+  return BIOME_MAPSERVER+'/export?'+q.toString();
+ }
+ const BIOME_RASTER_URL=biomeRasterUrl();
+
+ ensureWorldBiomes=async function(){
+  if(worldBiomesLayer)return worldBiomesLayer;
+  if(worldBiomesLoading)return worldBiomesLoading;
+  worldBiomesLoading=(async()=>{
+   const layer=L.imageOverlay(BIOME_RASTER_URL,[[-85.05112878,-180],[85.05112878,180]],{
+    opacity:+(document.getElementById('worldBiomesOpacity')?.value||.58),interactive:false,crossOrigin:true,className:'anambro-biomes-raster'
+   });
+   /* Compatibilidad con el controlador de opacidad ya existente. */
+   layer.setStyle=function(opts){if(opts&&opts.fillOpacity!==undefined)this.setOpacity(+opts.fillOpacity);return this;};
+   worldBiomesLayer=layer;
+   worldBiomesData=null;
+   return layer;
+  })().catch(err=>{worldBiomesLoading=null;throw err;});
+  return worldBiomesLoading;
+ };
+
+ toggleWorldBiomesGlobe=async function(on){
+  if(!globeViewer||!window.Cesium)return;
+  if(!on){if(globeBiomesImageryLayer)globeBiomesImageryLayer.show=false;globeBiomesSource=null;globeViewer.scene.requestRender();return;}
+  try{
+   if(!globeBiomesImageryLayer){
+    let provider;
+    if(Cesium.SingleTileImageryProvider?.fromUrl){
+     provider=await Cesium.SingleTileImageryProvider.fromUrl(BIOME_RASTER_URL,{rectangle:Cesium.Rectangle.fromDegrees(-180,-85.05112878,180,85.05112878),credit:'RESOLVE 2017 · Dinerstein et al.'});
+    }else{
+     provider=new Cesium.SingleTileImageryProvider({url:BIOME_RASTER_URL,rectangle:Cesium.Rectangle.fromDegrees(-180,-85.05112878,180,85.05112878),credit:'RESOLVE 2017 · Dinerstein et al.'});
+    }
+    globeBiomesImageryLayer=globeViewer.imageryLayers.addImageryProvider(provider);
+   }
+   globeBiomesSource=null;
+   globeBiomesImageryLayer.show=true;
+   globeBiomesImageryLayer.alpha=+(document.getElementById('worldBiomesOpacity')?.value||.58);
+   globeViewer.imageryLayers.raiseToTop(globeBiomesImageryLayer);
+   globeViewer.scene.requestRender();
+  }catch(e){console.error('Biomas raster globo:',e);}
+ };
+ document.getElementById('worldBiomesOpacity')?.addEventListener('input',e=>{
+  if(globeBiomesImageryLayer){globeBiomesImageryLayer.alpha=+e.target.value;globeViewer?.scene.requestRender();}
+ });
+
+ /* =============================================================
+    2. CAPAS TEMÁTICAS: red geográfica y toponimia física fuera.
+    No se cambian los checkboxes: se conserva la preferencia del usuario
+    y se recupera automáticamente al salir del modo temático.
+    ============================================================= */
+ function thematicWorldActive(){
+  try{if(typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)return true;}catch(e){}
+  return ['worldGeologyCheck','worldClimateCheck','worldBiomesCheck'].some(id=>document.getElementById(id)?.checked);
+ }
+ window.anambroThematicWorldActive=thematicWorldActive;
+
+ const baseRedrawGeoGrid=redrawGeoGrid;
+ redrawGeoGrid=function(){
+  if(thematicWorldActive()){geoGrid.clearLayers();return;}
+  return baseRedrawGeoGrid.apply(this,arguments);
+ };
+ const baseEnsurePhysical2D=ensurePhysicalLabels2D;
+ ensurePhysicalLabels2D=function(){
+  if(thematicWorldActive()){
+   if(anambroPhysical2D){anambroPhysical2D.clearLayers();if(map.hasLayer(anambroPhysical2D))map.removeLayer(anambroPhysical2D);}
+   return;
+  }
+  return baseEnsurePhysical2D.apply(this,arguments);
+ };
+ const basePhysical3DVisibility=syncPhysicalLabels3DVisibility;
+ syncPhysicalLabels3DVisibility=function(){
+  if(thematicWorldActive()){for(const e of anambroPhysical3D)e.show=false;globeViewer?.scene.requestRender();return;}
+  return basePhysical3DVisibility.apply(this,arguments);
+ };
+ function syncThematicReferenceLayers(){
+  const on=thematicWorldActive();
+  if(on){
+   if(map.hasLayer(geoGrid))map.removeLayer(geoGrid);
+   if(anambroPhysical2D&&map.hasLayer(anambroPhysical2D))map.removeLayer(anambroPhysical2D);
+  }else{
+   if(gridEnabled&&document.getElementById('gridCheck')?.checked){if(!map.hasLayer(geoGrid))geoGrid.addTo(map);redrawGeoGrid();}
+   ensurePhysicalLabels2D();
+  }
+  if(globeViewer){
+   globeViewer.scene.globe.depthTestAgainstTerrain=true;
+   const showGrid=!on&&!!document.getElementById('gridCheck')?.checked;
+   for(const e of (window.__anambroGlobeGridEntities||[]))e.show=showGrid;
+   ensurePhysicalLabels3D();
+   syncPhysicalLabels3DVisibility();
+   globeViewer.scene.requestRender();
+  }
+ }
+ window.anambroSyncThematicReferenceLayers=syncThematicReferenceLayers;
+ ['worldGeologyCheck','worldClimateCheck','worldBiomesCheck','gridCheck','worldPhysicalToponymsCheck'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>setTimeout(syncThematicReferenceLayers,0)));
+ document.querySelectorAll('.worldHumanLayerCheck').forEach(el=>el.addEventListener('change',()=>setTimeout(syncThematicReferenceLayers,0)));
+ const oldToggleGlobeForRefs=toggleGlobe;
+ toggleGlobe=async function(){const r=await oldToggleGlobeForRefs.apply(this,arguments);setTimeout(syncThematicReferenceLayers,0);return r;};
+
+ /* =============================================================
+    3. OCLUSIÓN: protección adicional frente a futuras capas.
+    ============================================================= */
+ function enforceGlobeOcclusion(){if(globeViewer?.scene?.globe){globeViewer.scene.globe.depthTestAgainstTerrain=true;globeViewer.scene.requestRender();}}
+ window.anambroEnforceGlobeOcclusion=enforceGlobeOcclusion;
+ setTimeout(()=>{syncThematicReferenceLayers();enforceGlobeOcclusion();},0);
+})();
+</script>
+
 </body></html>
