@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>ANAMBRO · Insolación y latitud</title>
+<style>
+:root{--bg:#081522;--panel:#102536;--ink:#f7fbff;--muted:#a9c0d1;--sun:#ffd447;--ray:#ffe681;--earth:#1976a8;--land:#79b86b;--accent:#32c4ad;--hot:#ff8b4f;--cold:#88c8ff}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Montserrat,Inter,system-ui,-apple-system,sans-serif}
+button{font:inherit}.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:0}.top{display:flex;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(180deg,#102637,#0b1b29);border-bottom:1px solid #294457}.brand{font-weight:950;letter-spacing:.2px;color:#fff}.brand span{color:var(--accent)}.title{font-size:13px;color:#cfe0ec}.topControls{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}.top button,.phaseBtn{border:1px solid #456277;background:#132c3e;color:#eef8ff;border-radius:999px;padding:7px 11px;font-weight:800;cursor:pointer}.top button.active,.phaseBtn.active{background:#eaf8ff;color:#17324d;border-color:#fff}.stage{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:10px;padding:10px}.visual{position:relative;min-height:0;border:1px solid #29475b;border-radius:16px;overflow:hidden;background:radial-gradient(circle at 25% 40%,#173249 0,#0b1b29 46%,#07121c 100%)}svg{display:block;width:100%;height:100%}.side{min-height:0;overflow:auto;border:1px solid #29475b;border-radius:16px;background:rgba(16,37,54,.92);padding:13px}.side h2{font-size:18px;margin:0 0 7px}.side p{font-size:12px;line-height:1.42;color:#c6d8e5;margin:6px 0}.fact{margin-top:10px;padding:9px 10px;border-radius:10px;background:#0a1e2d;border-left:4px solid var(--accent)}.fact strong{display:block;color:#fff;margin-bottom:3px}.readout{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.metric{padding:8px;border-radius:9px;background:#152f42;border:1px solid #315168}.metric small{display:block;color:#91afc3;font-size:9px;text-transform:uppercase;letter-spacing:.5px}.metric b{font-size:16px}.energy{margin-top:10px}.energyBar{height:12px;border-radius:99px;background:#243e50;overflow:hidden}.energyFill{height:100%;width:50%;background:linear-gradient(90deg,#5bc0eb,#ffd447,#ff7b54);border-radius:99px;transition:width .55s ease}.bottom{display:flex;gap:7px;align-items:center;padding:9px 12px;background:#0b1c2a;border-top:1px solid #294457;overflow-x:auto}.bottom .phaseBtn{white-space:nowrap}.bottom .hint{margin-left:auto;color:#91aabd;font-size:10px;white-space:nowrap}.personHit{cursor:pointer}.person .body,.person .limb{stroke:#f9fcff;stroke-width:3;stroke-linecap:round}.person .head{fill:#f9fcff;stroke:#17324d;stroke-width:1.5}.person .ground{stroke:#fff;stroke-width:3;opacity:.95}.person .tag{font-size:10px;font-weight:850;fill:#f4f9fc;text-anchor:middle;paint-order:stroke;stroke:#07121c;stroke-width:4;stroke-linejoin:round}.person.selected .head{fill:#ffd447}.person.selected .body,.person.selected .limb{stroke:#ffd447}.person.selected .ground{stroke:#ffd447;stroke-width:5}.latitudeLine{stroke:#9cd1ef;stroke-width:1;opacity:.34;stroke-dasharray:4 5}.ray{stroke:var(--ray);stroke-width:3;opacity:.72;stroke-dasharray:12 9;animation:rays 2.2s linear infinite}.ray.focus{stroke:#ffd447;stroke-width:5;opacity:1}.ray.blocked{stroke:#ff7c68;stroke-dasharray:7 7;opacity:.65}.sunGlow{filter:drop-shadow(0 0 18px rgba(255,212,71,.55))}.axis{stroke:#dcecf7;stroke-width:2;stroke-dasharray:6 5;opacity:.7}.terminator{fill:#06101a;opacity:.72}.earthEdge{fill:#176b96;stroke:#bde8ff;stroke-width:2.5}.land{fill:#69a965;opacity:.88}.angleArc{fill:none;stroke:#ffd447;stroke-width:3}.angleText{fill:#ffd447;font-size:12px;font-weight:900;paint-order:stroke;stroke:#07121c;stroke-width:3}.nightLabel{fill:#ff9080;font-size:12px;font-weight:900;paint-order:stroke;stroke:#07121c;stroke-width:4}.footprint{fill:#ffcf4f;opacity:.22;stroke:#ffd447;stroke-width:2}.caption{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(5,15,24,.86);border:1px solid rgba(133,181,211,.35);border-radius:12px;padding:9px 11px;text-align:center;font-size:12px;font-weight:800;line-height:1.35;backdrop-filter:blur(3px)}
+@keyframes rays{to{stroke-dashoffset:-42}}
+@media(max-width:850px){.stage{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}.side{max-height:30vh;padding:9px}.side h2{font-size:14px}.side p{font-size:10.5px}.readout{grid-template-columns:repeat(4,1fr)}.metric b{font-size:12px}.metric{padding:6px}.visual{min-height:320px}.title{display:none}.bottom .hint{display:none}}
+@media(max-width:520px){.top{padding:7px 8px}.brand{font-size:12px}.top button{padding:5px 8px;font-size:10px}.stage{padding:5px;gap:5px}.visual{border-radius:10px;min-height:300px}.side{border-radius:10px}.bottom{padding:6px}.phaseBtn{font-size:10px;padding:5px 8px}.person .tag{font-size:8px}.caption{font-size:10px;left:7px;right:7px;bottom:7px;padding:6px}}
+</style>
+</head>
+<body>
+<div class="app">
+ <header class="top"><div class="brand">ANAMBRO <span>· Aula</span></div><div class="title">Insolación y latitud · ¿Por qué el Sol no calienta igual toda la Tierra?</div><div class="topControls"><button id="playBtn">▶ Explicación</button><button id="pauseBtn">⏸</button><button id="restartBtn">↺ Reiniciar</button></div></header>
+ <main class="stage">
+  <section class="visual">
+   <svg id="scene" viewBox="0 0 980 620" role="img" aria-label="Animación de la incidencia solar según la latitud">
+    <defs><clipPath id="earthClip"><circle cx="650" cy="310" r="205"/></clipPath></defs>
+    <g id="sun" class="sunGlow"><circle cx="88" cy="310" r="65" fill="#ffd447"/><circle cx="88" cy="310" r="48" fill="#ffe681"/><text x="88" y="315" text-anchor="middle" font-size="18" font-weight="950" fill="#704d00">SOL</text></g>
+    <g id="baseRays"></g>
+    <circle class="earthEdge" cx="650" cy="310" r="205"/>
+    <g id="earthRotator" clip-path="url(#earthClip)">
+      <path class="land" d="M530 260c45-70 88-72 117-49 25 20 21 43 64 56 41 13 72 50 41 80-28 27-55 7-74 34-25 36-77 38-95 2-18-37-67-38-70-82-1-17 5-29 17-41z"/>
+      <path class="land" d="M703 151c33 8 73 30 73 59 0 22-30 30-46 16-18-16-26-47-27-75z" opacity=".75"/>
+      <line id="axis" class="axis" x1="650" y1="70" x2="650" y2="550"/>
+      <g id="latGuides"></g>
+    </g>
+    <rect id="nightHalf" class="terminator" x="650" y="100" width="220" height="420" clip-path="url(#earthClip)"/>
+    <circle cx="650" cy="310" r="205" fill="none" stroke="#bde8ff" stroke-width="2.5"/>
+    <g id="dynamicRays"></g><g id="annotations"></g><g id="labels"></g>
+   </svg>
+   <div id="caption" class="caption">Los rayos solares llegan prácticamente paralelos. La curvatura terrestre hace que no incidan con el mismo ángulo en todas las latitudes.</div>
+  </section>
+  <aside class="side">
+   <h2 id="infoTitle">🌍 Insolación desigual</h2>
+   <p id="infoText">Selecciona una de las personas del planeta. Verás la altura del Sol sobre su horizonte y cómo cambia la energía recibida por unidad de superficie.</p>
+   <div class="fact"><strong id="factTitle">Idea clave</strong><span id="factText">No es la distancia al Sol lo que explica el contraste Ecuador–polos: es, sobre todo, el ángulo con el que llega la radiación.</span></div>
+   <div class="readout"><div class="metric"><small>Latitud</small><b id="metricLat">0°</b></div><div class="metric"><small>Altura solar</small><b id="metricAlt">90°</b></div><div class="metric"><small>Incidencia</small><b id="metricInc">Perpendicular</b></div><div class="metric"><small>Situación</small><b id="metricDay">Día</b></div></div>
+   <div class="energy"><small style="color:#91afc3">ENERGÍA CONCENTRADA POR UNIDAD DE SUPERFICIE</small><div class="energyBar"><div id="energyFill" class="energyFill"></div></div><p id="energyText">Cerca del punto subsolar, la misma energía se concentra sobre una superficie menor.</p></div>
+  </aside>
+ </main>
+ <footer class="bottom"><button class="phaseBtn active" data-phase="equinox">⚖️ Equinoccio</button><button class="phaseBtn" data-phase="june">☀️ Solsticio de junio</button><button class="phaseBtn" data-phase="december">☀️ Solsticio de diciembre</button><span class="hint">Pulsa una persona para comparar latitudes.</span></footer>
+</div>
+<script>
+(()=>{
+ const C={cx:650,cy:310,r:205};
+ const latitudes=[{id:'np',lat:90,label:'Polo Norte'},{id:'ac',lat:66.56,label:'Círculo Polar Ártico'},{id:'tc',lat:23.44,label:'Trópico de Cáncer'},{id:'eq',lat:0,label:'Ecuador'},{id:'tcap',lat:-23.44,label:'Trópico de Capricornio'},{id:'aac',lat:-66.56,label:'Círculo Polar Antártico'},{id:'sp',lat:-90,label:'Polo Sur'}];
+ const phases={equinox:{tilt:0,decl:0,label:'Equinoccio'},june:{tilt:-23.44,decl:23.44,label:'Solsticio de junio'},december:{tilt:23.44,decl:-23.44,label:'Solsticio de diciembre'}};
+ let phase='equinox',selected='eq',timer=null,storyIndex=0;
+ const NS='http://www.w3.org/2000/svg';
+ const $=id=>document.getElementById(id); const svgEl=(tag,a={})=>{const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(a))e.setAttribute(k,v);return e;};
+ const rad=d=>d*Math.PI/180;
+ function rotatedNormal(lat,tilt){const a=rad(lat+tilt),nx=-Math.cos(a),ny=-Math.sin(a);return {nx,ny,x:C.cx+C.r*nx,y:C.cy+C.r*ny};}
+ function solarAltitude(lat){return 90-Math.abs(lat-phases[phase].decl);}
+ function buildBase(){
+  const g=$('baseRays');for(let y=120;y<=500;y+=47){const dy=y-C.cy;const x2=Math.abs(dy)<C.r?C.cx-Math.sqrt(C.r*C.r-dy*dy)-3:940;const l=svgEl('line',{x1:155,y1:y,x2:x2,y2:y,class:'ray'});g.appendChild(l);}
+  const guides=$('latGuides');for(const p of latitudes){const a=rad(p.lat);const x=C.cx-C.r*Math.cos(a),y=C.cy-C.r*Math.sin(a);const x2=C.cx+C.r*.17*Math.cos(a),y2=C.cy+C.r*.17*Math.sin(a);guides.appendChild(svgEl('line',{x1:x,y1:y,x2:x2,y2:y2,class:'latitudeLine'}));}
+  render();
+ }
+ function personGroup(p,i){
+  const {nx,ny,x,y}=rotatedNormal(p.lat,phases[phase].tilt),tx=-ny,ty=nx;const g=svgEl('g',{class:'person personHit'+(p.id===selected?' selected':''),'data-id':p.id});
+  const sx=x+nx*2,sy=y+ny*2,bx=x+nx*26,by=y+ny*26,hx=x+nx*37,hy=y+ny*37;
+  g.appendChild(svgEl('line',{x1:x+tx*12,y1:y+ty*12,x2:x-tx*12,y2:y-ty*12,class:'ground'}));
+  g.appendChild(svgEl('line',{x1:sx,y1:sy,x2:bx,y2:by,class:'body'}));
+  g.appendChild(svgEl('line',{x1:x+nx*9,y1:y+ny*9,x2:x+nx*1+tx*8,y2:y+ny*1+ty*8,class:'limb'}));
+  g.appendChild(svgEl('line',{x1:x+nx*9,y1:y+ny*9,x2:x+nx*1-tx*8,y2:y+ny*1-ty*8,class:'limb'}));
+  g.appendChild(svgEl('line',{x1:x+nx*17,y1:y+ny*17,x2:x+nx*8+tx*9,y2:y+ny*8+ty*9,class:'limb'}));
+  g.appendChild(svgEl('line',{x1:x+nx*17,y1:y+ny*17,x2:x+nx*8-tx*9,y2:y+ny*8-ty*9,class:'limb'}));
+  g.appendChild(svgEl('circle',{cx:hx,cy:hy,r:7,class:'head'}));g.addEventListener('click',()=>{selected=p.id;render();});
+  return {g,head:{x:hx,y:hy},normal:{nx,ny},surface:{x,y}};
+ }
+ function render(){
+  const tilt=phases[phase].tilt;$('earthRotator').setAttribute('transform',`rotate(${tilt} ${C.cx} ${C.cy})`);
+  // people are drawn outside the rotator coordinates because their geometry is already rotated; keep rotator children only static Earth guides.
+  $('people').innerHTML='';$('dynamicRays').innerHTML='';$('annotations').innerHTML='';$('labels').innerHTML='';
+  // Neutralize parent rotation for dynamic people by placing them in root labels/rays instead.
+  const peopleRoot=$('labels');
+  latitudes.forEach((p,i)=>{const obj=personGroup(p,i);peopleRoot.appendChild(obj.g);const alt=solarAltitude(p.lat);const visible=alt>0.05;const ray=$('dynamicRays');
+    if(visible){ray.appendChild(svgEl('line',{x1:160,y1:obj.head.y,x2:obj.head.x-8,y2:obj.head.y,class:'ray '+(p.id===selected?'focus':'')}));}
+    else{const dy=obj.head.y-C.cy,hitX=Math.abs(dy)<C.r?C.cx-Math.sqrt(C.r*C.r-dy*dy)-4:C.cx-C.r-4;ray.appendChild(svgEl('line',{x1:160,y1:obj.head.y,x2:hitX,y2:obj.head.y,class:'ray blocked'}));}
+    const tx=obj.surface.x+obj.normal.nx*61,ty=obj.surface.y+obj.normal.ny*61;const t=svgEl('text',{x:tx,y:ty,class:'tag',transform:`rotate(0 ${tx} ${ty})`});t.textContent=p.label;peopleRoot.appendChild(t);
+    if(p.id===selected)annotate(p,obj,alt,visible);
+  });
+  document.querySelectorAll('.phaseBtn').forEach(b=>b.classList.toggle('active',b.dataset.phase===phase));updateInfo();
+ }
+ function annotate(p,obj,alt,visible){
+  const a=$('annotations');if(!visible){const t=svgEl('text',{x:obj.head.x+18,y:obj.head.y-12,class:'nightLabel'});t.textContent=alt<0?'Noche polar · el Sol no sale':'Sol en el horizonte';a.appendChild(t);return;}
+  const len=50,ang=Math.max(0,Math.min(90,alt));const start=-180,end=-180+ang;const r=35;const p1=[obj.surface.x+r*Math.cos(rad(start)),obj.surface.y+r*Math.sin(rad(start))],p2=[obj.surface.x+r*Math.cos(rad(end)),obj.surface.y+r*Math.sin(rad(end))];
+  a.appendChild(svgEl('path',{d:`M ${p1[0]} ${p1[1]} A ${r} ${r} 0 0 1 ${p2[0]} ${p2[1]}`,class:'angleArc'}));const t=svgEl('text',{x:obj.surface.x-48,y:obj.surface.y-16,class:'angleText'});t.textContent=Math.round(alt)+'°';a.appendChild(t);
+  const spread=Math.min(95,16/Math.max(.18,Math.sin(rad(alt))));a.appendChild(svgEl('rect',{x:obj.surface.x-4,y:obj.surface.y+22,width:spread,height:10,rx:5,class:'footprint',transform:`rotate(${Math.atan2(obj.normal.ny,obj.normal.nx)*180/Math.PI+90} ${obj.surface.x} ${obj.surface.y})`}));
+ }
+ function selectedObj(){return latitudes.find(x=>x.id===selected)||latitudes[3];}
+ function updateInfo(){const p=selectedObj(),alt=solarAltitude(p.lat),vis=alt>0.05,energy=vis?Math.max(0,Math.sin(rad(alt))):0;const abs=Math.abs(p.lat);$('metricLat').textContent=(p.lat===0?'0°':Math.abs(p.lat).toFixed(abs===90?0:1)+'° '+(p.lat>0?'N':'S'));$('metricAlt').textContent=vis?Math.max(0,alt).toFixed(alt===90?0:1)+'°':Math.abs(alt)<.1?'0°':'< 0°';$('metricInc').textContent=!vis?(Math.abs(alt)<.1?'Rasante':'Sin incidencia'):alt>80?'Casi perpendicular':alt>35?'Oblicua':'Muy oblicua';$('metricDay').textContent=vis?'Día':Math.abs(alt)<.1?'Horizonte':'Noche polar';$('energyFill').style.width=(energy*100).toFixed(0)+'%';$('infoTitle').textContent='☀️ '+p.label;$('infoText').textContent=vis?`En ${phases[phase].label.toLowerCase()}, la altura solar al mediodía en esta latitud es aproximadamente ${Math.max(0,alt).toFixed(1)}°. Cuanto más bajo está el Sol, más oblicua es la radiación.`:Math.abs(alt)<.1?`En ${phases[phase].label.toLowerCase()}, el Sol queda justo en el horizonte: los rayos llegan rasantes.`:`En ${phases[phase].label.toLowerCase()}, el Sol permanece por debajo del horizonte en esta posición: la radiación directa no alcanza a la persona.`;$('energyText').textContent=energy>.8?'La energía llega muy concentrada: una cantidad similar de radiación se reparte sobre poca superficie.':energy>.3?'La energía se reparte sobre una superficie mayor que cerca del punto subsolar.':vis?'La incidencia rasante reparte mucho la energía y además alarga el recorrido por la atmósfera.':'Sin radiación solar directa, no hay aporte energético directo en ese momento.';
+  $('factTitle').textContent=phase==='equinox'?'La geometría manda':phase==='june'?'Junio: hemisferio norte inclinado hacia el Sol':'Diciembre: hemisferio sur inclinado hacia el Sol';$('factText').textContent=phase==='equinox'?'El Ecuador recibe los rayos perpendiculares al mediodía; hacia los polos llegan progresivamente más oblicuos.':phase==='june'?'El punto subsolar se sitúa en el Trópico de Cáncer. El Polo Norte recibe luz; el Polo Sur queda en noche polar.':'El punto subsolar se sitúa en el Trópico de Capricornio. El Polo Sur recibe luz; el Polo Norte queda en noche polar.';
+ }
+ function setPhase(p){phase=p;render();$('caption').textContent=p==='equinox'?'Equinoccio: los rayos son perpendiculares en el Ecuador y se hacen cada vez más oblicuos hacia los polos.':p==='june'?'Solsticio de junio: el eje terrestre inclina el hemisferio norte hacia el Sol. El Trópico de Cáncer recibe la incidencia máxima.':'Solsticio de diciembre: la situación se invierte; la incidencia máxima se desplaza al Trópico de Capricornio.';}
+ const story=[['equinox','eq','Los rayos llegan paralelos, pero la superficie curva de la Tierra cambia su ángulo de incidencia.'],['equinox','tc','En los trópicos la radiación ya llega algo más oblicua durante el equinoccio.'],['equinox','ac','En los círculos polares la misma energía se reparte sobre mucha más superficie.'],['equinox','np','En los polos, durante el equinoccio, el Sol queda prácticamente en el horizonte.'],['june','tc','En junio el eje terrestre inclina el hemisferio norte hacia el Sol: el Trópico de Cáncer recibe rayos perpendiculares.'],['june','sp','Mientras tanto, el Polo Sur queda orientado en sentido contrario y entra en noche polar.'],['december','tcap','En diciembre la situación se invierte: el punto subsolar pasa al Trópico de Capricornio.'],['december','np','Ahora es el Polo Norte el que queda en noche polar.']];
+ function runStory(){stop();storyIndex=0;$('playBtn').classList.add('active');const step=()=>{const [ph,id,cap]=story[storyIndex%story.length];phase=ph;selected=id;render();$('caption').textContent=cap;storyIndex++;};step();timer=setInterval(step,4300);}
+ function stop(){if(timer){clearInterval(timer);timer=null;}$('playBtn').classList.remove('active');}
+ document.querySelectorAll('.phaseBtn').forEach(b=>b.addEventListener('click',()=>{stop();setPhase(b.dataset.phase);}));$('playBtn').onclick=runStory;$('pauseBtn').onclick=stop;$('restartBtn').onclick=()=>{stop();phase='equinox';selected='eq';storyIndex=0;setPhase('equinox');};
+ buildBase();
+})();
+</script>
+</body></html>
