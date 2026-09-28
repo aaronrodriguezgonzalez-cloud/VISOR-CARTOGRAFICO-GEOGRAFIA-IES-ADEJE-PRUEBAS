@@ -14614,4 +14614,121 @@ html body.admin-atlas-mode #map .anambro-admin-gebco-tile{filter:saturate(.62) b
 })();
 </script>
 
+
+<script id="anambro-biomes-native-3857-fix-20260928">
+(function(){
+ 'use strict';
+ /* BIOMAS únicamente: render por teselas en el CRS nativo del servicio
+    RESOLVE (Web Mercator / EPSG:3857). Evita el desfase del antiguo
+    imageOverlay global reproyectado, especialmente visible en latitudes altas. */
+ const MAPSERVER='https://data-gis.unep-wcmc.org/server/rest/services/Bio-geographicalRegions/Resolve_Ecoregions/MapServer';
+ let globeBiome3857Layer=null;
+
+ function rgba(hex,a=235){
+  let h=String(hex||'').replace('#','');
+  if(h.length===3)h=h.split('').map(x=>x+x).join('');
+  const n=parseInt(h||'8aa08f',16);
+  return [n>>16&255,n>>8&255,n&255,a];
+ }
+ function renderer(){
+  const infos=(window.WORLD_BIOME_COLORS||WORLD_BIOME_COLORS||[]).map(([name,color])=>({
+   value:name,label:name,
+   symbol:{type:'esriSFS',style:'esriSFSSolid',color:rgba(color,235),outline:{type:'esriSLS',style:'esriSLSSolid',color:[70,80,78,55],width:.2}}
+  }));
+  return {type:'uniqueValue',field1:'biome_name',
+   defaultSymbol:{type:'esriSFS',style:'esriSFSSolid',color:[138,160,143,225],outline:{type:'esriSLS',style:'esriSLSSolid',color:[70,80,78,45],width:.2}},
+   uniqueValueInfos:infos};
+ }
+ const dynamicLayers=encodeURIComponent(JSON.stringify([{id:0,source:{type:'mapLayer',mapLayerId:0},drawingInfo:{renderer:renderer()}}]));
+ const tail='&bboxSR=3857&imageSR=3857&size=256,256&dpi=96&format=png32&transparent=true&dynamicLayers='+dynamicLayers+'&f=image';
+
+ function tileUrlFromBBox(bbox){
+  return MAPSERVER+'/export?bbox='+bbox+tail;
+ }
+
+ function makeLeafletBiomeLayer(){
+  const Grid=L.GridLayer.extend({
+   createTile:function(coords,done){
+    const tile=document.createElement('img');
+    tile.alt=''; tile.setAttribute('role','presentation'); tile.crossOrigin='anonymous';
+    tile.style.width='100%';tile.style.height='100%';tile.style.display='block';
+    const ts=this.getTileSize();
+    const nwPx=coords.scaleBy(ts),sePx=nwPx.add(ts);
+    const nw=map.unproject(nwPx,coords.z),se=map.unproject(sePx,coords.z);
+    const a=L.CRS.EPSG3857.project(nw),b=L.CRS.EPSG3857.project(se);
+    const bbox=[a.x,b.y,b.x,a.y].join(',');
+    tile.onload=()=>done(null,tile);
+    tile.onerror=(err)=>done(err,tile);
+    tile.src=tileUrlFromBBox(bbox);
+    return tile;
+   }
+  });
+  const g=new Grid({
+   tileSize:256,
+   opacity:+(document.getElementById('worldBiomesOpacity')?.value||.58),
+   updateWhenIdle:true,
+   updateWhenZooming:false,
+   keepBuffer:1,
+   noWrap:false,
+   maxNativeZoom:10,
+   maxZoom:18,
+   pane:'overlayPane'
+  });
+  g.setStyle=function(o){if(o&&o.fillOpacity!==undefined)this.setOpacity(+o.fillOpacity);return this;};
+  return g;
+ }
+
+ ensureWorldBiomes=async function(){
+  if(worldBiomesLayer && worldBiomesLayer.__anambroBiome3857)return worldBiomesLayer;
+  if(worldBiomesLayer && map.hasLayer(worldBiomesLayer))map.removeLayer(worldBiomesLayer);
+  worldBiomesLayer=makeLeafletBiomeLayer();
+  worldBiomesLayer.__anambroBiome3857=true;
+  worldBiomesLoading=null;
+  /* La consulta puntual/perfil sigue usando FeatureServer; no cargamos polígonos masivos. */
+  worldBiomesData=null;
+  return worldBiomesLayer;
+ };
+
+ toggleWorldBiomesGlobe=async function(on){
+  if(!globeViewer||!window.Cesium)return;
+  if(!on){
+   if(globeBiome3857Layer)globeBiome3857Layer.show=false;
+   globeBiomesSource=null;
+   globeViewer.scene.requestRender();
+   return;
+  }
+  try{
+   if(!globeBiome3857Layer){
+    const scheme=new Cesium.WebMercatorTilingScheme();
+    const provider=new Cesium.UrlTemplateImageryProvider({
+     url:MAPSERVER+'/export?bbox={anambroBbox}'+tail,
+     tilingScheme:scheme,
+     tileWidth:256,tileHeight:256,
+     minimumLevel:0,maximumLevel:10,
+     credit:'RESOLVE 2017 · Dinerstein et al.',
+     customTags:{
+      anambroBbox:function(imageryProvider,x,y,level){
+       const r=imageryProvider.tilingScheme.tileXYToNativeRectangle(x,y,level);
+       return [r.west,r.south,r.east,r.north].join(',');
+      }
+     }
+    });
+    globeBiome3857Layer=globeViewer.imageryLayers.addImageryProvider(provider);
+   }
+   globeBiomesSource=null;
+   globeBiome3857Layer.show=true;
+   globeBiome3857Layer.alpha=+(document.getElementById('worldBiomesOpacity')?.value||.58);
+   globeViewer.imageryLayers.raiseToTop(globeBiome3857Layer);
+   globeViewer.scene.requestRender();
+  }catch(e){console.error('Biomas 3857 globo:',e);}
+ };
+
+ document.getElementById('worldBiomesOpacity')?.addEventListener('input',function(e){
+  const o=+e.target.value;
+  if(worldBiomesLayer?.__anambroBiome3857)worldBiomesLayer.setOpacity(o);
+  if(globeBiome3857Layer){globeBiome3857Layer.alpha=o;globeViewer?.scene.requestRender();}
+ });
+})();
+</script>
+
 </body></html>
