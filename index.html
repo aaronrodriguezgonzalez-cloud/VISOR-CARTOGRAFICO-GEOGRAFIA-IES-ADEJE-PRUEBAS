@@ -2598,26 +2598,134 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 </style>
 
 <style id="anambro-v09-grafcan-fixes">
-/* El modelo de sombras es una capa WMS propia, no el LiDAR del IGN. */
-body.political-map-mode #map [class*="politicalBasePane"]{opacity:1!important;filter:none!important;mix-blend-mode:multiply!important}
+/* GRAFCAN: Modelo de Sombras ≠ LiDAR. En modo político se superpone como sombreado real
+   sobre una base muy atenuada; nunca se fabrica una máscara/polígono de tierra. */
 body.political-map-mode.political-canary-physical #map{background:#dceff7!important}
-body.political-map-mode.political-canary-physical #map .leaflet-tile-pane{opacity:.12!important}
-body.political-map-mode #map .anambro-political-canary-shadow{opacity:1!important;filter:grayscale(1) contrast(1.32) brightness(1.03)!important;mix-blend-mode:multiply!important}
+body.political-map-mode.political-canary-physical #map .leaflet-tile-pane{opacity:.38!important;filter:grayscale(1) saturate(.18) brightness(1.28) contrast(.78)!important}
+body.political-map-mode #map [class*="politicalBasePane"],body.political-map-mode #map [class*="politicalBathyPane"],body.political-map-mode #map [class*="politicalAdminPane"],body.political-map-mode #map [class*="politicalLeaderPane"],body.political-map-mode #map [class*="politicalLabelPane"]{opacity:1!important;visibility:visible!important}
+body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1) contrast(1.28) brightness(1.02)!important;mix-blend-mode:multiply!important}
 #canaryLandLegend img{vertical-align:middle;max-width:100%;height:auto}
-body.political-map-mode.political-canary-physical #map [class*="politicalBasePane"]{opacity:1!important;visibility:visible!important;filter:none!important;mix-blend-mode:normal!important}
-body.political-map-mode #map .anambro-political-canary-shadow{opacity:1!important;filter:grayscale(1) contrast(1.20) brightness(1.02)!important;mix-blend-mode:normal!important}
-.political-map-label{width:1px!important;height:1px!important;overflow:visible!important}
-.politicalLabelInner{position:absolute;display:block!important;max-width:110px;white-space:normal!important;text-align:center;line-height:1.08!important;overflow:visible;pointer-events:auto}
+.political-map-label{width:1px!important;height:1px!important;overflow:visible!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;pointer-events:auto!important;cursor:grab!important}
+.politicalLabelInner{position:absolute;display:block!important;max-width:92px;white-space:normal!important;text-align:center;line-height:1.06!important;overflow:visible;pointer-events:auto;background:rgba(255,255,255,.82);border-radius:3px;padding:1px 3px;color:#182b3b;font-family:Montserrat,system-ui,sans-serif;font-weight:850;text-shadow:0 1px 0 #fff;box-shadow:0 0 0 1px rgba(255,255,255,.30)}
 .politicalLabelInner.align-center{transform:translate(-50%,-50%)!important}
 .politicalLabelInner.align-left{transform:translate(0,-50%)!important;text-align:left}
 .politicalLabelInner.align-right{transform:translate(-100%,-50%)!important;text-align:right}
 </style>
 
-<style id="anambro-v09-mapservice-hotfix">
-/* v0.9 hotfix cartográfico: las capas WMS físicas se muestran sin filtros heredados del antiguo LiDAR. */
-.leaflet-tile-pane .leaflet-layer img{image-rendering:auto}
-body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1) contrast(1.18) brightness(1.02)!important;mix-blend-mode:normal!important}
+
+
+<style id="anambro-v010-track-editor-css">
+.trackBuilderBox{display:grid;gap:5px}.trackBuilderBox select,.trackBuilderBox input{font:inherit;padding:5px;border:1px solid #aab7c1;border-radius:6px;background:#fff}.trackBuilderBusy{opacity:.62;pointer-events:none}.anambro-track-waypoint{background:#fff;border:3px solid #e53935;border-radius:50%;width:14px;height:14px;box-sizing:border-box;box-shadow:0 1px 5px #0007}.anambro-track-waypoint.start{border-color:#0f766e}.anambro-track-waypoint.end{border-color:#17324d}.trackModeActive #map{cursor:crosshair!important}
+#anambroZoomInBtn,#anambroZoomOutBtn{border:0;background:transparent;color:#17324d;font:900 18px/1 system-ui,-apple-system,sans-serif;width:26px;height:24px;padding:0;cursor:pointer;border-radius:5px}#anambroZoomInBtn:hover,#anambroZoomOutBtn:hover{background:#eaf2f6}
 </style>
+
+<style id="anambro-v011-responsive-header">
+/* v0.11 · La cabecera de escritorio conserva el diseño libre del usuario.
+   Tablet y móvil usan una composición responsive independiente: nunca reutilizan
+   coordenadas absolutas pensadas para escritorio. */
+@media (max-width:1180px){
+  html body .brand.brandWide.brandV06.header-free-layout{
+    position:relative!important;display:grid!important;
+    grid-template-columns:150px minmax(0,1fr) 196px!important;
+    grid-template-rows:62px 30px!important;
+    grid-template-areas:"left title right" "left center right"!important;
+    width:100%!important;height:92px!important;min-height:92px!important;
+    padding:0 8px!important;overflow:hidden!important;align-items:center!important;
+    background:#fff!important;box-sizing:border-box!important;
+  }
+  html body .brandV06.header-free-layout .headerEditFrame{
+    display:contents!important;position:static!important;left:auto!important;top:auto!important;
+    width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;
+    transform:none!important;overflow:visible!important;
+  }
+  html body .brandV06.header-free-layout>.brandSideLeft,
+  html body .brandV06.header-free-layout>.brandSideRight,
+  html body .brandV06.header-free-layout .brandInstitutionV06,
+  html body .brandV06.header-free-layout .brandAuthorV06{display:revert!important;position:static!important}
+  html body .brandV06.header-free-layout>.brandSideLeft{
+    grid-area:left!important;height:92px!important;display:flex!important;align-items:center!important;
+    justify-content:flex-start!important;padding:4px 6px!important;border-right:1px solid rgba(45,80,105,.12)!important;
+    min-width:0!important;box-sizing:border-box!important;
+  }
+  html body .brandV06.header-free-layout .brandInstitutionV06{
+    display:grid!important;grid-template-columns:50px minmax(0,1fr)!important;gap:7px!important;align-items:center!important;min-width:0!important
+  }
+  html body .brandV06.header-free-layout .brandInstituteLogoV06{width:48px!important;height:48px!important;object-fit:contain!important}
+  html body .brandV06.header-free-layout .brandLeftText{display:block!important;min-width:0!important}
+  html body .brandV06.header-free-layout .brandDept{font-size:8.5px!important;line-height:1.05!important;white-space:normal!important}
+  html body .brandV06.header-free-layout .brandDept b{font-size:11px!important}
+  html body .brandV06.header-free-layout .brandVersion{font-size:7.2px!important;line-height:1!important;margin-top:3px!important;padding:2px 4px!important}
+  html body .brandV06.header-free-layout .brandAuthorV06{display:none!important}
+  html body .brandV06.header-free-layout>.brandTitleTop{
+    grid-area:title!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;
+    height:62px!important;padding:2px 8px 0!important;min-width:0!important;box-sizing:border-box!important
+  }
+  html body .brandV06.header-free-layout .brandAnambroIntegratedLogo{
+    display:block!important;width:min(100%,460px)!important;height:58px!important;max-width:100%!important;object-fit:contain!important;transform:none!important
+  }
+  html body .brandV06.header-free-layout>.brandCenter{
+    grid-area:center!important;height:30px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+    padding:0 6px 3px!important;min-width:0!important;box-sizing:border-box!important
+  }
+  html body .brandV06.header-free-layout .brandDescriptor{
+    display:block!important;font-size:9.3px!important;line-height:1.08!important;text-align:center!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;width:100%!important;color:#0f756b!important
+  }
+  html body .brandV06.header-free-layout>.brandSideRight{
+    grid-area:right!important;height:92px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+    padding:4px 0 4px 7px!important;border-left:1px solid rgba(45,80,105,.12)!important;box-sizing:border-box!important;min-width:0!important
+  }
+  html body .brandV06.header-free-layout .brandRoles{display:none!important}
+  html body .brandV06.header-free-layout .brandActions{display:flex!important;flex-wrap:wrap!important;gap:5px!important;justify-content:center!important;align-content:center!important}
+  html body .brandV06.header-free-layout .brandWelcomeBtn{font-size:8.7px!important;line-height:1.05!important;padding:6px 7px!important;min-height:30px!important;white-space:nowrap!important}
+  html body .brandV06.header-free-layout .brandHeaderEditBtn{display:none!important}
+  #headerEditorBar,#headerEditorInspector,.headerResizeHandle,.headerEditHandle{display:none!important}
+}
+
+@media (max-width:760px){
+  html body .brand.brandWide.brandV06.header-free-layout{
+    grid-template-columns:46px minmax(0,1fr) 82px!important;
+    grid-template-rows:56px 25px!important;
+    grid-template-areas:"left title right" "center center right"!important;
+    height:81px!important;min-height:81px!important;padding:0 5px!important;
+  }
+  html body .brandV06.header-free-layout>.brandSideLeft{height:81px!important;padding:0!important;border-right:0!important;justify-content:center!important}
+  html body .brandV06.header-free-layout .brandInstitutionV06{display:flex!important;align-items:center!important;justify-content:center!important}
+  html body .brandV06.header-free-layout .brandInstituteLogoV06{width:38px!important;height:38px!important}
+  html body .brandV06.header-free-layout .brandLeftText{display:none!important}
+  html body .brandV06.header-free-layout>.brandTitleTop{height:56px!important;padding:2px 3px 0!important;align-items:center!important}
+  html body .brandV06.header-free-layout .brandAnambroIntegratedLogo{height:51px!important;width:100%!important}
+  html body .brandV06.header-free-layout>.brandCenter{height:25px!important;padding:0 4px 2px!important}
+  html body .brandV06.header-free-layout .brandDescriptor{font-size:8px!important;line-height:1!important;white-space:nowrap!important}
+  html body .brandV06.header-free-layout>.brandSideRight{height:81px!important;padding:0!important;border-left:0!important;align-items:center!important}
+  html body .brandV06.header-free-layout .brandActions{display:grid!important;grid-template-columns:36px 36px!important;gap:5px!important}
+  html body .brandV06.header-free-layout .brandWelcomeBtn{width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;font-size:0!important;border-radius:10px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  html body .brandV06.header-free-layout .brandWelcomeBtn:first-child::before{content:"👋";font-size:18px!important;line-height:1!important}
+  html body .brandV06.header-free-layout .brandSourcesBtn::before{content:"ⓘ";font-size:18px!important;line-height:1!important}
+  html body .brandV06.header-free-layout .brandHeaderEditBtn{display:none!important}
+}
+
+@media (max-height:560px) and (orientation:landscape){
+  html body .brand.brandWide.brandV06.header-free-layout{
+    grid-template-columns:44px minmax(0,1fr) 82px!important;
+    grid-template-rows:48px 20px!important;
+    grid-template-areas:"left title right" "center center right"!important;
+    height:68px!important;min-height:68px!important;padding:0 5px!important;
+  }
+  html body .brandV06.header-free-layout>.brandSideLeft,
+  html body .brandV06.header-free-layout>.brandSideRight{height:68px!important}
+  html body .brandV06.header-free-layout .brandInstituteLogoV06{width:34px!important;height:34px!important}
+  html body .brandV06.header-free-layout>.brandTitleTop{height:48px!important;padding:0 4px!important}
+  html body .brandV06.header-free-layout .brandAnambroIntegratedLogo{height:45px!important;width:100%!important}
+  html body .brandV06.header-free-layout>.brandCenter{height:20px!important;padding:0 3px 1px!important}
+  html body .brandV06.header-free-layout .brandDescriptor{font-size:7.3px!important}
+  html body .brandV06.header-free-layout .brandActions{grid-template-columns:31px 31px!important;gap:4px!important}
+  html body .brandV06.header-free-layout .brandWelcomeBtn{width:31px!important;height:31px!important;min-height:31px!important}
+  html body .brandV06.header-free-layout .brandWelcomeBtn:first-child::before,
+  html body .brandV06.header-free-layout .brandSourcesBtn::before{font-size:15px!important}
+}
+</style>
+
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -2646,7 +2754,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
       <img class="brandInstituteLogoV06" src="data:image/jpeg;base64,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" alt="IES Adeje">
       <div class="brandLeftText">
         <div class="brandDept"><b>IES ADEJE</b><br>Herramienta cartográfica abierta<br>Curso 2026-2027</div>
-        <div class="brandVersion">Versión 0.8 · aula interactiva</div>
+        <div class="brandVersion">Versión 0.11 · aula interactiva</div>
       </div>
     </div>
     <div class="brandAuthorV06">
@@ -2682,7 +2790,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
         <div id="welcomeTitle" class="welcomeTitle welcomeLogoTitle">
           <img class="welcomeAnambroLogo" src="assets/anambro-logo.png" alt="ANAMBRO · Visor cartográfico interactivo de uso educativo">
         </div>
-        <div class="welcomeSub"><b>ANAMBRO</b> es un <b>visor cartográfico interactivo y una herramienta didáctica para explorar, analizar, explicar y crear cartografía</b>. Integra mapa 2D y globo 3D, cartografía física, temática e histórica, perfiles territoriales mundiales, geodemografía, tracks GPX/KML, medición, composición y exportación, <b>mapas políticos y mapas mudos editables</b> y una biblioteca creciente de <b>explicaciones audiovisuales, animaciones y simulaciones</b>.</div>
+        <div class="welcomeSub"><b>ANAMBRO</b> es un <b>visor cartográfico interactivo y una herramienta didáctica para explorar, analizar, explicar y crear cartografía</b>. Integra mapa 2D y globo 3D, cartografía física, temática e histórica, perfiles territoriales mundiales, geodemografía, tracks GPX/KML —incluida creación y exportación con ajuste a caminos OpenStreetMap—, medición, composición y exportación, <b>mapas políticos y mapas mudos editables</b> y una biblioteca creciente de <b>explicaciones audiovisuales, animaciones y simulaciones</b>.</div>
         <div class="welcomeAuthor welcomeAuthorWithPortrait">
           <img class="welcomeAuthorPortrait" src="assets/aaron-retrato.webp" alt="Retrato ilustrado de Aarón Rodríguez González">
           <div class="welcomeAuthorText"><div class="welcomeAuthorName"><b>Aarón Rodríguez González</b> <span>· Geógrafo</span></div>
@@ -2774,7 +2882,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
       </section>
 
     </div>
-    <div class="welcomeFooter"><b>ANAMBRO · Versión 0.6 · Curso 2026-2027.</b> Proyecto personal de <b>Aarón Rodríguez González · Geógrafo</b>, <b>docente del Departamento de Geografía e Historia del IES ADEJE</b> y <b>Coordinador de Patrimonio Natural, Social y Cultural Canario</b>, desarrollado de forma independiente en su tiempo libre a partir de necesidades reales del aula y abierto a la comunidad educativa. ANAMBRO continuará ampliando sus capas, fuentes, herramientas, explicaciones y capacidades de creación cartográfica.</div>
+    <div class="welcomeFooter"><b>ANAMBRO · Versión 0.9 · Curso 2026-2027.</b> Proyecto personal de <b>Aarón Rodríguez González · Geógrafo</b>, <b>docente del Departamento de Geografía e Historia del IES ADEJE</b> y <b>Coordinador de Patrimonio Natural, Social y Cultural Canario</b>, desarrollado de forma independiente en su tiempo libre a partir de necesidades reales del aula y abierto a la comunidad educativa. ANAMBRO continuará ampliando sus capas, fuentes, herramientas, explicaciones y capacidades de creación cartográfica.</div>
   </div>
 </div>
 
@@ -2800,6 +2908,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseCanary" type="radio"/> Mapa topográfico · MTN</label>
 <label><input data-base-choice="pnoa" name="baseCanary" type="radio"/> Imagen · PNOA máxima actualidad</label>
 <label><input data-base-choice="street" name="baseCanary" type="radio"/> Callejero · IGN Base</label>
+<label><input data-base-choice="osm" name="baseCanary" type="radio"/> <b>OpenStreetMap</b></label>
 <label><input checked="" data-base-choice="hybrid" name="baseCanary" type="radio"/> Híbrido · PNOA + cartografía</label>
 <label><input data-base-choice="lidar" name="baseCanary" type="radio"/> LiDAR · relieve (IGN)</label>
 <label><input data-base-choice="shadowCanary" name="baseCanary" type="radio"/> <b>Modelo de Sombras · GRAFCAN</b></label>
@@ -2860,6 +2969,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="raster" name="baseSpain" type="radio"/> Mapa topográfico · MTN</label>
 <label><input data-base-choice="pnoa" name="baseSpain" type="radio"/> Imagen · PNOA máxima actualidad</label>
 <label><input data-base-choice="street" name="baseSpain" type="radio"/> Callejero · IGN Base</label>
+<label><input data-base-choice="osm" name="baseSpain" type="radio"/> <b>OpenStreetMap</b></label>
 <label><input checked="" data-base-choice="hybrid" name="baseSpain" type="radio"/> Híbrido · PNOA + cartografía</label>
 <label><input data-base-choice="lidar" name="baseSpain" type="radio"/> LiDAR · relieve</label>
 <label><input data-base-choice="land" name="baseSpain" type="radio"/> Ocupación del suelo</label>
@@ -2899,7 +3009,8 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 </div>
 </details>
 <details class="layerScope"><summary>🌍 Mundo</summary>
-<div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="worldsat" name="baseWorld" type="radio"/> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div></details><details class="layerSubcategory"><summary>🌐 Límites, divisiones, topónimos y servicios</summary><label><input id="countriesCheck" type="checkbox"/> <b>Fronteras internacionales</b></label>
+<div class="layerScopeInner"><details class="layerSubcategory"><summary>🗺️ Cartografía base</summary><label><input data-base-choice="worldsat" name="baseWorld" type="radio"/> <b>Imagen aérea/satélite mundial · Esri World Imagery</b></label>
+<label><input data-base-choice="osm" name="baseWorld" type="radio"/> <b>OpenStreetMap</b></label><div class="layerSubBlock"><small>El mismo mosaico de imágenes que utiliza el globo 3D.</small></div></details><details class="layerSubcategory"><summary>🌐 Límites, divisiones, topónimos y servicios</summary><label><input id="countriesCheck" type="checkbox"/> <b>Fronteras internacionales</b></label>
 <label class="sub"><input id="countryLabelsCheck" type="checkbox"/> Nombres de países</label>
 <label><input id="worldAdmin1Check" type="checkbox"/> <b>Divisiones infraestatales de 1.er nivel</b></label><div class="layerSubBlock"><small>Regiones, estados, comunidades, provincias y equivalentes · World Bank.</small></div>
 <label><input id="worldAdmin2Check" type="checkbox"/> <b>Divisiones infraestatales de 2.º nivel</b></label><div class="layerSubBlock"><small>Departamentos, distritos, condados, provincias secundarias, municipios y equivalentes · World Bank.</small></div>
@@ -2999,13 +3110,26 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <div id="profileBox" style="display:none"><div id="profileSummary" style="margin-bottom:5px"></div><canvas id="profileCanvas" width="520" height="220" style="width:100%;height:auto;border:1px solid #bbb;border-radius:6px"></canvas></div>
 </div>
 
-<div id="trackPanel" class="panel hidden"><h3>Track GPX / KML</h3>
-<p>Carga un archivo <b>GPX</b> o <b>KML</b> desde tu dispositivo. El track se dibuja sobre el mapa como una capa independiente y puede mantenerse visible al imprimir o exportar el mapa.</p>
+<div id="trackPanel" class="panel hidden"><h3>Tracks GPX / KML</h3>
+<p>Importa un track existente o <b>créalo directamente en ANAMBRO</b>. En modo «Seguir caminos», cada punto nuevo se enruta por la red de OpenStreetMap; puedes alternar con tramos manuales.</p>
 <input id="trackFileInput" type="file" accept=".gpx,.kml,application/gpx+xml,application/vnd.google-earth.kml+xml,application/xml,text/xml" style="display:none" onchange="loadTrackFile(this.files&&this.files[0])">
-<button class="action" style="width:100%" onclick="document.getElementById('trackFileInput').click()">📂 Cargar GPX/KML</button>
-<div class="row" style="margin-top:5px"><button class="action" id="trackCenterBtn" onclick="centerImportedTrack()" disabled>⌖ Centrar</button><button class="action" id="trackProfileBtn" onclick="profileImportedTrack()" disabled>⛰️ Generar perfil</button></div>
+<button class="action" style="width:100%" onclick="document.getElementById('trackFileInput').click()">📂 Importar GPX/KML</button>
+<details class="layerSubcategory" open style="margin-top:8px"><summary>✏️ Generar track</summary>
+<div class="layerSubBlock trackBuilderBox">
+<label><b>Nombre</b><input id="trackBuildName" type="text" value="Track ANAMBRO" style="width:100%;box-sizing:border-box"></label>
+<div class="politicalGrid2" style="margin-top:5px">
+<label><b>Perfil</b><select id="trackRoutingProfile"><option value="hiking-mountain" selected>Senderismo</option><option value="trekking">Bicicleta / trekking</option><option value="mtb">MTB</option><option value="car-fast">Coche</option></select></label>
+<label><b>Nuevo tramo</b><select id="trackSegmentMode"><option value="follow" selected>Seguir caminos</option><option value="manual">Manual · línea directa</option></select></label>
+</div>
+<div class="row" style="margin-top:6px"><button class="action" id="trackBuildStartBtn" onclick="startTrackBuilder()">▶ Generar track</button><button class="action" id="trackBuildFinishBtn" onclick="finishTrackBuilder()" disabled>■ Terminar</button></div>
+<div class="row" style="margin-top:5px"><button class="action" id="trackBuildUndoBtn" onclick="undoTrackBuilderPoint()" disabled>↶ Deshacer punto</button><button class="action" id="trackBuildClearBtn" onclick="clearTrackBuilder()" disabled>🗑 Borrar trazado</button></div>
+<small id="trackBuildStatus">Pulsa «Generar track» y después marca el punto inicial sobre el mapa.</small>
+</div></details>
+<div class="row" style="margin-top:7px"><button class="action" id="trackCenterBtn" onclick="centerImportedTrack()" disabled>⌖ Centrar</button><button class="action" id="trackProfileBtn" onclick="profileImportedTrack()" disabled>⛰️ Generar perfil</button></div>
 <div class="row" style="margin-top:5px"><button class="action" id="trackVisibilityBtn" onclick="toggleImportedTrackVisibility()" disabled>👁 Ocultar</button><button class="action" id="trackRemoveBtn" onclick="removeImportedTrack()" disabled>✕ Eliminar</button></div>
+<div class="row" style="margin-top:5px"><button class="action" id="trackExportGpxBtn" onclick="exportCurrentTrack('gpx')" disabled>⬇ GPX</button><button class="action" id="trackExportKmlBtn" onclick="exportCurrentTrack('kml')" disabled>⬇ KML</button></div>
 <p id="trackFileStatus" style="margin:7px 0 0;color:#52616d"><b>Estado:</b> ningún track cargado.</p>
+<small>El enrutamiento automático utiliza BRouter sobre datos de OpenStreetMap. Si un camino no está cartografiado o el servicio no responde, cambia «Nuevo tramo» a <b>Manual</b> para continuar sin bloquear el trabajo.</small>
 <button class="action" style="margin-top:8px;width:100%" onclick="togglePanel('trackPanel')">Cerrar</button>
 </div>
 
@@ -3073,6 +3197,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
       <label><b>Base</b>
         <select id="politicalBackground">
           <option value="clean">Base ANAMBRO atenuada</option>
+          <option value="osm">OpenStreetMap</option>
           <option value="canary-shadow" selected>Canarias · Modelo de Sombras GRAFCAN</option>
           <option value="canary-topobathy">Canarias · Topobatimétrico GRAFCAN</option>
           <option value="bathy-soft">Batimetría mundial suave</option>
@@ -3089,10 +3214,11 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
   <details open class="politicalSection"><summary>🔤 Rotulación</summary>
     <label class="politicalCheck"><input id="politicalLabelsCheck" type="checkbox"> Mostrar nombres de las unidades</label>
     <div class="politicalGrid2">
-      <label><b>Tamaño general</b><input id="politicalLabelDefaultSize" type="range" min="7" max="20" step="1" value="10"></label>
+      <label><b>Tamaño general</b><input id="politicalLabelDefaultSize" type="range" min="7" max="28" step="1" value="10"></label>
       <label><b>Líneas guía</b><select id="politicalLeaderMode"><option value="auto" selected>Automáticas</option><option value="always">Siempre</option><option value="never">Nunca</option></select></label>
     </div>
-    <small class="politicalSubHint">Los nombres se pueden arrastrar directamente sobre el mapa. Al separarlos de su territorio, ANAMBRO dibuja una línea guía.</small>
+    <label class="politicalCheck"><input id="politicalLabelUniformSize" type="checkbox" checked> Aplicar <b>el mismo tamaño a todas</b> las etiquetas</label>
+    <small class="politicalSubHint">Con esta opción activa, el control «Tamaño general» modifica simultáneamente todas las etiquetas. Desactívala para conservar tamaños individuales. Los nombres se pueden arrastrar directamente sobre el mapa y generan línea guía al alejarlos.</small>
   </details>
 
   <div class="row politicalButtons">
@@ -3187,6 +3313,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <div class="sourceItem sourceOk"><b>PNUD · Human Development Reports</b> · Índice de Desarrollo Humano (IDH), serie temporal 1990–2023.<br><small>Human Development Report 2025.</small><br><a href="https://hdr.undp.org/data-center" target="_blank" rel="noopener">Human Development Data Center</a></div>
 <div class="sourceItem sourceOk"><b>World Bank Global Administrative Divisions</b> · límites administrativos mundiales de primer y segundo orden.<br><small>ANAMBRO utiliza ADM1 para regiones/estados/provincias y ADM2 para departamentos/distritos/condados/municipios y equivalentes.</small><br><a href="https://services.arcgis.com/iQ1dY19aHwbSDYIF/arcgis/rest/services/World_Bank_Global_Administrative_Divisions/FeatureServer" target="_blank" rel="noopener">Servicio World Bank GAD</a></div>
 <div class="sourceItem sourceOk"><b>Natural Earth</b> · fronteras y geometrías mundiales auxiliares.<br><small>Datos de dominio público.</small><br><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener">Terms of Use</a></div>
+    <div class="sourceItem sourceOk"><b>BRouter</b> · cálculo de rutas sobre datos de OpenStreetMap para el generador de tracks.<br><small>Servicio externo de enrutamiento; ANAMBRO permite continuar con tramos manuales si no está disponible.</small><br><a href="https://brouter.de/" target="_blank" rel="noopener">BRouter</a></div>
     <div class="sourceItem sourceOk"><b>OpenStreetMap</b> · referencia cartográfica y geocodificación Nominatim.<br><small>© OpenStreetMap contributors · ODbL. ANAMBRO aplica caché y una cola de consultas para respetar el servicio público.</small><br><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">Copyright / ODbL</a> · <a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener">Nominatim Usage Policy</a></div>
     <div class="sourceItem sourceOk"><b>OpenFreeMap / OpenMapTiles</b> · toponimia vectorial mundial.<br><small>Atribución: OpenFreeMap © OpenMapTiles · Data from OpenStreetMap.</small><br><a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a></div>
     <div class="sourceItem sourceOk"><b>Beck et al. (2018)</b> · clasificación climática Köppen-Geiger.<br><small>Dataset científico CC BY 4.0. ANAMBRO realiza una visualización/adaptación educativa; los rangos explicativos son orientativos.</small><br><a href="https://www.nature.com/articles/sdata2018214" target="_blank" rel="noopener">Scientific Data · Beck et al.</a></div>
@@ -3444,6 +3571,7 @@ function activeSourceKeys(){
    (typeof adminMun!=='undefined'&&has(adminMun));
  if(ignVisible)s.add('ign');
  if(typeof worldImagery!=='undefined'&&has(worldImagery))s.add('esri');
+ if(typeof osm!=='undefined'&&has(osm))s.add('osm');
 
  if((typeof vegetation!=='undefined'&&has(vegetation))||(typeof vegetationCanaryPotential!=='undefined'&&has(vegetationCanaryPotential)))s.add('grafcan');
  if((typeof geologyCanary!=='undefined'&&has(geologyCanary))||(typeof geologySpain!=='undefined'&&has(geologySpain)))s.add('igme');
@@ -3479,6 +3607,10 @@ const WORLD_VIEW_BOUNDS=L.latLngBounds([[-84.8,-180],[84.8,180]]);
 const map=L.map('map',{
  zoomControl:false,
  minZoom:0,
+ zoomSnap:1,
+ zoomDelta:1,
+ wheelDebounceTime:90,
+ wheelPxPerZoomLevel:180,
  worldCopyJump:false,
  preferCanvas:true
 }).setView([28.30,-16.55],9);
@@ -3526,6 +3658,7 @@ const pnoa=L.tileLayer('https://www.ign.es/wmts/pnoa-ma?service=WMTS&request=Get
 const street=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'© IGN/CNIG'});
 const labels=L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=IGNBaseOrto&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'© IGN/CNIG'});
 const hybrid=L.layerGroup([pnoa,labels]);
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{noWrap:true,maxZoom:19,attribution:'© OpenStreetMap contributors'});
 const lidar=L.tileLayer('https://wmts-mapa-lidar.idee.es/lidar?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=EL.GridCoverageDSM&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'LiDAR · © IGN/CNIG'});
 // Canarias: servicios oficiales GRAFCAN distintos del LiDAR del IGN.
 // Canarias · servicios oficiales GRAFCAN. Se fuerza EPSG:4326 porque estos WMS no deben pedirse como WebMercator genérico.
@@ -3533,15 +3666,16 @@ const shadowCanary=L.tileLayer.wms('https://idecan1.grafcan.es/ServicioWMS/MDSom
  noWrap:true,layers:'WMS_HS',format:'image/jpeg',transparent:false,version:'1.1.1',uppercase:true,
  bounds:L.latLngBounds([[27.45,-18.25],[29.55,-13.15]]),minZoom:4,maxZoom:20,attribution:'Modelo de Sombras · © Gobierno de Canarias / GRAFCAN'
 });
+shadowCanary.on('tileerror',e=>console.warn('Modelo de Sombras GRAFCAN: error de tesela WMS_HS',e));
 const landCanary=L.tileLayer.wms('https://idecan2.grafcan.es/ServicioWMS/MOS?',{
  noWrap:true,layers:'WMS_MOS',format:'image/png',transparent:false,version:'1.1.1',crs:L.CRS.EPSG4326,uppercase:true,
  bounds:L.latLngBounds([[27.45,-18.25],[29.55,-13.15]]),minZoom:4,maxZoom:20,attribution:'Mapa de Ocupación del Suelo 2002 · © Gobierno de Canarias / GRAFCAN'
 });
 const land=L.tileLayer('https://servicios.idee.es/wmts/ocupacion-suelo?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=LC.LandCoverSurfaces&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}',{noWrap:true,maxZoom:19,attribution:'SIOSE/CORINE · © IGN/CNIG'});
-// Primera edición MTN50: se usa el WMS oficial, más robusto aquí que las teselas WMTS que estaban quedando en blanco.
-const historic=L.tileLayer.wms('https://www.ign.es/wms/primera-edicion-mtn?',{
- noWrap:true,layers:'MTN50',format:'image/png',transparent:false,version:'1.3.0',uppercase:true,
- minZoom:5,maxZoom:19,attribution:'1.ª edición MTN50 · © IGN/CNIG'
+// Primera edición del MTN50 · WMTS oficial IGN/CNIG.
+// La capa publicada para GoogleMapsCompatible es mtn50-edicion1.
+const historic=L.tileLayer('https://www.ign.es/wmts/primera-edicion-mtn?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=mtn50-edicion1&FORMAT=image/jpeg&STYLE=default&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',{
+ noWrap:true,minZoom:5,maxZoom:19,maxNativeZoom:19,attribution:'1.ª edición MTN50 · © IGN/CNIG'
 });
 const worldImagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false',{
  noWrap:true,minZoom:0,maxZoom:23,maxNativeZoom:23,
@@ -5410,7 +5544,7 @@ document.getElementById('vegetationPotentialCanaryCheck').onchange=e=>{if(e.targ
 document.getElementById('transportOpacity').oninput=e=>transport.setOpacity(+e.target.value);
 document.getElementById('adminOpacity').oninput=e=>[adminCCAA,adminProv,adminMun].forEach(l=>l.setOpacity(+e.target.value));
 
-const bases={raster,pnoa,street,hybrid,lidar,shadowCanary,landCanary,land,historic,worldsat:worldImagery};
+const bases={raster,pnoa,street,osm,hybrid,lidar,shadowCanary,landCanary,land,historic,worldsat:worldImagery};
 let activeBase=hybrid;
 hybrid.addTo(map);
 document.querySelectorAll('input[data-base-choice]').forEach(r=>r.addEventListener('change',()=>{
@@ -5900,7 +6034,7 @@ async function mfeAt(lat,lon){
 }
 // Mapa de Ocupación del Suelo de Canarias · GRAFCAN (MOS 2002)
 let canaryMosLegendItems=null,canaryMosLegendPromise=null;
-const CANARY_MOS_LEGEND_URL='https://idecan2.grafcan.es/ServicioWMS/MOS?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=WMS_MOS';
+const CANARY_MOS_LEGEND_URL='https://idecan2.grafcan.es/ServicioWMS/MOS?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=MOS_03';
 function canaryMosLegendHTML(){
  if(Array.isArray(canaryMosLegendItems)&&canaryMosLegendItems.length){
   return canaryMosLegendItems.map(x=>'<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><img src="'+escHtml(x.icon)+'" alt="" style="width:22px;height:14px;object-fit:contain;border:0;flex:0 0 auto"><span>'+escHtml(x.label)+'</span></div>').join('');
@@ -5909,8 +6043,8 @@ function canaryMosLegendHTML(){
 }
 async function loadCanaryMosLegend(){
  const box=document.getElementById('canaryLandLegend');
- // El servicio MOS publica la capa WMS_MOS. La leyenda oficial se sirve mediante GetLegendGraphic.
- // No intentamos interpretar HTML propietario: mostramos la leyenda oficial tal cual para evitar perder clases o colores.
+ // La visualización usa WMS_MOS; la leyenda detallada se pide a MOS_03, la clasificación consultable por punto.
+ // Mostramos la leyenda oficial del propio servicio para conservar colores y clases.
  if(box)box.innerHTML=canaryMosLegendHTML();
  if(typeof updateLegend==='function')setTimeout(updateLegend,0);
  return [];
@@ -5924,15 +6058,21 @@ function cleanGrafcanInfoTable(raw){
 }
 async function canaryLandUseAt(lat,lon){
  if(!isCanaryPoint(lat,lon)||typeof activeBase==='undefined'||activeBase!==landCanary)return null;
- const d=.003,bbox=[lon-d,lat-d,lon+d,lat+d].join(',');
- const layers=['WMS_MOS'],formats=['text/html','application/json','text/plain'];
+ // GetFeatureInfo debe usar exactamente el BBOX, tamaño y píxel de la vista que el usuario está tocando.
+ // Así la consulta coincide con la tesela WMS visible y no con una caja artificial alrededor del punto.
+ const b=map.getBounds(),sz=map.getSize(),pt=map.latLngToContainerPoint(L.latLng(lat,lon));
+ if(!b?.isValid?.()||!sz?.x||!sz?.y)return null;
+ const bbox=[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].join(',');
+ const x=Math.max(0,Math.min(sz.x-1,Math.round(pt.x))),y=Math.max(0,Math.min(sz.y-1,Math.round(pt.y)));
+ const layers=['MOS_03','MOS','WMS_MOS'],formats=['text/html','text/plain','application/json'];
  let lastErr=null;
  for(const layer of layers){for(const info of formats){try{
-  const q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetFeatureInfo',LAYERS:layer,QUERY_LAYERS:layer,STYLES:'',SRS:'EPSG:4326',BBOX:bbox,WIDTH:'101',HEIGHT:'101',X:'50',Y:'50',FORMAT:'image/png',INFO_FORMAT:info,FEATURE_COUNT:'8'});
+  const q=new URLSearchParams({SERVICE:'WMS',VERSION:'1.1.1',REQUEST:'GetFeatureInfo',LAYERS:layer,QUERY_LAYERS:layer,STYLES:'',SRS:'EPSG:4326',BBOX:bbox,WIDTH:String(Math.round(sz.x)),HEIGHT:String(Math.round(sz.y)),X:String(x),Y:String(y),FORMAT:'image/png',INFO_FORMAT:info,FEATURE_COUNT:'8'});
   const r=await fetch('https://idecan2.grafcan.es/ServicioWMS/MOS?'+q.toString(),{mode:'cors',cache:'no-store'});if(!r.ok)throw Error('GRAFCAN '+r.status);
   const text=await r.text();
+  if(/ServiceException|ExceptionReport|msWMSFeatureInfo/i.test(text))throw Error('Formato GetFeatureInfo no admitido');
   if(info==='application/json'){
-   try{const j=JSON.parse(text),f=j?.features?.[0],props=f?.properties;if(props){const rows=Object.entries(props).filter(([k,v])=>v!==null&&v!==''&&!/^(shape|objectid|fid|gid|id)$/i.test(k)).map(([k,v])=>[String(k),String(v)]).slice(0,12);if(rows.length)return rows;}}catch(_){ }
+   try{const j=JSON.parse(text),f=j?.features?.[0],props=f?.properties;if(props){const rows=Object.entries(props).filter(([k,v])=>v!==null&&v!==''&&!/^(shape|objectid|fid|gid|id)$/i.test(k)).map(([k,v])=>[String(k),String(v)]).slice(0,14);if(rows.length)return rows;}}catch(_){ }
   }
   const rows=cleanGrafcanInfoTable(text);if(rows.length)return rows;
  }catch(e){lastErr=e;}}
@@ -6055,7 +6195,7 @@ async function showPoint(ll,title='Punto consultado',useMarker=true){
 // Track GPX / KML · herramienta cartográfica independiente
 let importedTrackGroup=null,importedTrackSegments=[],importedTrackProfilePts=[],importedTrackName='',importedTrackVisible=true;
 function setTrackButtons(enabled){
- for(const id of ['trackCenterBtn','trackProfileBtn','trackVisibilityBtn','trackRemoveBtn']){const b=document.getElementById(id);if(b)b.disabled=!enabled;}
+ for(const id of ['trackCenterBtn','trackProfileBtn','trackVisibilityBtn','trackRemoveBtn','trackExportGpxBtn','trackExportKmlBtn']){const b=document.getElementById(id);if(b)b.disabled=!enabled;}
 }
 function trackStatus(msg){const el=document.getElementById('trackFileStatus');if(el)el.innerHTML='<b>Estado:</b> '+msg;}
 function updateTrackVisibilityButton(){const b=document.getElementById('trackVisibilityBtn');if(b)b.textContent=importedTrackVisible?'👁 Ocultar':'👁 Mostrar';}
@@ -6064,6 +6204,7 @@ function removeImportedTrack(silent=false){
  importedTrackGroup=null;importedTrackSegments=[];importedTrackProfilePts=[];importedTrackName='';importedTrackVisible=true;
  setTrackButtons(false);updateTrackVisibilityButton();trackStatus('ningún track cargado.');
  const input=document.getElementById('trackFileInput');if(input)input.value='';
+ if(typeof resetTrackBuilderState==='function')resetTrackBuilderState(false);
  if(!silent)status('Track eliminado');
 }
 function importedTrackPoint(lat,lon,ele){
@@ -6091,6 +6232,7 @@ async function loadTrackFile(file){
   trackStatus('leyendo '+name+'…');const text=await file.text();const xml=new DOMParser().parseFromString(text,'application/xml');
   if(xml.querySelector('parsererror'))throw new Error('el XML del archivo no es válido');
   const segs=ext==='gpx'?parseGpxTrack(xml):parseKmlTrack(xml);if(!segs.length)throw new Error('no se encontró ningún track o línea con al menos dos puntos');
+  if(typeof resetTrackBuilderState==='function')resetTrackBuilderState(false);
   if(importedTrackGroup&&map.hasLayer(importedTrackGroup))map.removeLayer(importedTrackGroup);
   importedTrackGroup=L.layerGroup();importedTrackSegments=segs;importedTrackName=name;importedTrackVisible=true;
   for(const pts of segs)L.polyline(pts,{color:'#e53935',weight:5,opacity:.92,lineCap:'round',lineJoin:'round'}).addTo(importedTrackGroup);
@@ -6103,21 +6245,97 @@ async function loadTrackFile(file){
  }catch(err){console.error('Track GPX/KML:',err);removeImportedTrack(true);trackStatus('error: '+(err?.message||err));alert('No se pudo cargar el track. '+(err?.message||err));}
 }
 function centerImportedTrack(){
- if(!importedTrackSegments.length)return;const bounds=L.latLngBounds(importedTrackSegments.flat());if(bounds.isValid())map.fitBounds(bounds.pad(.08));
+ const segs=(typeof currentTrackSegments==='function'?currentTrackSegments():importedTrackSegments);if(!segs.length)return;const bounds=L.latLngBounds(segs.flat());if(bounds.isValid())map.fitBounds(bounds.pad(.08));
 }
+
 function toggleImportedTrackVisibility(){
- if(!importedTrackGroup)return;
- if(map.hasLayer(importedTrackGroup)){map.removeLayer(importedTrackGroup);importedTrackVisible=false;status('Track oculto');}
- else{importedTrackGroup.addTo(map);importedTrackVisible=true;status('Track visible');}
+ const layer=(trackBuildGroup&&trackBuildSegments.length)?trackBuildGroup:importedTrackGroup;if(!layer)return;
+ if(map.hasLayer(layer)){map.removeLayer(layer);importedTrackVisible=false;status('Track oculto');}
+ else{layer.addTo(map);importedTrackVisible=true;status('Track visible');}
  updateTrackVisibilityButton();
 }
 async function profileImportedTrack(){
- if(importedTrackProfilePts.length<2){alert('Carga primero un track GPX o KML.');return;}
+ const live=(typeof currentTrackSegments==='function'?currentTrackSegments():importedTrackSegments);if(live.length){importedTrackProfilePts=live.slice().sort((a,b)=>trackSegmentDistance(b)-trackSegmentDistance(a))[0]?.slice()||importedTrackProfilePts;}
+ if(importedTrackProfilePts.length<2){alert('Carga o genera primero un track.');return;}
  if(document.body.classList.contains('globe-mode')){alert('El perfil del track se genera desde el mapa 2D. Cambia a vista de mapa para continuar.');return;}
  lastProfileSource='map';lastProfileCountries=[];
  document.getElementById('profileResult').innerHTML='<b>Resultado:</b> '+fmtDistance(trackSegmentDistance(importedTrackProfilePts))+' · preparando perfil del track…';
  status('Generando perfil del track · '+importedTrackName);
  await finishProfileFromPoints(importedTrackProfilePts.slice());
+}
+
+// Generador/Editor de tracks v0.10 · enrutamiento por caminos OSM mediante BRouter + tramos manuales.
+let trackBuildActive=false,trackBuildWaypoints=[],trackBuildSegments=[],trackBuildMarkers=[],trackBuildGroup=null,trackRoutingBusy=false;
+function trackBuildStatus(msg){const e=document.getElementById('trackBuildStatus');if(e)e.innerHTML=msg;}
+function trackWaypointIcon(i){const last=i===trackBuildWaypoints.length-1,first=i===0;return L.divIcon({className:'',html:'<div class="anambro-track-waypoint '+(first?'start ':last?'end ':'')+'"></div>',iconSize:[14,14],iconAnchor:[7,7]});}
+function resetTrackBuilderState(keepGeometry=false){
+ trackBuildActive=false;trackRoutingBusy=false;document.body.classList.remove('trackModeActive');
+ if(!keepGeometry&&trackBuildGroup&&map.hasLayer(trackBuildGroup))map.removeLayer(trackBuildGroup);
+ if(!keepGeometry){trackBuildWaypoints=[];trackBuildSegments=[];trackBuildMarkers=[];trackBuildGroup=null;}
+ for(const id of ['trackBuildFinishBtn','trackBuildUndoBtn','trackBuildClearBtn']){const b=document.getElementById(id);if(b)b.disabled=true;}
+ const sb=document.getElementById('trackBuildStartBtn');if(sb){sb.disabled=false;sb.textContent='▶ Generar track';}
+}
+function currentTrackSegments(){if(trackBuildSegments.length)return trackBuildSegments.map(s=>s.points).filter(p=>p?.length>1);return importedTrackSegments||[];}
+function syncGeneratedTrackToMainState(){
+ const segs=currentTrackSegments();if(!segs.length)return;
+ importedTrackSegments=segs.map(s=>s.slice());importedTrackProfilePts=importedTrackSegments.slice().sort((a,b)=>trackSegmentDistance(b)-trackSegmentDistance(a))[0]?.slice()||[];
+ importedTrackName=(document.getElementById('trackBuildName')?.value||'Track ANAMBRO').trim()||'Track ANAMBRO';importedTrackVisible=true;setTrackButtons(true);updateTrackVisibilityButton();
+ const total=importedTrackSegments.reduce((a,s)=>a+trackSegmentDistance(s),0);trackStatus('<b>'+escHtml(importedTrackName)+'</b> · '+trackBuildWaypoints.length+' puntos de control · '+fmtDistance(total));
+}
+function rebuildTrackBuilderVisuals(){
+ if(!trackBuildGroup)trackBuildGroup=L.layerGroup().addTo(map);
+ for(const m of trackBuildMarkers)try{trackBuildGroup.removeLayer(m)}catch(e){} trackBuildMarkers=[];
+ trackBuildSegments.forEach(s=>{if(!s.line){s.line=L.polyline(s.points,{color:s.mode==='manual'?'#ff9800':'#e53935',weight:5,opacity:.94,dashArray:s.mode==='manual'?'8 5':null,lineCap:'round',lineJoin:'round'}).addTo(trackBuildGroup);}else{s.line.setLatLngs(s.points);s.line.setStyle({color:s.mode==='manual'?'#ff9800':'#e53935',dashArray:s.mode==='manual'?'8 5':null});}});
+ trackBuildWaypoints.forEach((ll,i)=>{const m=L.marker(ll,{draggable:true,icon:trackWaypointIcon(i),zIndexOffset:900});m.on('dragend',async()=>{trackBuildWaypoints[i]=m.getLatLng();await recalcTrackBuilderAround(i);});m.addTo(trackBuildGroup);trackBuildMarkers.push(m);});
+}
+function brouterProfiles(profile){const p=String(profile||'hiking-mountain');if(p==='hiking-mountain')return ['hiking-mountain','hiking-beta','trekking'];if(p==='mtb')return ['mtb','trekking'];return [p];}
+async function brouterRoute(a,b,profile){
+ let lastErr=null;
+ for(const prof of brouterProfiles(profile)){
+  const url='https://brouter.de/brouter?lonlats='+encodeURIComponent(a.lng+','+a.lat+'|'+b.lng+','+b.lat)+'&profile='+encodeURIComponent(prof)+'&alternativeidx=0&format=geojson';
+  try{
+   const r=await fetch(url,{headers:{Accept:'application/geo+json,application/json'}});if(!r.ok)throw new Error('BRouter HTTP '+r.status);
+   const d=await r.json();let g=d?.features?.[0]?.geometry||d?.geometry||null,coords=g?.coordinates||[];if(g?.type==='MultiLineString')coords=coords.flat();
+   const pts=(coords||[]).map(c=>{const ll=importedTrackPoint(c[1],c[0],c[2]);return ll}).filter(Boolean);if(pts.length>1)return pts;
+   throw new Error('BRouter no devolvió una geometría válida');
+  }catch(e){lastErr=e;}
+ }
+ throw lastErr||new Error('No se pudo calcular la ruta');
+}
+async function routeBuilderSegment(a,b,mode,profile){if(mode==='manual')return [L.latLng(a.lat,a.lng),L.latLng(b.lat,b.lng)];return await brouterRoute(a,b,profile);}
+async function addTrackBuilderPoint(ll){
+ if(!trackBuildActive||trackRoutingBusy)return;
+ const point=L.latLng(ll.lat,ll.lng);if(!trackBuildWaypoints.length){trackBuildWaypoints.push(point);rebuildTrackBuilderVisuals();trackBuildStatus('Punto inicial fijado. Marca el siguiente punto.');document.getElementById('trackBuildUndoBtn').disabled=false;document.getElementById('trackBuildClearBtn').disabled=false;return;}
+ const prev=trackBuildWaypoints.at(-1),mode=document.getElementById('trackSegmentMode')?.value||'follow',profile=document.getElementById('trackRoutingProfile')?.value||'hiking-mountain';trackRoutingBusy=true;trackBuildStatus(mode==='manual'?'Añadiendo tramo manual…':'Calculando recorrido por caminos…');
+ try{const pts=await routeBuilderSegment(prev,point,mode,profile);trackBuildWaypoints.push(point);trackBuildSegments.push({mode,profile,points:pts,line:null});rebuildTrackBuilderVisuals();syncGeneratedTrackToMainState();trackBuildStatus((mode==='manual'?'Tramo manual':'Tramo ajustado a la red')+' añadido. Puedes cambiar el modo antes del siguiente punto.');}
+ catch(e){console.warn('ANAMBRO routing',e);trackBuildStatus('<b>No se pudo ajustar ese tramo a la red.</b> Cambia «Nuevo tramo» a Manual y vuelve a marcar el punto.');}
+ finally{trackRoutingBusy=false;}
+}
+async function recalcTrackBuilderAround(i){
+ if(trackRoutingBusy)return;trackRoutingBusy=true;trackBuildStatus('Recalculando los tramos adyacentes…');
+ try{
+  for(const si of [i-1,i]){if(si<0||si>=trackBuildSegments.length)continue;const s=trackBuildSegments[si],a=trackBuildWaypoints[si],b=trackBuildWaypoints[si+1];s.points=await routeBuilderSegment(a,b,s.mode,s.profile);if(s.line)s.line.setLatLngs(s.points);}
+  rebuildTrackBuilderVisuals();syncGeneratedTrackToMainState();trackBuildStatus('Track actualizado.');
+ }catch(e){console.warn(e);trackBuildStatus('No se pudo recalcular algún tramo. Puedes cambiarlo a manual rehaciendo el último punto.');}
+ finally{trackRoutingBusy=false;}
+}
+function startTrackBuilder(){
+ if(document.body.classList.contains('globe-mode')){alert('El generador de tracks funciona en el mapa 2D. Cambia primero a la vista de mapa.');return;}
+ if((importedTrackSegments.length||trackBuildWaypoints.length)&&!confirm('Hay un track visible. ¿Quieres iniciar uno nuevo y sustituirlo?'))return;
+ removeImportedTrack(true);trackBuildWaypoints=[];trackBuildSegments=[];trackBuildMarkers=[];trackBuildGroup=L.layerGroup().addTo(map);trackBuildActive=true;measureMode=null;profileMode=false;document.body.classList.add('trackModeActive');
+ document.getElementById('trackBuildStartBtn').disabled=true;document.getElementById('trackBuildStartBtn').textContent='● Generando…';document.getElementById('trackBuildFinishBtn').disabled=false;document.getElementById('trackBuildClearBtn').disabled=false;trackBuildStatus('<b>Modo Generar track activo.</b> Marca el punto inicial sobre el mapa.');status('GENERAR TRACK · marca el punto inicial');
+}
+function finishTrackBuilder(){if(!trackBuildActive)return;trackBuildActive=false;document.body.classList.remove('trackModeActive');document.getElementById('trackBuildStartBtn').disabled=false;document.getElementById('trackBuildStartBtn').textContent='▶ Generar track';document.getElementById('trackBuildFinishBtn').disabled=true;syncGeneratedTrackToMainState();trackBuildStatus(trackBuildSegments.length?'Track terminado. Los puntos de control siguen siendo arrastrables para corregir el trazado.':'Generación detenida.');status('Track terminado');}
+function undoTrackBuilderPoint(){
+ if(trackRoutingBusy||!trackBuildWaypoints.length)return;if(trackBuildSegments.length){const s=trackBuildSegments.pop();try{if(s.line&&trackBuildGroup)trackBuildGroup.removeLayer(s.line)}catch(e){}}trackBuildWaypoints.pop();rebuildTrackBuilderVisuals();if(trackBuildSegments.length)syncGeneratedTrackToMainState();else{importedTrackSegments=[];importedTrackProfilePts=[];setTrackButtons(false);trackStatus('ningún track cargado.');}document.getElementById('trackBuildUndoBtn').disabled=!trackBuildWaypoints.length;trackBuildStatus(trackBuildWaypoints.length?'Último punto eliminado.':'Sin puntos. Marca un nuevo punto inicial.');
+}
+function clearTrackBuilder(){if(trackBuildWaypoints.length&&!confirm('¿Borrar todo el trazado actual?'))return;if(trackBuildGroup&&map.hasLayer(trackBuildGroup))map.removeLayer(trackBuildGroup);trackBuildWaypoints=[];trackBuildSegments=[];trackBuildMarkers=[];trackBuildGroup=L.layerGroup().addTo(map);importedTrackSegments=[];importedTrackProfilePts=[];setTrackButtons(false);trackStatus('ningún track cargado.');trackBuildStatus(trackBuildActive?'Trazado borrado. Marca un nuevo punto inicial.':'Trazado borrado.');document.getElementById('trackBuildUndoBtn').disabled=true;}
+function xmlEsc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+function exportCurrentTrack(format){
+ const segs=currentTrackSegments();if(!segs.length){alert('No hay ningún track para exportar.');return;}const name=(document.getElementById('trackBuildName')?.value||importedTrackName||'Track ANAMBRO').trim()||'Track ANAMBRO';let data='',mime='',ext='';
+ if(format==='kml'){ext='kml';mime='application/vnd.google-earth.kml+xml';const geoms=segs.map(s=>'<Placemark><name>'+xmlEsc(name)+'</name><LineString><tessellate>1</tessellate><coordinates>'+s.map(p=>p.lng+','+p.lat+','+(Number.isFinite(p.trackElevation)?p.trackElevation:0)).join(' ')+'</coordinates></LineString></Placemark>').join('');data='<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>'+xmlEsc(name)+'</name>'+geoms+'</Document></kml>';}
+ else{ext='gpx';mime='application/gpx+xml';const trksegs=segs.map(s=>'<trkseg>'+s.map(p=>'<trkpt lat="'+p.lat.toFixed(7)+'" lon="'+p.lng.toFixed(7)+'">'+(Number.isFinite(p.trackElevation)?'<ele>'+p.trackElevation+'</ele>':'')+'</trkpt>').join('')+'</trkseg>').join('');data='<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="ANAMBRO" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>'+xmlEsc(name)+'</name></metadata><trk><name>'+xmlEsc(name)+'</name>'+trksegs+'</trk></gpx>';}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:mime}));a.download=name.replace(/[\\/:*?"<>|]+/g,'_')+'.'+ext;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200);status('Track exportado · '+a.download);
 }
 
 // Perfil topográfico · herramienta independiente
@@ -8018,7 +8236,7 @@ function clearProfile(){lastProfilePath=null;lastProfileAnalysis=null;lastProfil
 
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProfileModal();});
-map.on('click',e=>{if(profileMode){addProfilePoint(e.latlng);return;}if(measureMode){addMeasurePoint(e.latlng);return;}if(document.getElementById('worldHistoryCheck')?.checked){L.popup({maxWidth:390,className:'historyPopup',autoPan:true,autoPanPaddingTopLeft:L.point(24,125),autoPanPaddingBottomRight:L.point(24,120)}).setLatLng(e.latlng).setContent('<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(historyYearText(historyYear))+'</div>No hay una entidad política de Cliopatria identificada en este punto para el año seleccionado.<div class="historyCardNote">No se muestran topónimos, países ni divisiones actuales mientras la capa histórica está activa.</div></div>').openOn(map);return;}showPoint(e.latlng);});
+map.on('click',e=>{if(typeof trackBuildActive!=='undefined'&&trackBuildActive){addTrackBuilderPoint(e.latlng);return;}if(profileMode){addProfilePoint(e.latlng);return;}if(measureMode){addMeasurePoint(e.latlng);return;}if(document.getElementById('worldHistoryCheck')?.checked){L.popup({maxWidth:390,className:'historyPopup',autoPan:true,autoPanPaddingTopLeft:L.point(24,125),autoPanPaddingBottomRight:L.point(24,120)}).setLatLng(e.latlng).setContent('<div class="historyCard"><div class="historyCardTitle">🏛️ '+escHtml(historyYearText(historyYear))+'</div>No hay una entidad política de Cliopatria identificada en este punto para el año seleccionado.<div class="historyCardNote">No se muestran topónimos, países ni divisiones actuales mientras la capa histórica está activa.</div></div>').openOn(map);return;}showPoint(e.latlng);});
 function goCoords(){const lat=parseFloat(latIn.value),lon=parseFloat(lonIn.value);if(!isFinite(lat)||!isFinite(lon))return alert('Introduce latitud y longitud válidas.');const ll=L.latLng(lat,lon);map.setView(ll,16);closePanels();showPoint(ll,'Coordenadas introducidas');}
 
 // GPS
@@ -12518,9 +12736,9 @@ body.globe-mode #anambroZoomSliderControl{background:rgba(255,255,255,.93)}
 }
 </style>
 <div id="anambroZoomSliderControl" role="group" aria-label="Control de zoom">
-  <span class="zoomGlyph" aria-hidden="true">＋</span>
+  <button id="anambroZoomInBtn" type="button" aria-label="Acercar un nivel">＋</button>
   <input id="anambroZoomSlider" type="range" min="0" max="100" step="1" value="50" aria-label="Zoom: arriba acerca y abajo aleja">
-  <span class="zoomGlyph" aria-hidden="true">−</span>
+  <button id="anambroZoomOutBtn" type="button" aria-label="Alejar un nivel">−</button>
   <span id="anambroZoomModeHint" class="zoomModeHint">Zoom</span>
 </div>
 <script id="anambro-unified-zoom-slider-script">
@@ -12595,6 +12813,27 @@ body.globe-mode #anambroZoomSliderControl{background:rgba(255,255,255,.93)}
    }finally{internal=false;}
  });
  slider.addEventListener('change',()=>setTimeout(updateSlider,0));
+ const zin=document.getElementById('anambroZoomInBtn'),zout=document.getElementById('anambroZoomOutBtn');
+ function stepZoom(dir){
+  if(isGlobe()){
+   try{const h=Math.max(1,globeViewer.camera.positionCartographic.height||1000000),delta=Math.max(25,h*.28);if(dir>0)globeViewer.camera.zoomIn(delta);else globeViewer.camera.zoomOut(delta);globeViewer.scene.requestRender();setTimeout(updateSlider,0);}catch(e){}
+   return;
+  }
+  if(typeof map==='undefined')return;const r=mapRange(),z=map.getZoom(),next=clamp(Math.round(z)+dir,r.lo,r.hi);if(next!==z)map.setZoom(next,{animate:false});
+ }
+ zin?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();stepZoom(1)});
+ zout?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();stepZoom(-1)});
+ // Un gesto corto de rueda/ratón = un único nivel. Evita saltos de 2–3 niveles en ratones de alta resolución.
+ if(typeof map!=='undefined'){
+   try{map.scrollWheelZoom.disable()}catch(e){}
+   let wheelLocked=false;
+   map.getContainer().addEventListener('wheel',e=>{
+     if(document.body.classList.contains('globe-mode'))return;
+     e.preventDefault();if(wheelLocked||!e.deltaY)return;wheelLocked=true;setTimeout(()=>{wheelLocked=false},190);
+     const dir=e.deltaY<0?1:-1,r=mapRange(),z=map.getZoom(),next=clamp(Math.round(z)+dir,r.lo,r.hi);
+     if(next===z)return;const p=map.mouseEventToContainerPoint(e);map.setZoomAround(p,next,{animate:false});
+   },{passive:false});
+ }
  if(typeof map!=='undefined')map.on('zoomend zoomlevelschange',updateSlider);
  // También sincroniza cuando cambia el máximo permitido por el proveedor efectivo.
  if(typeof map!=='undefined')map.on('moveend',()=>setTimeout(updateSlider,0));
@@ -13552,11 +13791,11 @@ html body .historyPopup .leaflet-popup-close-button{
 
 
 
-<script id="anambro-v09-header-editor">
+<script id="anambro-v010-header-editor">
 (()=>{
  'use strict';
- const KEY='anambro.header.layout.v09';
- const DEFAULT_LAYOUT={"version":3,"height":118,"items":{"iesLogo":{"left":11,"top":11,"width":78,"height":77,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"iesText":{"left":93,"top":14,"width":124,"height":91,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n        <div class=\"brandDept\"><b>IES ADEJE</b>&nbsp;Curso 2026-2027</div>\n        <div class=\"brandVersion\">Versión 0.9 · aula interactiva</div>\n      "},"portrait":{"left":229,"top":11,"width":93,"height":81,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"authorText":{"left":328,"top":11,"width":242,"height":88,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":15,"html":"\n        <div class=\"brandTeacher\">Aarón Rodríguez González&nbsp;</div><div class=\"brandTeacher\"><span class=\"brandGeo\">Geógrafo</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Profesor de Geografía e Historia</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Coordinador de Patrimonio&nbsp;</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Natural,&nbsp;</span><span style=\"white-space: normal\"><span style=\"color: rgb(66, 98, 123);\">Cultural y Social Canario.</span></span></div><div class=\"brandProfessional\"><br><span><br></span></div>\n      "},"anambroLogo":{"left":578,"top":5,"width":452,"height":108,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":27},"descriptor":{"left":1040,"top":17,"width":392,"height":25,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n    <div class=\"brandDescriptor\">SIG web para el análisis territorial y la cartografía temática 2D/3D</div>\n  "},"roles":{"left":1044,"top":55,"width":390,"height":48,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":8.8,"html":"<b>Cartografía base y temática · consulta espacial · series temporales · perfiles · geodemografía · leyendas dinámicas · exportación de&nbsp; mapas-historia-animaciones explicativas</b>"},"actions":{"left":1456,"top":24,"width":132,"height":54,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16}}};
+ const KEY='anambro.header.layout.v10';
+ const DEFAULT_LAYOUT={"version":3,"height":118,"items":{"iesLogo":{"left":117,"top":12,"width":78,"height":77,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"iesText":{"left":219,"top":7,"width":121,"height":91,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n        <div class=\"brandDept\">IES ADEJE&nbsp;Curso 2026-2027</div>\n        <div class=\"brandVersion\">Versión 0.10 · aula interactiva</div>\n      ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"center","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"0.9px"},"portrait":{"left":377,"top":10,"width":93,"height":81,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"authorText":{"left":490,"top":11,"width":242,"height":88,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":15,"html":"\n        <div class=\"brandTeacher\">Aarón Rodríguez González&nbsp;</div><div class=\"brandTeacher\"><span class=\"brandGeo\">Geógrafo</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Profesor de Geografía e Historia</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Coordinador de Patrimonio&nbsp;</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Natural,&nbsp;</span><span style=\"white-space: normal\"><span style=\"color: rgb(66, 98, 123);\">Cultural y Social Canario.</span></span></div><div class=\"brandProfessional\"><br><span><br></span></div>\n      ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"start","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"normal"},"anambroLogo":{"left":877,"top":3,"width":452,"height":108,"z":1,"fit":"contain","zoom":1,"posx":53,"posy":50,"font":27},"descriptor":{"left":1364,"top":13,"width":393,"height":25,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n    <div class=\"brandDescriptor\">SIG web para el análisis territorial y la cartografía temática 2D/3D</div>\n  ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"center","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"normal"},"roles":{"left":1367,"top":48,"width":390,"height":48,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":8.8,"html":"<b>Cartografía base y temática · consulta espacial · series temporales · perfiles · geodemografía · leyendas dinámicas · exportación de&nbsp; mapas-historia-animaciones explicativas</b>","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(63, 93, 112)","textAlign":"left","fontWeight":"800","fontStyle":"normal","textDecoration":"none","lineHeight":"12.915px","letterSpacing":"normal"},"actions":{"left":1872,"top":22,"width":132,"height":54,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16}}};
  const defs=[
   ['iesLogo','.brandInstituteLogoV06','Logo IES','image'],['iesText','.brandLeftText','Texto IES','text'],
   ['portrait','.brandAuthorPortraitV06','Retrato','image'],['authorText','.brandAuthorTextV06','Datos del autor','text'],
@@ -13573,9 +13812,9 @@ html body .historyPopup .leaflet-popup-close-button{
  function rectData(f){const b=brand().getBoundingClientRect(),r=f.getBoundingClientRect();return {left:Math.round(r.left-b.left),top:Math.round(r.top-b.top),width:Math.round(r.width),height:Math.round(r.height),z:+(f.style.zIndex||1)}}
  function textStyleData(t){const cs=getComputedStyle(t);return {fontFamily:t.style.fontFamily||cs.fontFamily||'',color:t.style.color||cs.color||'',textAlign:t.style.textAlign||cs.textAlign||'left',fontWeight:t.style.fontWeight||cs.fontWeight||'400',fontStyle:t.style.fontStyle||cs.fontStyle||'normal',textDecoration:t.style.textDecoration||cs.textDecorationLine||'none',lineHeight:t.style.lineHeight||cs.lineHeight||'normal',letterSpacing:t.style.letterSpacing||cs.letterSpacing||'normal'}}
  function readLayout(){const data={version:3,height:Math.round(brand().getBoundingClientRect().height),items:{}};for(const [key] of defs){const f=frames.get(key);if(!f)continue;const v=rectData(f);v.fit=f.style.getPropertyValue('--he-fit')||'contain';v.zoom=parseFloat(f.style.getPropertyValue('--he-zoom'))||1;v.posx=parseFloat(f.style.getPropertyValue('--he-posx'))||50;v.posy=parseFloat(f.style.getPropertyValue('--he-posy'))||50;const t=f.querySelector('.headerEditableTarget');v.font=parseFloat(t?.style.fontSize)||parseFloat(getComputedStyle(t).fontSize)||null;if(f.dataset.type==='text'){v.html=t.innerHTML;Object.assign(v,textStyleData(t))}data.items[key]=v}return data}
- function applyTextStyle(t,v){if(!t||!v)return;if(v.font)t.style.fontSize=v.font+'px';for(const [k,p] of [['fontFamily','font-family'],['color','color'],['textAlign','text-align'],['fontWeight','font-weight'],['fontStyle','font-style'],['textDecoration','text-decoration'],['lineHeight','line-height'],['letterSpacing','letter-spacing']]){if(v[k])t.style.setProperty(p,String(v[k]))}}
+ function applyTextStyle(t,v){if(!t||!v)return;if(v.font)t.style.setProperty('font-size',v.font+'px','important');for(const [k,p] of [['fontFamily','font-family'],['color','color'],['textAlign','text-align'],['fontWeight','font-weight'],['fontStyle','font-style'],['textDecoration','text-decoration'],['lineHeight','line-height'],['letterSpacing','letter-spacing']]){if(v[k])t.style.setProperty(p,String(v[k]))}}
  function applyLayout(data){if(!data?.items||window.innerWidth<=760)return;const b=brand();b.classList.add('header-free-layout');if(data.height)b.style.height=Math.max(76,+data.height)+'px';for(const [key] of defs){const f=frames.get(key),v=data.items[key];if(!f||!v)continue;Object.assign(f.style,{left:(+v.left||0)+'px',top:(+v.top||0)+'px',width:Math.max(20,+v.width||20)+'px',height:Math.max(16,+v.height||16)+'px',zIndex:String(v.z||1)});f.style.setProperty('--he-fit',v.fit||'contain');f.style.setProperty('--he-zoom',v.zoom||1);f.style.setProperty('--he-posx',(v.posx??50)+'%');f.style.setProperty('--he-posy',(v.posy??50)+'%');const t=f.querySelector('.headerEditableTarget');applyTextStyle(t,v);if(f.dataset.type==='text'&&typeof v.html==='string')t.innerHTML=v.html}}
- function clearLayout(){const b=brand();b.classList.remove('header-free-layout','header-editing');b.style.removeProperty('height');for(const f of frames.values()){f.classList.remove('selected','textEditing');for(const p of ['left','top','width','height','z-index','--he-fit','--he-zoom','--he-posx','--he-posy'])f.style.removeProperty(p);const t=f.querySelector('.headerEditableTarget');if(t){for(const p of ['font-size','font-family','color','text-align','font-weight','font-style','text-decoration','line-height','letter-spacing'])t.style.removeProperty(p);t.removeAttribute('contenteditable')}}}
+ function clearLayout(){const b=brand();b.classList.remove('header-free-layout','header-editing');b.style.removeProperty('height');for(const f of frames.values()){f.classList.remove('selected','textEditing');for(const p of ['left','top','width','height','z-index','--he-fit','--he-zoom','--he-posx','--he-posy'])f.style.removeProperty(p);const t=f.querySelector('.headerEditableTarget');if(t){for(const p of ['font-size','font-family','color','text-align','font-weight','font-style','text-decoration','line-height','letter-spacing'])t.style.removeProperty(p);t.removeAttribute('contenteditable');for(const n of t.querySelectorAll('[style]')){if(n.style.getPropertyPriority('font-size')==='important')n.style.removeProperty('font-size')}}}}
  function selectionInside(t){const s=window.getSelection();if(!s||!s.rangeCount||s.isCollapsed)return false;const r=s.getRangeAt(0),a=r.commonAncestorContainer;return t===a||t.contains(a.nodeType===1?a:a.parentElement)}
  function rememberSelection(){const t=selected?.querySelector('.headerEditableTarget'),s=window.getSelection();if(t&&s?.rangeCount&&selectionInside(t))lastSelection=s.getRangeAt(0).cloneRange()}
  function restoreSelection(){if(!lastSelection)return false;const s=window.getSelection();try{s.removeAllRanges();s.addRange(lastSelection);return true}catch(_){return false}}
@@ -13586,6 +13825,10 @@ html body .historyPopup .leaflet-popup-close-button{
  function beginTextEdit(){if(!selected||selected.dataset.type!=='text')return;const t=selected.querySelector('.headerEditableTarget');selected.classList.add('textEditing');t.setAttribute('contenteditable','true');t.focus();const r=document.createRange();r.selectNodeContents(t);const s=window.getSelection();s.removeAllRanges();s.addRange(r);rememberSelection()}
  function endTextEdit(f){if(!f)return;f.classList.remove('textEditing');f.querySelector('.headerEditableTarget')?.removeAttribute('contenteditable');lastSelection=null}
  function applyTextCommand(cmd,value,wholeStyle){if(!selected||selected.dataset.type!=='text')return;const t=selected.querySelector('.headerEditableTarget'),had=selectionInside(t)||restoreSelection();if(had){t.setAttribute('contenteditable','true');t.focus();restoreSelection();try{document.execCommand(cmd,false,value)}catch(_){}rememberSelection();return}if(wholeStyle)wholeStyle(t)}
+ function textNodesForScaling(t){return [t,...t.querySelectorAll('*')].filter(n=>{const fs=parseFloat(getComputedStyle(n).fontSize);return Number.isFinite(fs)&&fs>0;});}
+ function prepareTextScaleBasis(t){const nodes=textNodesForScaling(t),root=parseFloat(getComputedStyle(t).fontSize)||16;t.__anambroFontBasis={root,nodes:nodes.map(n=>[n,parseFloat(getComputedStyle(n).fontSize)||root])};return t.__anambroFontBasis;}
+ function applyHeaderFontSize(px){if(!selected||selected.dataset.type!=='text')return;const t=selected.querySelector('.headerEditableTarget');px=Math.max(6,Math.min(80,+px||16));const had=selectionInside(t)||restoreSelection();if(had){t.setAttribute('contenteditable','true');t.focus();restoreSelection();try{document.execCommand('fontSize',false,'7');for(const f of t.querySelectorAll('font[size="7"]')){f.removeAttribute('size');f.style.setProperty('font-size',px+'px','important');}}catch(_){}rememberSelection();return;}const basis=prepareTextScaleBasis(t),ratio=px/Math.max(1,basis.root);for(const [n,fs] of basis.nodes)n.style.setProperty('font-size',Math.max(5,fs*ratio).toFixed(2)+'px','important');t.style.setProperty('font-size',px+'px','important');t.__anambroFontBasis=null;}
+ function setTextTreeStyle(t,prop,value,priority='important'){for(const n of [t,...t.querySelectorAll('*')]){if(n.nodeType===1)n.style.setProperty(prop,value,priority)}}
  function dragStart(ev,f){if(!editing||ev.button!==0||ev.target.classList.contains('headerResizeHandle')||f.classList.contains('textEditing'))return;selectFrame(f);const b=brand().getBoundingClientRect(),r=f.getBoundingClientRect(),sx=ev.clientX,sy=ev.clientY,sl=r.left-b.left,st=r.top-b.top;ev.preventDefault();try{f.setPointerCapture(ev.pointerId)}catch(_){};const mv=e=>{let l=sl+e.clientX-sx,t=st+e.clientY-sy;l=Math.max(0,Math.min(l,b.width-r.width));t=Math.max(0,Math.min(t,b.height-r.height));f.style.left=Math.round(l)+'px';f.style.top=Math.round(t)+'px';syncInspector()};const up=e=>{f.removeEventListener('pointermove',mv);f.removeEventListener('pointerup',up);f.removeEventListener('pointercancel',up);try{f.releasePointerCapture(e.pointerId)}catch(_){}};f.addEventListener('pointermove',mv);f.addEventListener('pointerup',up);f.addEventListener('pointercancel',up)}
  function resizeStart(ev,f,dir){if(!editing)return;selectFrame(f);const b=brand().getBoundingClientRect(),r=f.getBoundingClientRect(),sx=ev.clientX,sy=ev.clientY,x0=r.left-b.left,y0=r.top-b.top,w0=r.width,h0=r.height;ev.preventDefault();ev.stopPropagation();const h=ev.currentTarget;try{h.setPointerCapture(ev.pointerId)}catch(_){};const mv=e=>{let dx=e.clientX-sx,dy=e.clientY-sy,x=x0,y=y0,w=w0,hg=h0;if(dir.includes('e'))w=w0+dx;if(dir.includes('s'))hg=h0+dy;if(dir.includes('w')){w=w0-dx;x=x0+dx}if(dir.includes('n')){hg=h0-dy;y=y0+dy}w=Math.max(20,w);hg=Math.max(16,hg);x=Math.max(0,Math.min(x,b.width-w));y=Math.max(0,Math.min(y,b.height-hg));Object.assign(f.style,{left:Math.round(x)+'px',top:Math.round(y)+'px',width:Math.round(w)+'px',height:Math.round(hg)+'px'});syncInspector()};const up=e=>{h.removeEventListener('pointermove',mv);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up);try{h.releasePointerCapture(e.pointerId)}catch(_){}};h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up)}
  function wire(){for(const f of frames.values()){if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('pointerdown',e=>dragStart(e,f));f.addEventListener('click',e=>{if(editing){e.stopPropagation();selectFrame(f)}});f.addEventListener('dblclick',e=>{if(editing&&f.dataset.type==='text'){e.preventDefault();e.stopPropagation();selectFrame(f);beginTextEdit()}});const t=f.querySelector('.headerEditableTarget');t?.addEventListener('mouseup',rememberSelection);t?.addEventListener('keyup',rememberSelection);t?.addEventListener('blur',()=>{if(!ins()?.contains(document.activeElement))endTextEdit(f)});f.querySelectorAll('.headerResizeHandle').forEach(h=>h.addEventListener('pointerdown',e=>resizeStart(e,f,h.dataset.dir)))}}
@@ -13594,20 +13837,20 @@ html body .historyPopup .leaflet-popup-close-button{
  function save(){const d=readLayout();localStorage.setItem(KEY,JSON.stringify(d));closeEdit();toast('Diseño, textos y formato guardados')}
  function cancel(){if(snapshot){clearLayout();applyLayout(snapshot)}closeEdit();toast('Cambios descartados')}
  function reset(){localStorage.removeItem(KEY);clearLayout();applyLayout(DEFAULT_LAYOUT);closeEdit();toast('Cabecera restablecida al diseño que exportaste')}
- function exportJSON(){const d=readLayout();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='ANAMBRO_cabecera_v09.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200)}
+ function exportJSON(){const d=readLayout();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='ANAMBRO_cabecera_v10.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200)}
  function importFile(file){if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);if(!d?.items)throw new Error('Formato incorrecto');ensureFrames();clearLayout();applyLayout(d);localStorage.setItem(KEY,JSON.stringify(d));toast('Diseño importado')}catch(e){alert('No se pudo importar: '+e.message)}};rd.readAsText(file)}
  ensureFrames();wire();
  const $=id=>document.getElementById(id);
  ['heiX','heiY','heiW','heiH'].forEach(id=>$(id)?.addEventListener('input',setGeom));
- $('heiFont')?.addEventListener('input',e=>{if(selected)selected.querySelector('.headerEditableTarget').style.fontSize=e.target.value+'px'});
- $('heiFontFamily')?.addEventListener('change',e=>applyTextCommand('fontName',e.target.value,t=>t.style.fontFamily=e.target.value));
- $('heiTextColor')?.addEventListener('input',e=>applyTextCommand('foreColor',e.target.value,t=>t.style.color=e.target.value));
+ $('heiFont')?.addEventListener('input',e=>applyHeaderFontSize(e.target.value));
+ $('heiFontFamily')?.addEventListener('change',e=>applyTextCommand('fontName',e.target.value,t=>setTextTreeStyle(t,'font-family',e.target.value)));
+ $('heiTextColor')?.addEventListener('input',e=>applyTextCommand('foreColor',e.target.value,t=>setTextTreeStyle(t,'color',e.target.value)));
  $('heiBold')?.addEventListener('mousedown',e=>e.preventDefault());$('heiItalic')?.addEventListener('mousedown',e=>e.preventDefault());$('heiUnderline')?.addEventListener('mousedown',e=>e.preventDefault());
- $('heiBold')?.addEventListener('click',()=>applyTextCommand('bold',null,t=>t.style.fontWeight=(parseInt(getComputedStyle(t).fontWeight)>=600?'400':'700')));
- $('heiItalic')?.addEventListener('click',()=>applyTextCommand('italic',null,t=>t.style.fontStyle=(getComputedStyle(t).fontStyle==='italic'?'normal':'italic')));
- $('heiUnderline')?.addEventListener('click',()=>applyTextCommand('underline',null,t=>t.style.textDecoration=(getComputedStyle(t).textDecorationLine.includes('underline')?'none':'underline')));
- $('heiAlignLeft')?.addEventListener('click',()=>{if(selected)selected.querySelector('.headerEditableTarget').style.textAlign='left'});$('heiAlignCenter')?.addEventListener('click',()=>{if(selected)selected.querySelector('.headerEditableTarget').style.textAlign='center'});$('heiAlignRight')?.addEventListener('click',()=>{if(selected)selected.querySelector('.headerEditableTarget').style.textAlign='right'});
- $('heiLineHeight')?.addEventListener('input',e=>{if(selected)selected.querySelector('.headerEditableTarget').style.lineHeight=e.target.value});$('heiLetterSpacing')?.addEventListener('input',e=>{if(selected)selected.querySelector('.headerEditableTarget').style.letterSpacing=e.target.value+'px'});
+ $('heiBold')?.addEventListener('click',()=>applyTextCommand('bold',null,t=>setTextTreeStyle(t,'font-weight',(parseInt(getComputedStyle(t).fontWeight)>=600?'400':'700'))));
+ $('heiItalic')?.addEventListener('click',()=>applyTextCommand('italic',null,t=>setTextTreeStyle(t,'font-style',(getComputedStyle(t).fontStyle==='italic'?'normal':'italic'))));
+ $('heiUnderline')?.addEventListener('click',()=>applyTextCommand('underline',null,t=>setTextTreeStyle(t,'text-decoration',(getComputedStyle(t).textDecorationLine.includes('underline')?'none':'underline'))));
+ $('heiAlignLeft')?.addEventListener('click',()=>{if(selected)setTextTreeStyle(selected.querySelector('.headerEditableTarget'),'text-align','left')});$('heiAlignCenter')?.addEventListener('click',()=>{if(selected)setTextTreeStyle(selected.querySelector('.headerEditableTarget'),'text-align','center')});$('heiAlignRight')?.addEventListener('click',()=>{if(selected)setTextTreeStyle(selected.querySelector('.headerEditableTarget'),'text-align','right')});
+ $('heiLineHeight')?.addEventListener('input',e=>{if(selected)setTextTreeStyle(selected.querySelector('.headerEditableTarget'),'line-height',e.target.value)});$('heiLetterSpacing')?.addEventListener('input',e=>{if(selected)setTextTreeStyle(selected.querySelector('.headerEditableTarget'),'letter-spacing',e.target.value+'px')});
  $('heiFit')?.addEventListener('change',e=>selected?.style.setProperty('--he-fit',e.target.value));$('heiZoom')?.addEventListener('input',e=>selected?.style.setProperty('--he-zoom',e.target.value));$('heiImgX')?.addEventListener('input',e=>selected?.style.setProperty('--he-posx',e.target.value+'%'));$('heiImgY')?.addEventListener('input',e=>selected?.style.setProperty('--he-posy',e.target.value+'%'));
  $('heiEditText')?.addEventListener('click',beginTextEdit);$('heiFront')?.addEventListener('click',()=>{if(selected){selected.style.zIndex=String(++zseq)}});$('heiBack')?.addEventListener('click',()=>{if(selected){selected.style.zIndex='1'}});$('heiClose')?.addEventListener('click',()=>ins()?.classList.remove('open'));
  $('headerEditorSave')?.addEventListener('click',save);$('headerEditorCancel')?.addEventListener('click',cancel);$('headerEditorReset')?.addEventListener('click',reset);$('headerEditorExport')?.addEventListener('click',exportJSON);$('headerEditorImport')?.addEventListener('click',()=>$('headerEditorFile')?.click());$('headerEditorFile')?.addEventListener('change',e=>{importFile(e.target.files?.[0]);e.target.value=''});
@@ -13628,7 +13871,7 @@ html body .historyPopup .leaflet-popup-close-button{
 
  // ---------- Editor de mapas políticos / mudos v0.5 ----------
  const POLITICAL_URLS={
-  'canary-municipalities':['https://datos.canarias.es/catalogos/estadisticas/dataset/6dd8baf4-14f4-43a3-88b2-984d034c965c/resource/d31b5422-df3b-4eae-b0eb-b4acbecb8ef0/download/municipios_desde2007_generalizada_20170101.json','https://opendata.sitcan.es/upload/unidades-administrativas/gobcan_unidades-administrativas_municipios.geojson','https://opendata.sitcan.es/upload/unidades-administrativas/gobcan_unidades-administrativas_municipios-generalizados.geojson','data/admin/municipios-canarias.geojson'],
+  'canary-municipalities':['https://datos.canarias.es/api/estadisticas/geographical-resources/indicadoresdemograficos/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=Municipios-20220101&outputFormat=application/json','https://datos.canarias.es/catalogos/estadisticas/dataset/6dd8baf4-14f4-43a3-88b2-984d034c965c/resource/d31b5422-df3b-4eae-b0eb-b4acbecb8ef0/download/municipios_desde2007_generalizada_20170101.json','https://opendata.sitcan.es/upload/unidades-administrativas/gobcan_unidades-administrativas_municipios.geojson','https://ctim.ulpgc.es/AEDV/data/geo_canarias_municipios.geojson','data/admin/municipios-canarias.geojson'],
   'spain-provinces':['https://mapas.fomento.gob.es/arcgis/rest/services/SIU/ENTIDADES_TERRITORIALES_EGRN/MapServer/2/query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson&outSR=4326','https://raw.githubusercontent.com/codeforgermany/click_that_hood/refs/heads/main/public/data/spain-provinces.geojson'],
   'spain-ccaa':['https://mapas.fomento.gob.es/arcgis/rest/services/SIU/ENTIDADES_TERRITORIALES_EGRN/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson&outSR=4326','https://raw.githubusercontent.com/codeforgermany/click_that_hood/refs/heads/main/public/data/spain-communities.geojson'],
   'europe-countries':['https://gisco-services.ec.europa.eu/distribution/v2/countries/geojson/CNTR_RG_10M_2024_4326.geojson','https://gisco-services.ec.europa.eu/distribution/v2/countries/geojson/CNTR_RG_20M_2024_4326.geojson']
@@ -13737,6 +13980,11 @@ html body .historyPopup .leaflet-popup-close-button{
   }
   const intensity=+(pEl('politicalBathyOpacity')?.value||.72);
   if(bg==='clean')return;
+  if(bg==='osm'){
+   politicalPhysicalBase=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{pane:'politicalBasePane',noWrap:true,maxZoom:19,opacity:Math.max(.15,Math.min(1,intensity)),attribution:'© OpenStreetMap contributors'}).addTo(map);
+   politicalPhysicalBase.setOpacity(Math.max(.15,Math.min(1,intensity)));
+   return;
+  }
   if(bg==='canary-shadow'){
    // Capa oficial del servicio MDSombras: WMS_HS.
    politicalPhysicalBase=L.tileLayer.wms('https://idecan1.grafcan.es/ServicioWMS/MDSombras?',{
@@ -13764,12 +14012,35 @@ html body .historyPopup .leaflet-popup-close-button{
   requestAnimationFrame(()=>{const c=politicalBathy?.getContainer?.();if(c)c.style.filter=bg==='bathy-soft'?'saturate(.35) brightness(1.35) contrast(.62)':bg==='bathy-medium'?'saturate(.48) brightness(1.22) contrast(.76)':'saturate(.62) brightness(1.10) contrast(.90)';});
  }
  function politicalClearLabels(){politicalLabels.clearLayers();politicalLeaders.clearLayers();politicalLabelRefs.clear();if(map.hasLayer(politicalLabels))map.removeLayer(politicalLabels);if(map.hasLayer(politicalLeaders))map.removeLayer(politicalLeaders);}
- function politicalLabelStyle(key){const o=politicalLabelOverrides.get(key)||{};return {align:o.align||'center',size:+(o.size||pEl('politicalLabelDefaultSize')?.value||10)};}
+ function politicalLabelStyle(key){const o=politicalLabelOverrides.get(key)||{},ui=+(pEl('politicalLabelDefaultSize')?.value||10),uniform=pEl('politicalLabelUniformSize')?.checked!==false;return {align:o.align||'center',size:+(uniform?ui:(o.size||ui||10))};}
  function politicalIcon(name,key){const st=politicalLabelStyle(key);return L.divIcon({className:'political-map-label',html:'<span class="politicalLabelInner align-'+st.align+'" style="font-size:'+st.size+'px">'+escHtml(name)+'</span>',iconSize:[1,1],iconAnchor:[0,0]});}
  function politicalUpdateLeader(ref){if(!ref)return;const mode=pEl('politicalLeaderMode')?.value||'auto',m=ref.marker,a=L.latLng(ref.anchor),b=m.getLatLng();let show=mode==='always';if(mode==='auto'){const pa=map.latLngToLayerPoint(a),pb=map.latLngToLayerPoint(b);show=pa.distanceTo(pb)>28;}if(mode==='never')show=false;if(show){if(!ref.line){ref.line=L.polyline([a,b],{pane:'politicalLeaderPane',color:'#516573',weight:1.05,opacity:.8,interactive:false}).addTo(politicalLeaders);}else ref.line.setLatLngs([a,b]);}else if(ref.line){politicalLeaders.removeLayer(ref.line);ref.line=null;}}
- function politicalBuildLabels(data){politicalClearLabels();if(!pEl('politicalLabelsCheck')?.checked)return;(data.features||[]).forEach((f,i)=>{const anchor=politicalFeatureAnchor(f);if(!anchor)return;const key=politicalKey(f,i),ov=politicalLabelOverrides.get(key)||{},pos=(Number.isFinite(ov.lat)&&Number.isFinite(ov.lng))?[ov.lat,ov.lng]:anchor,name=politicalName(f,i);if(!name)return;const marker=L.marker(pos,{pane:'politicalLabelPane',icon:politicalIcon(name,key),draggable:true,interactive:true});const ref={key,f,i,name,anchor,marker,line:null};marker.on('click',()=>politicalSelect(f,i,null));marker.on('dragstart',()=>politicalSelect(f,i,null));marker.on('drag',()=>politicalUpdateLeader(ref));marker.on('dragend',()=>{const ll=marker.getLatLng(),old=politicalLabelOverrides.get(key)||{};politicalLabelOverrides.set(key,{...old,lat:ll.lat,lng:ll.lng});politicalUpdateLeader(ref);});marker.addTo(politicalLabels);politicalLabelRefs.set(key,ref);});politicalLeaders.addTo(map);politicalLabels.addTo(map);for(const ref of politicalLabelRefs.values())politicalUpdateLeader(ref);}
+ function politicalBoxesOverlap(a,b,pad=4){return !(a.r+pad<b.l||b.r+pad<a.l||a.b+pad<b.t||b.b+pad<a.t);}
+ function politicalLabelBoxAt(point,name,size){const w=Math.min(118,Math.max(34,String(name||'').length*size*.57+10)),h=Math.max(16,size*1.28+5);return {l:point.x-w/2,r:point.x+w/2,t:point.y-h/2,b:point.y+h/2};}
+ function politicalAutoPlaceLabel(anchor,name,size,occupied){
+  const p=map.latLngToLayerPoint(L.latLng(anchor));
+  const offsets=[[0,0],[0,-18],[18,0],[-18,0],[0,18],[28,-18],[-28,-18],[28,18],[-28,18],[0,-36],[38,0],[-38,0],[0,36],[45,-28],[-45,-28],[45,28],[-45,28],[0,-54],[58,0],[-58,0],[58,-38],[-58,-38],[58,38],[-58,38],[0,58]];
+  for(const [dx,dy] of offsets){const q=L.point(p.x+dx,p.y+dy),box=politicalLabelBoxAt(q,name,size);if(!occupied.some(o=>politicalBoxesOverlap(box,o))){occupied.push(box);return map.layerPointToLatLng(q);}}
+  const q=L.point(p.x,p.y);occupied.push(politicalLabelBoxAt(q,name,size));return map.layerPointToLatLng(q);
+ }
+ function politicalBuildLabels(data){
+  politicalClearLabels();if(!pEl('politicalLabelsCheck')?.checked)return;
+  const occupied=[];
+  (data.features||[]).forEach((f,i)=>{
+   const anchor=politicalFeatureAnchor(f);if(!anchor)return;
+   const key=politicalKey(f,i),ov=politicalLabelOverrides.get(key)||{},name=politicalName(f,i);if(!name)return;
+   const st=politicalLabelStyle(key),manual=Number.isFinite(ov.lat)&&Number.isFinite(ov.lng);
+   const autoDeclutter=politicalCurrentScope==='canary-municipalities'&&!manual;
+   const pos=manual?[ov.lat,ov.lng]:(autoDeclutter?politicalAutoPlaceLabel(anchor,name,st.size,occupied):anchor);
+   const marker=L.marker(pos,{pane:'politicalLabelPane',icon:politicalIcon(name,key),draggable:true,interactive:true});
+   const ref={key,f,i,name,anchor,marker,line:null,auto:!manual};
+   marker.on('click',()=>politicalSelect(f,i,null));marker.on('dragstart',()=>{ref.auto=false;politicalSelect(f,i,null)});marker.on('drag',()=>politicalUpdateLeader(ref));marker.on('dragend',()=>{const ll=marker.getLatLng(),old=politicalLabelOverrides.get(key)||{};politicalLabelOverrides.set(key,{...old,lat:ll.lat,lng:ll.lng});ref.auto=false;politicalUpdateLeader(ref);});
+   marker.addTo(politicalLabels);politicalLabelRefs.set(key,ref);
+  });
+  politicalLeaders.addTo(map);politicalLabels.addTo(map);for(const ref of politicalLabelRefs.values())politicalUpdateLeader(ref);
+ }
  function politicalRefreshLabel(key){const ref=politicalLabelRefs.get(key);if(!ref)return;ref.marker.setIcon(politicalIcon(ref.name,key));politicalUpdateLeader(ref);}
- function politicalSelect(f,i,layer){const key=politicalKey(f,i);politicalSelected={f,i,layer,key,name:politicalName(f,i)};pEl('politicalSelectedName').textContent=politicalSelected.name;const ov=politicalOverrides.get(key)||{};pEl('politicalColor').value=ov.fillColor||politicalBaseColor(f,i);pEl('politicalSelectedStrokeColor').value=ov.strokeColor||pEl('politicalStrokeColor').value;const lov=politicalLabelOverrides.get(key)||{};pEl('politicalLabelAlign').value=lov.align||'center';pEl('politicalLabelSize').value=lov.size||pEl('politicalLabelDefaultSize').value;for(const id of ['politicalColor','politicalSelectedStrokeColor','politicalWhiteBtn','politicalResetBtn','politicalLabelAlign','politicalLabelSize','politicalLabelResetBtn'])pEl(id).disabled=false;pEl('politicalEditor').classList.remove('disabled');try{if(politicalLayer)politicalLayer.eachLayer(l=>l.setStyle&&l.setStyle({dashArray:null}));if(layer){layer.setStyle({dashArray:'5 4',weight:Math.max(2.4,+pEl('politicalStrokeWidth').value+1)});layer.bringToFront();}}catch(e){}}
+ function politicalSelect(f,i,layer){const key=politicalKey(f,i);politicalSelected={f,i,layer,key,name:politicalName(f,i)};pEl('politicalSelectedName').textContent=politicalSelected.name;const ov=politicalOverrides.get(key)||{};pEl('politicalColor').value=ov.fillColor||politicalBaseColor(f,i);pEl('politicalSelectedStrokeColor').value=ov.strokeColor||pEl('politicalStrokeColor').value;const lov=politicalLabelOverrides.get(key)||{};pEl('politicalLabelAlign').value=lov.align||'center';pEl('politicalLabelSize').value=lov.size||pEl('politicalLabelDefaultSize').value;for(const id of ['politicalColor','politicalSelectedStrokeColor','politicalWhiteBtn','politicalResetBtn','politicalLabelAlign','politicalLabelSize','politicalLabelResetBtn'])pEl(id).disabled=false;if(pEl('politicalLabelUniformSize')?.checked)pEl('politicalLabelSize').disabled=true;pEl('politicalEditor').classList.remove('disabled');try{if(politicalLayer)politicalLayer.eachLayer(l=>l.setStyle&&l.setStyle({dashArray:null}));if(layer){layer.setStyle({dashArray:'5 4',weight:Math.max(2.4,+pEl('politicalStrokeWidth').value+1)});layer.bringToFront();}}catch(e){}}
  function politicalResetEditor(){politicalSelected=null;pEl('politicalSelectedName').textContent='Pulsa una unidad territorial o su nombre para editarla.';for(const id of ['politicalColor','politicalSelectedStrokeColor','politicalWhiteBtn','politicalResetBtn','politicalLabelAlign','politicalLabelSize','politicalLabelResetBtn'])pEl(id).disabled=true;pEl('politicalEditor').classList.add('disabled');}
  function politicalSnapshotView(){if(politicalViewSnapshot)return;let baseValue='';try{baseValue=document.querySelector('input[data-base-choice]:checked')?.dataset?.baseChoice||''}catch(_){};politicalViewSnapshot={center:map.getCenter(),zoom:map.getZoom(),baseValue,wasGlobe:document.body.classList.contains('globe-mode')}}
  async function politicalRestoreNormal2D(){
@@ -13782,7 +14053,7 @@ html body .historyPopup .leaflet-popup-close-button{
  }
  function politicalApplyScopeDefaults(scope){if(scope==='canary-municipalities'&&!politicalCanaryDefaultsApplied){politicalCanaryDefaultsApplied=true;const op=pEl('politicalFillOpacity');if(op){op.value='.42';updatePct('politicalFillOpacity','politicalFillOpacityValue')}const bi=pEl('politicalBathyOpacity');if(bi){bi.value='1';updatePct('politicalBathyOpacity','politicalBathyOpacityValue')}const bg=pEl('politicalBackground');if(bg)bg.value='canary-shadow';}}
  function politicalRestyle(){if(!politicalLayer)return;let i=0;politicalLayer.eachLayer(l=>{if(l.feature&&l.setStyle){const idx=l.__politicalOrder??i;l.setStyle(politicalStyle(l.feature,idx));i++;}});if(politicalSelected?.layer?.setStyle)politicalSelected.layer.setStyle({dashArray:'5 4',weight:Math.max(2.4,+pEl('politicalStrokeWidth').value+1)});}
- async function politicalApply(){const scope=pEl('politicalScope').value;politicalSnapshotView();politicalApplyScopeDefaults(scope);politicalCurrentScope=scope;politicalSetStatus('Cargando '+politicalScopeTitle()+'…');document.body.classList.add('political-map-mode');politicalActive=true;politicalEnsurePanes();try{const data=await politicalData(scope);await politicalEnsureBackdrop();if(politicalLayer&&map.hasLayer(politicalLayer))map.removeLayer(politicalLayer);let order=0;politicalLayer=L.geoJSON(data,{pane:'politicalAdminPane',style:f=>politicalStyle(f,order),onEachFeature:(f,l)=>{l.__politicalOrder=order++;l.on('click',()=>politicalSelect(f,l.__politicalOrder,l));}}).addTo(map);politicalBuildLabels(data);politicalResetEditor();const b=politicalLayer.getBounds?.();if(b?.isValid?.())map.fitBounds(b,{padding:[18,18],animate:false,maxZoom:scope==='canary-municipalities'?9:undefined});else if(POLITICAL_SCOPE_META[scope]?.bounds)map.fitBounds(POLITICAL_SCOPE_META[scope].bounds,{padding:[18,18],animate:false});politicalSetStatus(politicalScopeTitle()+' · '+data.features.length+' unidades · '+(pEl('politicalFillMode').value==='blank'?'mapa mudo':pEl('politicalFillMode').value==='auto'?'colores automáticos':'color único')+(pEl('politicalLabelsCheck').checked?' · nombres editables':' · sin nombres'));}catch(e){console.error('Mapa político',e);politicalSetStatus('No se pudo cargar '+politicalScopeTitle()+': '+(e?.message||e));politicalExit(false);}}
+ async function politicalApply(){const scope=pEl('politicalScope').value;politicalSnapshotView();politicalApplyScopeDefaults(scope);politicalCurrentScope=scope;politicalSetStatus('Cargando '+politicalScopeTitle()+'…');document.body.classList.add('political-map-mode');politicalActive=true;politicalEnsurePanes();try{const data=await politicalData(scope);await politicalEnsureBackdrop();if(politicalLayer&&map.hasLayer(politicalLayer))map.removeLayer(politicalLayer);let order=0;politicalLayer=L.geoJSON(data,{pane:'politicalAdminPane',style:f=>politicalStyle(f,order),onEachFeature:(f,l)=>{l.__politicalOrder=order++;l.on('click',()=>politicalSelect(f,l.__politicalOrder,l));}}).addTo(map);politicalBuildLabels(data);politicalResetEditor();const b=politicalLayer.getBounds?.();if(b?.isValid?.())map.fitBounds(b,{padding:[18,18],animate:false,maxZoom:scope==='canary-municipalities'?9:undefined});else if(POLITICAL_SCOPE_META[scope]?.bounds)map.fitBounds(POLITICAL_SCOPE_META[scope].bounds,{padding:[18,18],animate:false});const namedCount=(data.features||[]).filter((f,i)=>!!politicalName(f,i)).length;politicalSetStatus(politicalScopeTitle()+' · '+data.features.length+' unidades · '+(pEl('politicalFillMode').value==='blank'?'mapa mudo':pEl('politicalFillMode').value==='auto'?'colores automáticos':'color único')+(pEl('politicalLabelsCheck').checked?(namedCount?' · '+namedCount+' nombres editables':' · geometrías cargadas; nombres no disponibles en la fuente de reserva'):' · sin nombres'));}catch(e){console.error('Mapa político',e);politicalSetStatus('No se pudo cargar '+politicalScopeTitle()+': '+(e?.message||e));politicalExit(false);}}
  async function politicalExit(report=true,restoreView=true){
   for(const l of [politicalLayer,politicalBathy,politicalPhysicalBase,politicalLabels,politicalLeaders])try{if(l&&map.hasLayer(l))map.removeLayer(l);}catch(e){}
   politicalLayer=null;politicalBathy=null;politicalPhysicalBase=null;politicalClearLabels();document.body.classList.remove('political-map-mode','political-context-ready','political-canary-physical');politicalActive=false;politicalResetEditor();
@@ -13805,20 +14076,20 @@ html body .historyPopup .leaflet-popup-close-button{
  pEl('politicalBackground')?.addEventListener('change',()=>{const legacy=pEl('politicalBathyCheck');if(legacy)legacy.checked=pEl('politicalBackground').value!=='clean';if(politicalActive)politicalEnsureBackdrop();});
  pEl('politicalFillMode')?.addEventListener('change',politicalRestyle);
  pEl('politicalBathyOpacity')?.addEventListener('input',()=>{updatePct('politicalBathyOpacity','politicalBathyOpacityValue');if(politicalActive)politicalEnsureBackdrop();});
- pEl('politicalLabelsCheck')?.addEventListener('change',rebuildLabels);pEl('politicalLabelDefaultSize')?.addEventListener('input',rebuildLabels);pEl('politicalLeaderMode')?.addEventListener('change',()=>{for(const r of politicalLabelRefs.values())politicalUpdateLeader(r);});
+ pEl('politicalLabelsCheck')?.addEventListener('change',rebuildLabels);pEl('politicalLabelDefaultSize')?.addEventListener('input',rebuildLabels);pEl('politicalLabelUniformSize')?.addEventListener('change',()=>{const u=pEl('politicalLabelUniformSize').checked;if(politicalSelected)pEl('politicalLabelSize').disabled=u;rebuildLabels();});pEl('politicalLeaderMode')?.addEventListener('change',()=>{for(const r of politicalLabelRefs.values())politicalUpdateLeader(r);});
  pEl('politicalColor')?.addEventListener('input',e=>{if(!politicalSelected)return;const o=politicalOverrides.get(politicalSelected.key)||{};politicalOverrides.set(politicalSelected.key,{...o,fillColor:e.target.value});politicalRestyle();});
  pEl('politicalSelectedStrokeColor')?.addEventListener('input',e=>{if(!politicalSelected)return;const o=politicalOverrides.get(politicalSelected.key)||{};politicalOverrides.set(politicalSelected.key,{...o,strokeColor:e.target.value});politicalRestyle();});
  pEl('politicalWhiteBtn')?.addEventListener('click',()=>{if(!politicalSelected)return;const o=politicalOverrides.get(politicalSelected.key)||{};politicalOverrides.set(politicalSelected.key,{...o,fillColor:'#ffffff'});pEl('politicalColor').value='#ffffff';politicalRestyle();});
  pEl('politicalResetBtn')?.addEventListener('click',()=>{if(!politicalSelected)return;politicalOverrides.delete(politicalSelected.key);pEl('politicalColor').value=politicalBaseColor(politicalSelected.f,politicalSelected.i);pEl('politicalSelectedStrokeColor').value=pEl('politicalStrokeColor').value;politicalRestyle();});
  pEl('politicalLabelAlign')?.addEventListener('change',e=>{if(!politicalSelected)return;const o=politicalLabelOverrides.get(politicalSelected.key)||{};politicalLabelOverrides.set(politicalSelected.key,{...o,align:e.target.value});politicalRefreshLabel(politicalSelected.key);});
- pEl('politicalLabelSize')?.addEventListener('input',e=>{if(!politicalSelected)return;const o=politicalLabelOverrides.get(politicalSelected.key)||{};politicalLabelOverrides.set(politicalSelected.key,{...o,size:+e.target.value});politicalRefreshLabel(politicalSelected.key);});
+ pEl('politicalLabelSize')?.addEventListener('input',e=>{if(!politicalSelected)return;if(pEl('politicalLabelUniformSize'))pEl('politicalLabelUniformSize').checked=false;const o=politicalLabelOverrides.get(politicalSelected.key)||{};politicalLabelOverrides.set(politicalSelected.key,{...o,size:+e.target.value});politicalRefreshLabel(politicalSelected.key);});
  pEl('politicalLabelResetBtn')?.addEventListener('click',()=>{if(!politicalSelected)return;const o=politicalLabelOverrides.get(politicalSelected.key)||{};delete o.lat;delete o.lng;delete o.align;delete o.size;if(Object.keys(o).length)politicalLabelOverrides.set(politicalSelected.key,o);else politicalLabelOverrides.delete(politicalSelected.key);rebuildLabels();});
- map.on('zoomend moveend',()=>{if(politicalActive)for(const r of politicalLabelRefs.values())politicalUpdateLeader(r);});
+ map.on('zoomend',()=>{if(politicalActive&&politicalCurrentScope==='canary-municipalities'&&pEl('politicalLabelsCheck')?.checked)rebuildLabels();else if(politicalActive)for(const r of politicalLabelRefs.values())politicalUpdateLeader(r);});map.on('moveend',()=>{if(politicalActive)for(const r of politicalLabelRefs.values())politicalUpdateLeader(r);});
  for(const id of ['historyYearRange','historyYearInput'])pEl(id)?.addEventListener('change',()=>{if(politicalActive&&politicalCurrentScope==='historical-polities')setTimeout(()=>politicalApply(),900);});
 
  if(typeof defaultLayoutTitle==='function'){const base=defaultLayoutTitle;defaultLayoutTitle=function(){if(politicalActive)return (pEl('politicalFillMode')?.value==='blank'?'Mapa mudo · ':'Mapa político · ')+politicalScopeTitle();return base.apply(this,arguments);};}
  if(typeof activeLegendHTML==='function'){const base=activeLegendHTML;activeLegendHTML=function(){if(politicalActive){const blank=pEl('politicalFillMode')?.value==='blank',labels=pEl('politicalLabelsCheck')?.checked;return '<small><b>'+escHtml(politicalScopeTitle())+'</b><br>'+(blank?'Unidades en blanco para trabajo cartográfico.':'Representación política editable.')+'<br>'+(labels?'Rotulación editable y desplazable.':'Sin rotulación.')+'</small>';}return base.apply(this,arguments);};}
- if(typeof activeSourcesText==='function'){const base=activeSourcesText;activeSourcesText=function(){if(politicalActive){const bg=pEl('politicalBackground')?.value||'clean';const bsrc=bg==='canary-shadow'?'Modelo de Sombras · GRAFCAN / Gobierno de Canarias':bg==='canary-topobathy'?'Modelo Topobatimétrico · GRAFCAN / Gobierno de Canarias':bg==='clean'?'Base cartográfica ANAMBRO atenuada':'GEBCO_2026';return [POLITICAL_SCOPE_META[politicalCurrentScope]?.source,bsrc].filter(Boolean).join(' · ');}return base.apply(this,arguments);};}
+ if(typeof activeSourcesText==='function'){const base=activeSourcesText;activeSourcesText=function(){if(politicalActive){const bg=pEl('politicalBackground')?.value||'clean';const bsrc=bg==='canary-shadow'?'Modelo de Sombras · GRAFCAN / Gobierno de Canarias':bg==='canary-topobathy'?'Modelo Topobatimétrico · GRAFCAN / Gobierno de Canarias':bg==='osm'?'© OpenStreetMap contributors · ODbL':bg==='clean'?'Base cartográfica ANAMBRO atenuada':'GEBCO_2026';return [POLITICAL_SCOPE_META[politicalCurrentScope]?.source,bsrc].filter(Boolean).join(' · ');}return base.apply(this,arguments);};}
 
  window.togglePoliticalTool=async function(){
   const panel=pEl('politicalPanel');if(!panel)return;
