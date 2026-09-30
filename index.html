@@ -14536,6 +14536,12 @@ html body .leaflet-popup-content{padding-top:5px}
  ];
  const ISTAC_MUNICIPAL_CSV='https://datos.canarias.es/catalogos/estadisticas/dataset/6dd8baf4-14f4-43a3-88b2-984d034c965c/resource/74237bc8-1e5f-43f1-9f6b-24ef9e073903/download/municipios_desde2007_20170101.csv';
 
+ // Recursos estadísticos directos verificados. Se priorizan sobre instancias del sistema
+ // cuando el catálogo C00067A publica una entrada cuyo endpoint /data ya no responde.
+ const ISTAC_DIRECT_DATASETS=[
+  {id:'dataset:E30243A_000018',name:'Densidad de población',datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30243A_000018/1.0.jsonstat',verified:true}
+ ];
+
  // Catálogo de reserva: únicamente instancias comprobadas en la página oficial actual de C00067A.
  // El catálogo vivo del ISTAC, cuando responde, se antepone y completa esta lista.
  const ISTAC_VERIFIED_CATALOG=[
@@ -14658,11 +14664,11 @@ html body .leaflet-popup-content{padding-top:5px}
  }
  function mergeIstacCatalog(remote){
   const out=[],seenId=new Set(),seenName=new Set();
-  for(const x of [...(remote||[]),...ISTAC_VERIFIED_CATALOG]){
+  for(const x of [...ISTAC_DIRECT_DATASETS,...(remote||[]),...ISTAC_VERIFIED_CATALOG]){
    const id=String(x?.id||x?.uuid||x?.code||'').trim(),name=istacInstanceName(x)||String(x?.name||'').trim();
    if(!id||!name)continue;
    const nk=norm(name);if(seenId.has(id)||seenName.has(nk))continue;
-   seenId.add(id);seenName.add(nk);out.push({id,name,raw:x?.raw||x,verified:!!x?.verified||ISTAC_VERIFIED_CATALOG.some(v=>v.id===id)});
+   seenId.add(id);seenName.add(nk);out.push({id,name,raw:x?.raw||x,datasetUrl:x?.datasetUrl||null,verified:!!x?.verified||ISTAC_DIRECT_DATASETS.some(v=>v.id===id)||ISTAC_VERIFIED_CATALOG.some(v=>v.id===id)});
   }
   return out;
  }
@@ -14732,8 +14738,11 @@ html body .leaflet-popup-content{padding-top:5px}
  }
  function istacDimensionKey(keys,target){
   const t=target.toUpperCase();
-  return keys.find(k=>String(k).toUpperCase()===t)||
-         keys.find(k=>String(k).toUpperCase().includes(t==='GEOGRAPHICAL'?'GEO':t==='TIME'?'TIME':'MEASURE'))||'';
+  const exact=keys.find(k=>String(k).toUpperCase()===t);if(exact)return exact;
+  const rx=t==='GEOGRAPHICAL'?/(GEOGRAPH|GEO|TERRIT|LUGAR|RESID|MUNICIP|AREA)/i:
+           t==='TIME'?/(TIME|PERIOD|YEAR|ANO|AÑO|TIEMPO)/i:
+           /(MEASURE|MEDIDA|INDICADOR|MAGNITUD)/i;
+  return keys.find(k=>rx.test(String(k)))||'';
  }
  function istacObservationEntries(obs){
   if(Array.isArray(obs))return obs.map((v,i)=>[i,v]);
@@ -14854,6 +14863,16 @@ html body .leaflet-popup-content{padding-top:5px}
  async function loadIstacGeo(){
   if(istacMunicipalGeo)return istacMunicipalGeo;
   let lastErr=null;
+  // Primera opción: reutilizar exactamente la geometría municipal que ya usa y funciona
+  // en el módulo de mapas políticos de ANAMBRO. Evita cargar otra cartografía distinta.
+  try{
+   if(typeof politicalData==='function'){
+    const j=await politicalData('canary-municipalities');
+    if(j?.type==='FeatureCollection'&&Array.isArray(j.features)&&j.features.length>=80){
+     istacMunicipalGeo=await istacEnrichGeoNames(j);return istacMunicipalGeo;
+    }
+   }
+  }catch(e){lastErr=e;console.warn('Atlas ISTAC · geometría municipal ANAMBRO',e)}
   for(const u of ISTAC_GEO_URLS){
    try{
     const r=await fetch(u,{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('HTTP '+r.status);
@@ -15005,6 +15024,12 @@ html body .leaflet-popup-content{padding-top:5px}
   if(status)status.textContent=(istacMeta?.name||'Indicador ISTAC')+' · '+built.matched+'/'+built.total+' municipios con datos · '+(istacSelectedYear==='__latest__'?'último disponible':istacSelectedYear)+'.';
  }
  async function fetchIstacInstanceData(item){
+  if(item?.datasetUrl){
+   const r=await fetch(item.datasetUrl,{mode:'cors',cache:'no-store',headers:{Accept:'application/json, application/jsonstat+json;q=0.9, */*;q=0.5'}});
+   if(!r.ok)throw Error('ISTAC '+r.status);
+   const j=await r.json();if(!j||typeof j!=='object')throw Error('respuesta no JSON');
+   return j;
+  }
   const base=ISTAC_BASE+'indicatorsSystems/'+ISTAC_SYSTEM+'/indicatorsInstances/'+encodeURIComponent(item.id)+'/data';
   const urls=[base+'?fields=-observationsMetadata',base];
   let lastErr=null;
