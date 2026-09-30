@@ -15023,23 +15023,71 @@ html body .leaflet-popup-content{padding-top:5px}
   const status=document.getElementById('istacStatus');
   if(status)status.textContent=(istacMeta?.name||'Indicador ISTAC')+' · '+built.matched+'/'+built.total+' municipios con datos · '+(istacSelectedYear==='__latest__'?'último disponible':istacSelectedYear)+'.';
  }
- async function fetchIstacInstanceData(item){
-  if(item?.datasetUrl){
-   const r=await fetch(item.datasetUrl,{mode:'cors',cache:'no-store',headers:{Accept:'application/json, application/jsonstat+json;q=0.9, */*;q=0.5'}});
-   if(!r.ok)throw Error('ISTAC '+r.status);
-   const j=await r.json();if(!j||typeof j!=='object')throw Error('respuesta no JSON');
-   return j;
+ function istacFindJsonStatPayload(root){
+  const seen=new Set();
+  function walk(v,depth){
+   if(!v||typeof v!=='object'||seen.has(v)||depth>9)return null;seen.add(v);
+   const dims=v.dimension||v.dimensions,obs=v.observation??v.observations??v.value;
+   if(dims&&typeof dims==='object'&&obs!==undefined)return v;
+   const preferred=['data','dataset','jsonstat','jsonStat','response','result','results','indicatorInstance','indicatorInstances','items'];
+   for(const k of preferred){if(v[k]!==undefined){const r=walk(v[k],depth+1);if(r)return r}}
+   if(Array.isArray(v)){for(const x of v){const r=walk(x,depth+1);if(r)return r}}
+   else{for(const [k,x] of Object.entries(v)){if(preferred.includes(k))continue;const r=walk(x,depth+1);if(r)return r}}
+   return null;
   }
-  const base=ISTAC_BASE+'indicatorsSystems/'+ISTAC_SYSTEM+'/indicatorsInstances/'+encodeURIComponent(item.id)+'/data';
-  const urls=[base+'?fields=-observationsMetadata',base];
+  return walk(root,0);
+ }
+ function istacIndicatorCodeFromItem(item){
+  const r=item?.raw||{};
+  const cand=[
+   r?.indicator?.id,r?.indicator?.code,r?.indicator?.identifier,
+   r?.indicatorRef?.id,r?.indicatorRef?.code,r?.indicatorRef?.identifier,
+   r?.indicatorCode,r?.indicatorId,r?.indicatorIdentifier
+  ];
+  for(const x of cand){const c=String(x||'').trim();if(/^[A-Z][A-Z0-9_]{2,}$/.test(c)&&!c.includes('-'))return c}
+  return '';
+ }
+ async function istacFetchJson(url,label){
+  const r=await fetch(url,{mode:'cors',cache:'no-store',headers:{Accept:'application/json, application/jsonstat+json;q=0.9, */*;q=0.5'}});
+  if(!r.ok)throw Error((label||'ISTAC')+' '+r.status);
+  const j=await r.json();if(!j||typeof j!=='object')throw Error((label||'ISTAC')+': respuesta no JSON');
+  return j;
+ }
+ async function fetchIstacInstanceData(item){
+  // 1) Recursos estadísticos directos ya verificados (p. ej., densidad).
+  if(item?.datasetUrl)return await istacFetchJson(item.datasetUrl,'ISTAC');
+
+  // 2) La API oficial permite pedir +data en la MISMA colección de instancias que ya usa
+  // ANAMBRO para construir el catálogo. Esta ruta evita depender del subrecurso /{uuid}/data,
+  // que actualmente devuelve 404 para varias instancias de C00067A.
   let lastErr=null;
-  for(const u of urls){
-   try{
-    const r=await fetch(u,{mode:'cors',cache:'no-store',headers:{Accept:'application/json'}});
-    if(!r.ok)throw Error('ISTAC '+r.status);
-    const j=await r.json();if(!j||typeof j!=='object')throw Error('respuesta no JSON');
-    return j;
-   }catch(e){lastErr=e;console.warn('Atlas ISTAC · datos',u,e)}
+  try{
+   const qs=new URLSearchParams({q:'id EQ "'+String(item.id).replace(/"/g,'')+'"',limit:'5',fields:'+data'});
+   const u=ISTAC_BASE+'indicatorsSystems/'+ISTAC_SYSTEM+'/indicatorsInstances?'+qs.toString();
+   const j=await istacFetchJson(u,'ISTAC catálogo+datos');
+   const items=istacExtractInstances(j),wanted=items.find(x=>String(x?.id||x?.uuid||x?.code||'')===String(item.id));
+   const p=istacFindJsonStatPayload(wanted||j);if(p)return p;
+   throw Error('ISTAC catálogo+datos: la instancia llegó sin bloque de datos');
+  }catch(e){lastErr=e;console.warn('Atlas ISTAC · +data en colección',e)}
+
+  // 3) Compatibilidad con el endpoint específico documentado por ISTAC.
+  const base=ISTAC_BASE+'indicatorsSystems/'+ISTAC_SYSTEM+'/indicatorsInstances/'+encodeURIComponent(item.id)+'/data';
+  for(const u of [base+'?fields=-observationsMetadata',base]){
+   try{const j=await istacFetchJson(u,'ISTAC instancia');const p=istacFindJsonStatPayload(j)||j;return p}
+   catch(e){lastErr=e;console.warn('Atlas ISTAC · datos de instancia',u,e)}
+  }
+
+  // 4) Último respaldo: si los metadatos del catálogo identifican el indicador base (POBLACION,
+  // PARO_REGISTRADO, etc.), consultar directamente ese indicador. Es la misma API oficial.
+  const code=istacIndicatorCodeFromItem(item);
+  if(code){
+   for(const u of [
+    ISTAC_BASE+'indicators/'+encodeURIComponent(code)+'/data?fields=-observationsMetadata',
+    ISTAC_BASE+'indicators/'+encodeURIComponent(code)+'/data'
+   ]){
+    try{const j=await istacFetchJson(u,'ISTAC indicador '+code);const p=istacFindJsonStatPayload(j)||j;return p}
+    catch(e){lastErr=e;console.warn('Atlas ISTAC · indicador base',u,e)}
+   }
   }
   throw lastErr||Error('No se pudieron obtener los datos del indicador');
  }
