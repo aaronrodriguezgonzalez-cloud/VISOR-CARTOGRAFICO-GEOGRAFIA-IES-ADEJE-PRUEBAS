@@ -12199,8 +12199,15 @@ function syncHumanThematicBasemap(){
    map.getContainer().style.background='';
    map.getContainer().style.backgroundColor=humanOldMapBackground||'';
    humanOldMapBackground='';
-   if(typeof syncWorldImagery2D==='function')syncWorldImagery2D();
-   else if(typeof activeBase!=='undefined'&&activeBase&&!map.hasLayer(activeBase))activeBase.addTo(map);
+   // Al abandonar la última coropleta mundial, ANAMBRO vuelve al fondo neutro acordado: OpenStreetMap.
+   try{
+    if(typeof worldImagery!=='undefined'&&map.hasLayer(worldImagery))map.removeLayer(worldImagery);
+    if(typeof activeBase!=='undefined'&&activeBase&&activeBase!==osm&&map.hasLayer(activeBase))map.removeLayer(activeBase);
+    activeBase=osm;
+    if(!map.hasLayer(osm))osm.addTo(map);
+    try{osm.bringToBack();}catch(_){}
+    document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice==='osm'));
+   }catch(e){console.warn('Restauración OSM tras temática mundial',e)}
    if(humanAutoHiddenCountryLabels2D&&document.getElementById('countryLabelsCheck')?.checked)toggleCountryLabels2D(true);
    if(humanAutoHiddenWorldToponyms2D&&document.getElementById('worldToponymsCheck')?.checked)updateWorldToponyms2D(true);
    humanAutoHiddenCountryLabels2D=false;humanAutoHiddenWorldToponyms2D=false;
@@ -14585,8 +14592,8 @@ html body .leaflet-popup-content{padding-top:5px}
  function dimCodes(dim){const r=dim?.representation||dim||{},cat=dim?.category||r?.category||{},idx=cat.index??r.index??dim?.index;if(Array.isArray(idx))return idx.map(String);if(idx&&typeof idx==='object')return Object.entries(idx).sort((a,b)=>Number(a[1])-Number(b[1])).map(x=>String(x[0]));if(Array.isArray(r))return r.map(x=>String(x.code||x.id||x.value||''));return []}
  function dimLabels(dim){const out=new Map(),r=dim?.representation||dim||{},cat=dim?.category||r?.category||{};for(const arr of [r.representations,r.values,r.items,Array.isArray(r)?r:[]])if(Array.isArray(arr))for(const x of arr){const c=String(x.code||x.id||x.value||'');if(c)out.set(c,txt(x.name||x.label||x.title||c))}const lab=cat.label||r.label;if(lab&&typeof lab==='object')for(const [c,v] of Object.entries(lab))out.set(String(c),txt(v||c));return out}
  function parseIstacData(j){j=unwrapIstacPayload(j);const dims=j?.dimension||j?.dimensions||{},keys=Array.isArray(j?.id)?j.id:Object.keys(dims);if(!keys.length)return [];const codes=keys.map(k=>dimCodes(dims[k])),sizes=codes.map(x=>x.length||1),labels=keys.map(k=>dimLabels(dims[k]));const obs=j?.observation||j?.observations||j?.value||[];const vals=Array.isArray(obs)?obs:Object.entries(obs).sort((a,b)=>Number(a[0])-Number(b[0])).map(x=>x[1]);const rows=[];for(let n=0;n<vals.length;n++){const raw=typeof vals[n]==='object'?(vals[n]?.value??vals[n]?.obsValue):vals[n],v=Number(raw);if(!Number.isFinite(v))continue;let rem=n,tuple={};for(let i=keys.length-1;i>=0;i--){const size=sizes[i]||1,ix=rem%size;rem=Math.floor(rem/size);const c=codes[i][ix]||String(ix);tuple[keys[i]]={code:c,label:labels[i].get(c)||c}}rows.push({tuple,value:v})}return rows}
- function geoKeyFromFeature(f){const p=f?.properties||{};for(const k of ['CODIGO','codigo','CODIGO_MUNICIPIO','codmun','CODMUN','CMUN','MUNICIPIO_COD','INE','COD_INE','cod_ine']){const v=String(p[k]??'').trim();if(v)return v}return ''}
- function geoNameFromFeature(f){const p=f?.properties||{};for(const k of ['MUNICIPIO','municipio','NOMBRE','nombre','NAMEUNIT','name','NOM_MUN','DENOMINACION']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function geoKeyFromFeature(f){const p=f?.properties||{};for(const k of ['GEOCODE','geocode','CODIGO','codigo','CODIGO_MUNICIPIO','codmun','CODMUN','CMUN','MUNICIPIO_COD','INE','COD_INE','cod_ine']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function geoNameFromFeature(f){const p=f?.properties||{};for(const k of ['__name','__name_es','__name_popup_es','etiqueta','ETIQUETA','MUNICIPIO','municipio','NOMBRE','nombre','NAMEUNIT','NAME_2','name','NOM_MUN','DENOMINACION']){const v=String(p[k]??'').trim();if(v)return v}return ''}
  function islandNameFromFeature(f){const p=f?.properties||{};for(const k of ['ISLA','isla','NOMBRE_ISLA','nombre_isla','NOM_ISLA','ISLAND','island']){const v=String(p[k]??'').trim();if(v)return v}return ''}
  function geoVariants(v){const raw=String(v??'').trim(),digits=raw.replace(/\D/g,''),a=new Set([raw,raw.replace(/^ES/i,''),digits,digits.replace(/^0+/,''),digits.slice(-5),digits.slice(-3)]);return [...a].filter(Boolean)}
  async function loadIstacGeo(){
@@ -14647,7 +14654,7 @@ html body .leaflet-popup-content{padding-top:5px}
   box.querySelector('#istacLatestBtn')?.addEventListener('click',()=>{istacSelectedYear='__latest__';const y=box.querySelector('#istacYearSelect');if(y)y.value='__latest__';renderIstac()});
   box.querySelector('#istacLabelsCheck')?.addEventListener('change',renderIstacLabels);
   box.querySelector('#istacOpacity')?.addEventListener('input',e=>{const v=+e.target.value;const o=box.querySelector('#istacOpacityValue');if(o)o.textContent=Math.round(v*100)+' %';if(istacLayer)istacLayer.setStyle({fillOpacity:v})});
-  box.querySelector('#istacClearBtn')?.addEventListener('click',()=>{if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacLabels();box.querySelector('#istacLegend').innerHTML='';try{updateLegend()}catch(e){}});
+  box.querySelector('#istacClearBtn')?.addEventListener('click',()=>{if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacLabels();box.querySelector('#istacLegend').innerHTML='';try{if(typeof worldImagery!=='undefined'&&map.hasLayer(worldImagery))map.removeLayer(worldImagery);if(typeof activeBase!=='undefined'&&activeBase&&activeBase!==osm&&map.hasLayer(activeBase))map.removeLayer(activeBase);activeBase=osm;if(!map.hasLayer(osm))osm.addTo(map);try{osm.bringToBack()}catch(_){}document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice==='osm'));}catch(e){console.warn('Restauración OSM tras Atlas ISTAC',e)}try{updateLegend()}catch(e){}});
   box.querySelector('#istacReloadBtn')?.addEventListener('click',loadIstacCatalog);
   istacCatalog=ISTAC_FALLBACK.map(x=>({...x,fallback:true}));renderIstacCatalog();loadIstacCatalog();
  }
