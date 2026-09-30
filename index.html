@@ -14764,35 +14764,132 @@ html body .leaflet-popup-content{padding-top:5px}
  }
  function istacDecodeData(j){
   if(!j||typeof j!=='object')throw Error('respuesta ISTAC vacía');
-  const dims=j.dimension||j.dimensions;
-  if(!dims||typeof dims!=='object')throw Error('la respuesta no contiene dimensiones JSON-stat');
-  const keys=Array.isArray(j.id)&&j.id.length?j.id.map(String):Object.keys(dims);
-  const geoKey=istacDimensionKey(keys,'GEOGRAPHICAL'),timeKey=istacDimensionKey(keys,'TIME'),measureKey=istacDimensionKey(keys,'MEASURE');
-  if(!geoKey)throw Error('no se encontró la dimensión GEOGRAPHICAL');
-  if(!timeKey)throw Error('no se encontró la dimensión TIME');
-  const codes=keys.map(k=>istacDimensionCodes(dims[k])),labels=keys.map(k=>istacDimensionLabels(dims[k]));
-  const sizes=codes.map((a,i)=>a.length||Number(j.size?.[i])||1);
-  if(sizes.some(x=>!Number.isFinite(x)||x<1))throw Error('dimensiones inválidas');
-  const rows=[];
-  for(const [flat,raw0] of istacObservationEntries(j.observation??j.observations??j.value)){
-   const raw=raw0&&typeof raw0==='object'?(raw0.value??raw0.obsValue):raw0,v=Number(raw);
-   if(!Number.isFinite(v))continue;
-   let rem=flat,tuple={};
-   for(let i=keys.length-1;i>=0;i--){
-    const size=sizes[i],ix=rem%size;rem=Math.floor(rem/size);
-    const c=codes[i][ix]??String(ix);
-    tuple[keys[i]]={code:String(c),label:labels[i].get(String(c))||String(c)};
+
+  // A) JSON-stat / JSON-stat2 (e-Cubos y algunos endpoints modernos de e-Indicadores).
+  const jd=(j.dimension||j.dimensions)?j:(j.data&&(j.data.dimension||j.data.dimensions)&&
+            (j.data.observation!==undefined||j.data.observations!==undefined||j.data.value!==undefined)?j.data:null);
+  if(jd){
+   const dims=jd.dimension||jd.dimensions;
+   if(dims&&typeof dims==='object'&&!Array.isArray(dims)&&!Array.isArray(dims?.dimension)){
+    const keys=Array.isArray(jd.id)&&jd.id.length?jd.id.map(String):Object.keys(dims);
+    const geoKey=istacDimensionKey(keys,'GEOGRAPHICAL'),timeKey=istacDimensionKey(keys,'TIME'),measureKey=istacDimensionKey(keys,'MEASURE');
+    if(!geoKey)throw Error('no se encontró la dimensión GEOGRAPHICAL');
+    if(!timeKey)throw Error('no se encontró la dimensión TIME');
+    const codes=keys.map(k=>istacDimensionCodes(dims[k])),labels=keys.map(k=>istacDimensionLabels(dims[k]));
+    const sizes=codes.map((a,i)=>a.length||Number(jd.size?.[i])||1);
+    if(sizes.some(x=>!Number.isFinite(x)||x<1))throw Error('dimensiones inválidas');
+    const rows=[];
+    for(const [flat,raw0] of istacObservationEntries(jd.observation??jd.observations??jd.value)){
+     const raw=raw0&&typeof raw0==='object'?(raw0.value??raw0.obsValue):raw0,v=Number(raw);
+     if(!Number.isFinite(v))continue;
+     let rem=flat,tuple={};
+     for(let i=keys.length-1;i>=0;i--){
+      const size=sizes[i],ix=rem%size;rem=Math.floor(rem/size);
+      const c=codes[i][ix]??String(ix);
+      tuple[keys[i]]={code:String(c),label:labels[i].get(String(c))||String(c)};
+     }
+     const g=tuple[geoKey]||{},tm=tuple[timeKey]||{},me=measureKey?(tuple[measureKey]||{}):{};
+     rows.push({
+      geoCode:String(g.code||''),geoLabel:String(g.label||g.code||''),
+      period:String(tm.code||tm.label||''),timeLabel:String(tm.label||tm.code||''),
+      measureCode:String(me.code||''),measureLabel:String(me.label||me.code||''),
+      value:v,tuple
+     });
+    }
+    if(!rows.length)throw Error('sin observaciones numéricas');
+    return {rows,geoKey,timeKey,measureKey,format:'jsonstat'};
    }
-   const g=tuple[geoKey]||{},tm=tuple[timeKey]||{},me=measureKey?(tuple[measureKey]||{}):{};
-   rows.push({
-    geoCode:String(g.code||''),geoLabel:String(g.label||g.code||''),
-    period:String(tm.code||tm.label||''),timeLabel:String(tm.label||tm.code||''),
-    measureCode:String(me.code||''),measureLabel:String(me.label||me.code||''),
-    value:v,tuple
-   });
   }
-  if(!rows.length)throw Error('sin observaciones numéricas');
-  return {rows,geoKey,timeKey,measureKey};
+
+  // B) Formato nativo de e-Indicadores usado por las instancias de C00067A.
+  // ISTAC lo devuelve como data.observations (cadena separada por |) +
+  // data.dimensions.dimension[]. La librería oficial istacr usa exactamente esta estructura.
+  const data=j.data&&typeof j.data==='object'?j.data:j;
+  let dimList=data?.dimensions?.dimension;
+  if(dimList&&!Array.isArray(dimList))dimList=[dimList];
+  const obsRaw=data?.observations??data?.observation;
+  if(Array.isArray(dimList)&&dimList.length&&obsRaw!==undefined){
+   const keys=dimList.map((d,i)=>String(d?.dimensionId??d?.id??d?.code??('DIM_'+i)));
+   const geoKey=istacDimensionKey(keys,'GEOGRAPHICAL'),timeKey=istacDimensionKey(keys,'TIME'),measureKey=istacDimensionKey(keys,'MEASURE');
+   if(!geoKey)throw Error('no se encontró la dimensión geográfica en e-Indicadores');
+   if(!timeKey)throw Error('no se encontró la dimensión temporal en e-Indicadores');
+
+   function legacyCodes(d){
+    let reps=d?.representations?.representation??d?.representation??d?.values??d?.value??[];
+    if(reps&&typeof reps==='object'&&!Array.isArray(reps)&&Array.isArray(reps.code))return reps.code.map(String);
+    if(Array.isArray(reps)&&reps.length===1&&reps[0]&&Array.isArray(reps[0].code))return reps[0].code.map(String);
+    if(Array.isArray(reps)){
+     const out=[];
+     for(const r of reps){
+      if(r&&Array.isArray(r.code))out.push(...r.code.map(String));
+      else {const c=r?.code??r?.id??r?.value;if(c!==undefined&&c!==null)out.push(String(c));}
+     }
+     if(out.length)return out;
+    }
+    if(Array.isArray(d?.codes))return d.codes.map(String);
+    return [];
+   }
+   const codes=dimList.map(legacyCodes);
+   if(codes.some(a=>!a.length))throw Error('e-Indicadores devolvió una dimensión sin códigos');
+
+   const labelMaps=new Map();
+   let metaDims=j?.metadata?.dimensions?.dimension??j?.metadata?.dimension??[];
+   if(metaDims&&!Array.isArray(metaDims))metaDims=[metaDims];
+   const textOf=x=>{
+    if(x==null)return '';
+    if(typeof x==='string'||typeof x==='number')return String(x);
+    if(Array.isArray(x)){
+     const es=x.find(y=>String(y?.lang||y?.language||'').toLowerCase().startsWith('es'));
+     return textOf(es||x.find(Boolean));
+    }
+    if(typeof x==='object')return textOf(x.value??x.name??x.label??x.title??x.text??'');
+    return '';
+   };
+   for(const md of metaDims){
+    const key=String(md?.id??md?.dimensionId??md?.code??'');if(!key)continue;
+    let vals=md?.dimensionValues?.value??md?.values?.value??md?.values??[];
+    if(vals&&!Array.isArray(vals))vals=[vals];
+    const mp=new Map();
+    for(const v of vals){
+     const c=String(v?.id??v?.code??v?.value??'');if(!c)continue;
+     const lab=textOf(v?.text?.text??v?.text??v?.name??v?.label??v?.title??c)||c;mp.set(c,lab);
+    }
+    labelMaps.set(key,mp);
+   }
+
+   let obs=[];
+   if(typeof obsRaw==='string')obs=obsRaw.split('|');
+   else if(Array.isArray(obsRaw))obs=obsRaw;
+   else if(obsRaw&&typeof obsRaw==='object'){
+    obs=Object.keys(obsRaw).sort((a,b)=>+a-+b).map(k=>obsRaw[k]);
+   }
+   const sizes=codes.map(a=>a.length),expected=sizes.reduce((a,b)=>a*b,1);
+   // No exigimos igualdad exacta: algunas respuestas omiten observaciones finales vacías.
+   const rows=[];
+   const n=Math.min(obs.length,expected);
+   for(let flat=0;flat<n;flat++){
+    const raw0=obs[flat],raw=raw0&&typeof raw0==='object'?(raw0.value??raw0.obsValue):raw0;
+    if(raw===null||raw===undefined||raw===''||String(raw).toLowerCase()==='nan')continue;
+    const v=Number(raw);if(!Number.isFinite(v))continue;
+    let rem=flat,tuple={};
+    for(let i=keys.length-1;i>=0;i--){
+     const size=sizes[i],ix=rem%size;rem=Math.floor(rem/size);
+     const c=codes[i][ix]??String(ix),mp=labelMaps.get(keys[i]);
+     tuple[keys[i]]={code:String(c),label:mp?.get(String(c))||String(c)};
+    }
+    const g=tuple[geoKey]||{},tm=tuple[timeKey]||{},me=measureKey?(tuple[measureKey]||{}):{};
+    rows.push({
+     geoCode:String(g.code||''),geoLabel:String(g.label||g.code||''),
+     period:String(tm.code||tm.label||''),timeLabel:String(tm.label||tm.code||''),
+     measureCode:String(me.code||''),measureLabel:String(me.label||me.code||''),
+     value:v,tuple
+    });
+   }
+   if(!rows.length)throw Error('e-Indicadores no devolvió observaciones numéricas');
+   return {rows,geoKey,timeKey,measureKey,format:'e-indicadores'};
+  }
+
+  throw Error('formato de datos ISTAC no reconocido');
  }
  function istacMunicipalityCode(v){
   const s=String(v??'').trim().toUpperCase(),digits=s.replace(/\D/g,'');
@@ -15067,38 +15164,41 @@ html body .leaflet-popup-content{padding-top:5px}
   return j;
  }
  async function fetchIstacInstanceData(item){
-  // 1) Recursos estadísticos directos ya verificados (p. ej., densidad).
+  // 1) Recursos estadísticos directos verificados (p. ej., densidad).
   if(item?.datasetUrl)return await istacFetchJson(item.datasetUrl,'ISTAC');
 
-  // 2) La API oficial permite pedir +data en la MISMA colección de instancias que ya usa
-  // ANAMBRO para construir el catálogo. Esta ruta evita depender del subrecurso /{uuid}/data,
-  // que actualmente devuelve 404 para varias instancias de C00067A.
   let lastErr=null;
+
+  // 2) Ruta oficial de colección con +data. Debe devolver EXACTAMENTE la instancia pedida.
+  // Nunca se acepta ya un payload ajeno de la colección: eso podía dejar en pantalla
+  // los datos de otro indicador y fue la causa de que pareciera que todo era "densidad".
   try{
-   const qs=new URLSearchParams({q:'id EQ "'+String(item.id).replace(/"/g,'')+'"',limit:'5',fields:'+data'});
+   const qs=new URLSearchParams({q:'id EQ "'+String(item.id).replace(/"/g,'')+'"',limit:'5',fields:'+data,+metadata'});
    const u=ISTAC_BASE+'indicatorsSystems/'+ISTAC_SYSTEM+'/indicatorsInstances?'+qs.toString();
    const j=await istacFetchJson(u,'ISTAC catálogo+datos');
-   const items=istacExtractInstances(j),wanted=items.find(x=>String(x?.id||x?.uuid||x?.code||'')===String(item.id));
-   const p=istacFindJsonStatPayload(wanted||j);if(p)return p;
-   throw Error('ISTAC catálogo+datos: la instancia llegó sin bloque de datos');
+   const items=istacExtractInstances(j);
+   const wanted=items.find(x=>String(x?.id||x?.uuid||x?.code||'')===String(item.id));
+   if(!wanted)throw Error('ISTAC catálogo+datos: no devolvió la instancia solicitada '+item.id);
+   // Devolvemos la instancia completa para conservar data + metadata; el decodificador
+   // soporta tanto JSON-stat como el formato nativo de e-Indicadores.
+   return wanted;
   }catch(e){lastErr=e;console.warn('Atlas ISTAC · +data en colección',e)}
 
-  // 3) Compatibilidad con el endpoint específico documentado por ISTAC.
+  // 3) Endpoint específico documentado por ISTAC. También devolvemos el objeto completo.
   const base=ISTAC_BASE+'indicatorsSystems/'+ISTAC_SYSTEM+'/indicatorsInstances/'+encodeURIComponent(item.id)+'/data';
   for(const u of [base+'?fields=-observationsMetadata',base]){
-   try{const j=await istacFetchJson(u,'ISTAC instancia');const p=istacFindJsonStatPayload(j)||j;return p}
+   try{return await istacFetchJson(u,'ISTAC instancia')}
    catch(e){lastErr=e;console.warn('Atlas ISTAC · datos de instancia',u,e)}
   }
 
-  // 4) Último respaldo: si los metadatos del catálogo identifican el indicador base (POBLACION,
-  // PARO_REGISTRADO, etc.), consultar directamente ese indicador. Es la misma API oficial.
+  // 4) Respaldo por indicador base cuando los metadatos permiten identificarlo.
   const code=istacIndicatorCodeFromItem(item);
   if(code){
    for(const u of [
     ISTAC_BASE+'indicators/'+encodeURIComponent(code)+'/data?fields=-observationsMetadata',
     ISTAC_BASE+'indicators/'+encodeURIComponent(code)+'/data'
    ]){
-    try{const j=await istacFetchJson(u,'ISTAC indicador '+code);const p=istacFindJsonStatPayload(j)||j;return p}
+    try{return await istacFetchJson(u,'ISTAC indicador '+code)}
     catch(e){lastErr=e;console.warn('Atlas ISTAC · indicador base',u,e)}
    }
   }
@@ -15130,10 +15230,14 @@ html body .leaflet-popup-content{padding-top:5px}
    }
   }catch(e){
    console.error('Atlas ISTAC',e);
-   if(sel&&istacActiveItemId&&[...sel.options].some(o=>o.value===istacActiveItemId))sel.value=istacActiveItemId;
+   // Nunca mostrar una coropleta anterior como si correspondiera al indicador recién elegido.
+   // Si falla la carga, se conserva el indicador seleccionado y se deja solo el límite municipal.
+   if(sel)sel.value=id;
+   if(istacLayer){try{map.removeLayer(istacLayer)}catch(_){}istacLayer=null}
+   clearIstacLabels();istacRows=[];istacAllRows=[];istacMeta=null;istacChosenMeasure='';istacActiveItemId='';istacSelectedYear='__latest__';
    if(status)status.textContent='No se pudo representar '+item.name+': '+(e?.message||e)+'.';
-   if(legend)legend.innerHTML=istacLayer?previousLegend:'<small>Sin coropleta: '+esc(e?.message||'error al cargar el indicador')+'.</small>';
-   try{const geo=istacMunicipalGeo||await loadIstacGeo();if(!istacLayer)showIstacBoundary(geo)}catch(_){}
+   if(legend)legend.innerHTML='<small>Sin coropleta para '+esc(item.name)+': '+esc(e?.message||'error al cargar el indicador')+'.</small>';
+   try{const geo=istacMunicipalGeo||await loadIstacGeo();clearIstacBoundary();showIstacBoundary(geo)}catch(_){}
   }
  }
  function restoreOsmAfterIstac(){
