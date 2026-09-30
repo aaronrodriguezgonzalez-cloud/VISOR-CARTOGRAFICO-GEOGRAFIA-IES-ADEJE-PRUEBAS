@@ -14585,7 +14585,55 @@ html body .leaflet-popup-content{padding-top:5px}
    measure:'estancia\\s+media',preferAnnual:true},
   {id:'cube:vehicle-registrations',name:'Matriculación de vehículos',category:'Transportes',
    datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E70041A_000001/1.41.jsonstat',
-   preferAnnual:true}
+   preferAnnual:true},
+
+  /* Ampliación con cubos públicos municipales verificados en el catálogo oficial ISTAC. */
+  {id:'cube:municipal-area',name:'Superficie municipal',category:'Territorio y medio ambiente',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/X00004A_000001/1.0.jsonstat'},
+
+  {id:'cube:births',name:'Nacimientos',category:'Demografía',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30304A_000002/1.3.jsonstat',
+   preferAnnual:true},
+  {id:'cube:births-female',name:'Nacimientos. Niñas',category:'Demografía',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30304A_000002/1.3.jsonstat',
+   rules:[{key:'sex|sexo',value:'mujer|female|femen|niña'}],preferAnnual:true},
+  {id:'cube:births-male',name:'Nacimientos. Niños',category:'Demografía',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30304A_000002/1.3.jsonstat',
+   rules:[{key:'sex|sexo',value:'hombre|male|mascul|niño'}],preferAnnual:true},
+
+  {id:'cube:irpf-average-income',name:'Renta media por declaración (IRPF)',category:'Economía',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E32063A_000005/1.1.jsonstat',
+   preferAnnual:true},
+  {id:'cube:income-mean-person',name:'Renta media por persona',category:'Economía',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30325A_000001/2.3.jsonstat',
+   measure:'renta\\s+media.*persona|media.*persona',preferAnnual:true},
+  {id:'cube:income-median-person',name:'Renta mediana por persona',category:'Economía',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30325A_000001/2.3.jsonstat',
+   measure:'renta\\s+mediana.*persona|mediana.*persona',preferAnnual:true},
+
+  {id:'cube:ss-affiliations-workplace',name:'Afiliaciones a la Seguridad Social · lugar de cotización',category:'Empleo',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E58015B_000030/1.86.jsonstat'},
+  {id:'cube:ss-affiliations-women',name:'Afiliaciones a la Seguridad Social · mujeres',category:'Empleo',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E58015B_000042/1.86.jsonstat',
+   rules:[{key:'sex|sexo',value:'mujer|female|femen'}]},
+  {id:'cube:ss-affiliations-men',name:'Afiliaciones a la Seguridad Social · hombres',category:'Empleo',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E58015B_000042/1.86.jsonstat',
+   rules:[{key:'sex|sexo',value:'hombre|male|mascul'}]},
+
+  {id:'cube:registered-unemployment-women',name:'Paro registrado · mujeres',category:'Empleo',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E59021A_000008/1.61.jsonstat',
+   rules:[{key:'sex|sexo',value:'mujer|female|femen'}]},
+  {id:'cube:registered-unemployment-men',name:'Paro registrado · hombres',category:'Empleo',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E59021A_000008/1.61.jsonstat',
+   rules:[{key:'sex|sexo',value:'hombre|male|mascul'}]},
+
+  {id:'cube:building-area',name:'Superficie a construir',category:'Vivienda y construcción',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E20001A_000022/1.0.jsonstat',
+   preferAnnual:true},
+
+  {id:'cube:tourism-arrivals',name:'Viajeros entrados en alojamientos turísticos',category:'Servicios y turismo',
+   datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/C00065A_000036/2.18.jsonstat',
+   measure:'viajer.*entrad',preferAnnual:true}
  ];
  const ISTAC_DIRECT_DATASETS=ISTAC_PUBLIC_INDICATORS;
  const ISTAC_VERIFIED_CATALOG=[];
@@ -14659,7 +14707,7 @@ html body .leaflet-popup-content{padding-top:5px}
    if(q&&!norm(x.name).includes(q))continue;
    const c=x.category||istacCategory(x.name);if(!by.has(c))by.set(c,[]);by.get(c).push(x);
   }
-  const order=['Territorio y medio ambiente','Demografía','Economía','Empleo','Sector primario','Servicios y turismo','Transportes','Administración pública','Territorio y sociedad'];
+  const order=['Territorio y medio ambiente','Demografía','Economía','Empleo','Sector primario','Servicios y turismo','Transportes','Vivienda y construcción','Administración pública','Territorio y sociedad'];
   sel.innerHTML='<option value="">— Elige un indicador —</option>';
   for(const cat of [...by.keys()].sort((a,b)=>(order.indexOf(a)<0?99:order.indexOf(a))-(order.indexOf(b)<0?99:order.indexOf(b))||a.localeCompare(b,'es'))){
    const g=document.createElement('optgroup');g.label=cat;
@@ -14858,17 +14906,32 @@ html body .leaflet-popup-content{padding-top:5px}
   for(const v of Object.values(p)){const c=istacMunicipalityCode(v);if(c)return c}
   return '';
  }
+ const ISTAC_ISLAND_NAMES={
+  ES703:'El Hierro',ES704:'Fuerteventura',ES705:'Gran Canaria',ES706:'La Gomera',
+  ES707:'La Palma',ES708:'Lanzarote',ES709:'Tenerife'
+ };
+ function istacIsHumanPlaceName(v){
+  const s=String(v??'').trim();
+  if(!s)return false;
+  if(istacMunicipalityCode(s)&&/^\s*(?:35|38)\d{3}\s*$/.test(s))return false;
+  if(/^ES70[3-9]$/i.test(s))return false;
+  if(/^\d+$/.test(s))return false;
+  return /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(s);
+ }
  function istacFeatureName(f){
   const p=f?.properties||{};
   for(const k of ['__istacName','__name_popup_es','__name_es','__name','etiqueta','ETIQUETA','LABEL','label','MUNICIPIO','municipio','NOMBRE_MUNICIPIO','NOMBRE','nombre','NAMEUNIT','NAME_2','NAME','name','NOM_MUN','DENOMINACION']){
-   const v=String(p[k]??'').trim();if(v)return v;
+   const v=String(p[k]??'').trim();if(istacIsHumanPlaceName(v))return v;
   }
   return '';
  }
  function istacIslandName(f){
   const p=f?.properties||{};
-  for(const k of ['ISLA','isla','NOMBRE_ISLA','nombre_isla','NOM_ISLA','ISLAND','island']){
-   const v=String(p[k]??'').trim();if(v)return v;
+  const forced=String(p.__istacIsland??'').trim();if(forced)return ISTAC_ISLAND_NAMES[forced.toUpperCase()]||forced;
+  for(const k of ['ISLA','isla','NOMBRE_ISLA','nombre_isla','NOM_ISLA','ISLAND','island','gcd_isla','GCD_ISLA']){
+   const v=String(p[k]??'').trim();if(!v)continue;
+   const human=ISTAC_ISLAND_NAMES[v.toUpperCase()]||v;
+   if(istacIsHumanPlaceName(human))return human;
   }
   return '';
  }
@@ -14888,27 +14951,47 @@ html body .leaflet-popup-content{padding-top:5px}
  }
  async function istacEnrichGeoNames(fc){
   if(!fc?.features?.length)return fc;
-  if(fc.features.filter(f=>istacFeatureName(f)).length>=80)return fc;
   try{
    const r=await fetch(ISTAC_MUNICIPAL_CSV,{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('ISTAC '+r.status);
    const t=await r.text(),lines=t.split(/\r?\n/).filter(Boolean);if(lines.length<2)return fc;
    const semi=(lines[0].match(/;/g)||[]).length,comma=(lines[0].match(/,/g)||[]).length,delim=semi>comma?';':',';
    const head=istacParseCSVLine(lines[0],delim).map(x=>norm(x.replace(/^\ufeff/,'')));
-   const find=(rx)=>head.findIndex(x=>rx.test(x)),ni=find(/^(etiqueta|municipio|nombre)$/),lai=find(/latitud/),loi=find(/longitud/);
-   if(ni<0||lai<0||loi<0)return fc;
-   const refs=[];
+   const find=(rx)=>head.findIndex(x=>rx.test(x));
+   const ci=find(/^geocode$|codigo|cod.*mun/),ni=find(/^(etiqueta|municipio|nombre)$/),ii=find(/^gcd[_\s-]*isla$|^isla$/),lai=find(/latitud/),loi=find(/longitud/);
+   if(ni<0)return fc;
+   const byCode=new Map(),refs=[];
    for(const line of lines.slice(1)){
-    const a=istacParseCSVLine(line,delim),lat=parseFloat(String(a[lai]||'').replace(',','.')),lng=parseFloat(String(a[loi]||'').replace(',','.'));
-    if(a[ni]&&Number.isFinite(lat)&&Number.isFinite(lng))refs.push({name:a[ni],lat,lng});
+    const a=istacParseCSVLine(line,delim),name=String(a[ni]||'').trim();
+    if(!istacIsHumanPlaceName(name))continue;
+    const code=ci>=0?istacMunicipalityCode(a[ci]):'';
+    const islandRaw=ii>=0?String(a[ii]||'').trim():'';
+    const island=ISTAC_ISLAND_NAMES[islandRaw.toUpperCase()]||islandRaw;
+    if(code)byCode.set(code,{name,island});
+    if(lai>=0&&loi>=0){
+     const lat=parseFloat(String(a[lai]||'').replace(',','.')),lng=parseFloat(String(a[loi]||'').replace(',','.'));
+     if(Number.isFinite(lat)&&Number.isFinite(lng))refs.push({name,island,lat,lng});
+    }
    }
-   if(refs.length<80)return fc;
    const unused=new Set(refs.map((_,i)=>i));
    for(const f of fc.features){
-    if(istacFeatureName(f))continue;const a=istacFeatureAnchor(f);if(!a)continue;
-    let bi=-1,bd=Infinity;for(const i of unused){const rr=refs[i],d=(rr.lat-a[0])**2+(rr.lng-a[1])**2;if(d<bd){bd=d;bi=i}}
-    if(bi>=0){f.properties=f.properties||{};f.properties.__istacName=refs[bi].name;unused.delete(bi)}
+    f.properties=f.properties||{};
+    const code=istacFeatureCode(f),hit=code?byCode.get(code):null;
+    if(hit){
+     f.properties.__istacName=hit.name;
+     if(hit.island)f.properties.__istacIsland=hit.island;
+     continue;
+    }
+    if(istacFeatureName(f))continue;
+    const a=istacFeatureAnchor(f);if(!a)continue;
+    let bi=-1,bd=Infinity;
+    for(const i of unused){const rr=refs[i],d=(rr.lat-a[0])**2+(rr.lng-a[1])**2;if(d<bd){bd=d;bi=i}}
+    if(bi>=0){
+     f.properties.__istacName=refs[bi].name;
+     if(refs[bi].island)f.properties.__istacIsland=refs[bi].island;
+     unused.delete(bi);
+    }
    }
-  }catch(e){console.warn('Atlas ISTAC · no se pudieron enriquecer nombres municipales',e)}
+  }catch(e){console.warn('Atlas ISTAC · nombres municipales',e)}
   return fc;
  }
  async function loadIstacGeo(){
@@ -15093,6 +15176,8 @@ html body .leaflet-popup-content{padding-top:5px}
   const join=buildIstacJoin(rows),matchedValues=[],matchedCodes=new Set(),matchedNames=new Set();
   for(const f of geo.features||[]){
    const r=join.rowForFeature(f);if(!r)continue;
+   f.properties=f.properties||{};
+   if(istacIsHumanPlaceName(r.geoLabel))f.properties.__istacName=String(r.geoLabel).trim();
    matchedValues.push(r.value);const c=istacFeatureCode(f);if(c)matchedCodes.add(c);const n=istacNameVariants(istacFeatureName(f))[0];if(n)matchedNames.add(n);
   }
   const breaks=istacBreaks(matchedValues);
