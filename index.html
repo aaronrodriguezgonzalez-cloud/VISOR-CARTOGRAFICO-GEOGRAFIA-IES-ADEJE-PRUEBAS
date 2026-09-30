@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Visor Cartográfico ANAMBRO v0.14 · Aarón Rodríguez González · Docente del Departamento de Geografía e Historia · IES ADEJE</title>
+<title>Visor Cartográfico ANAMBRO v0.15 · Aarón Rodríguez González · Docente del Departamento de Geografía e Historia · IES ADEJE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Satisfy&display=swap" rel="stylesheet">
@@ -2726,6 +2726,14 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 }
 </style>
 
+
+<style id="anambro-v015-atlas-ui">
+#istacAtlasBlock .row .action{min-width:0}
+#istacAtlasBlock select,#istacAtlasBlock input[type=search]{font-size:11px}
+#istacAtlasBlock #istacLegend{max-height:240px;overflow:auto;background:#fff;border:1px solid #d7e0e6;border-radius:7px;padding:6px}
+#worldHumanLatestBtn[aria-pressed="true"]{background:#0f6f63!important}
+@media(max-width:760px){#istacAtlasBlock{padding:9px!important}#istacAtlasBlock select,#istacAtlasBlock input[type=search],#istacAtlasBlock .action{min-height:40px;font-size:11px}}
+</style>
 </head><body>
 <div id="map"></div>
 <div id="globe" aria-label="Globo 3D"></div>
@@ -2754,7 +2762,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
       <img class="brandInstituteLogoV06" src="data:image/jpeg;base64,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" alt="IES Adeje">
       <div class="brandLeftText">
         <div class="brandDept"><b>IES ADEJE</b><br>Herramienta cartográfica abierta<br>Curso 2026-2027</div>
-        <div class="brandVersion">Versión 0.12 · aula interactiva</div>
+        <div class="brandVersion">Versión 0.15 · aula interactiva</div>
       </div>
     </div>
     <div class="brandAuthorV06">
@@ -2882,7 +2890,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
       </section>
 
     </div>
-    <div class="welcomeFooter"><b>ANAMBRO · Versión 0.14 · Curso 2026-2027.</b> Proyecto personal de <b>Aarón Rodríguez González · Geógrafo</b>, <b>docente del Departamento de Geografía e Historia del IES ADEJE</b> y <b>Coordinador de Patrimonio Natural, Social y Cultural Canario</b>, desarrollado de forma independiente en su tiempo libre a partir de necesidades reales del aula y abierto a la comunidad educativa. ANAMBRO continuará ampliando sus capas, fuentes, herramientas, explicaciones y capacidades de creación cartográfica.</div>
+    <div class="welcomeFooter"><b>ANAMBRO · Versión 0.15 · Curso 2026-2027.</b> Proyecto personal de <b>Aarón Rodríguez González · Geógrafo</b>, <b>docente del Departamento de Geografía e Historia del IES ADEJE</b> y <b>Coordinador de Patrimonio Natural, Social y Cultural Canario</b>, desarrollado de forma independiente en su tiempo libre a partir de necesidades reales del aula y abierto a la comunidad educativa. ANAMBRO continuará ampliando sus capas, fuentes, herramientas, explicaciones y capacidades de creación cartográfica.</div>
   </div>
 </div>
 
@@ -2909,7 +2917,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
   <div class="hubGrid">
     <section class="hubCard"><b>🧭 Explorar el mapa</b><button data-hub="layers">Capas, fondos y cartografía temática</button><button data-hub="globe">Globo 3D</button><button data-hub="coords">Localizar coordenadas</button><button data-hub="search">Buscar topónimo</button></section>
     <section class="hubCard"><b>🥾 Senderismo y campo</b><button data-hub="gps">Mi ubicación GPS</button><button data-hub="tracks">Crear / importar GPX y KML</button><button data-hub="profile">Perfil territorial</button><button data-hub="measure">Medir distancias y superficies</button></section>
-    <section class="hubCard"><b>📊 Atlas temáticos</b><button data-hub="atlas-world">Atlas mundial · Banco Mundial / PNUD</button><button data-hub="atlas-canary">Atlas de Canarias por municipios · ISTAC</button></section>
+    <section class="hubCard"><b>📊 Atlas estadístico ANAMBRO</b><button data-hub="atlas-world">🌍 Mundo · Banco Mundial / PNUD</button><button data-hub="atlas-canary">🏝️ Canarias · ISTAC</button></section>
     <section class="hubCard"><b>🏛️ Historia y patrimonio</b><button data-hub="history">Cartografía histórica</button><button data-hub="heritage">Patrimonio cultural de Canarias</button><button data-hub="political">Mapas políticos / mudos</button></section>
     <section class="hubCard"><b>🎓 Aula y creación</b><button data-hub="animations">Animaciones y explicaciones</button><button data-hub="print">Compositor cartográfico / PDF</button></section>
   </div>
@@ -2991,15 +2999,17 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <div id="vegetationLegendWrap" style="display:none;margin-top:6px;max-height:180px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:6px;padding:4px"></div>
 </div></details>
 </details>
-<details class="layerCategory"><summary>👥 Geografía Humana</summary>
+<details class="layerCategory"><summary>📊 Atlas estadístico · ISTAC</summary>
 <div class="layerSubBlock atlasPanelBlock" id="istacAtlasBlock">
-<b>📊 Atlas estadístico de Canarias · ISTAC</b>
-<small class="atlasSearchHint">Municipios en Cifras (C00067A) · atlas municipal de indicadores territoriales, demográficos, laborales, económicos, turísticos y sociales.</small>
-<input id="istacIndicatorSearch" type="search" placeholder="Buscar: población, turismo, empleo, renta…"/>
-<select id="istacIndicatorSelect"><option value="">Preparando catálogo…</option></select>
-<div class="row" style="margin-top:5px"><select id="istacYearSelect"><option value="">Periodo</option></select><button class="action" id="istacClearBtn" type="button">Quitar mapa</button></div>
-<button class="action" id="istacReloadBtn" type="button" style="width:100%;margin-top:5px">↻ Recargar catálogo ISTAC</button>
-<small id="istacStatus" style="display:block;margin-top:6px">Catálogo municipal disponible; conectando con ISTAC…</small>
+<b>🏝️ Canarias · Atlas estadístico ANAMBRO</b>
+<small class="atlasSearchHint">Datos oficiales del ISTAC · Municipios en Cifras (C00067A). Busca un indicador y ANAMBRO coloreará automáticamente los 88 municipios cuando la serie disponga de detalle municipal.</small>
+<input id="istacIndicatorSearch" type="search" placeholder="Buscar: población, envejecimiento, turismo, empleo, renta…"/>
+<select id="istacIndicatorSelect"><option value="">Preparando catálogo ISTAC…</option></select>
+<div class="row" style="margin-top:5px"><select id="istacYearSelect"><option value="__latest__">Último disponible</option></select><button class="action" id="istacClearBtn" type="button">Quitar mapa</button></div>
+<div class="row" style="margin-top:5px"><button class="action" id="istacLatestBtn" type="button">Último disponible</button><button class="action" id="istacReloadBtn" type="button">↻ Catálogo ISTAC</button></div>
+<label style="margin-top:5px"><input id="istacLabelsCheck" type="checkbox" checked/> Nombres municipales</label>
+<label><small><b>Opacidad</b> <span id="istacOpacityValue">72 %</span></small><input id="istacOpacity" max="1" min="0.15" step="0.05" style="width:100%" type="range" value="0.72"/></label>
+<small id="istacStatus" style="display:block;margin-top:6px">Preparando el catálogo municipal del ISTAC…</small>
 <div id="istacLegend" class="miniThemeLegend" style="margin-top:6px"></div>
 </div></details>
 <details class="layerCategory"><summary>🏛️ Historia</summary><div class="layerEmpty">No hay todavía capas históricas específicas para este ámbito.</div></details>
@@ -3076,7 +3086,7 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <div class="atlasPanelBlock" style="margin-top:7px"><b>🔎 Buscar indicador</b><input id="worldHumanSearch" type="search" placeholder="Ej.: empleo, turismo, bosques, natalidad…"/><small class="atlasSearchHint">Un único catálogo ordenado por temas. Puedes activar varias variables simultáneamente.</small></div>
 <label style="padding-top:7px"><b>Año común: <span id="worldHumanYearValue">2023</span></b></label>
 <input id="worldHumanYear" max="2025" min="1960" step="1" style="width:100%" type="range" value="2023"/>
-<div class="row" style="margin-top:5px"><button class="action" id="worldHumanLatestBtn" type="button">2025</button><button class="action" id="worldHumanReloadBtn" type="button">Actualizar activas</button></div>
+<div class="row" style="margin-top:5px"><button class="action" id="worldHumanLatestBtn" type="button">Último disponible</button><button class="action" id="worldHumanReloadBtn" type="button">Actualizar activas</button></div>
 <details open=""><summary>👥 Demografía</summary>
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="SP.POP.TOTL" type="checkbox"/> Población total</label>
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.POP.DNST" type="checkbox"/> Densidad de población</label>
@@ -3137,6 +3147,11 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.ATM.CO2E.PC" type="checkbox"/> Emisiones de CO₂ per cápita</label>
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.FEC.RNEW.ZS" type="checkbox"/> Renovables en consumo final</label>
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.ELC.RNEW.ZS" type="checkbox"/> Electricidad de origen renovable</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EG.USE.PCAP.KG.OE" type="checkbox"/> Consumo de energía por habitante</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.ATM.CO2E.KT" type="checkbox"/> Emisiones de CO₂ totales</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="ER.H2O.INTR.PC" type="checkbox"/> Recursos internos de agua dulce por habitante</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="ER.H2O.FWTL.ZS" type="checkbox"/> Extracciones de agua dulce</label>
+<label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="ER.PTD.TOTL.ZS" type="checkbox"/> Áreas protegidas terrestres y marinas</label>
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="AG.LND.FRST.ZS" type="checkbox"/> Superficie forestal</label>
 <label class="sub"><input class="worldHumanLayerCheck" data-human-indicator="EN.ATM.PM25.MC.M3" type="checkbox"/> Exposición a PM2,5</label>
 </details>
@@ -12277,6 +12292,42 @@ async function humanPointHtmlFromISO2(iso2){const iso3=await humanISO3FromISO2(i
 (function(){const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue');document.querySelectorAll('.worldHumanLayerCheck').forEach(cb=>cb.addEventListener('change',async()=>{if(cb.checked)await updateHumanIndicator(cb.dataset.humanIndicator);else clearHumanIndicator(cb.dataset.humanIndicator);refreshHumanLegend();}));yr.addEventListener('input',()=>yv.textContent=yr.value);yr.addEventListener('change',updateWorldHuman);document.getElementById('worldHumanReloadBtn').onclick=updateWorldHuman;document.getElementById('worldHumanLatestBtn').onclick=()=>{yr.value=2025;yv.textContent='2025';updateWorldHuman();};})();
 </script>
 
+<script id="anambro-world-latest-available-v015">
+(()=>{
+  if(typeof loadHumanWB!=='function'||typeof updateHumanIndicator!=='function')return;
+  window.__anambroWorldLatestMode=false;
+  loadHumanWB=async function(ind,year,latest=false){
+    const base='https://api.worldbank.org/v2/country/all/indicator/'+encodeURIComponent(ind)+'?format=json&per_page=400';
+    const u=latest?base+'&mrnev=1':base+'&date='+encodeURIComponent(year);
+    const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('Banco Mundial '+r.status);const j=await r.json(),m=new Map(),years=new Map();
+    for(const row of (j?.[1]||[])){const c=String(row?.countryiso3code||'').toUpperCase(),raw=row?.value;if(raw===null||raw===undefined||String(raw).trim()==='')continue;const v=Number(raw);if(c.length===3&&Number.isFinite(v)){m.set(c,v);if(row?.date!=null)years.set(c,String(row.date))}}
+    m.__anambroYears=years;return m;
+  };
+  updateHumanIndicator=async function(ind){
+    const meta=WORLD_HUMAN_INDICATORS[ind];if(!meta)return;
+    const cb=document.querySelector('.worldHumanLayerCheck[data-human-indicator="'+CSS.escape(ind)+'"]');if(!cb?.checked){clearHumanIndicator(ind);return;}
+    const requestedYear=+document.getElementById('worldHumanYear').value,latest=!!window.__anambroWorldLatestMode;
+    const year=(ind==='UNDP_HDI'&&Number.isFinite(meta.maxYear))?Math.min(requestedYear,meta.maxYear):requestedYear;
+    const st=humanState(ind),status=document.getElementById('worldHumanStatus');
+    status.textContent='Cargando '+meta.name+(latest?' · último dato disponible…':' · '+year+'…');
+    const data=ind==='UNDP_HDI'?await loadHumanHDI(latest&&Number.isFinite(meta.maxYear)?meta.maxYear:year):await loadHumanWB(ind,year,latest);
+    st.data=data;st.year=latest?(ind==='UNDP_HDI'&&Number.isFinite(meta.maxYear)?meta.maxYear:requestedYear):year;st.requestedYear=requestedYear;st.latestMode=latest;st.years=data.__anambroYears||new Map();st.breaks=humanBreaks([...data.values()],meta);
+    if(!st.breaks.length){clearHumanIndicator(ind);st.data=data;throw new Error(meta.name+': sin datos disponibles');}
+    await renderHuman2D(ind,data,meta,st.year,st.breaks);if(globeViewer)await renderHuman3D(ind,data,meta,st.year,st.breaks);
+  };
+  function actualCountryYear(st,iso3,fallback){return st?.latestMode?(st.years?.get?.(iso3)||(Number.isFinite(st.year)?String(st.year):'último disponible')):(st?.year||fallback)}
+  humanThematicInfoHTML=function(country,iso3){const active=activeHumanIndicators(),requestedYear=+document.getElementById('worldHumanYear').value,latest=!!window.__anambroWorldLatestMode;let h='<b>👥 '+escHtml(country||'País / territorio')+'</b><br><b>'+ (latest?'Modo:':'Año seleccionado:') +'</b> '+(latest?'último dato disponible por país':requestedYear);for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.data.get(iso3),actual=actualCountryYear(st,iso3,requestedYear);h+='<br><b>'+escHtml(meta.name)+' ('+escHtml(actual)+'):</b> '+escHtml(humanFmt(v,meta));}return h};
+  humanPointHtmlByISO3=function(iso3){const active=activeHumanIndicators();if(!active.length)return '';const requestedYear=+document.getElementById('worldHumanYear').value,latest=!!window.__anambroWorldLatestMode;let h='<hr><b>👥 Geografía humana · '+(latest?'último dato disponible por país':'año seleccionado '+requestedYear)+'</b>';for(const ind of active){const meta=WORLD_HUMAN_INDICATORS[ind],st=humanState(ind),v=st.data.get(iso3),actual=actualCountryYear(st,iso3,requestedYear);h+='<br><b>'+escHtml(meta.name)+' ('+escHtml(actual)+'):</b> '+escHtml(humanFmt(v,meta));}return h};
+  refreshHumanLegend=function(){const year=+document.getElementById('worldHumanYear').value,active=activeHumanIndicators(),el=document.getElementById('worldHumanLegend'),latest=!!window.__anambroWorldLatestMode;syncHumanThematicBasemap();const dyn=document.getElementById('dynamicLegend'),btn=document.getElementById('legendToggle');if(active.length&&dyn){dyn.classList.remove('hidden');if(btn){btn.innerHTML='<span>✕</span> Ocultar leyenda';btn.setAttribute('aria-expanded','true')}}if(!active.length){el.innerHTML='';document.getElementById('worldHumanStatus').textContent='Activa una o varias variables.';setTimeout(updateLegend,0);return;}el.innerHTML=active.map(ind=>{const st=humanState(ind),meta=WORLD_HUMAN_INDICATORS[ind],label=latest?'Último disponible':(st.year||year);return '<div style="margin:6px 0 10px;padding-top:5px;border-top:1px solid #ddd">'+humanLegendHTML(meta,label,st.breaks||[])+'</div>'}).join('');document.getElementById('worldHumanStatus').textContent=active.length+' capa'+(active.length===1?'':'s')+' activa'+(active.length===1?'':'s')+' · '+(latest?'último dato no vacío disponible para cada país':'año común '+year);setTimeout(updateLegend,0)};
+  const yr=document.getElementById('worldHumanYear'),yv=document.getElementById('worldHumanYearValue'),latestBtn=document.getElementById('worldHumanLatestBtn');
+  function setLatest(on){window.__anambroWorldLatestMode=!!on;if(latestBtn){latestBtn.style.outline=on?'3px solid #0f9d8a':'';latestBtn.setAttribute('aria-pressed',on?'true':'false')}if(yr)yr.disabled=!!on;if(yv)yv.textContent=on?'último':yr?.value||''}
+  latestBtn.onclick=()=>{setLatest(true);updateWorldHuman()};
+  yr?.addEventListener('pointerdown',()=>setLatest(false));yr?.addEventListener('keydown',()=>setLatest(false));yr?.addEventListener('change',()=>setLatest(false));
+  const reload=document.getElementById('worldHumanReloadBtn');if(reload)reload.title='Actualiza las variables activas en el modo temporal seleccionado';
+  if(typeof defaultLayoutTitle==='function'){const prev=defaultLayoutTitle;defaultLayoutTitle=function(){if(window.__anambroWorldLatestMode&&typeof activeHumanIndicators==='function'){const a=activeHumanIndicators();if(a.length===1&&WORLD_HUMAN_INDICATORS[a[0]])return WORLD_HUMAN_INDICATORS[a[0]].name+' en el mundo · último dato disponible';if(a.length)return 'Geografía humana en el mundo · último dato disponible'}return prev.apply(this,arguments)}}
+})();
+</script>
+
 
 <script id="anambro-header-clearance-20260927">
 (function(){
@@ -13945,7 +13996,8 @@ html body .historyPopup .leaflet-popup-close-button{
  function textStyleData(t){const cs=getComputedStyle(t);return {fontFamily:t.style.fontFamily||cs.fontFamily||'',color:t.style.color||cs.color||'',textAlign:t.style.textAlign||cs.textAlign||'left',fontWeight:t.style.fontWeight||cs.fontWeight||'400',fontStyle:t.style.fontStyle||cs.fontStyle||'normal',textDecoration:t.style.textDecoration||cs.textDecorationLine||'none',lineHeight:t.style.lineHeight||cs.lineHeight||'normal',letterSpacing:t.style.letterSpacing||cs.letterSpacing||'normal'}}
  function readLayout(){const data={version:3,height:Math.round(brand().getBoundingClientRect().height),items:{}};for(const [key] of defs){const f=frames.get(key);if(!f)continue;const v=rectData(f);v.fit=f.style.getPropertyValue('--he-fit')||'contain';v.zoom=parseFloat(f.style.getPropertyValue('--he-zoom'))||1;v.posx=parseFloat(f.style.getPropertyValue('--he-posx'))||50;v.posy=parseFloat(f.style.getPropertyValue('--he-posy'))||50;const t=f.querySelector('.headerEditableTarget');v.font=parseFloat(t?.style.fontSize)||parseFloat(getComputedStyle(t).fontSize)||null;if(f.dataset.type==='text'){v.html=t.innerHTML;Object.assign(v,textStyleData(t))}data.items[key]=v}return data}
  function applyTextStyle(t,v){if(!t||!v)return;if(v.font)t.style.setProperty('font-size',v.font+'px','important');for(const [k,p] of [['fontFamily','font-family'],['color','color'],['textAlign','text-align'],['fontWeight','font-weight'],['fontStyle','font-style'],['textDecoration','text-decoration'],['lineHeight','line-height'],['letterSpacing','letter-spacing']]){if(v[k])t.style.setProperty(p,String(v[k]))}}
- function applyLayout(data){if(!data?.items||window.innerWidth<=760)return;const b=brand();b.classList.add('header-free-layout');if(data.height)b.style.height=Math.max(76,+data.height)+'px';for(const [key] of defs){const f=frames.get(key),v=data.items[key];if(!f||!v)continue;Object.assign(f.style,{left:(+v.left||0)+'px',top:(+v.top||0)+'px',width:Math.max(20,+v.width||20)+'px',height:Math.max(16,+v.height||16)+'px',zIndex:String(v.z||1)});f.style.setProperty('--he-fit',v.fit||'contain');f.style.setProperty('--he-zoom',v.zoom||1);f.style.setProperty('--he-posx',(v.posx??50)+'%');f.style.setProperty('--he-posy',(v.posy??50)+'%');const t=f.querySelector('.headerEditableTarget');applyTextStyle(t,v);if(f.dataset.type==='text'&&typeof v.html==='string')t.innerHTML=v.html}}
+ function isIPadHeaderDevice(){return /iPad/i.test(navigator.userAgent||'')||((navigator.platform==='MacIntel'||/Macintosh/i.test(navigator.userAgent||''))&&(navigator.maxTouchPoints||0)>1)}
+ function applyLayout(data){if(!data?.items||window.innerWidth<=760||isIPadHeaderDevice())return;const b=brand();b.classList.add('header-free-layout');if(data.height)b.style.height=Math.max(76,+data.height)+'px';const bw=b.getBoundingClientRect().width||window.innerWidth;for(const [key] of defs){const f=frames.get(key),v=data.items[key];if(!f||!v)continue;let w=Math.max(20,+v.width||20),h=Math.max(16,+v.height||16),left=(+v.left||0),top=(+v.top||0);if(key==='actions'){w=Math.min(Math.max(w,132),Math.max(80,bw-16));left=Math.min(left,Math.max(8,bw-w-8));}Object.assign(f.style,{left:left+'px',top:top+'px',width:w+'px',height:h+'px',zIndex:String(v.z||1)});f.style.setProperty('--he-fit',v.fit||'contain');f.style.setProperty('--he-zoom',v.zoom||1);f.style.setProperty('--he-posx',(v.posx??50)+'%');f.style.setProperty('--he-posy',(v.posy??50)+'%');const t=f.querySelector('.headerEditableTarget');applyTextStyle(t,v);if(f.dataset.type==='text'&&typeof v.html==='string')t.innerHTML=v.html}}
  function clearLayout(){const b=brand();b.classList.remove('header-free-layout','header-editing');b.style.removeProperty('height');for(const f of frames.values()){f.classList.remove('selected','textEditing');for(const p of ['left','top','width','height','z-index','--he-fit','--he-zoom','--he-posx','--he-posy'])f.style.removeProperty(p);const t=f.querySelector('.headerEditableTarget');if(t){for(const p of ['font-size','font-family','color','text-align','font-weight','font-style','text-decoration','line-height','letter-spacing'])t.style.removeProperty(p);t.removeAttribute('contenteditable');for(const n of t.querySelectorAll('[style]')){if(n.style.getPropertyPriority('font-size')==='important')n.style.removeProperty('font-size')}}}}
  function selectionInside(t){const s=window.getSelection();if(!s||!s.rangeCount||s.isCollapsed)return false;const r=s.getRangeAt(0),a=r.commonAncestorContainer;return t===a||t.contains(a.nodeType===1?a:a.parentElement)}
  function rememberSelection(){const t=selected?.querySelector('.headerEditableTarget'),s=window.getSelection();if(t&&s?.rangeCount&&selectionInside(t))lastSelection=s.getRangeAt(0).cloneRange()}
@@ -14379,7 +14431,7 @@ html body .leaflet-popup-content{padding-top:5px}
   if(kind==='layers'){togglePanel('layersPanel');return}if(kind==='globe'){closePanels();toggleGlobe();return}if(kind==='political'){closePanels();window.togglePoliticalTool?.();return}if(kind==='print'){closePanels();openLayoutEditor();return}
   if(kind==='gps'){closePanels();gps();return}if(kind==='tracks'){togglePanel('trackPanel');return}if(kind==='profile'){togglePanel('profilePanel');return}if(kind==='measure'){togglePanel('measurePanel');return}if(kind==='animations'){togglePanel('explainPanel');return}if(kind==='coords'){togglePanel('locPanel');return}if(kind==='search'){togglePanel('searchPanel');return}
   if(kind==='atlas-world'){const sec=openLayersPath('Mundo','Geografía Humana');sec?.scrollIntoView({block:'nearest'});return}
-  if(kind==='atlas-canary'){const sec=openLayersPath('Canarias','Geografía Humana');sec?.scrollIntoView({block:'nearest'});setTimeout(()=>document.getElementById('istacIndicatorSearch')?.focus(),80);return}
+  if(kind==='atlas-canary'){const sec=openLayersPath('Canarias','Atlas estadístico');sec?.scrollIntoView({block:'nearest'});setTimeout(()=>document.getElementById('istacIndicatorSearch')?.focus(),80);return}
   if(kind==='heritage'){const sec=openLayersPath('Canarias','Territorio y patrimonio');const h=sec?findDetails(sec,'Patrimonio cultural'):null;if(h)h.open=true;h?.scrollIntoView({block:'nearest'});return}
   if(kind==='history'){const sec=openLayersPath('Mundo','Historia');sec?.scrollIntoView({block:'nearest'});return}
  };
@@ -14416,6 +14468,11 @@ html body .leaflet-popup-content{padding-top:5px}
   ['Educación y salud','SH.XPD.CHEX.GD.ZS','Gasto sanitario corriente','% del PIB',{dec:1,sense:'neutral',zeroBase:true,breakProfile:'percent'}],
   ['Energía y medio ambiente','EG.FEC.RNEW.ZS','Energías renovables en consumo final','% del consumo total',{dec:1,sense:'positive',domain:[0,100],breakProfile:'percent'}],
   ['Energía y medio ambiente','EG.ELC.RNEW.ZS','Electricidad de origen renovable','% de la producción eléctrica',{dec:1,sense:'positive',domain:[0,100],breakProfile:'percent'}],
+  ['Energía y medio ambiente','EG.USE.PCAP.KG.OE','Consumo de energía por habitante','kg equivalentes de petróleo por habitante',{dec:0,sense:'neutral',zeroBase:true,breakProfile:'population'}],
+  ['Energía y medio ambiente','EN.ATM.CO2E.KT','Emisiones de CO₂ totales','kt',{dec:0,sense:'negative',compact:true,zeroBase:true,breakProfile:'money-total'}],
+  ['Energía y medio ambiente','ER.H2O.INTR.PC','Recursos internos de agua dulce por habitante','m³ por habitante',{dec:0,sense:'positive',zeroBase:true,breakProfile:'population'}],
+  ['Energía y medio ambiente','ER.H2O.FWTL.ZS','Extracciones de agua dulce','% de los recursos internos',{dec:1,sense:'negative',zeroBase:true,breakProfile:'percent'}],
+  ['Energía y medio ambiente','ER.PTD.TOTL.ZS','Áreas protegidas terrestres y marinas','% de la superficie territorial',{dec:1,sense:'positive',domain:[0,100],breakProfile:'percent'}],
   ['Energía y medio ambiente','AG.LND.FRST.ZS','Superficie forestal','% de la superficie terrestre',{dec:1,sense:'positive',domain:[0,100],breakProfile:'percent'}],
   ['Energía y medio ambiente','EN.ATM.PM25.MC.M3','Exposición a PM2,5','µg/m³',{dec:1,sense:'negative',zeroBase:true,breakProfile:'co2'}],
   ['Tecnología y movilidad','IT.CEL.SETS.P2','Abonos de telefonía móvil','por 100 habitantes',{dec:1,sense:'neutral',zeroBase:true,breakProfile:'percent'}],
@@ -14460,9 +14517,9 @@ html body .leaflet-popup-content{padding-top:5px}
   heritageBlock.querySelector('#heritageOpacity')?.addEventListener('input',e=>{const out=heritageBlock.querySelector('#heritageOpacityValue');if(out)out.textContent=Math.round(+e.target.value*100)+' %';for(const l of heritageLayers.values())l.setOpacity(+e.target.value)});
  }
 
- /* ----- Atlas municipal de Canarias · ISTAC ----- */
+ /* ----- Atlas estadístico de Canarias · ISTAC · módulo municipal ----- */
  const ISTAC_BASE='https://datos.canarias.es/api/estadisticas/indicators/v1.0/';
- let istacLayer=null,istacMunicipalGeo=null,istacRows=[],istacMeta=null,istacSelectedYear=null,istacCatalog=[];
+ let istacLayer=null,istacLabelLayer=null,istacMunicipalGeo=null,istacRows=[],istacMeta=null,istacSelectedYear='__latest__',istacCatalog=[];
  const ISTAC_FALLBACK=[
   {id:'6daf4220-c08f-431c-8383-a0a7daa87da7',name:'Población'},
   {id:'c19aa858-484a-4d4d-a6af-9cc4b268424a',name:'Población de 65 años o más'},
@@ -14471,55 +14528,67 @@ html body .leaflet-popup-content{padding-top:5px}
   {id:'88372219-c31d-4608-a051-5572de24f1d6',name:'Tasa bruta de mortalidad'},
   {id:'c8747bfa-2967-499b-81fb-9b58557f1322',name:'Saldo migratorio'},
   {id:'8f8f21e8-e382-4fbb-a107-101052b10d87',name:'Población extranjera'},
-  {id:'579c2c01-3219-46ba-8741-a32c6566581a',name:'Empleo registrado'},
-  {id:'3f29230c-8680-4fd4-a06f-22a46972f078',name:'Empleo registrado en agricultura'},
-  {id:'486e46ff-788c-4dcd-845b-c16fbd5b4d82',name:'Empleo registrado en servicios'},
-  {id:'9de5166a-c9d0-4e56-bf73-42a6e07f5a97',name:'Paro registrado'},
-  {id:'9990ffac-b016-49f8-8d23-eea5538da814',name:'Empresas inscritas en la Seguridad Social'},
-  {id:'e1197477-1b1d-4675-bf07-7a3eae40a159',name:'Superficie cultivada'},
-  {id:'5ac41241-1008-4495-bc24-04d478deac2a',name:'Alojamientos turísticos abiertos'},
-  {id:'503ab41f-6906-4eb1-9c7d-e49ee137ea53',name:'Pernoctaciones turísticas'},
-  {id:'ac286c1a-f70a-4888-9679-bd973250c824',name:'Tasa de ocupación por plazas'},
-  {id:'224a27c7-5682-4ae9-bf56-58ce4f5aebe6',name:'Población turística equivalente'},
-  {id:'9bc48a8b-22d5-4f95-8128-4c0ea93fa358',name:'Parque de vehículos por 1.000 habitantes'},
-  {id:'f67d8703-6392-4237-a554-55d0fd9d0662',name:'IRPF · renta bruta'},
-  {id:'24bdac38-e400-412a-942c-7a6b75ce3dae',name:'IRPF · renta disponible'},
-  {id:'42c9c233-b1bc-4677-b8ad-4c6a764a95da',name:'Policía local por 1.000 habitantes'}
+  {id:'5df4fb64-c27e-40f8-8ffd-67289524748d',name:'Paro registrado'},
+  {id:'5fe35c9a-4e6b-4af6-8b8f-74aa625151df',name:'Contratos registrados'},
+  {id:'a57c640e-c0ef-4664-a407-729596d60728',name:'Afiliaciones a la Seguridad Social'},
+  {id:'4d625b95-bb75-4a38-b9b5-e70efecf5a44',name:'Empresas inscritas en la Seguridad Social'},
+  {id:'1b132b50-58db-453c-b59a-6428973e663d',name:'Plazas alojativas turísticas'},
+  {id:'54fb5d82-d33f-4459-9309-cce866b3bde8',name:'Pernoctaciones turísticas'},
+  {id:'13c366ff-0ce2-42cf-a597-65bedf36b1b4',name:'Viajeros alojados'},
+  {id:'e582811c-2ccb-4db3-921d-386f11769376',name:'Superficie cultivada'},
+  {id:'b4baa97a-ab38-440c-983d-ec853c626397',name:'Ganado caprino'},
+  {id:'d5c868f2-5d20-423d-ad9f-71bd9aa6abbf',name:'Vehículos'},
+  {id:'6ffea86a-d2d6-4984-90f8-c735adf6e00e',name:'Presupuesto municipal'},
+  {id:'b452e5d6-a7c9-4c79-b79e-f48964e25f16',name:'Viviendas'},
+  {id:'d376e74c-b9e8-4e19-bc99-7297df1dbd7d',name:'Densidad de población'},
+  {id:'e97a91e1-ea88-4288-ae56-d9e5cd014b89',name:'Superficie municipal'}
+ ];
+ const ISTAC_DATASET_BACKUP=[
+  {rx:/^poblacion$/i,name:'Población',datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/C00025A_000002/1.4.jsonstat'},
+  {rx:/empleo|afili/i,name:'Empleo registrado',datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/C00040A_000001/1.21.jsonstat'},
+  {rx:/paro/i,name:'Paro registrado',datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E59021A_000008/1.61.jsonstat'},
+  {rx:/renta|irpf/i,name:'IRPF · renta media por declaración',datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E32063A_000005/1.1.jsonstat'}
  ];
  function txt(o){if(o==null)return '';if(typeof o==='string'||typeof o==='number')return String(o);if(Array.isArray(o))return txt(o.find(Boolean));return txt(o.text||o.name||o.title||o.label||o.value||o.code||o.id||'')}
  function extractItems(j){for(const k of ['items','indicatorsInstances','indicatorInstances','instances','indicatorInstance','data'])if(Array.isArray(j?.[k]))return j[k];if(Array.isArray(j))return j;for(const v of Object.values(j||{})){if(v&&typeof v==='object'){const x=extractItems(v);if(x.length)return x}}return []}
- function istacCategory(name){const n=norm(name);if(/pobl|nacim|defun|edad|migr|extranj|demograf/.test(n))return 'Demografía';if(/emple|paro|afilia|labor/.test(n))return 'Empleo';if(/turis|aloj|hotel|pernoct|viajer|ocupacion/.test(n))return 'Turismo';if(/cultiv|agri|ganad|pesca|sector prim/.test(n))return 'Sector primario';if(/vehic|transporte|movilidad/.test(n))return 'Movilidad';if(/presup|irpf|ibi|municipal|policia|administr/.test(n))return 'Administración y hacienda';if(/empresa|econom|renta|industr|comerc/.test(n))return 'Economía';return 'Territorio y sociedad'}
+ function istacCategory(name){const n=norm(name);if(/superficie|territor|densidad|medio ambiente|residuo|agua|suelo/.test(n))return 'Territorio y medio ambiente';if(/pobl|nacim|defun|mortal|edad|migr|extranj|demograf|envejec/.test(n))return 'Demografía';if(/educ|salud|social|viviend|hogar|dependen/.test(n))return 'Sociedad';if(/emple|paro|afilia|labor|contrat/.test(n))return 'Empleo';if(/cultiv|agri|ganad|pesca|sector prim/.test(n))return 'Sector primario';if(/industr|energia|construccion|sector secund/.test(n))return 'Sector secundario';if(/turis|aloj|hotel|pernoct|viajer|comerc|servicio/.test(n))return 'Servicios y turismo';if(/presup|irpf|ibi|municipal|policia|administr|hacienda/.test(n))return 'Administración pública';if(/ciencia|tecnolog|internet|digital|i\+d/.test(n))return 'Ciencia y tecnología';if(/empresa|econom|renta|pib|riqueza/.test(n))return 'Economía';return 'Territorio y sociedad'}
  async function loadIstacCatalog(){
   const status=document.getElementById('istacStatus');
   if(!istacCatalog.length){istacCatalog=ISTAC_FALLBACK.map(x=>({...x,fallback:true}));renderIstacCatalog();}
   if(status)status.textContent='Catálogo municipal visible · conectando con el catálogo completo del ISTAC…';
   try{
-   const u=ISTAC_BASE+'indicatorsSystems/C00067A/indicatorsInstances?limit=200&fields=%2Bmetadata';
+   const u=ISTAC_BASE+'indicatorsSystems/C00067A/indicatorsInstances?limit=1000&fields=%2Bmetadata';
    const r=await fetch(u,{cache:'force-cache'});if(!r.ok)throw Error('ISTAC '+r.status);
    const j=await r.json(),items=extractItems(j);
    const remote=items.map(x=>({id:String(x.id||x.code||x.uuid||''),name:txt(x.name||x.title||x.indicator?.name||x.indicatorRef?.name||x.metadata?.name||x.id),raw:x})).filter(x=>x.id&&x.name);
    if(!remote.length)throw Error('catálogo vacío');
-   istacCatalog=remote;renderIstacCatalog();if(status)status.textContent=istacCatalog.length+' indicadores/instancias disponibles · ISTAC';
+   const seen=new Set();istacCatalog=[...remote,...ISTAC_DATASET_BACKUP.map(x=>({id:'backup:'+x.name,name:x.name,datasetUrl:x.datasetUrl,backup:true}))].filter(x=>{const k=norm(x.name);if(seen.has(k))return false;seen.add(k);return true});
+   renderIstacCatalog();if(status)status.textContent=remote.length+' indicadores/instancias del ISTAC disponibles.';
   }catch(e){
-   console.warn('Atlas ISTAC catálogo',e);istacCatalog=ISTAC_FALLBACK.map(x=>({...x,fallback:true}));renderIstacCatalog();if(status)status.textContent='Catálogo de reserva operativo ('+istacCatalog.length+' indicadores) · la conexión al catálogo completo del ISTAC no respondió.';
+   console.warn('Atlas ISTAC catálogo',e);
+   istacCatalog=[...ISTAC_FALLBACK.map(x=>({...x,fallback:true})),...ISTAC_DATASET_BACKUP.map(x=>({id:'backup:'+x.name,name:x.name,datasetUrl:x.datasetUrl,backup:true}))];
+   renderIstacCatalog();if(status)status.textContent='Catálogo de reserva visible · la conexión al catálogo completo del ISTAC no respondió.';
   }
  }
  function renderIstacCatalog(){
   const sel=document.getElementById('istacIndicatorSelect');if(!sel)return;
   const q=norm(document.getElementById('istacIndicatorSearch')?.value||''),by=new Map();
   for(const x of istacCatalog){if(q&&!norm(x.name).includes(q))continue;const c=istacCategory(x.name);if(!by.has(c))by.set(c,[]);by.get(c).push(x)}
-  const order=['Territorio y sociedad','Demografía','Empleo','Economía','Sector primario','Turismo','Movilidad','Administración y hacienda'];
+  const order=['Territorio y medio ambiente','Demografía','Sociedad','Economía','Empleo','Sector primario','Sector secundario','Servicios y turismo','Administración pública','Ciencia y tecnología','Territorio y sociedad'];
   sel.innerHTML='<option value="">— Elige un indicador —</option>';
   for(const cat of [...by.keys()].sort((a,b)=>(order.indexOf(a)<0?99:order.indexOf(a))-(order.indexOf(b)<0?99:order.indexOf(b))||a.localeCompare(b,'es'))){
    const items=by.get(cat),g=document.createElement('optgroup');g.label=cat;items.sort((a,b)=>a.name.localeCompare(b.name,'es'));
    for(const x of items){const o=document.createElement('option');o.value=x.id;o.textContent=x.name;g.appendChild(o)}sel.appendChild(g);
   }
  }
+ function unwrapIstacPayload(j){if(!j||typeof j!=='object')return j;if(j.dimension||j.dimensions||j.observation||j.observations||j.value)return j;for(const k of ['data','dataset','result','response']){const v=j[k];if(v&&typeof v==='object'){const u=unwrapIstacPayload(v);if(u&&(u.dimension||u.dimensions||u.observation||u.observations||u.value))return u}}return j}
  function dimCodes(dim){const r=dim?.representation||dim||{},cat=dim?.category||r?.category||{},idx=cat.index??r.index??dim?.index;if(Array.isArray(idx))return idx.map(String);if(idx&&typeof idx==='object')return Object.entries(idx).sort((a,b)=>Number(a[1])-Number(b[1])).map(x=>String(x[0]));if(Array.isArray(r))return r.map(x=>String(x.code||x.id||x.value||''));return []}
  function dimLabels(dim){const out=new Map(),r=dim?.representation||dim||{},cat=dim?.category||r?.category||{};for(const arr of [r.representations,r.values,r.items,Array.isArray(r)?r:[]])if(Array.isArray(arr))for(const x of arr){const c=String(x.code||x.id||x.value||'');if(c)out.set(c,txt(x.name||x.label||x.title||c))}const lab=cat.label||r.label;if(lab&&typeof lab==='object')for(const [c,v] of Object.entries(lab))out.set(String(c),txt(v||c));return out}
- function parseIstacData(j){const dims=j?.dimension||j?.dimensions||{},keys=Array.isArray(j?.id)?j.id:Object.keys(dims);if(!keys.length)return [];const codes=keys.map(k=>dimCodes(dims[k])),sizes=codes.map(x=>x.length||1),labels=keys.map(k=>dimLabels(dims[k]));const obs=j?.observation||j?.observations||j?.value||[];const vals=Array.isArray(obs)?obs:Object.entries(obs).sort((a,b)=>Number(a[0])-Number(b[0])).map(x=>x[1]);const rows=[];for(let n=0;n<vals.length;n++){const raw=typeof vals[n]==='object'?(vals[n]?.value??vals[n]?.obsValue):vals[n],v=Number(raw);if(!Number.isFinite(v))continue;let rem=n,tuple={};for(let i=keys.length-1;i>=0;i--){const size=sizes[i]||1,ix=rem%size;rem=Math.floor(rem/size);const c=codes[i][ix]||String(ix);tuple[keys[i]]={code:c,label:labels[i].get(c)||c}}rows.push({tuple,value:v})}return rows}
- function geoKeyFromFeature(f){const p=f?.properties||{};for(const k of ['CODIGO','codigo','CODIGO_MUNICIPIO','codmun','CODMUN','CMUN','MUNICIPIO_COD','INE','COD_INE']){const v=String(p[k]??'').trim();if(v)return v}return ''}
- function geoNameFromFeature(f){const p=f?.properties||{};for(const k of ['MUNICIPIO','municipio','NOMBRE','nombre','NAMEUNIT','name','NOM_MUN']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function parseIstacData(j){j=unwrapIstacPayload(j);const dims=j?.dimension||j?.dimensions||{},keys=Array.isArray(j?.id)?j.id:Object.keys(dims);if(!keys.length)return [];const codes=keys.map(k=>dimCodes(dims[k])),sizes=codes.map(x=>x.length||1),labels=keys.map(k=>dimLabels(dims[k]));const obs=j?.observation||j?.observations||j?.value||[];const vals=Array.isArray(obs)?obs:Object.entries(obs).sort((a,b)=>Number(a[0])-Number(b[0])).map(x=>x[1]);const rows=[];for(let n=0;n<vals.length;n++){const raw=typeof vals[n]==='object'?(vals[n]?.value??vals[n]?.obsValue):vals[n],v=Number(raw);if(!Number.isFinite(v))continue;let rem=n,tuple={};for(let i=keys.length-1;i>=0;i--){const size=sizes[i]||1,ix=rem%size;rem=Math.floor(rem/size);const c=codes[i][ix]||String(ix);tuple[keys[i]]={code:c,label:labels[i].get(c)||c}}rows.push({tuple,value:v})}return rows}
+ function geoKeyFromFeature(f){const p=f?.properties||{};for(const k of ['CODIGO','codigo','CODIGO_MUNICIPIO','codmun','CODMUN','CMUN','MUNICIPIO_COD','INE','COD_INE','cod_ine']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function geoNameFromFeature(f){const p=f?.properties||{};for(const k of ['MUNICIPIO','municipio','NOMBRE','nombre','NAMEUNIT','name','NOM_MUN','DENOMINACION']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function islandNameFromFeature(f){const p=f?.properties||{};for(const k of ['ISLA','isla','NOMBRE_ISLA','nombre_isla','NOM_ISLA','ISLAND','island']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function geoVariants(v){const raw=String(v??'').trim(),digits=raw.replace(/\D/g,''),a=new Set([raw,raw.replace(/^ES/i,''),digits,digits.replace(/^0+/,''),digits.slice(-5),digits.slice(-3)]);return [...a].filter(Boolean)}
  async function loadIstacGeo(){
   if(istacMunicipalGeo)return istacMunicipalGeo;
   try{if(typeof politicalData==='function'){const j=await politicalData('canary-municipalities');if(j?.features?.length){istacMunicipalGeo=j;return j}}}catch(e){console.warn('Atlas ISTAC · geometría política de reserva',e)}
@@ -14527,28 +14596,217 @@ html body .leaflet-popup-content{padding-top:5px}
   for(const u of urls)try{const r=await fetch(u,{cache:'force-cache'});if(!r.ok)throw Error(r.status);const j=await r.json();if(j?.features?.length){istacMunicipalGeo=j;return j}}catch(e){err=e}
   throw err||Error('Sin geometría municipal');
  }
- function identifyIstacDims(row){const entries=Object.entries(row.tuple),geo=entries.find(([k])=>/geo/i.test(k))||entries.find(([,v])=>/^\d{5}$/.test(v.code))||entries[0],time=entries.find(([k])=>/time|period|year/i.test(k))||entries.find(([,v])=>/^\d{4}$/.test(v.code)),measure=entries.find(([k])=>/measure/i.test(k));return {geo:geo?.[1],time:time?.[1],measure:measure?.[1]}}
+ function identifyIstacDims(row){const entries=Object.entries(row.tuple),geo=entries.find(([k])=>/geo|territ|area|lugar|resid/i.test(k))||entries.find(([,v])=>/^(?:ES)?(?:35|38|70)\d{2,5}$/.test(String(v.code||'')))||entries[0],time=entries.find(([k])=>/time|period|year|tiempo/i.test(k))||entries.find(([,v])=>/^\d{4}(?:[-QM].*)?$/.test(String(v.code||''))),measure=entries.find(([k])=>/measure|indicador|indicator|unidad/i.test(k));return {geo:geo?.[1],time:time?.[1],measure:measure?.[1]}}
+ function istacPeriod(row){const t=identifyIstacDims(row).time;return String(t?.code||t?.label||'')}
+ function istacGeo(row){return identifyIstacDims(row).geo||{code:'',label:''}}
+ function istacGeoMatches(row,code,name){const g=istacGeo(row),rn=norm(g.label||''),nn=norm(name||'');if(nn&&rn===nn)return true;const a=new Set(geoVariants(g.code));return geoVariants(code).some(x=>a.has(x))}
+ function periodCmp(a,b){return String(a).localeCompare(String(b),'es',{numeric:true})}
+ function istacLatestRows(rows){const best=new Map();for(const r of rows){const g=istacGeo(r),key=norm(g.label||'')||String(g.code||'');if(!key)continue;const p=istacPeriod(r),old=best.get(key);if(!old||periodCmp(istacPeriod(old),p)<0)best.set(key,r)}return [...best.values()]}
+ function currentIstacRows(){return istacSelectedYear==='__latest__'?istacLatestRows(istacRows):istacRows.filter(r=>istacPeriod(r)===String(istacSelectedYear))}
  function istacBreaks(vals){const a=vals.filter(Number.isFinite).sort((a,b)=>a-b);if(!a.length)return [];const q=p=>a[Math.min(a.length-1,Math.floor((a.length-1)*p))];return [a[0],q(.2),q(.4),q(.6),q(.8),a.at(-1)]}
- const ISTAC_COL=['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000'];function istacClass(v,b){if(!Number.isFinite(v))return -1;return v<b[1]?0:v<b[2]?1:v<b[3]?2:v<b[4]?3:4}
- function currentIstacRows(){return istacRows.filter(r=>!istacSelectedYear||String(identifyIstacDims(r).time?.code||identifyIstacDims(r).time?.label||'')===String(istacSelectedYear))}
- function renderIstac(){if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}if(!istacMunicipalGeo||!istacRows.length)return;const rows=currentIstacRows(),byCode=new Map(),byName=new Map();for(const r of rows){const d=identifyIstacDims(r),c=String(d.geo?.code||'').replace(/^ES/,'');const n=norm(d.geo?.label||'');if(c)byCode.set(c,r.value);if(n)byName.set(n,r.value)}const vals=[...new Set([...byCode.values(),...byName.values()])],br=istacBreaks(vals);istacLayer=L.geoJSON(istacMunicipalGeo,{style:f=>{const c=geoKeyFromFeature(f),n=norm(geoNameFromFeature(f)),v=byCode.get(c)||byCode.get(c.replace(/^0+/,''))||byName.get(n),i=istacClass(v,br);return {color:'#334c5e',weight:.7,opacity:.9,fillColor:i<0?'#b9bdc1':ISTAC_COL[i],fillOpacity:.72}},onEachFeature:(f,l)=>{const c=geoKeyFromFeature(f),name=geoNameFromFeature(f)||'Municipio',n=norm(name),v=byCode.get(c)||byCode.get(c.replace(/^0+/,''))||byName.get(n);l.bindPopup('<b>📊 '+esc(name)+'</b><br><b>'+esc(istacMeta?.name||'Indicador ISTAC')+':</b> '+(Number.isFinite(v)?new Intl.NumberFormat('es-ES',{maximumFractionDigits:2}).format(v):'Sin dato')+'<br><b>Periodo:</b> '+esc(istacSelectedYear||'último disponible')+'<br><small>ISTAC · Municipios en Cifras (C00067A)</small>',{maxWidth:390})}}).addTo(map);const legend=document.getElementById('istacLegend');if(legend){legend.innerHTML='<b>'+esc(istacMeta?.name||'Indicador ISTAC')+'</b><br><small>'+esc(istacSelectedYear||'Último periodo')+' · ISTAC</small>'+br.slice(1,5).map((b,i)=>'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[i]+'"></span>'+(i===0?'Menos de ':new Intl.NumberFormat('es-ES',{maximumFractionDigits:2}).format(br[i])+' – ')+new Intl.NumberFormat('es-ES',{maximumFractionDigits:2}).format(b)+'</div>').join('')+'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[4]+'"></span>Más de '+new Intl.NumberFormat('es-ES',{maximumFractionDigits:2}).format(br[4])+'</div>'}if(istacLayer.getBounds().isValid())map.fitBounds(istacLayer.getBounds(),{padding:[16,16],maxZoom:10})}
- async function loadIstacIndicator(id){const status=document.getElementById('istacStatus'),item=istacCatalog.find(x=>x.id===id);if(!item)return;status.textContent='Cargando '+item.name+'…';try{const geo=await loadIstacGeo();let u=item.direct?ISTAC_BASE+'indicators/'+encodeURIComponent(id)+'/data?fields=-observationsMetadata':ISTAC_BASE+'indicatorsSystems/C00067A/indicatorsInstances/'+encodeURIComponent(id)+'/data?fields=-observationsMetadata';let r=await fetch(u,{cache:'no-store'});if(!r.ok&& !item.direct){u=ISTAC_BASE+'indicators/'+encodeURIComponent(id)+'/data?fields=-observationsMetadata';r=await fetch(u,{cache:'no-store'})}if(!r.ok)throw Error('ISTAC '+r.status);const j=await r.json();istacRows=parseIstacData(j);istacMeta={name:item.name,raw:item.raw};if(!istacRows.length)throw Error('sin observaciones interpretables');const years=[...new Set(istacRows.map(r=>{const t=identifyIstacDims(r).time;return String(t?.code||t?.label||'')}).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}));const ys=document.getElementById('istacYearSelect');ys.innerHTML=years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');istacSelectedYear=years.at(-1)||null;if(istacSelectedYear)ys.value=istacSelectedYear;renderIstac();status.textContent=item.name+' · '+istacRows.length+' observaciones cargadas'}catch(e){console.error(e);status.textContent='No se pudo cargar este indicador del ISTAC. Prueba otro o recarga el catálogo.'}}
+ const ISTAC_COL=['#fff2b2','#ffd34d','#f28c28','#d94831','#7f0000'];function istacClass(v,b){if(!Number.isFinite(v)||b.length<5)return -1;return v<b[1]?0:v<b[2]?1:v<b[3]?2:v<b[4]?3:4}
+ function istacFmt(v){return Number.isFinite(v)?new Intl.NumberFormat('es-ES',{maximumFractionDigits:2}).format(v):'Sin dato'}
+ function istacUnit(){const r=istacMeta?.raw||{};return txt(r.unit||r.unitMeasure||r.measureUnit||r.metadata?.unit||r.metadata?.unitMeasure||'')}
+ function istacSeriesSVG(code,name){const pts=istacRows.filter(r=>istacGeoMatches(r,code,name)&&istacPeriod(r)).sort((a,b)=>periodCmp(istacPeriod(a),istacPeriod(b)));if(pts.length<2)return '';const vals=pts.map(r=>r.value).filter(Number.isFinite);if(vals.length<2)return '';const min=Math.min(...vals),max=Math.max(...vals),w=260,h=64,p=7,span=Math.max(1,max-min),xy=pts.map((r,i)=>[(p+(w-2*p)*(i/Math.max(1,pts.length-1))).toFixed(1),(h-p-(h-2*p)*((r.value-min)/span)).toFixed(1)]).map(x=>x.join(',')).join(' ');const first=istacPeriod(pts[0]),last=istacPeriod(pts.at(-1));return '<div style="margin-top:8px"><b>Serie temporal</b><svg viewBox="0 0 '+w+' '+h+'" style="display:block;width:100%;height:66px;background:#f7fafb;border:1px solid #d8e1e6;border-radius:7px;margin-top:3px"><polyline points="'+xy+'" fill="none" stroke="#17324d" stroke-width="2.2" vector-effect="non-scaling-stroke"/></svg><small>'+esc(first)+' → '+esc(last)+' · '+pts.length+' observaciones</small></div>'}
+ function istacReferenceValue(rows,labelRx){const r=rows.find(x=>labelRx.test(norm(istacGeo(x).label||'')));return r||null}
+ function istacPopupHTML(f,row,rows){const name=geoNameFromFeature(f)||istacGeo(row).label||'Municipio',code=geoKeyFromFeature(f),period=row?istacPeriod(row):'',unit=istacUnit(),island=islandNameFromFeature(f),can=istacReferenceValue(rows,/^canarias$/);let h='<b>📊 '+esc(name)+'</b><br><b>'+esc(istacMeta?.name||'Indicador ISTAC')+':</b> '+istacFmt(row?.value)+(unit?' '+esc(unit):'')+'<br><b>Año / periodo:</b> '+esc(period||'último disponible');if(island)h+='<br><b>Isla:</b> '+esc(island);if(can&&can!==row)h+='<br><b>Canarias:</b> '+istacFmt(can.value)+(unit?' '+esc(unit):'');h+=istacSeriesSVG(code,name)+'<br><small>ISTAC · Municipios en Cifras (C00067A)</small>';return h}
+ function clearIstacLabels(){if(istacLabelLayer){try{map.removeLayer(istacLabelLayer)}catch(e){}istacLabelLayer=null}}
+ function renderIstacLabels(){clearIstacLabels();if(!document.getElementById('istacLabelsCheck')?.checked||!istacLayer)return;istacLabelLayer=L.layerGroup();istacLayer.eachLayer(l=>{const f=l.feature,name=geoNameFromFeature(f);if(!name||!l.getBounds)return;const c=l.getBounds().getCenter(),icon=L.divIcon({className:'',html:'<span style="display:inline-block;padding:1px 3px;border-radius:3px;background:rgba(255,255,255,.82);border:1px solid #425b6c88;color:#17324d;font:700 8px/1.05 system-ui;white-space:nowrap;pointer-events:none">'+esc(name)+'</span>',iconSize:null});istacLabelLayer.addLayer(L.marker(c,{icon,interactive:false,pane:'markerPane'}))});istacLabelLayer.addTo(map)}
+ function renderIstac(){
+  if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacLabels();if(!istacMunicipalGeo||!istacRows.length)return;
+  const rows=currentIstacRows(),byCode=new Map(),byName=new Map();for(const r of rows){const g=istacGeo(r),n=norm(g.label||'');for(const c of geoVariants(g.code))if(c)byCode.set(c,r);if(n)byName.set(n,r)}
+  const vals=[...new Set([...byCode.values(),...byName.values()].map(r=>r.value))],br=istacBreaks(vals),opacity=+(document.getElementById('istacOpacity')?.value||.72);
+  function rowForFeature(f){const n=norm(geoNameFromFeature(f));for(const c of geoVariants(geoKeyFromFeature(f))){const r=byCode.get(c);if(r)return r}return byName.get(n)||null}
+  istacLayer=L.geoJSON(istacMunicipalGeo,{pane:'overlayPane',style:f=>{const r=rowForFeature(f),i=istacClass(r?.value,br);return {color:'#334c5e',weight:.8,opacity:.92,fillColor:i<0?'#b9bdc1':ISTAC_COL[i],fillOpacity:opacity}},onEachFeature:(f,l)=>{l.on('click',e=>{L.DomEvent.stopPropagation(e);const r=rowForFeature(f);l.bindPopup(istacPopupHTML(f,r,rows),{maxWidth:410}).openPopup(e.latlng)})}}).addTo(map);
+  renderIstacLabels();
+  const legend=document.getElementById('istacLegend');if(legend){const period=istacSelectedYear==='__latest__'?'Último disponible por municipio':istacSelectedYear;legend.innerHTML='<b>'+esc(istacMeta?.name||'Indicador ISTAC')+'</b><br><small>'+esc(period||'Periodo')+(istacUnit()?' · '+esc(istacUnit()):'')+' · ISTAC</small>'+br.slice(1,5).map((b,i)=>'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[i]+'"></span>'+(i===0?'Menos de ':istacFmt(br[i])+' – ')+istacFmt(b)+'</div>').join('')+(br.length?'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[4]+'"></span>Más de '+istacFmt(br[4])+'</div>':'<small>Sin datos municipales para este periodo.</small>')}
+  if(istacLayer.getBounds().isValid())map.fitBounds(istacLayer.getBounds(),{padding:[16,16],maxZoom:10});
+  try{updateLegend()}catch(e){}
+ }
+ async function fetchIstacItem(item){
+  if(item.datasetUrl){const r=await fetch(item.datasetUrl,{cache:'no-store',headers:{'Accept':'application/json, application/jsonstat+json;q=0.9, */*;q=0.5'}});if(!r.ok)throw Error('ISTAC '+r.status);return await r.json()}
+  let u=ISTAC_BASE+'indicatorsSystems/C00067A/indicatorsInstances/'+encodeURIComponent(item.id)+'/data?fields=-observationsMetadata',r=await fetch(u,{cache:'no-store'});
+  if(!r.ok){u=ISTAC_BASE+'indicators/'+encodeURIComponent(item.id)+'/data?fields=-observationsMetadata';r=await fetch(u,{cache:'no-store'})}
+  if(r.ok)return await r.json();
+  const backup=ISTAC_DATASET_BACKUP.find(x=>x.rx.test(norm(item.name)));if(backup){const b=await fetch(backup.datasetUrl,{cache:'no-store'});if(b.ok)return await b.json()}
+  throw Error('ISTAC '+r.status);
+ }
+ async function loadIstacIndicator(id){
+  const status=document.getElementById('istacStatus'),item=istacCatalog.find(x=>x.id===id);if(!item)return;status.textContent='Cargando '+item.name+'…';
+  try{await loadIstacGeo();const j=await fetchIstacItem(item);istacRows=parseIstacData(j);istacMeta={name:item.name,raw:item.raw||j,datasetUrl:item.datasetUrl||null};if(!istacRows.length)throw Error('sin observaciones interpretables');const years=[...new Set(istacRows.map(istacPeriod).filter(Boolean))].sort(periodCmp);const ys=document.getElementById('istacYearSelect');ys.innerHTML='<option value="__latest__">Último disponible</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');istacSelectedYear='__latest__';ys.value='__latest__';renderIstac();status.textContent=item.name+' · '+istacRows.length+' observaciones recuperadas · '+years.length+' periodos.'}
+  catch(e){console.error('Atlas ISTAC',e);status.textContent='No se pudo cargar este indicador del ISTAC ('+(e?.message||'error')+'). Prueba otro o recarga el catálogo.'}
+ }
  const canScope=[...document.querySelectorAll('#layersPanel details.layerScope')].find(d=>norm(d.querySelector(':scope>summary')?.textContent).includes('canarias'));
- const canHuman=canScope?[...canScope.querySelectorAll('details.layerCategory')].find(d=>norm(d.querySelector(':scope>summary')?.textContent).includes('geografia humana')):null;
+ const canAtlas=canScope?[...canScope.querySelectorAll('details.layerCategory')].find(d=>norm(d.querySelector(':scope>summary')?.textContent).includes('atlas estadistico')):null;
  const box=document.getElementById('istacAtlasBlock');
- if(canHuman&&box&&!box.dataset.bound){
+ if(canAtlas&&box&&!box.dataset.bound){
   box.dataset.bound='1';
   box.querySelector('#istacIndicatorSearch')?.addEventListener('input',renderIstacCatalog);
   box.querySelector('#istacIndicatorSelect')?.addEventListener('change',e=>{if(e.target.value)loadIstacIndicator(e.target.value)});
-  box.querySelector('#istacYearSelect')?.addEventListener('change',e=>{istacSelectedYear=e.target.value;renderIstac()});
-  box.querySelector('#istacClearBtn')?.addEventListener('click',()=>{if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}box.querySelector('#istacLegend').innerHTML=''});
+  box.querySelector('#istacYearSelect')?.addEventListener('change',e=>{istacSelectedYear=e.target.value||'__latest__';renderIstac()});
+  box.querySelector('#istacLatestBtn')?.addEventListener('click',()=>{istacSelectedYear='__latest__';const y=box.querySelector('#istacYearSelect');if(y)y.value='__latest__';renderIstac()});
+  box.querySelector('#istacLabelsCheck')?.addEventListener('change',renderIstacLabels);
+  box.querySelector('#istacOpacity')?.addEventListener('input',e=>{const v=+e.target.value;const o=box.querySelector('#istacOpacityValue');if(o)o.textContent=Math.round(v*100)+' %';if(istacLayer)istacLayer.setStyle({fillOpacity:v})});
+  box.querySelector('#istacClearBtn')?.addEventListener('click',()=>{if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacLabels();box.querySelector('#istacLegend').innerHTML='';try{updateLegend()}catch(e){}});
   box.querySelector('#istacReloadBtn')?.addEventListener('click',loadIstacCatalog);
   istacCatalog=ISTAC_FALLBACK.map(x=>({...x,fallback:true}));renderIstacCatalog();loadIstacCatalog();
  }
-
+ // El compositor reutiliza el mapa Leaflet, por lo que la coropleta sale en la captura. Añadimos también título, leyenda y fuente.
+ if(typeof defaultLayoutTitle==='function'){const prev=defaultLayoutTitle;defaultLayoutTitle=function(){if(istacLayer&&map.hasLayer(istacLayer)&&istacMeta?.name)return istacMeta.name+' · Canarias'+(istacSelectedYear==='__latest__'?' · último disponible':' · '+istacSelectedYear);return prev.apply(this,arguments)}}
+ if(typeof activeLegendHTML==='function'){const prev=activeLegendHTML;activeLegendHTML=function(){let h=prev.apply(this,arguments)||'';if(istacLayer&&map.hasLayer(istacLayer)){const x=document.getElementById('istacLegend')?.innerHTML||'';if(x)h+='<div style="margin-top:8px">'+x+'</div>'}return h}}
  // Fuentes activas: añadir ISTAC/GRAFCAN patrimonio cuando corresponda sin alterar la lógica previa.
  if(typeof activeSourcesText==='function'){const prev=activeSourcesText;activeSourcesText=function(){const a=[];const b=prev.apply(this,arguments);if(b)a.push(b);if(istacLayer&&map.hasLayer(istacLayer))a.push('ISTAC · Municipios en Cifras');if(window.canaryHeritageActive())a.push('Gobierno de Canarias / GRAFCAN · Patrimonio cultural');return a.join(' · ')}}
 })();
 </script>
 
+<!-- ANAMBRO v0.15 · corrección aislada de cabecera escritorio/iPad -->
+<style id="anambro-v015-header-ipad-fix2">
+/* Escritorio: el bloque editable de acciones nunca puede desbordar la cabecera. */
+@media (min-width:1181px){
+  html:not(.anambro-ipad) body .brandV06.header-free-layout .headerFrame-actions{overflow:hidden!important}
+  html:not(.anambro-ipad) body .brandV06.header-free-layout .headerFrame-actions>.brandActions{
+    width:100%!important;height:100%!important;box-sizing:border-box!important;
+    display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+    gap:2px!important;flex-wrap:nowrap!important;overflow:hidden!important;margin:0!important;padding:0!important
+  }
+  html:not(.anambro-ipad) body .brandV06.header-free-layout .headerFrame-actions .brandWelcomeBtn{
+    width:100%!important;max-width:100%!important;min-height:0!important;height:auto!important;
+    margin:0!important;padding:3px 5px!important;font-size:7.6px!important;line-height:1.05!important;
+    white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;box-sizing:border-box!important
+  }
+}
+
+/* iPad/iPadOS: nunca se reutiliza la geometría absoluta del editor de escritorio. */
+html.anambro-ipad body .brand.brandWide.brandV06,
+html.anambro-ipad body .brand.brandWide.brandV06.header-free-layout{
+  position:fixed!important;z-index:5000!important;top:0!important;left:0!important;right:0!important;
+  width:100%!important;max-width:none!important;height:118px!important;min-height:118px!important;
+  margin:0!important;padding:6px 9px!important;box-sizing:border-box!important;transform:none!important;
+  display:grid!important;grid-template-columns:minmax(330px,43%) minmax(250px,37%) minmax(150px,20%)!important;
+  grid-template-rows:76px 30px!important;grid-template-areas:"left title right" "left center right"!important;
+  column-gap:8px!important;row-gap:0!important;align-items:center!important;overflow:hidden!important;
+  border:0!important;border-bottom:1px solid rgba(28,67,94,.16)!important;border-radius:0!important;
+  background:linear-gradient(180deg,#fff 0%,#fbfdfe 66%,#f3f8fa 100%)!important;
+  box-shadow:0 3px 10px rgba(13,47,68,.10)!important
+}
+html.anambro-ipad body .brandV06 .headerEditFrame,
+html.anambro-ipad body .brandV06.header-free-layout .headerEditFrame{
+  display:contents!important;position:static!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;
+  min-width:0!important;min-height:0!important;margin:0!important;transform:none!important;overflow:visible!important
+}
+html.anambro-ipad body .brandV06>.brandSideLeft{
+  grid-area:left!important;display:grid!important;grid-template-columns:minmax(126px,.82fr) minmax(180px,1.18fr)!important;
+  align-items:center!important;gap:8px!important;position:static!important;width:100%!important;height:106px!important;
+  margin:0!important;padding:3px 8px 3px 0!important;border:0!important;border-right:1px solid rgba(45,80,105,.13)!important;
+  box-sizing:border-box!important;overflow:hidden!important
+}
+html.anambro-ipad body .brandV06 .brandInstitutionV06{
+  display:grid!important;grid-template-columns:46px minmax(0,1fr)!important;gap:6px!important;align-items:center!important;
+  position:static!important;min-width:0!important;margin:0!important;padding:0!important
+}
+html.anambro-ipad body .brandV06 .brandInstituteLogoV06{
+  display:block!important;width:44px!important;height:44px!important;max-width:44px!important;max-height:44px!important;
+  object-fit:contain!important;margin:0!important;transform:none!important
+}
+html.anambro-ipad body .brandV06 .brandLeftText{display:block!important;visibility:visible!important;min-width:0!important;margin:0!important;padding:0!important}
+html.anambro-ipad body .brandV06 .brandDept{display:block!important;font-size:8.2px!important;line-height:1.08!important;text-align:left!important;white-space:normal!important;margin:0!important}
+html.anambro-ipad body .brandV06 .brandDept b{display:block!important;font-size:11px!important;line-height:1!important}
+html.anambro-ipad body .brandV06 .brandVersion{display:inline-flex!important;position:static!important;font-size:6.8px!important;line-height:1!important;padding:2px 4px!important;margin-top:3px!important}
+html.anambro-ipad body .brandV06 .brandAuthorV06{
+  display:grid!important;visibility:visible!important;grid-template-columns:48px minmax(0,1fr)!important;gap:7px!important;align-items:center!important;
+  position:static!important;min-width:0!important;margin:0!important;padding:0!important
+}
+html.anambro-ipad body .brandV06 .brandAuthorPortraitV06{
+  display:block!important;visibility:visible!important;width:46px!important;height:46px!important;max-width:46px!important;max-height:46px!important;
+  object-fit:cover!important;border-radius:10px!important;margin:0!important;transform:none!important
+}
+html.anambro-ipad body .brandV06 .brandAuthorTextV06{display:block!important;visibility:visible!important;min-width:0!important;margin:0!important;padding:0!important}
+html.anambro-ipad body .brandV06 .brandAuthorTextV06 .brandTeacher{
+  display:block!important;visibility:visible!important;font-size:10px!important;line-height:1.05!important;text-align:left!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;margin:0!important
+}
+html.anambro-ipad body .brandV06 .brandAuthorTextV06 .brandProfessional{
+  display:block!important;visibility:visible!important;font-size:7.1px!important;line-height:1.08!important;text-align:left!important;
+  white-space:normal!important;overflow:visible!important;max-height:none!important;margin-top:2px!important
+}
+html.anambro-ipad body .brandV06 .brandAuthorTextV06 .brandProfessional b,
+html.anambro-ipad body .brandV06 .brandAuthorTextV06 .brandProfessional span{display:inline!important}
+html.anambro-ipad body .brandV06>.brandTitleTop{
+  grid-area:title!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  position:static!important;width:100%!important;height:76px!important;min-width:0!important;margin:0!important;padding:2px 6px!important;
+  border:0!important;overflow:hidden!important;box-sizing:border-box!important
+}
+html.anambro-ipad body .brandV06 .brandAnambroIntegratedLogo{
+  display:block!important;width:100%!important;height:72px!important;max-width:100%!important;max-height:72px!important;
+  object-fit:contain!important;object-position:center!important;margin:0!important;transform:none!important;border:0!important;box-shadow:none!important
+}
+html.anambro-ipad body .brandV06>.brandCenter{
+  grid-area:center!important;display:flex!important;visibility:visible!important;align-items:center!important;justify-content:center!important;
+  position:static!important;width:100%!important;height:30px!important;min-width:0!important;margin:0!important;padding:0 5px 3px!important;
+  border:0!important;overflow:hidden!important;box-sizing:border-box!important
+}
+html.anambro-ipad body .brandV06 .brandDescriptor{
+  display:block!important;visibility:visible!important;width:100%!important;font-size:8.2px!important;line-height:1.08!important;
+  text-align:center!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;margin:0!important
+}
+html.anambro-ipad body .brandV06>.brandSideRight{
+  grid-area:right!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+  position:static!important;width:100%!important;height:106px!important;min-width:0!important;margin:0!important;padding:3px 0 3px 7px!important;
+  border:0!important;overflow:hidden!important;box-sizing:border-box!important;gap:4px!important
+}
+html.anambro-ipad body .brandV06 .brandRoles{
+  display:block!important;visibility:visible!important;max-width:100%!important;font-size:6.9px!important;line-height:1.08!important;
+  text-align:left!important;white-space:normal!important;overflow:visible!important;margin:0!important;color:#3f5d70!important
+}
+html.anambro-ipad body .brandV06 .brandActions{
+  display:grid!important;grid-template-columns:1fr!important;gap:3px!important;position:static!important;width:100%!important;
+  margin:0!important;padding:0!important;overflow:hidden!important
+}
+html.anambro-ipad body .brandV06 .brandWelcomeBtn{
+  display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;max-width:100%!important;
+  min-height:0!important;height:21px!important;margin:0!important;padding:3px 4px!important;font-size:7px!important;line-height:1!important;
+  white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;border-radius:999px!important;box-sizing:border-box!important
+}
+html.anambro-ipad body .brandV06 .brandHeaderEditBtn{display:none!important}
+html.anambro-ipad body #headerEditorBar,
+html.anambro-ipad body #headerEditorInspector,
+html.anambro-ipad body .headerResizeHandle,
+html.anambro-ipad body .headerEditHandle{display:none!important}
+html.anambro-ipad body .toolbar{top:126px!important;display:flex!important;visibility:visible!important}
+html.anambro-ipad body .leaflet-top.leaflet-left{top:120px!important}
+
+@media (max-width:900px){
+  html.anambro-ipad body .brand.brandWide.brandV06,
+  html.anambro-ipad body .brand.brandWide.brandV06.header-free-layout{
+    height:132px!important;min-height:132px!important;padding:5px 6px!important;
+    grid-template-columns:minmax(300px,49%) minmax(230px,31%) minmax(130px,20%)!important;
+    grid-template-rows:88px 32px!important
+  }
+  html.anambro-ipad body .brandV06>.brandSideLeft,
+  html.anambro-ipad body .brandV06>.brandSideRight{height:120px!important}
+  html.anambro-ipad body .brandV06>.brandSideLeft{grid-template-columns:minmax(112px,.78fr) minmax(170px,1.22fr)!important;gap:5px!important}
+  html.anambro-ipad body .brandV06 .brandInstitutionV06{grid-template-columns:40px minmax(0,1fr)!important;gap:4px!important}
+  html.anambro-ipad body .brandV06 .brandInstituteLogoV06{width:38px!important;height:38px!important;max-width:38px!important;max-height:38px!important}
+  html.anambro-ipad body .brandV06 .brandAuthorV06{grid-template-columns:42px minmax(0,1fr)!important;gap:5px!important}
+  html.anambro-ipad body .brandV06 .brandAuthorPortraitV06{width:40px!important;height:40px!important;max-width:40px!important;max-height:40px!important}
+  html.anambro-ipad body .brandV06 .brandAuthorTextV06 .brandTeacher{font-size:8.8px!important}
+  html.anambro-ipad body .brandV06 .brandAuthorTextV06 .brandProfessional{font-size:6.3px!important}
+  html.anambro-ipad body .brandV06>.brandTitleTop{height:88px!important}
+  html.anambro-ipad body .brandV06 .brandAnambroIntegratedLogo{height:82px!important;max-height:82px!important}
+  html.anambro-ipad body .brandV06>.brandCenter{height:32px!important}
+  html.anambro-ipad body .brandV06 .brandRoles{font-size:6.2px!important}
+  html.anambro-ipad body .brandV06 .brandWelcomeBtn{height:20px!important;font-size:6.4px!important}
+  html.anambro-ipad body .toolbar{top:140px!important}
+  html.anambro-ipad body .leaflet-top.leaflet-left{top:136px!important}
+}
+</style>
+<script id="anambro-v015-ipad-detector-fix2">
+(()=>{
+  const isIPad=()=>/iPad/i.test(navigator.userAgent||'')||((navigator.platform==='MacIntel'||/Macintosh/i.test(navigator.userAgent||''))&&(navigator.maxTouchPoints||0)>1);
+  if(!isIPad())return;
+  document.documentElement.classList.add('anambro-ipad');
+  const mark=()=>document.body&&document.body.classList.add('anambro-ipad');
+  if(document.body)mark();else document.addEventListener('DOMContentLoaded',mark,{once:true});
+})();
+</script>
 </body></html>
