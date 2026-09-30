@@ -14526,13 +14526,29 @@ html body .leaflet-popup-content{padding-top:5px}
 
  /* ----- Atlas estadístico de Canarias · ISTAC · módulo municipal ----- */
  const ISTAC_BASE='https://datos.canarias.es/api/estadisticas/indicators/v1.0/';
- let istacLayer=null,istacBoundaryLayer=null,istacLabelLayer=null,istacMunicipalGeo=null,istacRows=[],istacMeta=null,istacSelectedYear='__latest__',istacCatalog=[];
- // Catálogo de reserva: solo recursos cuya ruta pública se ha podido verificar.
- // El catálogo completo se sigue obteniendo dinámicamente de e-Indicadores cuando responde.
+ let istacLayer=null,istacLabelLayer=null,istacMunicipalGeo=null,istacRows=[],istacMeta=null,istacSelectedYear='__latest__',istacCatalog=[];
  const ISTAC_FALLBACK=[
-  {id:'6daf4220-c08f-431c-8383-a0a7daa87da7',name:'Población',verified:true},
-  {id:'8f8f21e8-e382-4fbb-a107-101052b10d87',name:'Población extranjera',verified:true},
-  {id:'dataset-density',name:'Densidad de población',verified:true,datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/E30243A_000018/1.0.jsonstat'}
+  {id:'6daf4220-c08f-431c-8383-a0a7daa87da7',name:'Población'},
+  {id:'c19aa858-484a-4d4d-a6af-9cc4b268424a',name:'Población de 65 años o más'},
+  {id:'87f99b2c-608f-44be-8d7e-2e26681d1b45',name:'Edad media de la población'},
+  {id:'6879177d-dbe7-40f2-a02b-caa806cf064e',name:'Nacimientos'},
+  {id:'88372219-c31d-4608-a051-5572de24f1d6',name:'Tasa bruta de mortalidad'},
+  {id:'c8747bfa-2967-499b-81fb-9b58557f1322',name:'Saldo migratorio'},
+  {id:'8f8f21e8-e382-4fbb-a107-101052b10d87',name:'Población extranjera'},
+  {id:'5df4fb64-c27e-40f8-8ffd-67289524748d',name:'Paro registrado'},
+  {id:'5fe35c9a-4e6b-4af6-8b8f-74aa625151df',name:'Contratos registrados'},
+  {id:'a57c640e-c0ef-4664-a407-729596d60728',name:'Afiliaciones a la Seguridad Social'},
+  {id:'4d625b95-bb75-4a38-b9b5-e70efecf5a44',name:'Empresas inscritas en la Seguridad Social'},
+  {id:'1b132b50-58db-453c-b59a-6428973e663d',name:'Plazas alojativas turísticas'},
+  {id:'54fb5d82-d33f-4459-9309-cce866b3bde8',name:'Pernoctaciones turísticas'},
+  {id:'13c366ff-0ce2-42cf-a597-65bedf36b1b4',name:'Viajeros alojados'},
+  {id:'e582811c-2ccb-4db3-921d-386f11769376',name:'Superficie cultivada'},
+  {id:'b4baa97a-ab38-440c-983d-ec853c626397',name:'Ganado caprino'},
+  {id:'d5c868f2-5d20-423d-ad9f-71bd9aa6abbf',name:'Vehículos'},
+  {id:'6ffea86a-d2d6-4984-90f8-c735adf6e00e',name:'Presupuesto municipal'},
+  {id:'b452e5d6-a7c9-4c79-b79e-f48964e25f16',name:'Viviendas'},
+  {id:'d376e74c-b9e8-4e19-bc99-7297df1dbd7d',name:'Densidad de población'},
+  {id:'e97a91e1-ea88-4288-ae56-d9e5cd014b89',name:'Superficie municipal'}
  ];
  const ISTAC_DATASET_BACKUP=[
   {rx:/^poblacion$/i,name:'Población',datasetUrl:'https://datos.canarias.es/api/estadisticas/statistical-resources/v1.0/datasets/ISTAC/C00025A_000002/1.4.jsonstat'},
@@ -14576,35 +14592,10 @@ html body .leaflet-popup-content{padding-top:5px}
  function dimCodes(dim){const r=dim?.representation||dim||{},cat=dim?.category||r?.category||{},idx=cat.index??r.index??dim?.index;if(Array.isArray(idx))return idx.map(String);if(idx&&typeof idx==='object')return Object.entries(idx).sort((a,b)=>Number(a[1])-Number(b[1])).map(x=>String(x[0]));if(Array.isArray(r))return r.map(x=>String(x.code||x.id||x.value||''));return []}
  function dimLabels(dim){const out=new Map(),r=dim?.representation||dim||{},cat=dim?.category||r?.category||{};for(const arr of [r.representations,r.values,r.items,Array.isArray(r)?r:[]])if(Array.isArray(arr))for(const x of arr){const c=String(x.code||x.id||x.value||'');if(c)out.set(c,txt(x.name||x.label||x.title||c))}const lab=cat.label||r.label;if(lab&&typeof lab==='object')for(const [c,v] of Object.entries(lab))out.set(String(c),txt(v||c));return out}
  function parseIstacData(j){j=unwrapIstacPayload(j);const dims=j?.dimension||j?.dimensions||{},keys=Array.isArray(j?.id)?j.id:Object.keys(dims);if(!keys.length)return [];const codes=keys.map(k=>dimCodes(dims[k])),sizes=codes.map(x=>x.length||1),labels=keys.map(k=>dimLabels(dims[k]));const obs=j?.observation||j?.observations||j?.value||[];const vals=Array.isArray(obs)?obs:Object.entries(obs).sort((a,b)=>Number(a[0])-Number(b[0])).map(x=>x[1]);const rows=[];for(let n=0;n<vals.length;n++){const raw=typeof vals[n]==='object'?(vals[n]?.value??vals[n]?.obsValue):vals[n],v=Number(raw);if(!Number.isFinite(v))continue;let rem=n,tuple={};for(let i=keys.length-1;i>=0;i--){const size=sizes[i]||1,ix=rem%size;rem=Math.floor(rem/size);const c=codes[i][ix]||String(ix);tuple[keys[i]]={code:c,label:labels[i].get(c)||c}}rows.push({tuple,value:v})}return rows}
- function geoKeyFromFeature(f){
-  try{if(typeof politicalCode==='function'){const v=String(politicalCode(f)||'').trim();if(v)return v}}catch(e){}
-  const p=f?.properties||{};for(const k of ['GEOCODE','geocode','CODIGO','codigo','CODIGO_MUNICIPIO','codmun','CODMUN','CMUN','MUNICIPIO_COD','INE','COD_INE','cod_ine','code','CODE']){const v=String(p[k]??'').trim();if(v)return v}return ''
- }
- function geoNameFromFeature(f){
-  try{if(typeof politicalName==='function'){const v=String(politicalName(f)||'').trim();if(v)return v}}catch(e){}
-  const p=f?.properties||{};for(const k of ['__name','__name_es','__name_popup_es','etiqueta','ETIQUETA','MUNICIPIO','municipio','NOMBRE','nombre','NAMEUNIT','NAME_2','NAME','name','NOM_MUN','DENOMINACION','denominacion']){const v=String(p[k]??'').trim();if(v)return v}return ''
- }
+ function geoKeyFromFeature(f){const p=f?.properties||{};for(const k of ['GEOCODE','geocode','CODIGO','codigo','CODIGO_MUNICIPIO','codmun','CODMUN','CMUN','MUNICIPIO_COD','INE','COD_INE','cod_ine']){const v=String(p[k]??'').trim();if(v)return v}return ''}
+ function geoNameFromFeature(f){const p=f?.properties||{};for(const k of ['__name','__name_es','__name_popup_es','etiqueta','ETIQUETA','MUNICIPIO','municipio','NOMBRE','nombre','NAMEUNIT','NAME_2','name','NOM_MUN','DENOMINACION']){const v=String(p[k]??'').trim();if(v)return v}return ''}
  function islandNameFromFeature(f){const p=f?.properties||{};for(const k of ['ISLA','isla','NOMBRE_ISLA','nombre_isla','NOM_ISLA','ISLAND','island']){const v=String(p[k]??'').trim();if(v)return v}return ''}
- function geoVariants(v){
-  const raw=String(v??'').trim(),digits=raw.replace(/\D/g,''),a=new Set([raw,raw.toUpperCase(),raw.replace(/^ES/i,''),digits,digits.replace(/^0+/,''),digits.slice(-7),digits.slice(-6),digits.slice(-5),digits.slice(-3)]);
-  return [...a].filter(x=>x&&x!=='0')
- }
- function istacMunicipalityNameKey(v){return norm(v).replace(/^(el|la|los|las)\s+/,'').replace(/\s+(de|del)\s+/g,' ')}
- let istacGeoDimKey=null,istacTimeDimKey=null;
- function detectIstacDimensions(rows){
-  const keys=[...new Set(rows.slice(0,2500).flatMap(r=>Object.keys(r.tuple||{})))];
-  if(!keys.length){istacGeoDimKey=null;istacTimeDimKey=null;return}
-  const featureNames=new Set((istacMunicipalGeo?.features||[]).map(f=>istacMunicipalityNameKey(geoNameFromFeature(f))).filter(Boolean));
-  const featureCodes=new Set();for(const f of (istacMunicipalGeo?.features||[]))for(const c of geoVariants(geoKeyFromFeature(f)))featureCodes.add(c);
-  let bestGeo=[null,-1],bestTime=[null,-1];
-  for(const k of keys){
-   const uniq=new Map();for(const r of rows.slice(0,4000)){const v=r.tuple?.[k];if(!v)continue;const id=String(v.code??'')+'|'+String(v.label??'');if(!uniq.has(id))uniq.set(id,v);if(uniq.size>700)break}
-   let gh=0,th=0;for(const v of uniq.values()){const lab=istacMunicipalityNameKey(v.label||''),code=String(v.code||'');if(lab&&featureNames.has(lab))gh+=7;for(const c of geoVariants(code))if(featureCodes.has(c)){gh+=8;break}if(/municip|territ|geogr|area|lugar|resid/i.test(k))gh+=1;if(/^\d{4}(?:[-QM].*)?$/.test(code)||/^\d{4}(?:[-QM].*)?$/.test(String(v.label||'')))th+=5}
-   if(/time|period|year|tiempo|fecha/i.test(k))th+=15;if(/geo|territ|area|lugar|resid|municip/i.test(k))gh+=15;
-   if(gh>bestGeo[1])bestGeo=[k,gh];if(th>bestTime[1])bestTime=[k,th];
-  }
-  istacGeoDimKey=bestGeo[0];istacTimeDimKey=bestTime[0];
- }
+ function geoVariants(v){const raw=String(v??'').trim(),digits=raw.replace(/\D/g,''),a=new Set([raw,raw.replace(/^ES/i,''),digits,digits.replace(/^0+/,''),digits.slice(-5),digits.slice(-3)]);return [...a].filter(Boolean)}
  async function loadIstacGeo(){
   if(istacMunicipalGeo)return istacMunicipalGeo;
   try{if(typeof politicalData==='function'){const j=await politicalData('canary-municipalities');if(j?.features?.length){istacMunicipalGeo=j;return j}}}catch(e){console.warn('Atlas ISTAC · geometría política de reserva',e)}
@@ -14612,30 +14603,7 @@ html body .leaflet-popup-content{padding-top:5px}
   for(const u of urls)try{const r=await fetch(u,{cache:'force-cache'});if(!r.ok)throw Error(r.status);const j=await r.json();if(j?.features?.length){istacMunicipalGeo=j;return j}}catch(e){err=e}
   throw err||Error('Sin geometría municipal');
  }
- function clearIstacBoundaryLayer(){if(istacBoundaryLayer){try{map.removeLayer(istacBoundaryLayer)}catch(e){}istacBoundaryLayer=null}}
- function showIstacMunicipalBoundaries(){
-  if(!istacMunicipalGeo?.features?.length)return;
-  clearIstacBoundaryLayer();
-  if(!map.getPane('istacBoundaryPane')){const p=map.createPane('istacBoundaryPane');p.style.zIndex='655';p.style.pointerEvents='auto'}
-  istacBoundaryLayer=L.geoJSON(istacMunicipalGeo,{pane:'istacBoundaryPane',interactive:true,style:{color:'#27495f',weight:1.05,opacity:.96,fillColor:'#ffffff',fillOpacity:.03},onEachFeature:(f,l)=>{const n=geoNameFromFeature(f)||'Municipio';l.bindPopup('<b>📍 '+esc(n)+'</b><br><small>Límites municipales de Canarias · esperando datos del indicador ISTAC.</small>',{maxWidth:360})}}).addTo(map);
-  try{istacBoundaryLayer.bringToFront()}catch(e){}
- }
- function identifyIstacDims(row){
-  const entries=Object.entries(row.tuple||{});
-  const geo=(istacGeoDimKey&&row.tuple?.[istacGeoDimKey]?[istacGeoDimKey,row.tuple[istacGeoDimKey]]:null)||entries.find(([k])=>/geo|territ|area|lugar|resid|municip/i.test(k))||entries.find(([,v])=>/^(?:ES)?(?:35|38|70)\d{2,7}$/.test(String(v.code||'')))||entries[0];
-  const time=(istacTimeDimKey&&row.tuple?.[istacTimeDimKey]?[istacTimeDimKey,row.tuple[istacTimeDimKey]]:null)||entries.find(([k])=>/time|period|year|tiempo|fecha/i.test(k))||entries.find(([,v])=>/^\d{4}(?:[-QM].*)?$/.test(String(v.code||'')));
-  const measure=entries.find(([k])=>/measure|indicador|indicator|unidad/i.test(k));return {geo:geo?.[1],time:time?.[1],measure:measure?.[1],geoKey:geo?.[0],timeKey:time?.[0]}
- }
- function istacScalarScore(row){
-  const d=identifyIstacDims(row);let score=0;const totalRx=/(^|\b)(total|ambos sexos|ambos|todas las edades|todas las situaciones|todos|todas|conjunto|general)(\b|$)/i;
-  for(const [k,v] of Object.entries(row.tuple||{})){if(k===d.geoKey||k===d.timeKey)continue;const s=norm(k+' '+String(v?.code||'')+' '+String(v?.label||''));if(totalRx.test(s))score+=8;if(/hombre|mujer|varon|masculin|femenin|0 a 14|15 a 64|65 o mas|65 y mas|nacionalidad|extranjero|espanol/.test(s))score-=3}
-  return score
- }
- function selectIstacScalarRows(rows){
-  detectIstacDimensions(rows);const best=new Map();
-  for(const row of rows){const d=identifyIstacDims(row);if(!d.geo||!d.time)continue;const geo=istacMunicipalityNameKey(d.geo.label||'')||geoVariants(d.geo.code)[0]||String(d.geo.code||''),time=String(d.time.code||d.time.label||'');if(!geo||!time)continue;const key=geo+'|'+time,score=istacScalarScore(row),prev=best.get(key);if(!prev||score>prev.score)best.set(key,{row,score})}
-  const picked=[...best.values()].map(x=>x.row);return picked.length?picked:rows
- }
+ function identifyIstacDims(row){const entries=Object.entries(row.tuple),geo=entries.find(([k])=>/geo|territ|area|lugar|resid/i.test(k))||entries.find(([,v])=>/^(?:ES)?(?:35|38|70)\d{2,5}$/.test(String(v.code||'')))||entries[0],time=entries.find(([k])=>/time|period|year|tiempo/i.test(k))||entries.find(([,v])=>/^\d{4}(?:[-QM].*)?$/.test(String(v.code||''))),measure=entries.find(([k])=>/measure|indicador|indicator|unidad/i.test(k));return {geo:geo?.[1],time:time?.[1],measure:measure?.[1]}}
  function istacPeriod(row){const t=identifyIstacDims(row).time;return String(t?.code||t?.label||'')}
  function istacGeo(row){return identifyIstacDims(row).geo||{code:'',label:''}}
  function istacGeoMatches(row,code,name){const g=istacGeo(row),rn=norm(g.label||''),nn=norm(name||'');if(nn&&rn===nn)return true;const a=new Set(geoVariants(g.code));return geoVariants(code).some(x=>a.has(x))}
@@ -14652,19 +14620,13 @@ html body .leaflet-popup-content{padding-top:5px}
  function clearIstacLabels(){if(istacLabelLayer){try{map.removeLayer(istacLabelLayer)}catch(e){}istacLabelLayer=null}}
  function renderIstacLabels(){clearIstacLabels();if(!document.getElementById('istacLabelsCheck')?.checked||!istacLayer)return;istacLabelLayer=L.layerGroup();istacLayer.eachLayer(l=>{const f=l.feature,name=geoNameFromFeature(f);if(!name||!l.getBounds)return;const c=l.getBounds().getCenter(),icon=L.divIcon({className:'',html:'<span style="display:inline-block;padding:1px 3px;border-radius:3px;background:rgba(255,255,255,.82);border:1px solid #425b6c88;color:#17324d;font:700 8px/1.05 system-ui;white-space:nowrap;pointer-events:none">'+esc(name)+'</span>',iconSize:null});istacLabelLayer.addLayer(L.marker(c,{icon,interactive:false,pane:'markerPane'}))});istacLabelLayer.addTo(map)}
  function renderIstac(){
-  if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacBoundaryLayer();clearIstacLabels();if(!istacMunicipalGeo||!istacRows.length)return;
-  if(!map.getPane('istacPane')){const p=map.createPane('istacPane');p.style.zIndex='665';p.style.pointerEvents='auto'}
-  const rows=currentIstacRows(),byCode=new Map(),byName=new Map();
-  for(const r of rows){const g=istacGeo(r),n=istacMunicipalityNameKey(g.label||'');for(const c of geoVariants(g.code))if(c)byCode.set(c,r);if(n)byName.set(n,r)}
-  function rowForFeature(f){for(const c of geoVariants(geoKeyFromFeature(f))){const r=byCode.get(c);if(r)return r}const n=istacMunicipalityNameKey(geoNameFromFeature(f));return byName.get(n)||null}
-  const matched=[];for(const f of (istacMunicipalGeo.features||[])){const r=rowForFeature(f);if(r&&Number.isFinite(r.value))matched.push(r)}
-  const vals=[...new Set(matched.map(r=>r.value))],br=istacBreaks(vals),opacity=+(document.getElementById('istacOpacity')?.value||.72);
-  istacLayer=L.geoJSON(istacMunicipalGeo,{pane:'istacPane',interactive:true,style:f=>{const r=rowForFeature(f),i=istacClass(r?.value,br);return {color:'#27495f',weight:1.05,opacity:.96,fillColor:i<0?'#c7cbd0':ISTAC_COL[i],fillOpacity:i<0?.22:opacity}},onEachFeature:(f,l)=>{const r=rowForFeature(f);l.bindPopup(istacPopupHTML(f,r,rows),{maxWidth:410,autoPan:true});l.on('mouseover',()=>l.setStyle({weight:2}));l.on('mouseout',()=>l.setStyle({weight:1.05}))}}).addTo(map);
-  try{istacLayer.bringToFront()}catch(e){}
+  if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacLabels();if(!istacMunicipalGeo||!istacRows.length)return;
+  const rows=currentIstacRows(),byCode=new Map(),byName=new Map();for(const r of rows){const g=istacGeo(r),n=norm(g.label||'');for(const c of geoVariants(g.code))if(c)byCode.set(c,r);if(n)byName.set(n,r)}
+  const vals=[...new Set([...byCode.values(),...byName.values()].map(r=>r.value))],br=istacBreaks(vals),opacity=+(document.getElementById('istacOpacity')?.value||.72);
+  function rowForFeature(f){const n=norm(geoNameFromFeature(f));for(const c of geoVariants(geoKeyFromFeature(f))){const r=byCode.get(c);if(r)return r}return byName.get(n)||null}
+  istacLayer=L.geoJSON(istacMunicipalGeo,{pane:'overlayPane',style:f=>{const r=rowForFeature(f),i=istacClass(r?.value,br);return {color:'#334c5e',weight:.8,opacity:.92,fillColor:i<0?'#b9bdc1':ISTAC_COL[i],fillOpacity:opacity}},onEachFeature:(f,l)=>{l.on('click',e=>{L.DomEvent.stopPropagation(e);const r=rowForFeature(f);l.bindPopup(istacPopupHTML(f,r,rows),{maxWidth:410}).openPopup(e.latlng)})}}).addTo(map);
   renderIstacLabels();
-  const period=istacSelectedYear==='__latest__'?'Último disponible por municipio':istacSelectedYear,legend=document.getElementById('istacLegend');
-  if(legend){legend.innerHTML='<b>'+esc(istacMeta?.name||'Indicador ISTAC')+'</b><br><small>'+esc(period||'Periodo')+(istacUnit()?' · '+esc(istacUnit()):'')+' · ISTAC · '+matched.length+' municipios con dato</small>'+br.slice(1,5).map((b,i)=>'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[i]+'"></span>'+(i===0?'Menos de ':istacFmt(br[i])+' – ')+istacFmt(b)+'</div>').join('')+(br.length?'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[4]+'"></span>Más de '+istacFmt(br[4])+'</div>':'<small>Sin datos municipales para este periodo.</small>')}
-  const status=document.getElementById('istacStatus');if(status){const total=(istacMunicipalGeo.features||[]).length;status.textContent=(istacMeta?.name||'Indicador ISTAC')+' · '+matched.length+'/'+total+' municipios con datos · '+rows.length+' observaciones municipales usadas.'}
+  const legend=document.getElementById('istacLegend');if(legend){const period=istacSelectedYear==='__latest__'?'Último disponible por municipio':istacSelectedYear;legend.innerHTML='<b>'+esc(istacMeta?.name||'Indicador ISTAC')+'</b><br><small>'+esc(period||'Periodo')+(istacUnit()?' · '+esc(istacUnit()):'')+' · ISTAC</small>'+br.slice(1,5).map((b,i)=>'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[i]+'"></span>'+(i===0?'Menos de ':istacFmt(br[i])+' – ')+istacFmt(b)+'</div>').join('')+(br.length?'<div class="istacLegendItem"><span class="istacLegendSw" style="background:'+ISTAC_COL[4]+'"></span>Más de '+istacFmt(br[4])+'</div>':'<small>Sin datos municipales para este periodo.</small>')}
   if(istacLayer.getBounds().isValid())map.fitBounds(istacLayer.getBounds(),{padding:[16,16],maxZoom:10});
   try{updateLegend()}catch(e){}
  }
@@ -14678,15 +14640,8 @@ html body .leaflet-popup-content{padding-top:5px}
  }
  async function loadIstacIndicator(id){
   const status=document.getElementById('istacStatus'),item=istacCatalog.find(x=>x.id===id);if(!item)return;status.textContent='Cargando '+item.name+'…';
-  try{
-   await loadIstacGeo();
-   // Los límites son independientes del dato: deben seguir visibles aunque falle la fuente estadística.
-   showIstacMunicipalBoundaries();
-   const j=await fetchIstacItem(item);
-   istacRows=selectIstacScalarRows(parseIstacData(j));istacMeta={name:item.name,raw:item.raw||j,datasetUrl:item.datasetUrl||null};
-   if(!istacRows.length)throw Error('sin observaciones interpretables');
-   const years=[...new Set(istacRows.map(istacPeriod).filter(Boolean))].sort(periodCmp);const ys=document.getElementById('istacYearSelect');ys.innerHTML='<option value="__latest__">Último disponible</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');istacSelectedYear='__latest__';ys.value='__latest__';renderIstac();status.textContent=item.name+' · '+istacRows.length+' observaciones recuperadas · '+years.length+' periodos.';
-  }catch(e){console.error('Atlas ISTAC',e);status.textContent='No se pudo cargar este indicador del ISTAC ('+(e?.message||'error')+'). Los límites municipales permanecen visibles.'}
+  try{await loadIstacGeo();const j=await fetchIstacItem(item);istacRows=parseIstacData(j);istacMeta={name:item.name,raw:item.raw||j,datasetUrl:item.datasetUrl||null};if(!istacRows.length)throw Error('sin observaciones interpretables');const years=[...new Set(istacRows.map(istacPeriod).filter(Boolean))].sort(periodCmp);const ys=document.getElementById('istacYearSelect');ys.innerHTML='<option value="__latest__">Último disponible</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');istacSelectedYear='__latest__';ys.value='__latest__';renderIstac();status.textContent=item.name+' · '+istacRows.length+' observaciones recuperadas · '+years.length+' periodos.'}
+  catch(e){console.error('Atlas ISTAC',e);status.textContent='No se pudo cargar este indicador del ISTAC ('+(e?.message||'error')+'). Prueba otro o recarga el catálogo.'}
  }
  const canScope=[...document.querySelectorAll('#layersPanel details.layerScope')].find(d=>norm(d.querySelector(':scope>summary')?.textContent).includes('canarias'));
  const canAtlas=canScope?[...canScope.querySelectorAll('details.layerCategory')].find(d=>norm(d.querySelector(':scope>summary')?.textContent).includes('atlas estadistico')):null;
@@ -14699,7 +14654,7 @@ html body .leaflet-popup-content{padding-top:5px}
   box.querySelector('#istacLatestBtn')?.addEventListener('click',()=>{istacSelectedYear='__latest__';const y=box.querySelector('#istacYearSelect');if(y)y.value='__latest__';renderIstac()});
   box.querySelector('#istacLabelsCheck')?.addEventListener('change',renderIstacLabels);
   box.querySelector('#istacOpacity')?.addEventListener('input',e=>{const v=+e.target.value;const o=box.querySelector('#istacOpacityValue');if(o)o.textContent=Math.round(v*100)+' %';if(istacLayer)istacLayer.setStyle({fillOpacity:v})});
-  box.querySelector('#istacClearBtn')?.addEventListener('click',()=>{if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacBoundaryLayer();clearIstacLabels();box.querySelector('#istacLegend').innerHTML='';try{if(typeof worldImagery!=='undefined'&&map.hasLayer(worldImagery))map.removeLayer(worldImagery);if(typeof activeBase!=='undefined'&&activeBase&&activeBase!==osm&&map.hasLayer(activeBase))map.removeLayer(activeBase);activeBase=osm;if(!map.hasLayer(osm))osm.addTo(map);try{osm.bringToBack()}catch(_){}document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice==='osm'));}catch(e){console.warn('Restauración OSM tras Atlas ISTAC',e)}try{updateLegend()}catch(e){}});
+  box.querySelector('#istacClearBtn')?.addEventListener('click',()=>{if(istacLayer){map.removeLayer(istacLayer);istacLayer=null}clearIstacLabels();box.querySelector('#istacLegend').innerHTML='';try{if(typeof worldImagery!=='undefined'&&map.hasLayer(worldImagery))map.removeLayer(worldImagery);if(typeof activeBase!=='undefined'&&activeBase&&activeBase!==osm&&map.hasLayer(activeBase))map.removeLayer(activeBase);activeBase=osm;if(!map.hasLayer(osm))osm.addTo(map);try{osm.bringToBack()}catch(_){}document.querySelectorAll('input[data-base-choice]').forEach(x=>x.checked=(x.dataset.baseChoice==='osm'));}catch(e){console.warn('Restauración OSM tras Atlas ISTAC',e)}try{updateLegend()}catch(e){}});
   box.querySelector('#istacReloadBtn')?.addEventListener('click',loadIstacCatalog);
   istacCatalog=ISTAC_FALLBACK.map(x=>({...x,fallback:true}));renderIstacCatalog();loadIstacCatalog();
  }
