@@ -14664,11 +14664,24 @@ html body .leaflet-popup-content{padding-top:5px}
  }
  function mergeIstacCatalog(remote){
   const out=[],seenId=new Set(),seenName=new Set();
+  const directById=new Map(ISTAC_DIRECT_DATASETS.map(x=>[String(x.id),x]));
+  const verifiedById=new Map(ISTAC_VERIFIED_CATALOG.map(x=>[String(x.id),x]));
+  const looksLikeCode=(name,id)=>{
+   const s=String(name||'').trim();
+   return !s||s===String(id||'').trim()||/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(s)||/^[A-Z]?\d{5,}$/i.test(s);
+  };
   for(const x of [...ISTAC_DIRECT_DATASETS,...(remote||[]),...ISTAC_VERIFIED_CATALOG]){
-   const id=String(x?.id||x?.uuid||x?.code||'').trim(),name=istacInstanceName(x)||String(x?.name||'').trim();
-   if(!id||!name)continue;
-   const nk=norm(name);if(seenId.has(id)||seenName.has(nk))continue;
-   seenId.add(id);seenName.add(nk);out.push({id,name,raw:x?.raw||x,datasetUrl:x?.datasetUrl||null,verified:!!x?.verified||ISTAC_DIRECT_DATASETS.some(v=>v.id===id)||ISTAC_VERIFIED_CATALOG.some(v=>v.id===id)});
+   const id=String(x?.id||x?.uuid||x?.code||'').trim();
+   if(!id||seenId.has(id))continue;
+   const preferred=directById.get(id)||verifiedById.get(id)||null;
+   let name=String(preferred?.name||istacInstanceName(x)||x?.name||'').trim();
+   // El catálogo vivo a veces devuelve únicamente el UUID/código como “nombre”.
+   // Para los indicadores oficiales ya verificados usamos siempre su etiqueta legible;
+   // las entradas remotas sin ninguna etiqueta humana se ocultan en vez de enseñar códigos.
+   if(!preferred&&looksLikeCode(name,id))continue;
+   if(!name)continue;
+   const nk=norm(name);if(seenName.has(nk))continue;
+   seenId.add(id);seenName.add(nk);out.push({id,name,raw:x?.raw||x,datasetUrl:preferred?.datasetUrl||x?.datasetUrl||null,verified:!!preferred||!!x?.verified});
   }
   return out;
  }
