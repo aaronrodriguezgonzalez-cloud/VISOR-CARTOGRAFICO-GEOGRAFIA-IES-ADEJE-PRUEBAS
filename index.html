@@ -13175,8 +13175,11 @@ html body.istac-export-clean #map .leaflet-atlasBathymetryPane-pane{opacity:0!im
    await ensureAtlasVectors2D();
    // En Historia: relieve terrestre visible bajo una veladura cálida. En temáticos humanos: países ya cubren la tierra.
    if(historyOn()){if(!map.hasLayer(landTint2D))landTint2D.addTo(map);}else if(landTint2D&&map.hasLayer(landTint2D))map.removeLayer(landTint2D);
-   // En Historia no se superpone la costa moderna sobre Cliopatria: evita dobles líneas y cuñas por geometrías no coincidentes.
-   if(historyOn()){if(coast2D&&map.hasLayer(coast2D))map.removeLayer(coast2D);}else if(!map.hasLayer(coast2D))coast2D.addTo(map);
+   // En Historia no se superpone la costa moderna sobre Cliopatria.
+   // En el Atlas ISTAC tampoco: a escala municipal la costa Natural Earth (50 m) es demasiado
+   // generalizada y, al quedar bajo la coropleta semitransparente, aparece como un polígono
+   // ajeno detrás de las islas. La propia geometría municipal ya aporta una costa precisa.
+   if(historyOn()||istacOn()){if(coast2D&&map.hasLayer(coast2D))map.removeLayer(coast2D);}else if(!map.hasLayer(coast2D))coast2D.addTo(map);
    if(historyBase2DLayer&&map.hasLayer(historyBase2DLayer)){
     // Se retira el antiguo relleno blanco: lo sustituye la veladura física con relieve.
     map.removeLayer(historyBase2DLayer);
