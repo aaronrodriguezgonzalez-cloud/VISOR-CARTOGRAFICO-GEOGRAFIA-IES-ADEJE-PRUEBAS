@@ -2756,13 +2756,13 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
   <audio id="radioGardenAudio" controls preload="none"></audio>
   <button id="radioGardenClose" onclick="radioGardenStop()" title="Cerrar reproductor">×</button>
 </div>
-<div class="brand brandWide brandV06">
+<div id="anambroHeader" class="brand brandWide brandV06">
   <div class="brandSide brandSideLeft">
     <div class="brandInstitutionV06">
       <img class="brandInstituteLogoV06" src="data:image/jpeg;base64,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" alt="IES Adeje">
       <div class="brandLeftText">
         <div class="brandDept"><b>IES ADEJE</b><br>Herramienta cartográfica abierta<br>Curso 2026-2027</div>
-        <div class="brandVersion">Versión 0.15 · aula interactiva</div>
+        <div class="brandVersion">Versión 0.16 · aula interactiva</div>
       </div>
     </div>
     <div class="brandAuthorV06">
@@ -14021,7 +14021,7 @@ html body .historyPopup .leaflet-popup-close-button{
 (()=>{
  'use strict';
  const KEY='anambro.header.layout.v10';
- const DEFAULT_LAYOUT={"version":3,"height":118,"items":{"iesLogo":{"left":117,"top":12,"width":78,"height":77,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"iesText":{"left":219,"top":7,"width":121,"height":91,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n        <div class=\"brandDept\">IES ADEJE&nbsp;Curso 2026-2027</div>\n        <div class=\"brandVersion\">Versión 0.13 · aula interactiva</div>\n      ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"center","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"0.9px"},"portrait":{"left":377,"top":10,"width":93,"height":81,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"authorText":{"left":490,"top":11,"width":242,"height":88,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":15,"html":"\n        <div class=\"brandTeacher\">Aarón Rodríguez González&nbsp;</div><div class=\"brandTeacher\"><span class=\"brandGeo\">Geógrafo</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Profesor de Geografía e Historia</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Coordinador de Patrimonio&nbsp;</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Natural,&nbsp;</span><span style=\"white-space: normal\"><span style=\"color: rgb(66, 98, 123);\">Cultural y Social Canario.</span></span></div><div class=\"brandProfessional\"><br><span><br></span></div>\n      ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"start","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"normal"},"anambroLogo":{"left":877,"top":3,"width":452,"height":108,"z":1,"fit":"contain","zoom":1,"posx":53,"posy":50,"font":27},"descriptor":{"left":1364,"top":13,"width":393,"height":25,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n    <div class=\"brandDescriptor\">SIG web para el análisis territorial y la cartografía temática 2D/3D</div>\n  ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"center","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"normal"},"roles":{"left":1367,"top":48,"width":390,"height":48,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":8.8,"html":"<b>Cartografía base y temática · consulta espacial · series temporales · perfiles · geodemografía · leyendas dinámicas · exportación de&nbsp; mapas-historia-animaciones explicativas</b>","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(63, 93, 112)","textAlign":"left","fontWeight":"800","fontStyle":"normal","textDecoration":"none","lineHeight":"12.915px","letterSpacing":"normal"},"actions":{"left":1872,"top":22,"width":132,"height":54,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16}}};
+ const DEFAULT_LAYOUT={"version":3,"height":118,"items":{"iesLogo":{"left":117,"top":12,"width":78,"height":77,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"iesText":{"left":219,"top":7,"width":121,"height":91,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n        <div class=\"brandDept\">IES ADEJE&nbsp;Curso 2026-2027</div>\n        <div class=\"brandVersion\">Versión 0.16 · aula interactiva</div>\n      ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"center","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"0.9px"},"portrait":{"left":377,"top":10,"width":93,"height":81,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16},"authorText":{"left":490,"top":11,"width":242,"height":88,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":15,"html":"\n        <div class=\"brandTeacher\">Aarón Rodríguez González&nbsp;</div><div class=\"brandTeacher\"><span class=\"brandGeo\">Geógrafo</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Profesor de Geografía e Historia</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Coordinador de Patrimonio&nbsp;</span></div><div class=\"brandTeacher\"><span class=\"brandGeo\">Natural,&nbsp;</span><span style=\"white-space: normal\"><span style=\"color: rgb(66, 98, 123);\">Cultural y Social Canario.</span></span></div><div class=\"brandProfessional\"><br><span><br></span></div>\n      ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"start","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"normal"},"anambroLogo":{"left":877,"top":3,"width":452,"height":108,"z":1,"fit":"contain","zoom":1,"posx":53,"posy":50,"font":27},"descriptor":{"left":1364,"top":13,"width":393,"height":25,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16,"html":"\n    <div class=\"brandDescriptor\">SIG web para el análisis territorial y la cartografía temática 2D/3D</div>\n  ","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(0, 0, 0)","textAlign":"center","fontWeight":"400","fontStyle":"normal","textDecoration":"none","lineHeight":"normal","letterSpacing":"normal"},"roles":{"left":1367,"top":48,"width":390,"height":48,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":8.8,"html":"<b>Cartografía base y temática · consulta espacial · series temporales · perfiles · geodemografía · leyendas dinámicas · exportación de&nbsp; mapas-historia-animaciones explicativas</b>","fontFamily":"system-ui, -apple-system, sans-serif","color":"rgb(63, 93, 112)","textAlign":"left","fontWeight":"800","fontStyle":"normal","textDecoration":"none","lineHeight":"12.915px","letterSpacing":"normal"},"actions":{"left":1872,"top":22,"width":132,"height":54,"z":1,"fit":"contain","zoom":1,"posx":50,"posy":50,"font":16}}};
  const defs=[
   ['iesLogo','.brandInstituteLogoV06','Logo IES','image'],['iesText','.brandLeftText','Texto IES','text'],
   ['portrait','.brandAuthorPortraitV06','Retrato','image'],['authorText','.brandAuthorTextV06','Datos del autor','text'],
@@ -14061,9 +14061,9 @@ html body .historyPopup .leaflet-popup-close-button{
  function wire(){for(const f of frames.values()){if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('pointerdown',e=>dragStart(e,f));f.addEventListener('click',e=>{if(editing){e.stopPropagation();selectFrame(f)}});f.addEventListener('dblclick',e=>{if(editing&&f.dataset.type==='text'){e.preventDefault();e.stopPropagation();selectFrame(f);beginTextEdit()}});const t=f.querySelector('.headerEditableTarget');t?.addEventListener('mouseup',rememberSelection);t?.addEventListener('keyup',rememberSelection);t?.addEventListener('blur',()=>{if(!ins()?.contains(document.activeElement))endTextEdit(f)});f.querySelectorAll('.headerResizeHandle').forEach(h=>h.addEventListener('pointerdown',e=>resizeStart(e,f,h.dataset.dir)))}}
  function open(){if(window.innerWidth<=760){alert('El editor visual de cabecera está disponible en escritorio.');return}ensureFrames();wire();const b=brand();snapshot=readLayout();b.classList.add('header-editing');editing=true;bar()?.classList.add('open');bar()?.setAttribute('aria-hidden','false');toast('Cabecera desbloqueada: arrastra, redimensiona y formatea')}
  function closeEdit(){editing=false;for(const f of frames.values()){f.classList.remove('selected');endTextEdit(f)}selected=null;brand()?.classList.remove('header-editing');bar()?.classList.remove('open');bar()?.setAttribute('aria-hidden','true');ins()?.classList.remove('open');ins()?.setAttribute('aria-hidden','true')}
- function save(){const d=readLayout();localStorage.setItem(KEY,JSON.stringify(d));closeEdit();toast('Diseño, textos y formato guardados')}
- function cancel(){if(snapshot){clearLayout();applyLayout(snapshot)}closeEdit();toast('Cambios descartados')}
- function reset(){localStorage.removeItem(KEY);clearLayout();applyLayout(DEFAULT_LAYOUT);closeEdit();toast('Cabecera restablecida al diseño que exportaste')}
+ function save(){const d=readLayout();localStorage.setItem(KEY,JSON.stringify(d));closeEdit();clearLayout();toast('Contenido guardado; la composición pública sigue el diseño responsivo estable')}
+ function cancel(){clearLayout();closeEdit();toast('Cambios descartados')}
+ function reset(){localStorage.removeItem(KEY);clearLayout();closeEdit();toast('Cabecera restablecida al diseño responsivo estable')}
  function exportJSON(){const d=readLayout();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='ANAMBRO_cabecera_v10.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1200)}
  function importFile(file){if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);if(!d?.items)throw new Error('Formato incorrecto');ensureFrames();clearLayout();applyLayout(d);localStorage.setItem(KEY,JSON.stringify(d));toast('Diseño importado')}catch(e){alert('No se pudo importar: '+e.message)}};rd.readAsText(file)}
  ensureFrames();wire();
@@ -14081,7 +14081,7 @@ html body .historyPopup .leaflet-popup-close-button{
  $('heiFit')?.addEventListener('change',e=>selected?.style.setProperty('--he-fit',e.target.value));$('heiZoom')?.addEventListener('input',e=>selected?.style.setProperty('--he-zoom',e.target.value));$('heiImgX')?.addEventListener('input',e=>selected?.style.setProperty('--he-posx',e.target.value+'%'));$('heiImgY')?.addEventListener('input',e=>selected?.style.setProperty('--he-posy',e.target.value+'%'));
  $('heiEditText')?.addEventListener('click',beginTextEdit);$('heiFront')?.addEventListener('click',()=>{if(selected){selected.style.zIndex=String(++zseq)}});$('heiBack')?.addEventListener('click',()=>{if(selected){selected.style.zIndex='1'}});$('heiClose')?.addEventListener('click',()=>ins()?.classList.remove('open'));
  $('headerEditorSave')?.addEventListener('click',save);$('headerEditorCancel')?.addEventListener('click',cancel);$('headerEditorReset')?.addEventListener('click',reset);$('headerEditorExport')?.addEventListener('click',exportJSON);$('headerEditorImport')?.addEventListener('click',()=>$('headerEditorFile')?.click());$('headerEditorFile')?.addEventListener('change',e=>{importFile(e.target.files?.[0]);e.target.value=''});
- const saved=(()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(_){return null}})();requestAnimationFrame(()=>applyLayout(saved||DEFAULT_LAYOUT));
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(_){return null}})();requestAnimationFrame(()=>{clearLayout();});
  window.addEventListener('resize',()=>{if(window.innerWidth<=760&&editing)closeEdit()});
  window.anambroHeaderEditor={open,save,reset,export:exportJSON};
 })();
@@ -14572,12 +14572,19 @@ html body .leaflet-popup-content{padding-top:5px}
  ];
  const ISTAC_MUNICIPAL_CSV='https://datos.canarias.es/catalogos/estadisticas/dataset/6dd8baf4-14f4-43a3-88b2-984d034c965c/resource/74237bc8-1e5f-43f1-9f6b-24ef9e073903/download/municipios_desde2007_20170101.csv';
 
+ // Secciones censales 2025: geometría y datos se separan deliberadamente.
+ // La geometría prioriza un GeoJSON optimizado alojado junto a ANAMBRO; si aún no existe,
+ // usa la cartografía generalizada oficial del ISTAC. El WFS completo queda como último
+ // respaldo. Los indicadores viajan por CSV, mucho más ligero que repetir toda la geometría.
+ const ISTAC_SECTION_2025_GEO_LOCAL='data/istac/secciones_20250101_anambro.geojson';
+ const ISTAC_SECTION_2025_GEO_GENERAL_URL='https://datos.canarias.es/catalogos/estadisticas/dataset/6323a1f0-58c9-4b79-bd51-162658977e6c/resource/d47337a5-2432-4d5c-ae22-4c2e116fd6e5/download/secciones_20250101_generalizada.json';
+ const ISTAC_SECTION_2025_DATA_CSV='https://datos.canarias.es/api/estadisticas/geographical-resources/indicadoresdemograficos/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=Secciones-20250101&outputFormat=csv';
  const ISTAC_SECTION_2025_GEO_URL='https://datos.canarias.es/api/estadisticas/geographical-resources/indicadoresdemograficos/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=Secciones-20250101&outputFormat=application/json';
  const ISTAC_TERRITORY_LEVELS={
   municipality:{id:'municipality',label:'Municipios',singular:'Municipio',plural:'municipios',periodLabel:'Último disponible por municipio',sourceLabel:'ISTAC · Municipios en Cifras (C00067A)',maxZoom:10},
   section:{id:'section',label:'Secciones censales · 2025',singular:'Sección censal',plural:'secciones censales',periodLabel:'01/01/2025',sourceLabel:'ISTAC · Indicadores demográficos. Secciones de Canarias · 01/01/2025',maxZoom:13}
  };
- let istacTerritoryLevel='municipality',istacSectionGeo=null;
+ let istacTerritoryLevel='municipality',istacSectionGeo=null,istacSectionData=null,istacSectionGeoSource='';
  function istacTerritoryCfg(){return ISTAC_TERRITORY_LEVELS[istacTerritoryLevel]||ISTAC_TERRITORY_LEVELS.municipality}
  function istacTerritoryPlural(){return istacTerritoryCfg().plural}
  function istacTerritorySingular(){return istacTerritoryCfg().singular}
@@ -14956,7 +14963,8 @@ html body .leaflet-popup-content{padding-top:5px}
   return '';
  }
  function istacSectionFeatureName(f){
-  const p=f?.properties||{},code=istacSectionFeatureCode(f),mun=String(p.NMUN??p.nmun??p.MUNICIPIO??p.municipio??'').trim(),dis=String(p.CDIS??p.cdis??'').trim(),sec=String(p.CSEC??p.csec??'').trim();
+  const p=f?.properties||{},forced=String(p.__istacSectionName??'').trim();if(forced)return forced;
+  const code=istacSectionFeatureCode(f),mun=String(p.NMUN??p.nmun??p.MUNICIPIO??p.municipio??'').trim(),dis=String(p.CDIS??p.cdis??'').trim(),sec=String(p.CSEC??p.csec??'').trim();
   if(mun&&(dis||sec))return mun+' · D'+(dis||'?')+' · S'+(sec||'?');
   if(mun)return mun+(code?' · '+code:'');
   return code?('Sección '+code):'';
@@ -14973,39 +14981,93 @@ html body .leaflet-popup-content{padding-top:5px}
   const x=String(v??'').trim();if(!x)return NaN;
   const n=Number(x.replace(/\s/g,'').replace(/,(?=\d{1,6}$)/,'.'));return Number.isFinite(n)?n:NaN;
  }
- function istacSectionIndicatorCatalog(geo){
-  const fs=geo?.features||[],stats=new Map();
-  const skip=/(^id$|objectid|fid|shape|geom|geometry|geo(code)?|codigo|(^|_)cod|code|cusec|cumun|cudis|csec|cmun|cpro|cca|clau|cnut|fecha|date|year|ano|año|lat|lon|longitud|latitud)/i;
-  for(const f of fs.slice(0,Math.min(fs.length,700))){
-   for(const [k,v] of Object.entries(f.properties||{})){
+ function istacSectionRecordCode(row){
+  const r=row||{};
+  const keys=Object.keys(r);
+  for(const k of keys){
+   if(!/(^|_)(cusec|cod.*secc|codsec|geocode|codigo|code)(_|$)/i.test(k))continue;
+   const c=istacSectionCode(r[k]);if(c)return c;
+  }
+  const get=(rx)=>{const k=keys.find(x=>rx.test(x));return k===undefined?'':String(r[k]??'')};
+  const cumun=get(/^(cumun|cod.*mun|cmun)$/i).replace(/\D/g,''),cdis=get(/^(cdis|cod.*dis)$/i).replace(/\D/g,'').padStart(2,'0'),csec=get(/^(csec|sec(cion)?|cod.*sec)$/i).replace(/\D/g,'').padStart(3,'0');
+  const joined=istacSectionCode(cumun+cdis+csec);if(joined)return joined;
+  for(const v of Object.values(r)){const c=istacSectionCode(v);if(c)return c}
+  return '';
+ }
+ function istacSectionRecordName(row){
+  const r=row||{},keys=Object.keys(r),code=istacSectionRecordCode(r);
+  const val=(rx)=>{const k=keys.find(x=>rx.test(x));return k===undefined?'':String(r[k]??'').trim()};
+  const mun=val(/^(nmun|municipio|nombre.*mun|nom.*mun)$/i),dis=val(/^(cdis|distrito|cod.*dis)$/i),sec=val(/^(csec|seccion|sección|cod.*sec)$/i);
+  if(mun&&(dis||sec))return mun+' · D'+(dis||'?')+' · S'+(sec||'?');
+  if(mun)return mun+(code?' · '+code:'');
+  return code?('Sección '+code):'';
+ }
+ function istacSectionIndicatorCatalog(rows){
+  const sample=(rows||[]).slice(0,Math.min((rows||[]).length,700)),stats=new Map();
+  const skip=/(^id$|objectid|fid|shape|geom|geometry|geo(code)?|codigo|(^|_)cod|code|cusec|cumun|cudis|csec|cmun|cpro|cca|clau|cnut|fecha|date|year|ano|año|lat|lon|longitud|latitud|municipio|distrito|seccion|sección|nombre|etiqueta)/i;
+  for(const row of sample){
+   for(const [k,v] of Object.entries(row||{})){
     if(skip.test(k))continue;const n=istacNumericValue(v);if(!Number.isFinite(n))continue;
     const st=stats.get(k)||{key:k,count:0};st.count++;stats.set(k,st);
    }
   }
-  const minCount=Math.max(20,Math.floor(Math.min(fs.length,700)*.20));
+  const minCount=Math.max(20,Math.floor(sample.length*.20));
   return [...stats.values()].filter(x=>x.count>=minCount).map(x=>({id:'section-field:'+x.key,name:istacHumanizeField(x.key),category:'Demografía · secciones censales',property:x.key,territoryLevel:'section',period:'2025',verified:true})).sort((a,b)=>a.name.localeCompare(b.name,'es'));
  }
- function istacRowsFromSectionGeo(geo,item){
+ function istacRowsFromSectionData(data,item){
   const key=item?.property,period=item?.period||'2025',rows=[];
-  for(const f of geo?.features||[]){
-   const code=istacSectionFeatureCode(f),value=istacNumericValue(f?.properties?.[key]);if(!code||!Number.isFinite(value))continue;
-   rows.push({geoCode:code,geoLabel:istacSectionFeatureName(f)||code,period,timeLabel:period,measureCode:key||'',measureLabel:item?.name||istacHumanizeField(key),value,tuple:{GEOGRAPHICAL:{code,label:istacSectionFeatureName(f)||code},TIME:{code:period,label:period},MEASURE:{code:key||'',label:item?.name||key||''}}});
+  for(const rec of data||[]){
+   const code=istacSectionRecordCode(rec),value=istacNumericValue(rec?.[key]);if(!code||!Number.isFinite(value))continue;
+   const label=istacSectionRecordName(rec)||code;
+   rows.push({geoCode:code,geoLabel:label,period,timeLabel:period,measureCode:key||'',measureLabel:item?.name||istacHumanizeField(key),value,tuple:{GEOGRAPHICAL:{code,label},TIME:{code:period,label:period},MEASURE:{code:key||'',label:item?.name||key||''}}});
   }
   return rows;
  }
+ function istacParseSectionCSV(text){
+  const raw=String(text||'').replace(/^\ufeff/,'').split(/\r?\n/).filter(x=>x.trim());if(raw.length<2)return [];
+  const semi=(raw[0].match(/;/g)||[]).length,comma=(raw[0].match(/,/g)||[]).length,delim=semi>comma?';':',';
+  const head=istacParseCSVLine(raw[0],delim).map((x,i)=>String(x||('COL_'+i)).replace(/^\ufeff/,'').trim());
+  const out=[];
+  for(const line of raw.slice(1)){
+   const a=istacParseCSVLine(line,delim);if(!a.length)continue;
+   const o={};for(let i=0;i<head.length;i++)o[head[i]]=a[i]??'';out.push(o);
+  }
+  return out;
+ }
+ async function loadIstacSectionData(){
+  if(istacSectionData)return istacSectionData;
+  const r=await fetch(ISTAC_SECTION_2025_DATA_CSV,{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('ISTAC datos de secciones '+r.status);
+  const rows=istacParseSectionCSV(await r.text());if(rows.length<100)throw Error('CSV de secciones censales incompleto');
+  istacSectionData=rows;return rows;
+ }
+ function istacEnrichSectionGeo(geo,data){
+  if(!geo?.features?.length||!data?.length)return geo;
+  const byCode=new Map();for(const r of data){const c=istacSectionRecordCode(r);if(c&&!byCode.has(c))byCode.set(c,istacSectionRecordName(r)||c)}
+  for(const f of geo.features){f.properties=f.properties||{};const c=istacSectionFeatureCode(f),nm=c?byCode.get(c):'';if(nm)f.properties.__istacSectionName=nm}
+  return geo;
+ }
  async function loadIstacSectionGeo(){
   if(istacSectionGeo)return istacSectionGeo;
-  const r=await fetch(ISTAC_SECTION_2025_GEO_URL,{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('ISTAC secciones '+r.status);
-  const j=await r.json();if(j?.type!=='FeatureCollection'||!Array.isArray(j.features)||j.features.length<100)throw Error('GeoJSON de secciones censales incompleto');
-  for(const f of j.features){f.properties=f.properties||{};const nm=istacSectionFeatureName(f);if(nm)f.properties.__istacSectionName=nm}
-  istacSectionGeo=j;return j;
+  const candidates=[];
+  if(typeof location!=='undefined'&&location.protocol!=='file:')candidates.push([ISTAC_SECTION_2025_GEO_LOCAL,'GeoJSON ANAMBRO local']);
+  candidates.push([ISTAC_SECTION_2025_GEO_GENERAL_URL,'GeoJSON generalizado oficial ISTAC']);
+  candidates.push([ISTAC_SECTION_2025_GEO_URL,'WFS completo ISTAC']);
+  let lastErr=null;
+  for(const [url,label] of candidates){
+   try{
+    const r=await fetch(url,{mode:url.startsWith('http')?'cors':'same-origin',cache:'force-cache'});if(!r.ok)throw Error(label+' '+r.status);
+    const j=await r.json();if(j?.type!=='FeatureCollection'||!Array.isArray(j.features)||j.features.length<100)throw Error(label+' incompleto');
+    istacSectionGeo=j;istacSectionGeoSource=label;return j;
+   }catch(e){lastErr=e;console.warn('Atlas ISTAC · secciones · '+label,e)}
+  }
+  throw lastErr||Error('No se pudo cargar la geometría de secciones censales');
  }
  async function loadIstacSectionCatalog(){
   const status=document.getElementById('istacStatus'),sel=document.getElementById('istacIndicatorSelect');
-  if(status)status.textContent='Cargando secciones censales oficiales del ISTAC…';
-  const geo=await loadIstacSectionGeo();istacCatalog=istacSectionIndicatorCatalog(geo);renderIstacCatalog();
+  if(status)status.textContent='Cargando secciones censales optimizadas del ISTAC…';
+  const [geo,data]=await Promise.all([loadIstacSectionGeo(),loadIstacSectionData()]);istacEnrichSectionGeo(geo,data);istacCatalog=istacSectionIndicatorCatalog(data);renderIstacCatalog();
   if(sel)sel.value='';
-  if(status)status.textContent=istacCatalog.length+' indicadores numéricos detectados en '+geo.features.length+' secciones censales · 01/01/2025.';
+  if(status)status.textContent=istacCatalog.length+' indicadores numéricos · '+geo.features.length+' secciones censales · '+istacSectionGeoSource+' · 01/01/2025.';
   return geo;
  }
  function istacApplyLevelUI(){
@@ -15015,7 +15077,7 @@ html body .leaflet-popup-content{padding-top:5px}
   if(chk&&istacTerritoryLevel==='municipality')chk.checked=true;
   if(ys&&istacTerritoryLevel==='section'){ys.innerHTML='<option value="2025">2025</option>';ys.value='2025';ys.disabled=true}else if(ys)ys.disabled=false;
   if(latest)latest.style.display=istacTerritoryLevel==='section'?'none':'';
-  const hint=document.querySelector('#istacAtlasBlock .atlasSearchHint');if(hint)hint.textContent='Datos oficiales del ISTAC · '+cfg.label+'. Motor territorial multiescala con la misma simbología, leyenda, ficha y exportación.';
+  const hint=document.querySelector('#istacAtlasBlock .atlasSearchHint');if(hint)hint.textContent='Datos oficiales del ISTAC · '+cfg.label+'. '+(istacTerritoryLevel==='section'?'Cartografía generalizada + datos separados para acelerar la carga. ':'')+'Motor territorial multiescala con la misma simbología, leyenda, ficha y exportación.';
  }
  async function switchIstacTerritoryLevel(level){
   if(!ISTAC_TERRITORY_LEVELS[level]||level===istacTerritoryLevel)return;
@@ -15445,7 +15507,8 @@ html body .leaflet-popup-content{padding-top:5px}
    const geo=await loadIstacGeo();if(!istacLayer)showIstacBoundary(geo);
    let decoded=null,territorialRows=[],measure='',targetYear='__latest__';
    if(istacTerritoryLevel==='section'){
-    territorialRows=istacRowsFromSectionGeo(geo,item);if(!territorialRows.length)throw Error('el recurso de secciones no contiene valores numéricos compatibles para este indicador');
+    const sectionData=await loadIstacSectionData();istacEnrichSectionGeo(geo,sectionData);
+    territorialRows=istacRowsFromSectionData(sectionData,item);if(!territorialRows.length)throw Error('el recurso CSV de secciones no contiene valores numéricos compatibles para este indicador');
     decoded={rows:territorialRows};measure=item.property||territorialRows[0]?.measureCode||'';targetYear=item.period||'2025';
    }else{
     const payload=await fetchIstacInstanceData(item);decoded=istacDecodeData(payload);territorialRows=istacRowsForPublicIndicator(decoded,item);
@@ -15454,7 +15517,7 @@ html body .leaflet-popup-content{padding-top:5px}
    }
    // Preparar el estado nuevo sin destruir la coropleta anterior hasta comprobar que la unión funciona.
    const old={rows:istacRows,all:istacAllRows,meta:istacMeta,measure:istacChosenMeasure,year:istacSelectedYear};
-   istacAllRows=decoded.rows;istacRows=territorialRows;istacMeta={name:item.name,raw:item.raw||null,id:item.id,datasetUrl:item.datasetUrl||ISTAC_SECTION_2025_GEO_URL,territoryLevel:istacTerritoryLevel};istacChosenMeasure=measure;istacSelectedYear=targetYear;
+   istacAllRows=decoded.rows;istacRows=territorialRows;istacMeta={name:item.name,raw:item.raw||null,id:item.id,datasetUrl:item.datasetUrl||(istacTerritoryLevel==='section'?ISTAC_SECTION_2025_DATA_CSV:ISTAC_SECTION_2025_GEO_URL),territoryLevel:istacTerritoryLevel};istacChosenMeasure=measure;istacSelectedYear=targetYear;
    try{
     const years=[...new Set(istacRows.map(r=>r.period).filter(Boolean))].sort(istacPeriodCmp);
     const current=istacCurrentRows(istacRows),built=buildIstacLayer(geo,current);
@@ -15669,4 +15732,273 @@ html.anambro-ipad body .leaflet-top.leaflet-left{top:120px!important}
   if(document.body)mark();else document.addEventListener('DOMContentLoaded',mark,{once:true});
 })();
 </script>
+
+<style id="anambro-header-contract-v016">
+/*
+  ANAMBRO v0.16 · CONTRATO DE CABECERA RESPONSIVA
+  ------------------------------------------------
+  La cabecera pública deja de depender del editor libre/posiciones absolutas.
+  Cuatro zonas reales, todo el contenido visible y redistribución por tamaño.
+  Este bloque está deliberadamente al final para aislarla de reglas históricas.
+*/
+:root{--anambro-header-height:118px}
+
+#anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+  position:fixed!important;
+  z-index:5000!important;
+  inset:0 0 auto 0!important;
+  top:0!important;left:0!important;right:0!important;
+  transform:none!important;
+  width:100%!important;max-width:none!important;
+  height:auto!important;min-height:0!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+  padding:8px clamp(10px,1.3vw,24px)!important;
+  display:grid!important;
+  grid-template-columns:minmax(180px,.78fr) minmax(280px,1.18fr) minmax(380px,1.72fr) minmax(280px,1.22fr)!important;
+  grid-template-rows:minmax(72px,auto) auto!important;
+  grid-template-areas:
+    "institution author title right"
+    "institution author descriptor right"!important;
+  column-gap:clamp(10px,1.25vw,24px)!important;
+  row-gap:2px!important;
+  align-items:center!important;
+  overflow:visible!important;
+  border:0!important;
+  border-bottom:1px solid rgba(28,67,94,.16)!important;
+  border-radius:0!important;
+  background:linear-gradient(180deg,#fff 0%,#fbfdfe 68%,#f3f8fa 100%)!important;
+  box-shadow:0 3px 10px rgba(13,47,68,.10)!important;
+  font-family:Montserrat,system-ui,-apple-system,sans-serif!important;
+}
+
+/* Los wrappers del editor no pueden alterar la composición pública. */
+#anambroHeader:not(.header-editing)>.brandSideLeft{display:contents!important}
+#anambroHeader:not(.header-editing) .headerEditFrame{display:contents!important;position:static!important;width:auto!important;height:auto!important;left:auto!important;top:auto!important;transform:none!important;margin:0!important}
+
+/* ZONA 1 · IES / curso / versión */
+#anambroHeader:not(.header-editing) .brandInstitutionV06{
+  grid-area:institution!important;
+  position:static!important;transform:none!important;
+  display:grid!important;grid-template-columns:clamp(46px,3.5vw,62px) minmax(0,1fr)!important;
+  align-items:center!important;gap:clamp(7px,.7vw,12px)!important;
+  min-width:0!important;width:auto!important;height:auto!important;
+  padding:3px clamp(7px,.7vw,12px) 3px 0!important;margin:0!important;
+  border-right:1px solid rgba(45,80,105,.13)!important;
+  box-sizing:border-box!important;overflow:visible!important
+}
+#anambroHeader:not(.header-editing) .brandInstituteLogoV06,
+#anambroHeader:not(.header-editing) .brandLeftText,
+#anambroHeader:not(.header-editing) .brandAuthorPortraitV06,
+#anambroHeader:not(.header-editing) .brandAuthorTextV06{
+  grid-area:auto!important;grid-column:auto!important;grid-row:auto!important;order:0!important;justify-self:auto!important;align-self:auto!important
+}
+#anambroHeader:not(.header-editing) .brandInstituteLogoV06{
+  display:block!important;position:static!important;transform:none!important;
+  width:clamp(46px,3.5vw,62px)!important;height:clamp(46px,3.5vw,62px)!important;
+  max-width:none!important;max-height:none!important;object-fit:contain!important;margin:0!important;font-size:0!important;color:transparent!important
+}
+#anambroHeader:not(.header-editing) .brandLeftText{display:block!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}
+#anambroHeader:not(.header-editing) .brandDept{
+  display:block!important;margin:0!important;color:#17324d!important;
+  font-size:clamp(9px,.63vw,12px)!important;line-height:1.12!important;font-weight:800!important;
+  white-space:normal!important;overflow:visible!important;text-align:left!important;letter-spacing:.02em!important
+}
+#anambroHeader:not(.header-editing) .brandDept b{font-size:1.08em!important;font-weight:900!important}
+#anambroHeader:not(.header-editing) .brandVersion{
+  display:inline-flex!important;position:static!important;align-items:center!important;
+  margin-top:5px!important;padding:3px 7px!important;border-radius:999px!important;
+  background:#edf5f8!important;border:1px solid #c4d6de!important;color:#365a70!important;
+  font-size:clamp(7px,.5vw,9px)!important;line-height:1!important;font-weight:800!important;
+  white-space:nowrap!important
+}
+
+/* ZONA 2 · autor / cargos */
+#anambroHeader:not(.header-editing) .brandAuthorV06{
+  grid-area:author!important;
+  position:static!important;transform:none!important;
+  display:grid!important;grid-template-columns:clamp(54px,4.2vw,72px) minmax(0,1fr)!important;
+  align-items:center!important;gap:clamp(8px,.8vw,14px)!important;
+  min-width:0!important;width:auto!important;height:auto!important;
+  margin:0!important;padding:3px clamp(7px,.7vw,12px) 3px 0!important;
+  border-right:1px solid rgba(45,80,105,.13)!important;box-sizing:border-box!important;overflow:visible!important
+}
+#anambroHeader:not(.header-editing) .brandAuthorPortraitV06{
+  display:block!important;position:static!important;transform:none!important;
+  width:clamp(54px,4.2vw,72px)!important;height:clamp(54px,4.2vw,72px)!important;
+  max-width:none!important;max-height:none!important;object-fit:cover!important;border-radius:12px!important;
+  border:2px solid #b9d7dc!important;box-shadow:0 1px 4px rgba(0,0,0,.10)!important;margin:0!important;font-size:0!important;color:transparent!important
+}
+#anambroHeader:not(.header-editing) .brandAuthorTextV06{display:block!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}
+#anambroHeader:not(.header-editing) .brandTeacher{
+  display:block!important;margin:0!important;color:#17324d!important;font-weight:900!important;
+  font-size:clamp(10.5px,.78vw,14px)!important;line-height:1.08!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;text-align:left!important
+}
+#anambroHeader:not(.header-editing) .brandGeo{display:inline!important;color:#17324d!important}
+#anambroHeader:not(.header-editing) .brandProfessional{
+  display:block!important;margin-top:4px!important;color:#42627b!important;font-weight:700!important;
+  font-size:clamp(8px,.57vw,10.5px)!important;line-height:1.15!important;
+  white-space:normal!important;overflow:visible!important;max-height:none!important;text-align:left!important
+}
+
+/* ZONA 3 · identidad ANAMBRO */
+#anambroHeader:not(.header-editing)>.brandTitleTop,
+#anambroHeader:not(.header-editing)>.headerEditFrame>.brandTitleTop{
+  grid-area:title!important;position:static!important;transform:none!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;height:auto!important;min-width:0!important;min-height:0!important;
+  margin:0!important;padding:0 clamp(4px,.5vw,10px)!important;border:0!important;overflow:visible!important;box-sizing:border-box!important
+}
+#anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{
+  display:block!important;position:static!important;transform:none!important;
+  width:min(100%,clamp(360px,34vw,620px))!important;height:clamp(62px,5vw,86px)!important;
+  max-width:100%!important;max-height:none!important;object-fit:contain!important;object-position:center!important;
+  margin:0 auto!important;border:0!important;box-shadow:none!important;font-size:0!important;color:transparent!important
+}
+#anambroHeader:not(.header-editing)>.brandCenter,
+#anambroHeader:not(.header-editing)>.headerEditFrame>.brandCenter{
+  grid-area:descriptor!important;position:static!important;transform:none!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:100%!important;height:auto!important;min-width:0!important;margin:0!important;padding:0 4px 2px!important;
+  border:0!important;overflow:visible!important;box-sizing:border-box!important
+}
+#anambroHeader:not(.header-editing) .brandDescriptor{
+  display:block!important;width:100%!important;margin:0!important;color:#42627b!important;font-weight:800!important;
+  font-size:clamp(8.5px,.65vw,11.5px)!important;line-height:1.1!important;text-align:center!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important
+}
+
+/* ZONA 4 · descripción funcional + controles */
+#anambroHeader:not(.header-editing)>.brandSideRight{
+  grid-area:right!important;position:static!important;transform:none!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+  width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:3px 0 3px clamp(7px,.7vw,12px)!important;
+  border:0!important;box-sizing:border-box!important;overflow:visible!important;gap:7px!important
+}
+#anambroHeader:not(.header-editing) .brandRoles{
+  display:block!important;position:static!important;transform:none!important;max-width:none!important;
+  margin:0!important;color:#3f5d70!important;font-weight:800!important;
+  font-size:clamp(7.5px,.55vw,10px)!important;line-height:1.2!important;text-align:left!important;
+  white-space:normal!important;overflow:visible!important
+}
+#anambroHeader:not(.header-editing) .brandActions{
+  display:grid!important;position:static!important;transform:none!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;
+  width:100%!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important
+}
+#anambroHeader:not(.header-editing) .brandWelcomeBtn{
+  display:flex!important;position:static!important;align-items:center!important;justify-content:center!important;
+  min-width:0!important;width:100%!important;max-width:none!important;height:auto!important;min-height:28px!important;
+  margin:0!important;padding:5px 6px!important;border-radius:999px!important;box-sizing:border-box!important;
+  font-size:clamp(7px,.48vw,9px)!important;line-height:1.08!important;font-weight:850!important;text-align:center!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important
+}
+
+/* El resto de la interfaz se coloca debajo de la altura REAL de la cabecera. */
+body .toolbar{top:calc(var(--anambro-header-height,118px) + 8px)!important}
+body .leaflet-top.leaflet-left{top:var(--anambro-header-height,118px)!important}
+body #viewModeBadge{top:calc(var(--anambro-header-height,118px) + 8px)!important}
+
+/* PORTÁTIL ESTRECHO / TABLET HORIZONTAL: 2 x 2, sin ocultar contenido. */
+@media (max-width:1199px){
+  #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+    padding:7px 10px!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto!important;
+    grid-template-areas:
+      "institution author"
+      "title right"
+      "descriptor right"!important;
+    column-gap:12px!important;row-gap:5px!important
+  }
+  #anambroHeader:not(.header-editing) .brandInstitutionV06,
+  #anambroHeader:not(.header-editing) .brandAuthorV06{border-right:0!important;border-bottom:1px solid rgba(45,80,105,.11)!important;padding-bottom:6px!important}
+  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:min(100%,520px)!important;height:68px!important}
+  #anambroHeader:not(.header-editing) .brandSideRight{padding-left:10px!important;border-left:1px solid rgba(45,80,105,.11)!important}
+  #anambroHeader:not(.header-editing) .brandRoles{font-size:8.5px!important;line-height:1.17!important}
+  #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:7.7px!important;min-height:27px!important}
+}
+
+/* TABLET VERTICAL: mantiene el 2 x 2, con zonas más compactas. */
+@media (max-width:900px){
+  #anambroHeader.brand.brandWide.brandV06:not(.header-editing){padding:6px 8px!important;column-gap:8px!important;row-gap:4px!important}
+  #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:42px minmax(0,1fr)!important;gap:6px!important}
+  #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:42px!important;height:42px!important}
+  #anambroHeader:not(.header-editing) .brandDept{font-size:8.7px!important}
+  #anambroHeader:not(.header-editing) .brandVersion{font-size:6.8px!important;padding:2px 5px!important;margin-top:3px!important}
+  #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:46px minmax(0,1fr)!important;gap:6px!important}
+  #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{width:46px!important;height:46px!important}
+  #anambroHeader:not(.header-editing) .brandTeacher{font-size:9.6px!important}
+  #anambroHeader:not(.header-editing) .brandProfessional{font-size:7.3px!important}
+  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{height:60px!important}
+  #anambroHeader:not(.header-editing) .brandDescriptor{font-size:8.2px!important}
+  #anambroHeader:not(.header-editing) .brandRoles{font-size:7.5px!important}
+  #anambroHeader:not(.header-editing) .brandActions{gap:3px!important}
+  #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:6.8px!important;min-height:25px!important;padding:4px 3px!important}
+}
+
+/* MÓVIL: una sola columna; ANAMBRO primero y TODO el contenido visible. */
+@media (max-width:700px){
+  #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+    padding:5px 7px 6px!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto auto auto auto auto!important;
+    grid-template-areas:
+      "title"
+      "descriptor"
+      "institution"
+      "author"
+      "right"!important;
+    row-gap:4px!important;column-gap:0!important
+  }
+  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:min(100%,430px)!important;height:52px!important}
+  #anambroHeader:not(.header-editing) .brandDescriptor{font-size:7.7px!important;line-height:1.08!important}
+  #anambroHeader:not(.header-editing) .brandInstitutionV06,
+  #anambroHeader:not(.header-editing) .brandAuthorV06{
+    width:100%!important;border:0!important;border-top:1px solid rgba(45,80,105,.10)!important;padding:5px 4px 2px!important
+  }
+  #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:40px minmax(0,1fr)!important}
+  #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:40px!important;height:40px!important}
+  #anambroHeader:not(.header-editing) .brandDept{font-size:8.4px!important;line-height:1.08!important}
+  #anambroHeader:not(.header-editing) .brandVersion{font-size:6.8px!important;margin-top:3px!important}
+  #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:43px minmax(0,1fr)!important}
+  #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{display:block!important;width:43px!important;height:43px!important}
+  #anambroHeader:not(.header-editing) .brandTeacher{display:block!important;font-size:9.3px!important;line-height:1.06!important}
+  #anambroHeader:not(.header-editing) .brandProfessional{display:block!important;font-size:7.1px!important;line-height:1.08!important;margin-top:2px!important}
+  #anambroHeader:not(.header-editing) .brandSideRight{width:100%!important;padding:5px 4px 0!important;border:0!important;border-top:1px solid rgba(45,80,105,.10)!important;gap:4px!important}
+  #anambroHeader:not(.header-editing) .brandRoles{display:block!important;font-size:7.2px!important;line-height:1.1!important;text-align:center!important}
+  #anambroHeader:not(.header-editing) .brandActions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:3px!important}
+  #anambroHeader:not(.header-editing) .brandWelcomeBtn{display:flex!important;font-size:6.6px!important;min-height:24px!important;padding:4px 2px!important}
+  #anambroHeader:not(.header-editing) .brandHeaderEditBtn{display:flex!important}
+}
+
+/* MÓVIL MUY ESTRECHO: botones en dos columnas para no miniaturizar texto. */
+@media (max-width:430px){
+  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{height:46px!important}
+  #anambroHeader:not(.header-editing) .brandActions{grid-template-columns:1fr 1fr!important}
+  #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:7px!important}
+}
+</style>
+<script id="anambro-header-height-runtime-v016">
+(()=>{
+  const root=document.documentElement;
+  const header=document.getElementById('anambroHeader');
+  if(!header)return;
+  let raf=0;
+  const sync=()=>{
+    cancelAnimationFrame(raf);
+    raf=requestAnimationFrame(()=>{
+      const h=Math.ceil(header.getBoundingClientRect().height||0);
+      if(h>0)root.style.setProperty('--anambro-header-height',h+'px');
+    });
+  };
+  sync();
+  if('ResizeObserver' in window)new ResizeObserver(sync).observe(header);
+  window.addEventListener('resize',sync,{passive:true});
+  window.addEventListener('orientationchange',sync,{passive:true});
+  document.fonts?.ready?.then(sync).catch(()=>{});
+})();
+</script>
+
 </body></html>
