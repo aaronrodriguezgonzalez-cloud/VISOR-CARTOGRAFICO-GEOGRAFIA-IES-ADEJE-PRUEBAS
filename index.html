@@ -8515,6 +8515,17 @@ function updateLegend(){
   return;
  }
 
+ // Atlas ISTAC: igual que las coropletas temáticas mundiales, la leyenda
+ // temática se muestra directamente sobre el mapa 2D y sustituye a la
+ // leyenda general mientras la coropleta está activa.
+ let istacActive=false;
+ try{istacActive=!!window.anambroIstacActive?.()}catch(e){}
+ if(istacActive){
+  const istacLegend=document.getElementById('istacLegend');
+  const istacHtml=istacLegend?.innerHTML?.trim()||'';
+  if(istacHtml){c.innerHTML=istacHtml;return;}
+ }
+
  // Fuera de las capas geodemográficas se mantiene la leyenda general del visor.
  // Fondo activo.
  const baseRadio=document.querySelector('input[data-base-choice]:checked');
@@ -15235,6 +15246,13 @@ html body .leaflet-popup-content{padding-top:5px}
   clearIstacBoundary();clearIstacLabels();
   istacLayer=built.layer.addTo(map);renderIstacLabels();updateIstacLegend(built.breaks,built.matched,built.total);
   syncIstacThematicBackground();
+  // Mostrar automáticamente la leyenda superpuesta, igual que en los mapas
+  // temáticos mundiales, sin obligar a abrir la leyenda del panel lateral.
+  const dyn=document.getElementById('dynamicLegend'),btn=document.getElementById('legendToggle');
+  if(dyn){
+   dyn.classList.remove('hidden');
+   if(btn){btn.innerHTML='<span>✕</span> Ocultar leyenda';btn.setAttribute('aria-expanded','true')}
+  }
   try{if(istacLayer.getBounds().isValid())map.fitBounds(istacLayer.getBounds(),{padding:[16,16],maxZoom:10})}catch(e){}
   try{updateLegend()}catch(e){}
  }
