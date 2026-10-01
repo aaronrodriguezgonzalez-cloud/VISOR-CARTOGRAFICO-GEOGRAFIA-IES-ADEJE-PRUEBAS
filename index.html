@@ -2787,7 +2787,6 @@ body.political-map-mode #map .anambro-political-canary-shadow{filter:grayscale(1
     <div class="brandActions">
       <button type="button" class="brandWelcomeBtn" onclick="toggleWelcome(true)">👋 ¡Bienvenido!</button>
       <button type="button" class="brandWelcomeBtn brandSourcesBtn" onclick="openSourcesPanel()">ⓘ Fuentes y licencias</button>
-      <button type="button" class="brandWelcomeBtn brandHeaderEditBtn" onclick="window.anambroHeaderEditor?.open()">✥ Editar cabecera</button>
     </div>
   </div>
 </div>
@@ -15735,15 +15734,31 @@ html.anambro-ipad body .leaflet-top.leaflet-left{top:120px!important}
 
 <style id="anambro-header-contract-v016">
 /*
-  ANAMBRO v0.16 · CONTRATO DE CABECERA RESPONSIVA
-  ------------------------------------------------
-  La cabecera pública deja de depender del editor libre/posiciones absolutas.
-  Cuatro zonas reales, todo el contenido visible y redistribución por tamaño.
-  Este bloque está deliberadamente al final para aislarla de reglas históricas.
+  ANAMBRO v0.16 · CONTRATO DEFINITIVO DE CABECERA RESPONSIVA
+  -----------------------------------------------------------
+  Parche EXCLUSIVO de cabecera.
+  - Escritorio: conserva la composición que ya funcionaba.
+  - Portátil / tablet horizontal: 4 zonas en una sola fila.
+  - Tablet vertical: 2 x 2 compacto.
+  - Móvil: composición vertical compacta con todo el contenido.
+  - El editor de cabecera desaparece de la interfaz pública.
 */
 :root{--anambro-header-height:118px}
 
-#anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+/* Blindaje común: ninguna regla histórica puede volver a ocultar saltos o reactivar el editor. */
+html body #anambroHeader:not(.header-editing) .brandDept br{display:block!important}
+html body #anambroHeader .brandHeaderEditBtn{display:none!important}
+html body #headerEditorBar,
+html body #headerEditorInspector,
+html body #headerEditorToast,
+html body .headerResizeHandle,
+html body .headerEditHandle{display:none!important}
+
+/* =========================
+   ESCRITORIO GRANDE >=1200
+   Se conserva el diseño bueno.
+   ========================= */
+html body #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
   position:fixed!important;
   z-index:5000!important;
   inset:0 0 auto 0!important;
@@ -15771,123 +15786,117 @@ html.anambro-ipad body .leaflet-top.leaflet-left{top:120px!important}
   box-shadow:0 3px 10px rgba(13,47,68,.10)!important;
   font-family:Montserrat,system-ui,-apple-system,sans-serif!important;
 }
-
-/* Los wrappers del editor no pueden alterar la composición pública. */
-#anambroHeader:not(.header-editing)>.brandSideLeft{display:contents!important}
-#anambroHeader:not(.header-editing) .headerEditFrame{display:contents!important;position:static!important;width:auto!important;height:auto!important;left:auto!important;top:auto!important;transform:none!important;margin:0!important}
+html body #anambroHeader:not(.header-editing)>.brandSideLeft{display:contents!important}
+html body #anambroHeader:not(.header-editing) .headerEditFrame{display:contents!important;position:static!important;width:auto!important;height:auto!important;left:auto!important;top:auto!important;transform:none!important;margin:0!important}
 
 /* ZONA 1 · IES / curso / versión */
-#anambroHeader:not(.header-editing) .brandInstitutionV06{
-  grid-area:institution!important;
-  position:static!important;transform:none!important;
+html body #anambroHeader:not(.header-editing) .brandInstitutionV06{
+  grid-area:institution!important;position:static!important;transform:none!important;
   display:grid!important;grid-template-columns:clamp(46px,3.5vw,62px) minmax(0,1fr)!important;
   align-items:center!important;gap:clamp(7px,.7vw,12px)!important;
   min-width:0!important;width:auto!important;height:auto!important;
   padding:3px clamp(7px,.7vw,12px) 3px 0!important;margin:0!important;
-  border-right:1px solid rgba(45,80,105,.13)!important;
-  box-sizing:border-box!important;overflow:visible!important
+  border-right:1px solid rgba(45,80,105,.13)!important;box-sizing:border-box!important;overflow:visible!important
 }
-#anambroHeader:not(.header-editing) .brandInstituteLogoV06,
-#anambroHeader:not(.header-editing) .brandLeftText,
-#anambroHeader:not(.header-editing) .brandAuthorPortraitV06,
-#anambroHeader:not(.header-editing) .brandAuthorTextV06{
+html body #anambroHeader:not(.header-editing) .brandInstituteLogoV06,
+html body #anambroHeader:not(.header-editing) .brandLeftText,
+html body #anambroHeader:not(.header-editing) .brandAuthorPortraitV06,
+html body #anambroHeader:not(.header-editing) .brandAuthorTextV06{
   grid-area:auto!important;grid-column:auto!important;grid-row:auto!important;order:0!important;justify-self:auto!important;align-self:auto!important
 }
-#anambroHeader:not(.header-editing) .brandInstituteLogoV06{
+html body #anambroHeader:not(.header-editing) .brandInstituteLogoV06{
   display:block!important;position:static!important;transform:none!important;
   width:clamp(46px,3.5vw,62px)!important;height:clamp(46px,3.5vw,62px)!important;
   max-width:none!important;max-height:none!important;object-fit:contain!important;margin:0!important;font-size:0!important;color:transparent!important
 }
-#anambroHeader:not(.header-editing) .brandLeftText{display:block!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}
-#anambroHeader:not(.header-editing) .brandDept{
+html body #anambroHeader:not(.header-editing) .brandLeftText{display:block!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}
+html body #anambroHeader:not(.header-editing) .brandDept{
   display:block!important;margin:0!important;color:#17324d!important;
   font-size:clamp(9px,.63vw,12px)!important;line-height:1.12!important;font-weight:800!important;
   white-space:normal!important;overflow:visible!important;text-align:left!important;letter-spacing:.02em!important
 }
-#anambroHeader:not(.header-editing) .brandDept b{font-size:1.08em!important;font-weight:900!important}
-#anambroHeader:not(.header-editing) .brandVersion{
+html body #anambroHeader:not(.header-editing) .brandDept b{display:inline!important;font-size:1.08em!important;font-weight:900!important}
+html body #anambroHeader:not(.header-editing) .brandVersion{
   display:inline-flex!important;position:static!important;align-items:center!important;
   margin-top:5px!important;padding:3px 7px!important;border-radius:999px!important;
   background:#edf5f8!important;border:1px solid #c4d6de!important;color:#365a70!important;
-  font-size:clamp(7px,.5vw,9px)!important;line-height:1!important;font-weight:800!important;
-  white-space:nowrap!important
+  font-size:clamp(7px,.5vw,9px)!important;line-height:1!important;font-weight:800!important;white-space:nowrap!important
 }
 
 /* ZONA 2 · autor / cargos */
-#anambroHeader:not(.header-editing) .brandAuthorV06{
-  grid-area:author!important;
-  position:static!important;transform:none!important;
+html body #anambroHeader:not(.header-editing) .brandAuthorV06{
+  grid-area:author!important;position:static!important;transform:none!important;
   display:grid!important;grid-template-columns:clamp(54px,4.2vw,72px) minmax(0,1fr)!important;
   align-items:center!important;gap:clamp(8px,.8vw,14px)!important;
   min-width:0!important;width:auto!important;height:auto!important;
   margin:0!important;padding:3px clamp(7px,.7vw,12px) 3px 0!important;
   border-right:1px solid rgba(45,80,105,.13)!important;box-sizing:border-box!important;overflow:visible!important
 }
-#anambroHeader:not(.header-editing) .brandAuthorPortraitV06{
+html body #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{
   display:block!important;position:static!important;transform:none!important;
   width:clamp(54px,4.2vw,72px)!important;height:clamp(54px,4.2vw,72px)!important;
   max-width:none!important;max-height:none!important;object-fit:cover!important;border-radius:12px!important;
   border:2px solid #b9d7dc!important;box-shadow:0 1px 4px rgba(0,0,0,.10)!important;margin:0!important;font-size:0!important;color:transparent!important
 }
-#anambroHeader:not(.header-editing) .brandAuthorTextV06{display:block!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}
-#anambroHeader:not(.header-editing) .brandTeacher{
+html body #anambroHeader:not(.header-editing) .brandAuthorTextV06{display:block!important;min-width:0!important;margin:0!important;padding:0!important;text-align:left!important}
+html body #anambroHeader:not(.header-editing) .brandTeacher{
   display:block!important;margin:0!important;color:#17324d!important;font-weight:900!important;
   font-size:clamp(10.5px,.78vw,14px)!important;line-height:1.08!important;
   white-space:normal!important;overflow:visible!important;text-overflow:clip!important;text-align:left!important
 }
-#anambroHeader:not(.header-editing) .brandGeo{display:inline!important;color:#17324d!important}
-#anambroHeader:not(.header-editing) .brandProfessional{
+html body #anambroHeader:not(.header-editing) .brandGeo{display:inline!important;color:#17324d!important}
+html body #anambroHeader:not(.header-editing) .brandProfessional{
   display:block!important;margin-top:4px!important;color:#42627b!important;font-weight:700!important;
   font-size:clamp(8px,.57vw,10.5px)!important;line-height:1.15!important;
   white-space:normal!important;overflow:visible!important;max-height:none!important;text-align:left!important
 }
 
 /* ZONA 3 · identidad ANAMBRO */
-#anambroHeader:not(.header-editing)>.brandTitleTop,
-#anambroHeader:not(.header-editing)>.headerEditFrame>.brandTitleTop{
+html body #anambroHeader:not(.header-editing)>.brandTitleTop,
+html body #anambroHeader:not(.header-editing)>.headerEditFrame>.brandTitleTop{
   grid-area:title!important;position:static!important;transform:none!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
   width:100%!important;height:auto!important;min-width:0!important;min-height:0!important;
   margin:0!important;padding:0 clamp(4px,.5vw,10px)!important;border:0!important;overflow:visible!important;box-sizing:border-box!important
 }
-#anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{
+html body #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{
   display:block!important;position:static!important;transform:none!important;
   width:min(100%,clamp(360px,34vw,620px))!important;height:clamp(62px,5vw,86px)!important;
   max-width:100%!important;max-height:none!important;object-fit:contain!important;object-position:center!important;
   margin:0 auto!important;border:0!important;box-shadow:none!important;font-size:0!important;color:transparent!important
 }
-#anambroHeader:not(.header-editing)>.brandCenter,
-#anambroHeader:not(.header-editing)>.headerEditFrame>.brandCenter{
+html body #anambroHeader:not(.header-editing)>.brandCenter,
+html body #anambroHeader:not(.header-editing)>.headerEditFrame>.brandCenter{
   grid-area:descriptor!important;position:static!important;transform:none!important;
   display:flex!important;align-items:center!important;justify-content:center!important;
   width:100%!important;height:auto!important;min-width:0!important;margin:0!important;padding:0 4px 2px!important;
   border:0!important;overflow:visible!important;box-sizing:border-box!important
 }
-#anambroHeader:not(.header-editing) .brandDescriptor{
+html body #anambroHeader:not(.header-editing) .brandDescriptor{
   display:block!important;width:100%!important;margin:0!important;color:#42627b!important;font-weight:800!important;
   font-size:clamp(8.5px,.65vw,11.5px)!important;line-height:1.1!important;text-align:center!important;
   white-space:normal!important;overflow:visible!important;text-overflow:clip!important
 }
 
 /* ZONA 4 · descripción funcional + controles */
-#anambroHeader:not(.header-editing)>.brandSideRight{
+html body #anambroHeader:not(.header-editing)>.brandSideRight{
   grid-area:right!important;position:static!important;transform:none!important;
   display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
   width:auto!important;height:auto!important;min-width:0!important;margin:0!important;padding:3px 0 3px clamp(7px,.7vw,12px)!important;
   border:0!important;box-sizing:border-box!important;overflow:visible!important;gap:7px!important
 }
-#anambroHeader:not(.header-editing) .brandRoles{
+html body #anambroHeader:not(.header-editing) .brandRoles{
   display:block!important;position:static!important;transform:none!important;max-width:none!important;
   margin:0!important;color:#3f5d70!important;font-weight:800!important;
   font-size:clamp(7.5px,.55vw,10px)!important;line-height:1.2!important;text-align:left!important;
   white-space:normal!important;overflow:visible!important
 }
-#anambroHeader:not(.header-editing) .brandActions{
+html body #anambroHeader:not(.header-editing) .brandActions{
   display:grid!important;position:static!important;transform:none!important;
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;
   width:100%!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important
 }
-#anambroHeader:not(.header-editing) .brandWelcomeBtn{
+html body #anambroHeader:not(.header-editing) .brandWelcomeBtn{
   display:flex!important;position:static!important;align-items:center!important;justify-content:center!important;
   min-width:0!important;width:100%!important;max-width:none!important;height:auto!important;min-height:28px!important;
   margin:0!important;padding:5px 6px!important;border-radius:999px!important;box-sizing:border-box!important;
@@ -15895,53 +15904,110 @@ html.anambro-ipad body .leaflet-top.leaflet-left{top:120px!important}
   white-space:normal!important;overflow:visible!important;text-overflow:clip!important
 }
 
-/* El resto de la interfaz se coloca debajo de la altura REAL de la cabecera. */
+/* El resto de la interfaz siempre empieza debajo de la altura REAL de la cabecera. */
 body .toolbar{top:calc(var(--anambro-header-height,118px) + 8px)!important}
 body .leaflet-top.leaflet-left{top:var(--anambro-header-height,118px)!important}
 body #viewModeBadge{top:calc(var(--anambro-header-height,118px) + 8px)!important}
 
-/* PORTÁTIL ESTRECHO / TABLET HORIZONTAL: 2 x 2, sin ocultar contenido. */
-@media (max-width:1199px){
-  #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
-    padding:7px 10px!important;
+/* =====================================================
+   PORTÁTIL / TABLET HORIZONTAL (900–1199): 4 ZONAS
+   ===================================================== */
+@media (min-width:900px) and (max-width:1199px) and (orientation:landscape){
+  html body #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+    padding:5px 8px!important;
+    grid-template-columns:minmax(145px,.82fr) minmax(205px,1.12fr) minmax(285px,1.55fr) minmax(195px,1.08fr)!important;
+    grid-template-rows:minmax(62px,auto) auto!important;
+    grid-template-areas:
+      "institution author title right"
+      "institution author descriptor right"!important;
+    column-gap:8px!important;row-gap:1px!important;align-items:center!important
+  }
+  html body #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:42px minmax(0,1fr)!important;gap:5px!important;padding-right:6px!important}
+  html body #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:42px!important;height:42px!important}
+  html body #anambroHeader:not(.header-editing) .brandDept{font-size:7.7px!important;line-height:1.08!important;letter-spacing:0!important}
+  html body #anambroHeader:not(.header-editing) .brandDept b{font-size:10px!important}
+  html body #anambroHeader:not(.header-editing) .brandVersion{font-size:6.4px!important;padding:2px 4px!important;margin-top:3px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:44px minmax(0,1fr)!important;gap:6px!important;padding-right:6px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{width:44px!important;height:44px!important;border-radius:10px!important}
+  html body #anambroHeader:not(.header-editing) .brandTeacher{font-size:9.2px!important;line-height:1.04!important}
+  html body #anambroHeader:not(.header-editing) .brandProfessional{font-size:6.9px!important;line-height:1.08!important;margin-top:2px!important}
+  html body #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:100%!important;height:58px!important}
+  html body #anambroHeader:not(.header-editing) .brandDescriptor{font-size:7.7px!important;line-height:1.05!important}
+  html body #anambroHeader:not(.header-editing)>.brandSideRight{padding-left:6px!important;gap:4px!important}
+  html body #anambroHeader:not(.header-editing) .brandRoles{font-size:6.8px!important;line-height:1.1!important}
+  html body #anambroHeader:not(.header-editing) .brandActions{grid-template-columns:1fr 1fr!important;gap:3px!important}
+  html body #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:6.8px!important;line-height:1.05!important;min-height:24px!important;padding:4px 3px!important}
+}
+
+/* =====================================================
+   TABLET VERTICAL (600–1199): 2 x 2 COMPACTO
+   ===================================================== */
+@media (min-width:600px) and (max-width:1199px) and (orientation:portrait){
+  html body #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+    padding:6px 9px!important;
     grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
     grid-template-rows:auto auto auto!important;
     grid-template-areas:
       "institution author"
       "title right"
       "descriptor right"!important;
-    column-gap:12px!important;row-gap:5px!important
+    column-gap:10px!important;row-gap:4px!important;align-items:center!important
   }
-  #anambroHeader:not(.header-editing) .brandInstitutionV06,
-  #anambroHeader:not(.header-editing) .brandAuthorV06{border-right:0!important;border-bottom:1px solid rgba(45,80,105,.11)!important;padding-bottom:6px!important}
-  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:min(100%,520px)!important;height:68px!important}
-  #anambroHeader:not(.header-editing) .brandSideRight{padding-left:10px!important;border-left:1px solid rgba(45,80,105,.11)!important}
-  #anambroHeader:not(.header-editing) .brandRoles{font-size:8.5px!important;line-height:1.17!important}
-  #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:7.7px!important;min-height:27px!important}
+  html body #anambroHeader:not(.header-editing) .brandInstitutionV06,
+  html body #anambroHeader:not(.header-editing) .brandAuthorV06{border-right:0!important;border-bottom:1px solid rgba(45,80,105,.11)!important;padding:3px 5px 6px!important}
+  html body #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:44px minmax(0,1fr)!important;gap:6px!important}
+  html body #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:44px!important;height:44px!important}
+  html body #anambroHeader:not(.header-editing) .brandDept{font-size:8.5px!important;line-height:1.08!important;letter-spacing:0!important}
+  html body #anambroHeader:not(.header-editing) .brandDept b{font-size:10.5px!important}
+  html body #anambroHeader:not(.header-editing) .brandVersion{font-size:6.9px!important;margin-top:3px!important;padding:2px 5px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:48px minmax(0,1fr)!important;gap:7px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{width:48px!important;height:48px!important}
+  html body #anambroHeader:not(.header-editing) .brandTeacher{font-size:9.8px!important;line-height:1.06!important}
+  html body #anambroHeader:not(.header-editing) .brandProfessional{font-size:7.3px!important;line-height:1.09!important;margin-top:2px!important}
+  html body #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:min(100%,470px)!important;height:60px!important}
+  html body #anambroHeader:not(.header-editing) .brandDescriptor{font-size:8px!important;line-height:1.06!important}
+  html body #anambroHeader:not(.header-editing)>.brandSideRight{padding:5px 2px 3px 9px!important;border-left:1px solid rgba(45,80,105,.11)!important;gap:5px!important}
+  html body #anambroHeader:not(.header-editing) .brandRoles{font-size:7.4px!important;line-height:1.12!important}
+  html body #anambroHeader:not(.header-editing) .brandActions{grid-template-columns:1fr 1fr!important;gap:4px!important}
+  html body #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:7.2px!important;min-height:25px!important;padding:4px!important}
 }
 
-/* TABLET VERTICAL: mantiene el 2 x 2, con zonas más compactas. */
-@media (max-width:900px){
-  #anambroHeader.brand.brandWide.brandV06:not(.header-editing){padding:6px 8px!important;column-gap:8px!important;row-gap:4px!important}
-  #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:42px minmax(0,1fr)!important;gap:6px!important}
-  #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:42px!important;height:42px!important}
-  #anambroHeader:not(.header-editing) .brandDept{font-size:8.7px!important}
-  #anambroHeader:not(.header-editing) .brandVersion{font-size:6.8px!important;padding:2px 5px!important;margin-top:3px!important}
-  #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:46px minmax(0,1fr)!important;gap:6px!important}
-  #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{width:46px!important;height:46px!important}
-  #anambroHeader:not(.header-editing) .brandTeacher{font-size:9.6px!important}
-  #anambroHeader:not(.header-editing) .brandProfessional{font-size:7.3px!important}
-  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{height:60px!important}
-  #anambroHeader:not(.header-editing) .brandDescriptor{font-size:8.2px!important}
-  #anambroHeader:not(.header-editing) .brandRoles{font-size:7.5px!important}
-  #anambroHeader:not(.header-editing) .brandActions{gap:3px!important}
-  #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:6.8px!important;min-height:25px!important;padding:4px 3px!important}
+/* =====================================================
+   TABLET PEQUEÑA / MÓVIL HORIZONTAL (600–899): 4 ZONAS
+   ===================================================== */
+@media (min-width:600px) and (max-width:899px) and (orientation:landscape){
+  html body #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+    padding:4px 6px!important;
+    grid-template-columns:minmax(112px,.8fr) minmax(160px,1.08fr) minmax(220px,1.5fr) minmax(155px,1.05fr)!important;
+    grid-template-rows:minmax(52px,auto) auto!important;
+    grid-template-areas:
+      "institution author title right"
+      "institution author descriptor right"!important;
+    column-gap:6px!important;row-gap:0!important
+  }
+  html body #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:34px minmax(0,1fr)!important;gap:4px!important;padding-right:4px!important}
+  html body #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:34px!important;height:34px!important}
+  html body #anambroHeader:not(.header-editing) .brandDept{font-size:6.5px!important;line-height:1.04!important;letter-spacing:0!important}
+  html body #anambroHeader:not(.header-editing) .brandDept b{font-size:8px!important}
+  html body #anambroHeader:not(.header-editing) .brandVersion{font-size:5.7px!important;margin-top:2px!important;padding:2px 3px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:36px minmax(0,1fr)!important;gap:4px!important;padding-right:4px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{width:36px!important;height:36px!important;border-radius:8px!important}
+  html body #anambroHeader:not(.header-editing) .brandTeacher{font-size:7.7px!important;line-height:1.02!important}
+  html body #anambroHeader:not(.header-editing) .brandProfessional{font-size:5.8px!important;line-height:1.04!important;margin-top:1px!important}
+  html body #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:100%!important;height:48px!important}
+  html body #anambroHeader:not(.header-editing) .brandDescriptor{font-size:6.4px!important;line-height:1!important}
+  html body #anambroHeader:not(.header-editing)>.brandSideRight{padding-left:4px!important;gap:2px!important}
+  html body #anambroHeader:not(.header-editing) .brandRoles{font-size:5.7px!important;line-height:1.05!important}
+  html body #anambroHeader:not(.header-editing) .brandActions{grid-template-columns:1fr 1fr!important;gap:2px!important}
+  html body #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:5.8px!important;line-height:1!important;min-height:20px!important;padding:3px 2px!important}
 }
 
-/* MÓVIL: una sola columna; ANAMBRO primero y TODO el contenido visible. */
-@media (max-width:700px){
-  #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
-    padding:5px 7px 6px!important;
+/* =========================
+   MÓVIL <=599: VERTICAL
+   ========================= */
+@media (max-width:599px){
+  html body #anambroHeader.brand.brandWide.brandV06:not(.header-editing){
+    padding:6px 10px 7px!important;
     grid-template-columns:minmax(0,1fr)!important;
     grid-template-rows:auto auto auto auto auto!important;
     grid-template-areas:
@@ -15950,36 +16016,47 @@ body #viewModeBadge{top:calc(var(--anambro-header-height,118px) + 8px)!important
       "institution"
       "author"
       "right"!important;
-    row-gap:4px!important;column-gap:0!important
+    row-gap:3px!important;column-gap:0!important;align-items:center!important
   }
-  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:min(100%,430px)!important;height:52px!important}
-  #anambroHeader:not(.header-editing) .brandDescriptor{font-size:7.7px!important;line-height:1.08!important}
-  #anambroHeader:not(.header-editing) .brandInstitutionV06,
-  #anambroHeader:not(.header-editing) .brandAuthorV06{
-    width:100%!important;border:0!important;border-top:1px solid rgba(45,80,105,.10)!important;padding:5px 4px 2px!important
+  html body #anambroHeader:not(.header-editing)>.brandTitleTop{padding:0 3px!important}
+  html body #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{width:min(100%,430px)!important;height:54px!important}
+  html body #anambroHeader:not(.header-editing)>.brandCenter{padding:0 3px 4px!important}
+  html body #anambroHeader:not(.header-editing) .brandDescriptor{font-size:8.4px!important;line-height:1.08!important}
+  html body #anambroHeader:not(.header-editing) .brandInstitutionV06,
+  html body #anambroHeader:not(.header-editing) .brandAuthorV06{
+    width:100%!important;border:0!important;border-top:1px solid rgba(45,80,105,.10)!important;padding:5px 6px 3px!important
   }
-  #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:40px minmax(0,1fr)!important}
-  #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:40px!important;height:40px!important}
-  #anambroHeader:not(.header-editing) .brandDept{font-size:8.4px!important;line-height:1.08!important}
-  #anambroHeader:not(.header-editing) .brandVersion{font-size:6.8px!important;margin-top:3px!important}
-  #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:43px minmax(0,1fr)!important}
-  #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{display:block!important;width:43px!important;height:43px!important}
-  #anambroHeader:not(.header-editing) .brandTeacher{display:block!important;font-size:9.3px!important;line-height:1.06!important}
-  #anambroHeader:not(.header-editing) .brandProfessional{display:block!important;font-size:7.1px!important;line-height:1.08!important;margin-top:2px!important}
-  #anambroHeader:not(.header-editing) .brandSideRight{width:100%!important;padding:5px 4px 0!important;border:0!important;border-top:1px solid rgba(45,80,105,.10)!important;gap:4px!important}
-  #anambroHeader:not(.header-editing) .brandRoles{display:block!important;font-size:7.2px!important;line-height:1.1!important;text-align:center!important}
-  #anambroHeader:not(.header-editing) .brandActions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:3px!important}
-  #anambroHeader:not(.header-editing) .brandWelcomeBtn{display:flex!important;font-size:6.6px!important;min-height:24px!important;padding:4px 2px!important}
-  #anambroHeader:not(.header-editing) .brandHeaderEditBtn{display:flex!important}
+  html body #anambroHeader:not(.header-editing) .brandInstitutionV06{grid-template-columns:48px minmax(0,1fr)!important;gap:7px!important}
+  html body #anambroHeader:not(.header-editing) .brandInstituteLogoV06{width:48px!important;height:48px!important}
+  html body #anambroHeader:not(.header-editing) .brandDept{font-size:9.5px!important;line-height:1.08!important;letter-spacing:0!important}
+  html body #anambroHeader:not(.header-editing) .brandDept b{font-size:11.5px!important}
+  html body #anambroHeader:not(.header-editing) .brandVersion{font-size:7.7px!important;margin-top:4px!important;padding:3px 7px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorV06{grid-template-columns:52px minmax(0,1fr)!important;gap:8px!important}
+  html body #anambroHeader:not(.header-editing) .brandAuthorPortraitV06{display:block!important;width:52px!important;height:52px!important;border-radius:11px!important}
+  html body #anambroHeader:not(.header-editing) .brandTeacher{display:block!important;font-size:10.8px!important;line-height:1.06!important}
+  html body #anambroHeader:not(.header-editing) .brandProfessional{display:block!important;font-size:8.1px!important;line-height:1.1!important;margin-top:2px!important}
+  html body #anambroHeader:not(.header-editing)>.brandSideRight{width:100%!important;padding:5px 6px 0!important;border:0!important;border-top:1px solid rgba(45,80,105,.10)!important;gap:5px!important}
+  html body #anambroHeader:not(.header-editing) .brandRoles{display:block!important;font-size:8px!important;line-height:1.12!important;text-align:center!important}
+  html body #anambroHeader:not(.header-editing) .brandActions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:5px!important}
+  html body #anambroHeader:not(.header-editing) .brandWelcomeBtn{display:flex!important;font-size:8px!important;line-height:1.05!important;min-height:30px!important;padding:5px 4px!important}
 }
 
-/* MÓVIL MUY ESTRECHO: botones en dos columnas para no miniaturizar texto. */
-@media (max-width:430px){
-  #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{height:46px!important}
-  #anambroHeader:not(.header-editing) .brandActions{grid-template-columns:1fr 1fr!important}
-  #anambroHeader:not(.header-editing) .brandWelcomeBtn{font-size:7px!important}
+/* Móvil muy estrecho: ligera compactación, sin ocultar contenido. */
+@media (max-width:380px){
+  html body #anambroHeader:not(.header-editing) .brandAnambroIntegratedLogo{height:49px!important}
+  html body #anambroHeader:not(.header-editing) .brandDept{font-size:9px!important}
+  html body #anambroHeader:not(.header-editing) .brandTeacher{font-size:10.2px!important}
+  html body #anambroHeader:not(.header-editing) .brandProfessional{font-size:7.7px!important}
+  html body #anambroHeader:not(.header-editing) .brandRoles{font-size:7.6px!important}
 }
 </style>
+<script id="anambro-header-public-lock-v016">
+(()=>{
+  try{localStorage.removeItem('anambro.header.layout.v10')}catch(_){ }
+  document.querySelectorAll('.brandHeaderEditBtn,#headerEditorBar,#headerEditorInspector,#headerEditorToast').forEach(el=>el.remove());
+  try{window.anambroHeaderEditor=undefined}catch(_){ }
+})();
+</script>
 <script id="anambro-header-height-runtime-v016">
 (()=>{
   const root=document.documentElement;
