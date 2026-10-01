@@ -8026,11 +8026,20 @@ async function refreshLayoutSnapshot(){
   }else{
    syncLayoutThematicAppearance(false);
    if(typeof window.anambroRefreshHistoryLabelsForExport==='function')await window.anambroRefreshHistoryLabelsForExport();
-   const canvas=await html2canvas(document.getElementById('map'),{
-    useCORS:true,allowTaint:false,logging:false,
-    backgroundColor:((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#d9eef6':'#d9dde1',
-    ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
-   });
+   const istacCleanExport=!!window.anambroIstacActive?.();
+   let canvas;
+   if(istacCleanExport)document.body.classList.add('istac-export-clean');
+   try{
+    // Las coropletas ISTAC se visualizan sobre GEBCO, pero la exportación usa
+    // el mismo fondo temático limpio de los mapas mundiales: océano plano, sin batimetría.
+    canvas=await html2canvas(document.getElementById('map'),{
+     useCORS:true,allowTaint:false,logging:false,
+     backgroundColor:istacCleanExport?'#d9eef6':(((typeof activeHumanIndicators==='function'&&activeHumanIndicators().length)||document.getElementById('worldHistoryCheck')?.checked)?'#d9eef6':'#d9dde1'),
+     ignoreElements:el=>el.classList?.contains('leaflet-control')||el.id==='status'
+    });
+   }finally{
+    if(istacCleanExport)document.body.classList.remove('istac-export-clean');
+   }
    layoutSnapshotData=canvas.toDataURL('image/jpeg',.92);
    const size=map.getSize(),centerY=Math.round(size.y/2),a=map.containerPointToLatLng([Math.round(size.x*.25),centerY]),b=map.containerPointToLatLng([Math.round(size.x*.55),centerY]);
    layoutSnapshotMeta={type:'live-map',imgWidth:size.x,imgHeight:size.y,kmPerImagePxAtCenter:(map.distance(a,b)/1000)/Math.max(1,Math.round(size.x*.30))};
@@ -13106,6 +13115,13 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
   filter:saturate(.62) brightness(1.18) contrast(.86) hue-rotate(-4deg);
 }
 </style>
+<style id="anambro-istac-export-clean-background-20261001">
+/* Atlas ISTAC: en pantalla hereda el fondo batimétrico del atlas temático mundial.
+   En el compositor/exportación se usa el fondo temático limpio de los mapas mundiales, sin GEBCO. */
+html body.istac-export-clean #map{background:#d9eef6!important;}
+html body.istac-export-clean #map .anambro-gebco-tile,
+html body.istac-export-clean #map .leaflet-atlasBathymetryPane-pane{opacity:0!important;visibility:hidden!important;}
+</style>
 <script id="anambro-atlas-ocean-history-runtime-20260927">
 (function(){
  const OCEAN='#d9eef6', COAST='#39779d', LAND='#e9e1cf';
@@ -13115,7 +13131,9 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
  let syncing=false;
  function humanOn(){try{return typeof activeHumanIndicators==='function'&&activeHumanIndicators().length>0;}catch(e){return false;}}
  function historyOn(){return !!document.getElementById('worldHistoryCheck')?.checked;}
+ function istacOn(){try{return !!window.anambroIstacActive?.();}catch(e){return false;}}
  function atlasOn(){return humanOn()||historyOn();}
+ function atlas2DOn(){return atlasOn()||istacOn();}
  function ensurePanes(){
   if(!map.getPane('atlasBathymetryPane')){const p=map.createPane('atlasBathymetryPane');p.style.zIndex='180';p.style.pointerEvents='none';}
   if(!map.getPane('atlasLandPane')){const p=map.createPane('atlasLandPane');p.style.zIndex='220';p.style.pointerEvents='none';}
@@ -13143,7 +13161,7 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
  }
  async function sync2D(){
   if(typeof map==='undefined')return;
-  const on=atlasOn();
+  const on=atlas2DOn();
   document.body.classList.toggle('thematic-atlas-mode',on);
   if(!on){
    for(const l of [gebco2D,coast2D,landTint2D])try{if(l&&map.hasLayer(l))map.removeLayer(l);}catch(e){}
@@ -13243,7 +13261,10 @@ html body.thematic-atlas-mode #map .leaflet-atlasBathymetryPane-pane img{
  document.getElementById('worldHistoryCheck')?.addEventListener('change',()=>setTimeout(()=>{sync();restyleHistory();},50));
  document.querySelectorAll('.worldHumanLayerCheck').forEach(el=>el.addEventListener('change',()=>setTimeout(sync,50)));
  document.getElementById('historyYearRange')?.addEventListener('change',()=>setTimeout(()=>{sync();restyleHistory();},250));
- if(typeof map!=='undefined')map.on('layeradd',()=>{if(atlasOn())setTimeout(sync2D,40);});
+ if(typeof map!=='undefined')map.on('layeradd',()=>{if(atlas2DOn())setTimeout(sync2D,40);});
+ // Permite que módulos territoriales cargados después (p. ej. Atlas ISTAC) pidan
+ // exactamente el mismo fondo temático sin duplicar la lógica GEBCO/costa.
+ window.addEventListener('anambro:thematic-sync',()=>setTimeout(sync,0));
  setTimeout(()=>{sync();restyleHistory();},250);
 })();
 </script>
@@ -14639,6 +14660,10 @@ html body .leaflet-popup-content{padding-top:5px}
  const ISTAC_VERIFIED_CATALOG=[];
 
  let istacLayer=null,istacBoundaryLayer=null,istacLabelLayer=null,istacMunicipalGeo=null;
+ // Estado público mínimo para que el fondo temático común pueda reaccionar sin
+ // sacar la lógica del Atlas ISTAC de este módulo.
+ window.anambroIstacActive=()=>!!(istacLayer&&map.hasLayer(istacLayer));
+ function syncIstacThematicBackground(){try{window.dispatchEvent(new Event('anambro:thematic-sync'));}catch(e){}}
  let istacRows=[],istacAllRows=[],istacMeta=null,istacSelectedYear='__latest__',istacCatalog=[];
  let istacActiveItemId='',istacChosenMeasure='';
 
@@ -15206,6 +15231,7 @@ html body .leaflet-popup-content{padding-top:5px}
   if(istacLayer){try{map.removeLayer(istacLayer)}catch(e){}}
   clearIstacBoundary();clearIstacLabels();
   istacLayer=built.layer.addTo(map);renderIstacLabels();updateIstacLegend(built.breaks,built.matched,built.total);
+  syncIstacThematicBackground();
   try{if(istacLayer.getBounds().isValid())map.fitBounds(istacLayer.getBounds(),{padding:[16,16],maxZoom:10})}catch(e){}
   try{updateLegend()}catch(e){}
  }
@@ -15336,6 +15362,7 @@ html body .leaflet-popup-content{padding-top:5px}
   clearIstacBoundary();clearIstacLabels();istacRows=[];istacAllRows=[];istacMeta=null;istacChosenMeasure='';istacActiveItemId='';istacSelectedYear='__latest__';
   const legend=document.getElementById('istacLegend');if(legend)legend.innerHTML='';
   const status=document.getElementById('istacStatus');if(status)status.textContent='Atlas ISTAC inactivo.';
+  syncIstacThematicBackground();
   restoreOsmAfterIstac();try{updateLegend()}catch(e){}
  }
 
